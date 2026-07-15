@@ -1,0 +1,27 @@
+package com.ferry.user.webservice.tools;
+
+import com.ferry.user.core.tools.PasswordTool;
+import com.ferry.user.domain.HashedPasswordDomain;
+import com.ferry.user.domain.RawPasswordDomain;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password4j.Argon2Password4jPasswordEncoder;
+
+/************************
+ * Made by [MR Ferry™]  *
+ * on Juli 2026         *
+ ************************/
+
+@RequiredArgsConstructor
+public class Argon2PasswordTool implements PasswordTool{
+	private final Argon2Password4jPasswordEncoder encoder;
+
+	@Override
+	public HashedPasswordDomain hash(RawPasswordDomain rawPasswordDomain){
+		return new HashedPasswordDomain(encoder.encode(rawPasswordDomain.value()));
+	}
+
+	@Override
+	public boolean matches(RawPasswordDomain input, RawPasswordDomain stored){
+		return encoder.matches(input.value(), stored.value());
+	}
+}

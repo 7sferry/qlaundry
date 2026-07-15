@@ -1,0 +1,49 @@
+package com.ferry.user.gateway.tenant;
+
+import com.ferry.user.core.staff.registration.StaffRegistrationRequest;
+import com.ferry.user.core.staff.registration.StaffRegistrationResponse;
+import com.ferry.user.core.staff.registration.StaffRegistrationUseCase;
+import com.ferry.user.core.tenant.registration.TenantRegistrationGateway;
+import com.ferry.user.domain.DescriptionDomain;
+import com.ferry.user.domain.FullNameDomain;
+import com.ferry.user.domain.tenant.TenantDomain;
+import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
+import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
+import com.ferry.utils.generator.IdGenerator;
+import lombok.RequiredArgsConstructor;
+
+/************************
+ * Made by [MR Ferry™]  *
+ * on Juli 2026         *
+ ************************/
+
+@RequiredArgsConstructor
+public class TenantRegistrationJpaGateway implements TenantRegistrationGateway{
+	private final IdGenerator idGenerator;
+	private final TenantJpaRepository tenantRepository;
+	private final StaffRegistrationUseCase staffRegistrationUseCase;
+
+	@Override
+	public TenantDomain save(TenantDomain tenant){
+		TenantJpaEntity entity = new TenantJpaEntity();
+		entity.setId(idGenerator.generateId());
+		entity.setCreatedAt(tenant.createdAt());
+		entity.setUpdatedAt(tenant.updatedAt());
+		entity.setCreatedBy(entity.getId());
+		entity.setUpdatedBy(entity.getId());
+		entity.setDescription(tenant.descriptionValue());
+		entity.setFullName(tenant.fullNameValue());
+		TenantJpaEntity saved = tenantRepository.save(entity);
+		return new TenantDomain(saved.getId(), new FullNameDomain(saved.getFullName()),
+				new DescriptionDomain(saved.getDescription()), saved.getVersion(), saved.isDeleted(),
+				saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
+	}
+
+	@Override
+	public StaffRegistrationResponse registerAdmin(StaffRegistrationRequest request){
+		StaffRegistrationResponse[] result = new StaffRegistrationResponse[1];
+		staffRegistrationUseCase.execute(request, response -> result[0] = response);
+		return result[0];
+	}
+
+}
