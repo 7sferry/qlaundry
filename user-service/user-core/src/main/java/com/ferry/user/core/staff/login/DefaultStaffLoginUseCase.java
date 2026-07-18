@@ -58,7 +58,7 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 	private void storeSession(String hashedRefreshToken, StaffLoginProjection staff){
 		Instant expirationTime = Instant.now().plusSeconds(tokenProcessor.getRefreshTokenExpirationInSeconds());
 		UserSessionDomain userSession = gateway.save(UserSessionDomain.create(hashedRefreshToken, expirationTime,
-				staff.id(), SessionType.STAFF));
+				staff.username(), SessionType.STAFF));
 		gateway.cache(TokenConstant.REFRESH_KEY, userSession, Duration.ofHours(1));
 	}
 

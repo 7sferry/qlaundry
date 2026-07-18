@@ -6,6 +6,9 @@ import com.ferry.user.core.staff.detail.StaffDetailUseCase;
 import com.ferry.user.core.staff.login.DefaultStaffLoginUseCase;
 import com.ferry.user.core.staff.login.StaffLoginGateway;
 import com.ferry.user.core.staff.login.StaffLoginUseCase;
+import com.ferry.user.core.staff.refreshtoken.DefaultStaffRefreshTokenUseCase;
+import com.ferry.user.core.staff.refreshtoken.StaffRefreshTokenGateway;
+import com.ferry.user.core.staff.refreshtoken.StaffRefreshTokenUseCase;
 import com.ferry.user.core.staff.registration.DefaultStaffRegistrationUseCase;
 import com.ferry.user.core.staff.registration.StaffRegistrationGateway;
 import com.ferry.user.core.staff.registration.StaffRegistrationUseCase;
@@ -18,6 +21,7 @@ import com.ferry.user.gateway.session.repository.UserSessionJpaRepository;
 import com.ferry.user.gateway.session.repository.UserSessionTypeJpaRepository;
 import com.ferry.user.gateway.staff.StaffDetailJpaGateway;
 import com.ferry.user.gateway.staff.StaffLoginJpaGateway;
+import com.ferry.user.gateway.staff.StaffRefreshTokenJpaGateway;
 import com.ferry.user.gateway.staff.StaffRegistrationJpaGateway;
 import com.ferry.user.gateway.staff.repository.StaffAddressJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
@@ -32,6 +36,7 @@ import com.ferry.utils.generator.IdGenerator;
 import com.ferry.utils.generator.UlidGenerator;
 import com.ferry.utils.json.DefaultJsonManager;
 import com.ferry.utils.json.JsonManager;
+import com.ferry.utils.token.TokenGenerator;
 import com.password4j.Argon2Function;
 import com.password4j.types.Argon2;
 import org.springframework.context.annotation.Bean;
@@ -128,6 +133,19 @@ public class UserWebConfig{
 	@Bean
 	StaffDetailUseCase staffDetailUseCase(StaffDetailGateway staffDetailGateway){
 		return new DefaultStaffDetailUseCase(staffDetailGateway);
+	}
+
+	@Bean
+	StaffRefreshTokenGateway staffRefreshTokenGateway(StaffJpaRepository staffJpaRepository,
+	                                                  UserSessionJpaRepository userSessionJpaRepository,
+	                                                  TenantJpaRepository tenantJpaRepository){
+		return new StaffRefreshTokenJpaGateway(staffJpaRepository, userSessionJpaRepository, tenantJpaRepository);
+	}
+
+	@Bean
+	StaffRefreshTokenUseCase staffRefreshTokenUseCase(StaffRefreshTokenGateway staffRefreshTokenGateway,
+	                                                  TokenProcessor tokenProcessor){
+		return new DefaultStaffRefreshTokenUseCase(staffRefreshTokenGateway, tokenProcessor);
 	}
 
 }

@@ -56,7 +56,6 @@ public class UserSecurityConfig{
 		DefaultTokenGenerator tokenManager = new DefaultTokenGenerator(privateKey);
 		return new DefaultTokenProcessor(tokenManager, refreshTokenExpirationInSeconds, accessTokenExpirationInSeconds);
 	}
-
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter){
 		return http.csrf(AbstractHttpConfigurer::disable)

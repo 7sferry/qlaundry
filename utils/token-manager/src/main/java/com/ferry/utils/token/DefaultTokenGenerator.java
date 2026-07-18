@@ -36,15 +36,16 @@ public class DefaultTokenGenerator implements TokenGenerator{
 	public String generateRefreshToken(){
 		byte[] bytes = new byte[32];
 		SECURE_RANDOM.nextBytes(bytes);
-		return BASE_64_ENCODER.encodeToString(bytes);
+		return CrockfordBase32.encodeTimestamp(System.currentTimeMillis()) + BASE_64_ENCODER.encodeToString(bytes);
 	}
 
 	@SneakyThrows
 	@Override
 	public String hashToken(String token){
+		String uniquePart = token.substring(10);
 		MessageDigest sha256 = MessageDigest.getInstance("SHA256");
-		byte[] digest = sha256.digest(token.getBytes());
-		return CrockfordBase32.encodeTimestamp(System.currentTimeMillis()) + BASE_64_ENCODER.encodeToString(digest);
+		byte[] digest = sha256.digest(uniquePart.getBytes());
+		return token.substring(0, 10) + BASE_64_ENCODER.encodeToString(digest);
 	}
 
 	@Override
