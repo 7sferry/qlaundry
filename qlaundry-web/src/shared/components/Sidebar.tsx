@@ -13,6 +13,7 @@ import {
 	Moon,
 	PackagePlus,
 	Sun,
+	UserCog,
 	Users,
 	WashingMachine,
 } from 'lucide-react';
@@ -24,6 +25,7 @@ const NAV_ITEMS: { path: string; label: string; icon: FC<{ size?: number }> }[] 
 	{path: '/orders/new', label: 'Order baru', icon: PackagePlus},
 	{path: '/orders/history', label: 'Riwayat order', icon: ClipboardList},
 	{path: '/customers', label: 'Pelanggan', icon: Users},
+	{path: '/staff', label: 'Staf', icon: UserCog},
 	{path: '/reports', label: 'Laporan', icon: BarChart3},
 ];
 
