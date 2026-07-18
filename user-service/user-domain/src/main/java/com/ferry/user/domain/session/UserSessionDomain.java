@@ -14,7 +14,7 @@ public record UserSessionDomain(String id, Instant expirationTime, String userId
 			throw new IllegalArgumentException("expirationTime cannot be null");
 		}
 		if(userId == null){
-			throw new IllegalArgumentException("userId cannot be null");
+			throw new IllegalArgumentException("staffId cannot be null");
 		}
 		if(sessionType == null){
 			throw new IllegalArgumentException("session type cannot be null");

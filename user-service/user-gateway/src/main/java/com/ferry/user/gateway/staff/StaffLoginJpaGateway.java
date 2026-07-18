@@ -3,9 +3,12 @@ package com.ferry.user.gateway.staff;
 import com.ferry.user.core.staff.login.StaffLoginGateway;
 import com.ferry.user.domain.DescriptionDomain;
 import com.ferry.user.domain.FullNameDomain;
+import com.ferry.user.domain.UsernameDomain;
 import com.ferry.user.domain.session.UserSessionDomain;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.tenant.TenantDomain;
+import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.login.TenantLoginProjection;
 import com.ferry.user.gateway.session.entity.UserSessionJpaEntity;
 import com.ferry.user.gateway.session.entity.UserSessionTypeJpaEntity;
 import com.ferry.user.gateway.session.repository.UserSessionJpaRepository;
@@ -35,8 +38,8 @@ public class StaffLoginJpaGateway implements StaffLoginGateway{
 	private final JsonManager jsonManager;
 
 	@Override
-	public Optional<StaffLoginProjection> findByUsername(String username){
-		return staffJpaRepository.findByUsername(username, StaffLoginProjection.class);
+	public Optional<StaffLoginProjection> findByUsername(UsernameDomain username){
+		return staffJpaRepository.findByUsername(username.value(), StaffLoginProjection.class);
 	}
 
 	@Override
@@ -56,11 +59,8 @@ public class StaffLoginJpaGateway implements StaffLoginGateway{
 	}
 
 	@Override
-	public Optional<TenantDomain> findTenantById(String tenantId){
-		return tenantJpaRepository.findById(tenantId, TenantJpaEntity.class)
-				.map(tenant -> new TenantDomain(tenant.getId(), new FullNameDomain(tenant.getFullName()),
-						new DescriptionDomain(tenant.getDescription()), tenant.getVersion(), tenant.isDeleted(),
-						tenant.getCreatedAt(), tenant.getCreatedBy(), tenant.getUpdatedAt(), tenant.getUpdatedBy()));
+	public Optional<TenantLoginProjection> findTenantById(TenantIdDomain tenantId){
+		return tenantJpaRepository.findById(tenantId.value(), TenantLoginProjection.class);
 	}
 
 	@Override

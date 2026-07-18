@@ -1,7 +1,5 @@
 package com.ferry.utils.token;
 
-import lombok.SneakyThrows;
-
 import java.util.Map;
 
 /************************
@@ -9,11 +7,10 @@ import java.util.Map;
  * on Juli 2026         *
  ************************/
 
-public interface TokenManager{
+public interface TokenGenerator{
 	String generateRefreshToken();
 
-	@SneakyThrows
 	String hashToken(String token);
 
-	String generateAccessToken(String subject, Map<String, ?> claims, long expirationTimeInMillis);
+	String generateAccessToken(String subject, Map<String, ?> claims, long expirationTimeInSeconds);
 }

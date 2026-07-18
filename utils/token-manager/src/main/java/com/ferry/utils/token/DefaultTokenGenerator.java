@@ -16,7 +16,7 @@ import java.util.Map;
  ************************/
 
 @RequiredArgsConstructor
-public class DefaultTokenManager implements TokenManager{
+public class DefaultTokenGenerator implements TokenGenerator{
 	private static final Base64.Encoder BASE_64_ENCODER = Base64.getUrlEncoder().withoutPadding();
 	private static final SecureRandom SECURE_RANDOM;
 
@@ -48,11 +48,11 @@ public class DefaultTokenManager implements TokenManager{
 	}
 
 	@Override
-	public String generateAccessToken(String subject, Map<String, ?> claims, long expirationTimeInMillis){
+	public String generateAccessToken(String subject, Map<String, ?> claims, long expirationTimeInSeconds){
 		return Jwts.builder()
 				.subject(subject)
 				.claims(claims)
-				.expiration(new Date(System.currentTimeMillis() + expirationTimeInMillis))
+				.expiration(new Date(System.currentTimeMillis() + (expirationTimeInSeconds  * 1000L)))
 				.signWith(privateKey)
 				.compact();
 	}

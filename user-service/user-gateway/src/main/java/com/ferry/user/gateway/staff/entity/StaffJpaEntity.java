@@ -32,7 +32,7 @@ public class StaffJpaEntity{
 	@Column(nullable = false)
 	private String description;
 	@JoinColumn(nullable = false)
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private TenantJpaEntity tenant;
 	@Version
 	private Integer version;

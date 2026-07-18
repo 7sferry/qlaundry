@@ -1,8 +1,11 @@
 package com.ferry.user.core.staff.login;
 
+import com.ferry.user.domain.UsernameDomain;
 import com.ferry.user.domain.session.UserSessionDomain;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.tenant.TenantDomain;
+import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.login.TenantLoginProjection;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -13,9 +16,8 @@ import java.util.Optional;
  ************************/
 
 public interface StaffLoginGateway{
-	Optional<StaffLoginProjection> findByUsername(String username);
+	Optional<StaffLoginProjection> findByUsername(UsernameDomain username);
 	UserSessionDomain save(UserSessionDomain userSession);
-
-	Optional<TenantDomain> findTenantById(String tenantId);
+	Optional<TenantLoginProjection> findTenantById(TenantIdDomain tenantId);
 	void cache(String key, Object value, Duration duration);
 }

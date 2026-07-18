@@ -3,6 +3,7 @@ package com.ferry.user.webservice.staff.login;
 import com.ferry.user.core.staff.constant.TokenConstant;
 import com.ferry.user.core.staff.login.StaffLoginPresenter;
 import com.ferry.user.core.staff.login.StaffLoginResponse;
+import com.ferry.user.core.tools.TokenProcessor;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import org.springframework.http.HttpHeaders;
@@ -20,11 +21,13 @@ public class StaffLoginWebPresenter implements StaffLoginPresenter{
 	public static final String AUTH_PATH = "/auth";
 
 	private final HttpServletResponse servletResponse;
+	private final TokenProcessor tokenProcessor;
 
 	private ResponseEntity<StaffLoginWebResponse> responseEntity;
 
-	public StaffLoginWebPresenter(HttpServletResponse servletResponse){
+	public StaffLoginWebPresenter(HttpServletResponse servletResponse, TokenProcessor tokenProcessor){
 		this.servletResponse = servletResponse;
+		this.tokenProcessor = tokenProcessor;
 	}
 
 	@Override
@@ -38,7 +41,7 @@ public class StaffLoginWebPresenter implements StaffLoginPresenter{
 				.httpOnly(true)
 				.secure(false)
 				.path(AUTH_PATH)
-				.maxAge(TokenConstant.REFRESH_TOKEN_EXPIRATION_IN_SECONDS)
+				.maxAge(tokenProcessor.getRefreshTokenExpirationInSeconds())
 				.sameSite("Lax")
 				.build();
 	}

@@ -14,7 +14,7 @@ public record StaffAddressDomain(String id, String staffId, AddressLineDomain ad
                                  String updatedBy){
 	public StaffAddressDomain{
 		if(staffId == null || addressLine == null){
-			throw new IllegalArgumentException("User id and full address must not be null");
+			throw new IllegalArgumentException("User id and full addressLine must not be null");
 		}
 	}
 

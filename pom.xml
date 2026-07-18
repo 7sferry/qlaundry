@@ -11,10 +11,10 @@
 		<module>user-service/user-core</module>
 		<module>user-service/user-domain</module>
 		<module>utils/identity-generator</module>
-		<module>utils/redis-manager</module>
+		<module>utils/cache-tools</module>
 		<module>utils/token-manager</module>
 		<module>utils/internal-commons</module>
-		<module>utils/json-manager</module>
+		<module>utils/json-tools</module>
 	</modules>
 	<packaging>pom</packaging>
 	<description>qlaundry</description>
