@@ -2,6 +2,7 @@ package com.ferry.user.gateway.staff.repository;
 
 import com.ferry.user.domain.staff.StaffEmailFilter;
 import com.ferry.user.domain.staff.StaffFilter;
+import com.ferry.user.domain.staff.list.StaffEmailListProjection;
 import com.ferry.user.gateway.staff.entity.StaffEmailJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,5 +24,10 @@ public interface StaffEmailJpaRepository extends JpaRepository<StaffEmailJpaEnti
 			"where " +
 			"(:#{#filter?.staffId?.value} is null or s.staff.id = :#{#filter?.staffId?.value})")
 	<T> List<T> findAllWithFilter(@Param("filter") StaffEmailFilter filter, Class<T> clazz);
+
+	@Query("select new com.ferry.user.domain.staff.list.StaffEmailListProjection(s.staff.id, s.email) " +
+			"from StaffEmailJpaEntity s " +
+			"where s.staff.id in :staffIds and s.deleted = false")
+	List<StaffEmailListProjection> findAllByStaffIds(@Param("staffIds") List<String> staffIds);
 
 }

@@ -10,6 +10,31 @@ import {fallbackStaff} from './staffFallbackData';
 
 let localStaff: Staff[] = [...fallbackStaff];
 
+interface StaffListApiResponse {
+	staffs: {
+		description: string | null;
+		fullName: string;
+		createdAt: number;
+		username: string;
+		emails: { email: string }[];
+		phones: { phone: string }[];
+		addresses: { address: string }[];
+	}[];
+}
+
+function toStaff(item: StaffListApiResponse['staffs'][number]): Staff {
+	return {
+		id: item.username,
+		username: item.username,
+		fullName: item.fullName,
+		description: item.description ?? undefined,
+		emails: item.emails.map((e) => e.email),
+		phones: item.phones.map((p) => p.phone),
+		addresses: item.addresses.map((a) => a.address),
+		joinedAt: new Date(item.createdAt).toISOString(),
+	};
+}
+
 function newStaffFromInput(input: CreateStaffInput): Staff {
 	return {
 		id: `staff-${Date.now()}`,
@@ -25,8 +50,11 @@ function newStaffFromInput(input: CreateStaffInput): Staff {
 
 export class StaffRepositoryImpl implements StaffRepository {
 	async getStaffList(filters?: StaffFilters): Promise<Staff[]> {
+		const query = filters?.search ? `?fullName=${encodeURIComponent(filters.search)}` : '';
 		return withFallback<Staff[]>(
-				() => httpClient.get<Staff[]>('/api/staff'),
+				() => httpClient
+						.get<StaffListApiResponse>(`/staff/list${query}`)
+						.then((res) => res.staffs.map(toStaff)),
 				() => {
 					let result = [...localStaff];
 					if (filters?.search) {

@@ -3,6 +3,9 @@ package com.ferry.user.webservice.config;
 import com.ferry.user.core.staff.detail.DefaultStaffDetailUseCase;
 import com.ferry.user.core.staff.detail.StaffDetailGateway;
 import com.ferry.user.core.staff.detail.StaffDetailUseCase;
+import com.ferry.user.core.staff.list.DefaultStaffListUseCase;
+import com.ferry.user.core.staff.list.StaffListGateway;
+import com.ferry.user.core.staff.list.StaffListUseCase;
 import com.ferry.user.core.staff.login.DefaultStaffLoginUseCase;
 import com.ferry.user.core.staff.login.StaffLoginGateway;
 import com.ferry.user.core.staff.login.StaffLoginUseCase;
@@ -20,6 +23,7 @@ import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.gateway.session.repository.UserSessionJpaRepository;
 import com.ferry.user.gateway.session.repository.UserSessionTypeJpaRepository;
 import com.ferry.user.gateway.staff.StaffDetailJpaGateway;
+import com.ferry.user.gateway.staff.StaffListJpaGateway;
 import com.ferry.user.gateway.staff.StaffLoginJpaGateway;
 import com.ferry.user.gateway.staff.StaffRefreshTokenJpaGateway;
 import com.ferry.user.gateway.staff.StaffRegistrationJpaGateway;
@@ -133,6 +137,19 @@ public class UserWebConfig{
 	@Bean
 	StaffDetailUseCase staffDetailUseCase(StaffDetailGateway staffDetailGateway){
 		return new DefaultStaffDetailUseCase(staffDetailGateway);
+	}
+
+	@Bean
+	StaffListGateway staffListGateway(StaffJpaRepository staffJpaRepository,
+	                                  StaffEmailJpaRepository staffEmailJpaRepository,
+	                                  StaffPhoneJpaRepository staffPhoneJpaRepository,
+	                                  StaffAddressJpaRepository staffAddressJpaRepository){
+		return new StaffListJpaGateway(staffJpaRepository, staffEmailJpaRepository, staffPhoneJpaRepository, staffAddressJpaRepository);
+	}
+
+	@Bean
+	StaffListUseCase staffListUseCase(StaffListGateway staffListGateway){
+		return new DefaultStaffListUseCase(staffListGateway);
 	}
 
 	@Bean
