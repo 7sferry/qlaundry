@@ -3,7 +3,8 @@
  * on Juli 2026         *
  ************************/
 
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useState} from 'react';
+import {useOnceEffect} from '@/core/hooks/useOnceEffect';
 import type {DashboardStats} from '../domain/DashboardStats';
 import {dashboardUseCases} from '../application/DashboardUseCases';
 import {dashboardRepository} from '../infrastructure/DashboardRepositoryImpl';
@@ -15,12 +16,12 @@ export function useDashboard() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	useEffect(() => {
+	useOnceEffect(() => {
 		useCases.getStats()
 				.then(setStats)
 				.catch((err) => setError(err instanceof Error ? err.message : 'Gagal memuat statistik'))
 				.finally(() => setLoading(false));
-	}, []);
+	});
 
 	const refresh = useCallback(async () => {
 		setLoading(true);

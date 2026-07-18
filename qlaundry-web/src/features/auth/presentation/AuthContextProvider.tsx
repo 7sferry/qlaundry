@@ -3,7 +3,8 @@
  * on Juli 2026         *
  ************************/
 
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
+import {useOnceEffect} from '@/core/hooks/useOnceEffect';
 import type {LoginCredentials, RegisterData, User} from '../domain/User';
 import {authRepository} from '../infrastructure/AuthRepositoryImpl';
 import {LoginUseCase} from '../application/LoginUseCase';
@@ -15,17 +16,17 @@ const registerUseCase = new RegisterUseCase(authRepository);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}) => {
 	const [user, setUser] = useState<User | null>(null);
-	const [isLoading, setIsLoading] = useState(() => !!localStorage.getItem('ql_access_token'));
+	const [isLoading, setIsLoading] = useState(true);
 
-	useEffect(() => {
-		const token = localStorage.getItem('ql_access_token');
-		if (!token) return;
+	useOnceEffect(() => {
+		// The access token only lives in memory, so after a reload the session
+		// is restored through the refresh-token cookie inside getProfile().
 		authRepository
 				.getProfile()
 				.then(setUser)
-				.catch(() => localStorage.removeItem('ql_access_token'))
+				.catch(() => setUser(null))
 				.finally(() => setIsLoading(false));
-	}, []);
+	});
 
 	const login = useCallback(async (credentials: LoginCredentials) => {
 		const session = await loginUseCase.execute(credentials);

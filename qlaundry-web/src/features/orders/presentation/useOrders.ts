@@ -3,7 +3,8 @@
  * on Juli 2026         *
  ************************/
 
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useState} from 'react';
+import {useOnceEffect} from '@/core/hooks/useOnceEffect';
 import type {ClothingItem, CreateOrderInput, Order, UpdateOrderStatusInput} from '../domain/Order';
 import type {LaundryService} from '../domain/Service';
 import {orderUseCases} from '../application/OrderUseCases';
@@ -16,12 +17,12 @@ export function useOrders() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	useEffect(() => {
+	useOnceEffect(() => {
 		useCases.listOrders()
 				.then(setOrders)
 				.catch((err) => setError(err instanceof Error ? err.message : 'Gagal memuat pesanan'))
 				.finally(() => setLoading(false));
-	}, []);
+	});
 
 	const refresh = useCallback(async () => {
 		setLoading(true);
@@ -58,13 +59,13 @@ export function useServices() {
 	const [services, setServices] = useState<LaundryService[]>([]);
 	const [loading, setLoading] = useState(true);
 
-	useEffect(() => {
+	useOnceEffect(() => {
 		useCases
 				.listServices()
 				.then(setServices)
 				.catch(() => setServices([]))
 				.finally(() => setLoading(false));
-	}, []);
+	});
 
 	return {services, loading};
 }

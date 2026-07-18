@@ -3,7 +3,8 @@
  * on Juli 2026         *
  ************************/
 
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useState} from 'react';
+import {useOnceEffect} from '@/core/hooks/useOnceEffect';
 import type {CreateStaffInput, Staff, UpdateStaffInput} from '../domain/Staff';
 import {staffUseCases} from '../application/StaffUseCases';
 import {staffRepository} from '../infrastructure/StaffRepositoryImpl';
@@ -15,12 +16,12 @@ export function useStaff() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	useEffect(() => {
+	useOnceEffect(() => {
 		useCases.listStaff({})
 				.then(setStaff)
 				.catch((err) => setError(err instanceof Error ? err.message : 'Gagal memuat staf'))
 				.finally(() => setLoading(false));
-	}, []);
+	});
 
 	const refresh = useCallback(async (search?: string) => {
 		setLoading(true);

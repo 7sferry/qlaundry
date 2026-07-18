@@ -3,7 +3,8 @@
  * on Juli 2026         *
  ************************/
 
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useState} from 'react';
+import {useOnceEffect} from '@/core/hooks/useOnceEffect';
 import type {CreateCustomerInput, Customer, UpdateCustomerInput} from '../domain/Customer';
 import {customerUseCases} from '../application/CustomerUseCases';
 import {customerRepository} from '../infrastructure/CustomerRepositoryImpl';
@@ -15,12 +16,12 @@ export function useCustomers() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	useEffect(() => {
+	useOnceEffect(() => {
 		useCases.listCustomers({})
 				.then(setCustomers)
 				.catch((err) => setError(err instanceof Error ? err.message : 'Gagal memuat pelanggan'))
 				.finally(() => setLoading(false));
-	}, []);
+	});
 
 	const refresh = useCallback(async (search?: string) => {
 		setLoading(true);
