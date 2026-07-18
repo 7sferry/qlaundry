@@ -19,6 +19,7 @@ public record StaffPhoneDomain(String id, String staffId, PhoneDomain phone,
 	}
 
 	public static StaffPhoneDomain register(String userId, PhoneDomain phone, String createdBy){
-		return new StaffPhoneDomain(null, userId, phone, null, false, Instant.now(), createdBy, Instant.now(), createdBy);
+		Instant now = Instant.now();
+		return new StaffPhoneDomain(null, userId, phone, null, false, now, createdBy, now, createdBy);
 	}
 }

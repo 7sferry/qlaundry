@@ -19,6 +19,7 @@ public record StaffAddressDomain(String id, String staffId, AddressLineDomain ad
 	}
 
 	public static StaffAddressDomain register(String userId, AddressLineDomain fullAddress, String createdBy){
-		return new StaffAddressDomain(null, userId, fullAddress, null, false, Instant.now(), (createdBy), Instant.now(), (createdBy));
+		Instant now = Instant.now();
+		return new StaffAddressDomain(null, userId, fullAddress, null, false, now, createdBy, now, createdBy);
 	}
 }

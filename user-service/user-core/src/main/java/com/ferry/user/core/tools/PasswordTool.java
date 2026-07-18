@@ -11,5 +11,5 @@ import com.ferry.user.domain.RawPasswordDomain;
 public interface PasswordTool{
 	HashedPasswordDomain hash(RawPasswordDomain rawPasswordDomain);
 
-	boolean matches(RawPasswordDomain input, RawPasswordDomain stored);
+	boolean matches(String rawPassword, String hashedPassword);
 }

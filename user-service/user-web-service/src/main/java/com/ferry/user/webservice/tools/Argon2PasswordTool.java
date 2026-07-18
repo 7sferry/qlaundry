@@ -21,7 +21,7 @@ public class Argon2PasswordTool implements PasswordTool{
 	}
 
 	@Override
-	public boolean matches(RawPasswordDomain input, RawPasswordDomain stored){
-		return encoder.matches(input.value(), stored.value());
+	public boolean matches(String rawPassword, String hashedPassword){
+		return encoder.matches(rawPassword, hashedPassword);
 	}
 }

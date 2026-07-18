@@ -20,8 +20,8 @@ public record TenantDomain(String id, FullNameDomain fullName, DescriptionDomain
 	}
 
 	public static TenantDomain register(FullNameDomain name, DescriptionDomain description){
-		return new TenantDomain(null, name, description, null, false, Instant.now(), null,
-				Instant.now(), null);
+		Instant now = Instant.now();
+		return new TenantDomain(null, name, description, null, false, now, null, now, null);
 	}
 
 	public String descriptionValue(){

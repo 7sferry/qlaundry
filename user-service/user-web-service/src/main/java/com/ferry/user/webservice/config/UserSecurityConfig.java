@@ -37,7 +37,7 @@ public class UserSecurityConfig{
 				.sessionManagement(sessionManagementConfigurer ->
 						sessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(matcherRegistry -> matcherRegistry
-						.requestMatchers("/auth/staff/login", "/auth/staff/refresh", "/auth/staff/registration", "/auth/tenant/registration")
+						.requestMatchers("/auth/**")
 						.permitAll()
 						.anyRequest()
 						.authenticated())

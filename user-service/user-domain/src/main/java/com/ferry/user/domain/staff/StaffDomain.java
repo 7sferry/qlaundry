@@ -24,7 +24,8 @@ public record StaffDomain(String id, UsernameDomain username, HashedPasswordDoma
 
 	public static StaffDomain register(UsernameDomain username, HashedPasswordDomain password, FullNameDomain fullName,
 	                                   DescriptionDomain note, String tenantId, String createdBy){
-		return new StaffDomain(null, username, password, fullName, note, tenantId, null, false, Instant.now(), createdBy, Instant.now(), createdBy);
+		Instant now = Instant.now();
+		return new StaffDomain(null, username, password, fullName, note, tenantId, null, false, now, createdBy, now, createdBy);
 	}
 
 	public String usernameValue(){

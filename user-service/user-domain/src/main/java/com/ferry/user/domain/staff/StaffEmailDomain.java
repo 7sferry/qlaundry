@@ -19,6 +19,7 @@ public record StaffEmailDomain(String id, String staffId, EmailDomain email,
 	}
 
 	public static StaffEmailDomain register(String userId, EmailDomain email, String createdBy){
-		return new StaffEmailDomain(null, userId, email, null, false, Instant.now(), createdBy, Instant.now(), createdBy);
+		Instant now = Instant.now();
+		return new StaffEmailDomain(null, userId, email, null, false, now, createdBy, now, createdBy);
 	}
 }
