@@ -36,7 +36,7 @@ public class StaffLoginWebPresenter implements StaffLoginPresenter{
 				.httpOnly(true)
 				.secure(false)
 				.path(TokenConstant.AUTH_PATH)
-				.maxAge(tokenProcessor.getRefreshTokenExpirationInSeconds())
+				.maxAge(tokenProcessor.getRefreshDurationInSeconds())
 				.sameSite("Lax")
 				.build();
 	}

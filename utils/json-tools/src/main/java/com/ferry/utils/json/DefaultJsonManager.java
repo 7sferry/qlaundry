@@ -15,4 +15,10 @@ public class DefaultJsonManager implements JsonManager{
 	public String writeValueAsString(Object value){
 		return objectMapper.writeValueAsString(value);
 	}
+
+	@Override
+	public <T> T readValue(String value, Class<T> clazz){
+		return objectMapper.readValue(value, clazz);
+	}
+
 }

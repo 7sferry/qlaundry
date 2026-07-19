@@ -1,6 +1,7 @@
 package com.ferry.user.gateway.session.entity;
 
 import com.ferry.user.domain.session.SessionType;
+import com.ferry.user.domain.session.UserSessionDomain;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -34,4 +35,23 @@ public class UserSessionJpaEntity{
 	private Instant createdAt;
 	@Column(nullable = false)
 	private Instant updatedAt;
+
+	public static UserSessionJpaEntity construct(UserSessionDomain userSession, UserSessionTypeJpaEntity sessionType){
+		UserSessionJpaEntity entity = new UserSessionJpaEntity();
+		entity.id = userSession.id();
+		entity.createdAt = userSession.createdAt();
+		entity.expirationTime = userSession.expirationTime();
+		entity.userId = userSession.userId();
+		entity.sessionType = sessionType;
+		entity.updatedAt = userSession.updatedAt();
+		entity.version = userSession.version();
+		return entity;
+	}
+
+	public static UserSessionDomain construct(UserSessionJpaEntity saved, SessionType sessionType){
+		return new UserSessionDomain(saved.id, saved.expirationTime, saved.userId,
+				sessionType, saved.version, saved.createdAt,
+				saved.updatedAt);
+	}
+
 }

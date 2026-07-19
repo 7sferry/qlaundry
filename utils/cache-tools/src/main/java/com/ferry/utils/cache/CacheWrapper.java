@@ -5,5 +5,5 @@ package com.ferry.utils.cache;
  * on Juli 2026         *
  ************************/
 
-public record CacheWrapper<T>(T data, long expiresInSeconds) {
+public record CacheWrapper<T>(T data, long softExpirationTime) {
 }

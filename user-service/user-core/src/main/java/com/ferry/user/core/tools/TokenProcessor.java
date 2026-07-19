@@ -11,7 +11,9 @@ public interface TokenProcessor{
 	String generateRefreshToken();
 	String hashToken(String token);
 	String generateAccessToken(UserPrincipal userToken);
-	long getRefreshTokenExpirationInSeconds();
+	long getRefreshDurationInSeconds();
 
-	long getAccessTokenExpirationInSeconds();
+	long getAccessDurationInSeconds();
+
+	long getRotationDurationBeforeExpireInSeconds();
 }

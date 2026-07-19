@@ -49,12 +49,14 @@ public class UserSecurityConfig{
 	@SneakyThrows
 	@Bean
 	TokenProcessor tokenGenerator(@Value("${app.token.private-key}") String base64PrivateKey,
-	                              @Value("${app.token.refresh-token-expiration-in-seconds}") long refreshTokenExpirationInSeconds,
-	                              @Value("${app.token.access-token-expiration-in-seconds}") long accessTokenExpirationInSeconds){
+	                              @Value("${app.token.refresh-duration-in-seconds}") long refreshDurationInSeconds,
+	                              @Value("${app.token.rotation-duration-before-expire-in-seconds}") long rotationDurationBeforeExpireInSeconds,
+	                              @Value("${app.token.access-duration-in-seconds}") long accessDurationInSeconds){
 		PrivateKey privateKey = KeyFactory.getInstance("RSA")
 				.generatePrivate(new PKCS8EncodedKeySpec(Base64.getDecoder().decode(base64PrivateKey)));
 		DefaultTokenGenerator tokenManager = new DefaultTokenGenerator(privateKey);
-		return new DefaultTokenProcessor(tokenManager, refreshTokenExpirationInSeconds, accessTokenExpirationInSeconds);
+		return new DefaultTokenProcessor(tokenManager, refreshDurationInSeconds, accessDurationInSeconds,
+				rotationDurationBeforeExpireInSeconds);
 	}
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter){

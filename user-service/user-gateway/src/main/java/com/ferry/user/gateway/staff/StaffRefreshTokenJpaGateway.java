@@ -1,11 +1,13 @@
 package com.ferry.user.gateway.staff;
 
 import com.ferry.user.core.staff.refreshtoken.StaffRefreshTokenGateway;
-import com.ferry.user.domain.UsernameDomain;
+import com.ferry.user.domain.session.SessionType;
+import com.ferry.user.domain.session.UserSessionDomain;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
-import com.ferry.user.domain.staff.refresh.StaffRefreshTokenProjection;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
+import com.ferry.user.gateway.session.entity.UserSessionJpaEntity;
+import com.ferry.user.gateway.session.entity.UserSessionTypeJpaEntity;
 import com.ferry.user.gateway.session.repository.UserSessionJpaRepository;
 import com.ferry.user.gateway.session.repository.UserSessionTypeJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
@@ -23,12 +25,8 @@ import java.util.Optional;
 public class StaffRefreshTokenJpaGateway implements StaffRefreshTokenGateway{
 	private final StaffJpaRepository staffJpaRepository;
 	private final UserSessionJpaRepository userSessionJpaRepository;
+	private final UserSessionTypeJpaRepository userSessionTypeJpaRepository;
 	private final TenantJpaRepository tenantJpaRepository;
-
-	@Override
-	public Optional<StaffRefreshTokenProjection> findSessionById(String id){
-		return userSessionJpaRepository.findById(id, StaffRefreshTokenProjection.class);
-	}
 
 	@Override
 	public Optional<TenantLoginProjection> findTenantById(TenantIdDomain tenantId){
@@ -36,7 +34,25 @@ public class StaffRefreshTokenJpaGateway implements StaffRefreshTokenGateway{
 	}
 
 	@Override
-	public Optional<StaffLoginProjection> findByUsername(UsernameDomain usernameDomain){
-		return staffJpaRepository.findByUsername(usernameDomain.value(), StaffLoginProjection.class);
+	public Optional<StaffLoginProjection> findById(String id){
+		return staffJpaRepository.findById(id, StaffLoginProjection.class);
 	}
+
+	@Override
+	public Optional<UserSessionDomain> findSessionById(String sessionId){
+		return userSessionJpaRepository.findById(sessionId)
+				.map(e -> {
+					SessionType sessionType = SessionType.fromValue(e.getSessionType().getId()).orElseThrow();
+					return UserSessionJpaEntity.construct(e, sessionType);
+				});
+	}
+
+	@Override
+	public UserSessionDomain save(UserSessionDomain userSession){
+		UserSessionTypeJpaEntity sessionType = userSessionTypeJpaRepository.findById(userSession.sessionType().getValue())
+				.orElse(null);
+		UserSessionJpaEntity saved = userSessionJpaRepository.save(UserSessionJpaEntity.construct(userSession, sessionType));
+		return UserSessionJpaEntity.construct(saved, userSession.sessionType());
+	}
+
 }

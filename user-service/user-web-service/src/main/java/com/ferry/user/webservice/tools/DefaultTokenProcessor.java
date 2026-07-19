@@ -1,6 +1,5 @@
 package com.ferry.user.webservice.tools;
 
-import com.ferry.user.core.staff.constant.TokenConstant;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.domain.token.UserPrincipal;
 import com.ferry.utils.token.TokenGenerator;
@@ -17,8 +16,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class DefaultTokenProcessor implements TokenProcessor{
 	private final TokenGenerator tokenGenerator;
-	private final long refreshTokenExpirationInSeconds;
-	private final long accessTokenExpirationInSeconds;
+	private final long refreshDurationInSeconds;
+	private final long accessDurationInSeconds;
+	private final long rotationDurationBeforeExpireInSeconds;
 
 	@Override
 	public String generateRefreshToken(){
@@ -37,17 +37,22 @@ public class DefaultTokenProcessor implements TokenProcessor{
 		claims.put("type", userToken.sessionType());
 		claims.put("tenantName", userToken.tenantName());
 		claims.put("tenantId", userToken.tenantId());
-		return tokenGenerator.generateAccessToken(userToken.username(), claims, accessTokenExpirationInSeconds);
+		return tokenGenerator.generateAccessToken(userToken.username(), claims, accessDurationInSeconds);
 	}
 
 	@Override
-	public long getRefreshTokenExpirationInSeconds(){
-		return refreshTokenExpirationInSeconds;
+	public long getRefreshDurationInSeconds(){
+		return refreshDurationInSeconds;
 	}
 
 	@Override
-	public long getAccessTokenExpirationInSeconds(){
-		return accessTokenExpirationInSeconds;
+	public long getAccessDurationInSeconds(){
+		return accessDurationInSeconds;
+	}
+
+	@Override
+	public long getRotationDurationBeforeExpireInSeconds(){
+		return rotationDurationBeforeExpireInSeconds;
 	}
 
 }

@@ -20,6 +20,7 @@ import com.ferry.user.core.tenant.registration.TenantRegistrationGateway;
 import com.ferry.user.core.tenant.registration.TenantRegistrationUseCase;
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.core.tools.TokenProcessor;
+import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.gateway.session.repository.UserSessionJpaRepository;
 import com.ferry.user.gateway.session.repository.UserSessionTypeJpaRepository;
 import com.ferry.user.gateway.staff.StaffDetailJpaGateway;
@@ -34,13 +35,13 @@ import com.ferry.user.gateway.staff.repository.StaffPhoneJpaRepository;
 import com.ferry.user.gateway.tenant.TenantRegistrationJpaGateway;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import com.ferry.user.webservice.tools.Argon2PasswordTool;
-import com.ferry.utils.cache.DefaultStringCacheTemplate;
-import com.ferry.utils.cache.StringCacheTemplate;
+import com.ferry.user.webservice.tools.DefaultUserCacheManager;
+import com.ferry.utils.cache.CacheHandler;
+import com.ferry.utils.cache.DefaultCacheHandler;
 import com.ferry.utils.generator.IdGenerator;
 import com.ferry.utils.generator.UlidGenerator;
 import com.ferry.utils.json.DefaultJsonManager;
 import com.ferry.utils.json.JsonManager;
-import com.ferry.utils.token.TokenGenerator;
 import com.password4j.Argon2Function;
 import com.password4j.types.Argon2;
 import org.springframework.context.annotation.Bean;
@@ -101,19 +102,17 @@ public class UserWebConfig{
 
 	@Bean
 	StaffLoginUseCase staffLoginUseCase(StaffLoginGateway staffLoginGateway, PasswordTool passwordTool,
-	                                    TokenProcessor tokenProcessor){
-		return new DefaultStaffLoginUseCase(staffLoginGateway, passwordTool, tokenProcessor);
+	                                    TokenProcessor tokenProcessor, UserCacheManager userCacheManager){
+		return new DefaultStaffLoginUseCase(staffLoginGateway, passwordTool, tokenProcessor, userCacheManager);
 	}
 
 	@Bean
 	StaffLoginGateway staffLoginGateway(StaffJpaRepository staffJpaRepository,
 	                                    UserSessionJpaRepository userSessionJpaRepository,
 	                                    UserSessionTypeJpaRepository userSessionTypeJpaRepository,
-	                                    TenantJpaRepository tenantJpaRepository,
-	                                    StringCacheTemplate stringCacheTemplate,
-	                                    JsonManager jsonManager){
+	                                    TenantJpaRepository tenantJpaRepository){
 		return new StaffLoginJpaGateway(staffJpaRepository, userSessionJpaRepository, userSessionTypeJpaRepository,
-				tenantJpaRepository, stringCacheTemplate, jsonManager);
+				tenantJpaRepository);
 	}
 
 	@Bean
@@ -122,8 +121,13 @@ public class UserWebConfig{
 	}
 
 	@Bean
-	StringCacheTemplate stringCacheTemplate(StringRedisTemplate stringRedisTemplate){
-		return new DefaultStringCacheTemplate(stringRedisTemplate);
+	CacheHandler cacheHandler(StringRedisTemplate stringRedisTemplate, ObjectMapper objectMapper){
+		return new DefaultCacheHandler(stringRedisTemplate, objectMapper);
+	}
+
+	@Bean
+	UserCacheManager userCacheManager(CacheHandler cacheHandler, JsonManager jsonManager){
+		return new DefaultUserCacheManager(cacheHandler, jsonManager);
 	}
 
 	@Bean
@@ -155,14 +159,16 @@ public class UserWebConfig{
 	@Bean
 	StaffRefreshTokenGateway staffRefreshTokenGateway(StaffJpaRepository staffJpaRepository,
 	                                                  UserSessionJpaRepository userSessionJpaRepository,
+	                                                  UserSessionTypeJpaRepository userSessionTypeJpaRepository,
 	                                                  TenantJpaRepository tenantJpaRepository){
-		return new StaffRefreshTokenJpaGateway(staffJpaRepository, userSessionJpaRepository, tenantJpaRepository);
+		return new StaffRefreshTokenJpaGateway(staffJpaRepository, userSessionJpaRepository,
+				userSessionTypeJpaRepository, tenantJpaRepository);
 	}
 
 	@Bean
 	StaffRefreshTokenUseCase staffRefreshTokenUseCase(StaffRefreshTokenGateway staffRefreshTokenGateway,
-	                                                  TokenProcessor tokenProcessor){
-		return new DefaultStaffRefreshTokenUseCase(staffRefreshTokenGateway, tokenProcessor);
+	                                                  TokenProcessor tokenProcessor, UserCacheManager userCacheManager){
+		return new DefaultStaffRefreshTokenUseCase(staffRefreshTokenGateway, tokenProcessor, userCacheManager);
 	}
 
 }

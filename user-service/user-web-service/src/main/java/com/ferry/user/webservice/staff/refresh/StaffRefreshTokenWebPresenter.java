@@ -1,15 +1,13 @@
 package com.ferry.user.webservice.staff.refresh;
 
 import com.ferry.user.core.staff.constant.TokenConstant;
-import com.ferry.user.core.staff.login.StaffLoginPresenter;
-import com.ferry.user.core.staff.login.StaffLoginResponse;
 import com.ferry.user.core.staff.refreshtoken.StaffRefreshTokenPresenter;
 import com.ferry.user.core.staff.refreshtoken.StaffRefreshTokenResponse;
 import com.ferry.user.core.tools.TokenProcessor;
-import com.ferry.user.webservice.staff.login.StaffLoginWebResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 
@@ -30,7 +28,9 @@ public class StaffRefreshTokenWebPresenter implements StaffRefreshTokenPresenter
 	@Override
 	public void present(StaffRefreshTokenResponse response){
 		responseEntity = ResponseEntity.ok(new StaffRefreshTokenWebResponse(response.accessToken(), response.refreshToken()));
-//		servletResponse.addHeader(HttpHeaders.SET_COOKIE, getResponseCookie(response.refreshToken()).toString());
+		if(response.refreshToken() != null){
+			servletResponse.addHeader(HttpHeaders.SET_COOKIE, getResponseCookie(response.refreshToken()).toString());
+		}
 	}
 
 	private ResponseCookie getResponseCookie(String refreshToken){
@@ -38,7 +38,7 @@ public class StaffRefreshTokenWebPresenter implements StaffRefreshTokenPresenter
 				.httpOnly(true)
 				.secure(false)
 				.path(TokenConstant.AUTH_PATH)
-				.maxAge(tokenProcessor.getRefreshTokenExpirationInSeconds())
+				.maxAge(tokenProcessor.getRefreshDurationInSeconds())
 				.sameSite("Lax")
 				.build();
 	}

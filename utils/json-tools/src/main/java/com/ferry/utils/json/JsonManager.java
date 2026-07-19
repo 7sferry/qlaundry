@@ -7,4 +7,6 @@ package com.ferry.utils.json;
 
 public interface JsonManager{
 	String writeValueAsString(Object value);
+
+	<T> T readValue(String value, Class<T> clazz);
 }

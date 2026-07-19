@@ -19,6 +19,7 @@ import java.util.Optional;
 public interface StaffJpaRepository extends JpaRepository<StaffJpaEntity, String>{
 	boolean existsByUsername(String username);
 	<T> Optional<T> findByUsername(String username, Class<T> clazz);
+	<T> Optional<T> findById(String id, Class<T> clazz);
 
 	@Query("select s " +
 			"from StaffJpaEntity s " +

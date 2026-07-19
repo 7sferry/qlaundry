@@ -1,5 +1,7 @@
 package com.ferry.user.domain.session;
 
+import lombok.Builder;
+
 import java.time.Instant;
 
 /************************
@@ -7,6 +9,7 @@ import java.time.Instant;
  * on Juli 2026         *
  ************************/
 
+@Builder(toBuilder = true)
 public record UserSessionDomain(String id, Instant expirationTime, String userId, SessionType sessionType,
                                 Integer version, Instant createdAt, Instant updatedAt){
 	public UserSessionDomain{
@@ -14,7 +17,7 @@ public record UserSessionDomain(String id, Instant expirationTime, String userId
 			throw new IllegalArgumentException("expirationTime cannot be null");
 		}
 		if(userId == null){
-			throw new IllegalArgumentException("staffId cannot be null");
+			throw new IllegalArgumentException("userId cannot be null");
 		}
 		if(sessionType == null){
 			throw new IllegalArgumentException("session type cannot be null");
