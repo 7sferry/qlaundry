@@ -9,6 +9,9 @@ import com.ferry.user.core.staff.list.StaffListUseCase;
 import com.ferry.user.core.staff.login.DefaultStaffLoginUseCase;
 import com.ferry.user.core.staff.login.StaffLoginGateway;
 import com.ferry.user.core.staff.login.StaffLoginUseCase;
+import com.ferry.user.core.staff.logout.DefaultStaffLogoutUseCase;
+import com.ferry.user.core.staff.logout.StaffLogoutGateway;
+import com.ferry.user.core.staff.logout.StaffLogoutUseCase;
 import com.ferry.user.core.staff.refreshtoken.DefaultStaffRefreshTokenUseCase;
 import com.ferry.user.core.staff.refreshtoken.StaffRefreshTokenGateway;
 import com.ferry.user.core.staff.refreshtoken.StaffRefreshTokenUseCase;
@@ -23,11 +26,7 @@ import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.gateway.session.repository.UserSessionJpaRepository;
 import com.ferry.user.gateway.session.repository.UserSessionTypeJpaRepository;
-import com.ferry.user.gateway.staff.StaffDetailJpaGateway;
-import com.ferry.user.gateway.staff.StaffListJpaGateway;
-import com.ferry.user.gateway.staff.StaffLoginJpaGateway;
-import com.ferry.user.gateway.staff.StaffRefreshTokenJpaGateway;
-import com.ferry.user.gateway.staff.StaffRegistrationJpaGateway;
+import com.ferry.user.gateway.staff.*;
 import com.ferry.user.gateway.staff.repository.StaffAddressJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
@@ -169,6 +168,18 @@ public class UserWebConfig{
 	StaffRefreshTokenUseCase staffRefreshTokenUseCase(StaffRefreshTokenGateway staffRefreshTokenGateway,
 	                                                  TokenProcessor tokenProcessor, UserCacheManager userCacheManager){
 		return new DefaultStaffRefreshTokenUseCase(staffRefreshTokenGateway, tokenProcessor, userCacheManager);
+	}
+
+	@Bean
+	StaffLogoutGateway staffLogoutGateway(UserSessionJpaRepository userSessionJpaRepository,
+	                                      UserSessionTypeJpaRepository userSessionTypeJpaRepository){
+		return new StaffLogoutJpaGateway(userSessionJpaRepository, userSessionTypeJpaRepository);
+	}
+
+	@Bean
+	StaffLogoutUseCase staffLogoutUseCase(StaffLogoutGateway staffLogoutGateway, TokenProcessor tokenProcessor,
+	                                      UserCacheManager userCacheManager){
+		return new DefaultStaffLogoutUseCase(staffLogoutGateway, tokenProcessor, userCacheManager);
 	}
 
 }

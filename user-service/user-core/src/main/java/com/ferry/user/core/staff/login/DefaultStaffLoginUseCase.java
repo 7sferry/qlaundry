@@ -48,7 +48,7 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 		TenantIdDomain tenantId = new TenantIdDomain(staff.tenantId());
 		TenantLoginProjection tenant = gateway.findTenantById(tenantId)
 				.orElseThrow(() -> new NotFoundException("tenant not found"));
-		UserPrincipal userToken = new UserPrincipal(staff.username(),
+		UserPrincipal userToken = new UserPrincipal(staff.id(), staff.username(),
 				staff.fullName(), tenant.fullName(), staff.tenantId(), SessionType.STAFF);
 		String accessToken = tokenProcessor.generateAccessToken(userToken);
 		long cacheDurationInSeconds = tokenProcessor.getAccessDurationInSeconds()

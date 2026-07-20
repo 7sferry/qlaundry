@@ -51,25 +51,8 @@ function newStaffFromInput(input: CreateStaffInput): Staff {
 export class StaffRepositoryImpl implements StaffRepository {
 	async getStaffList(filters?: StaffFilters): Promise<Staff[]> {
 		const query = filters?.search ? `?fullName=${encodeURIComponent(filters.search)}` : '';
-		return withFallback<Staff[]>(
-				() => httpClient
-						.get<StaffListApiResponse>(`/staff/list${query}`)
-						.then((res) => res.staffs.map(toStaff)),
-				() => {
-					let result = [...localStaff];
-					if (filters?.search) {
-						const q = filters.search.toLowerCase();
-						result = result.filter(
-								(s) =>
-										s.fullName.toLowerCase().includes(q) ||
-										s.username.toLowerCase().includes(q) ||
-										s.phones.some((p) => p.includes(q)) ||
-										s.emails.some((e) => e.toLowerCase().includes(q)),
-						);
-					}
-					return result.sort((a, b) => a.fullName.localeCompare(b.fullName));
-				},
-		);
+		const res = await httpClient.get<StaffListApiResponse>(`/staff/list${query}`);
+		return res.staffs.map(toStaff);
 	}
 
 	async getStaffById(id: string): Promise<Staff> {
@@ -84,26 +67,18 @@ export class StaffRepositoryImpl implements StaffRepository {
 	}
 
 	async createStaff(input: CreateStaffInput): Promise<Staff> {
+		await httpClient.post<{ username: string }>('/auth/staff/registration', {
+			username: input.username,
+			password: input.password,
+			fullName: input.fullName,
+			description: input.description,
+			emails: input.emails,
+			phones: input.phones,
+			addresses: input.addresses,
+		});
 		const staff = newStaffFromInput(input);
-		return withFallback<Staff>(
-				async () => {
-					await httpClient.post<{ username: string }>('/auth/staff/registration', {
-						username: input.username,
-						password: input.password,
-						fullName: input.fullName,
-						description: input.description,
-						emails: input.emails,
-						phones: input.phones,
-						addresses: input.addresses,
-					});
-					localStaff = [staff, ...localStaff];
-					return staff;
-				},
-				() => {
-					localStaff = [staff, ...localStaff];
-					return staff;
-				},
-		);
+		localStaff = [staff, ...localStaff];
+		return staff;
 	}
 
 	async updateStaff(input: UpdateStaffInput): Promise<Staff> {

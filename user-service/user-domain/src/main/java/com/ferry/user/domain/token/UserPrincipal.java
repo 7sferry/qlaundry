@@ -10,6 +10,11 @@ import com.ferry.user.domain.tenant.TenantIdDomain;
  * on Juli 2026         *
  ************************/
 
-public record UserPrincipal(String username, String fullName, String tenantName,
+public record UserPrincipal(String userId, String username, String fullName, String tenantName,
                             String tenantId, SessionType sessionType){
+
+	public static UserPrincipal ofUserId(String userId){
+		return new UserPrincipal(userId, null, null, null, null, SessionType.STAFF);
+	}
+
 }

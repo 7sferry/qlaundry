@@ -28,6 +28,7 @@ export interface RegisterData {
 	phone?: string;
 	password: string;
 	outletName?: string;
+	address?: string;
 }
 
 export interface AuthTokens {

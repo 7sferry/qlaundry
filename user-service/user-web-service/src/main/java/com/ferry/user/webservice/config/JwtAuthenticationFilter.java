@@ -42,6 +42,7 @@ public class JwtAuthenticationFilter implements Filter{
 			return;
 		}
 		UserPrincipal principal = new UserPrincipal(
+				String.valueOf(payload.get("userId")),
 				String.valueOf(payload.get("sub")),
 				String.valueOf(payload.get("fullName")),
 				String.valueOf(payload.get("tenantName")),

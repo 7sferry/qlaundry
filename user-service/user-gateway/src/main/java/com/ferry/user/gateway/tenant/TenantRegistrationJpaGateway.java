@@ -7,6 +7,7 @@ import com.ferry.user.core.tenant.registration.TenantRegistrationGateway;
 import com.ferry.user.domain.DescriptionDomain;
 import com.ferry.user.domain.FullNameDomain;
 import com.ferry.user.domain.tenant.TenantDomain;
+import com.ferry.user.domain.token.UserPrincipal;
 import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
@@ -40,9 +41,9 @@ public class TenantRegistrationJpaGateway implements TenantRegistrationGateway{
 	}
 
 	@Override
-	public StaffRegistrationResponse registerAdmin(StaffRegistrationRequest request){
+	public StaffRegistrationResponse registerAdmin(StaffRegistrationRequest request, String userId){
 		StaffRegistrationResponse[] result = new StaffRegistrationResponse[1];
-		staffRegistrationUseCase.execute(request, response -> result[0] = response);
+		staffRegistrationUseCase.execute(request, UserPrincipal.ofUserId(userId), response -> result[0] = response);
 		return result[0];
 	}
 

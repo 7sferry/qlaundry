@@ -7,6 +7,7 @@ import com.ferry.user.domain.staff.StaffAddressDomain;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffEmailDomain;
 import com.ferry.user.domain.staff.StaffPhoneDomain;
+import com.ferry.user.domain.token.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -22,44 +23,46 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 	private final PasswordTool passwordTool;
 
 	@Override
-	public void execute(StaffRegistrationRequest request, StaffRegistrationPresenter presenter){
-		StaffDomain registeredUser = registerStaff(request);
-		saveEmail(request, registeredUser);
-		saveAddress(request, registeredUser);
-		savePhone(request, registeredUser);
+	public void execute(StaffRegistrationRequest request, UserPrincipal principal, StaffRegistrationPresenter presenter){
+		StaffDomain registeredUser = registerStaff(request, principal);
+		saveEmail(request, registeredUser, principal);
+		saveAddress(request, registeredUser, principal);
+		savePhone(request, registeredUser, principal);
 		presenter.present(new StaffRegistrationResponse(registeredUser));
 	}
 
-	private StaffDomain registerStaff(StaffRegistrationRequest request){
+	private StaffDomain registerStaff(StaffRegistrationRequest request, UserPrincipal principal){
 		UsernameDomain username = new UsernameDomain(request.username());
+		if(gateway.existsByUsername(username)){
+			throw new InvalidUsernameException("Username already exists");
+		}
 		HashedPasswordDomain hashedPassword = passwordTool.hash(new RawPasswordDomain(request.password()));
 		FullNameDomain fullName = new FullNameDomain(request.fullName());
 		DescriptionDomain note = new DescriptionDomain(request.description());
-		StaffDomain registered = StaffDomain.register(username, hashedPassword, fullName, note, request.tenantId(), request.createdBy());
-		if(gateway.existsByUsername(registered.username())){
-			throw new InvalidUsernameException("Username already exists");
-		}
+		StaffDomain registered = StaffDomain.register(username, hashedPassword, fullName, note, request.tenantId(),
+				principal.userId());
 		return gateway.save(registered);
 	}
 
-	private void savePhone(StaffRegistrationRequest request, StaffDomain registeredUser){
+	private void savePhone(StaffRegistrationRequest request, StaffDomain registeredUser, UserPrincipal principal){
 		List<String> phones = request.phones() == null ? List.of() : request.phones();
 		for(String phone : phones){
-			gateway.save(StaffPhoneDomain.register(registeredUser.id(), new PhoneDomain(phone), request.createdBy()));
+			gateway.save(StaffPhoneDomain.register(registeredUser.id(), new PhoneDomain(phone), principal.userId()));
 		}
 	}
 
-	private void saveAddress(StaffRegistrationRequest request, StaffDomain registeredUser){
+	private void saveAddress(StaffRegistrationRequest request, StaffDomain registeredUser, UserPrincipal principal){
 		List<String> addresses = request.addresses() == null ? List.of() : request.addresses();
 		for(String address : addresses){
-			gateway.save(StaffAddressDomain.register(registeredUser.id(), new AddressLineDomain(address), request.createdBy()));
+			gateway.save(StaffAddressDomain.register(registeredUser.id(), new AddressLineDomain(address),
+					principal.userId()));
 		}
 	}
 
-	private void saveEmail(StaffRegistrationRequest request, StaffDomain registeredUser){
+	private void saveEmail(StaffRegistrationRequest request, StaffDomain registeredUser, UserPrincipal principal){
 		List<String> emails = request.emails() == null ? List.of() : request.emails();
 		for(String email : emails){
-			gateway.save(StaffEmailDomain.register(registeredUser.id(), new EmailDomain(email), request.createdBy()));
+			gateway.save(StaffEmailDomain.register(registeredUser.id(), new EmailDomain(email), principal.userId()));
 		}
 	}
 

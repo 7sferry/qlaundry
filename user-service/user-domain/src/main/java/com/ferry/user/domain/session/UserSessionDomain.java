@@ -24,6 +24,10 @@ public record UserSessionDomain(String id, Instant expirationTime, String userId
 		}
 	}
 
+	public int sessionTypeValue(){
+		return sessionType.getValue();
+	}
+
 	public static UserSessionDomain create(String id, Instant expirationTime, String userId, SessionType sessionType){
 		Instant now = Instant.now();
 		return new UserSessionDomain(id, expirationTime, userId, sessionType, null, now, now);

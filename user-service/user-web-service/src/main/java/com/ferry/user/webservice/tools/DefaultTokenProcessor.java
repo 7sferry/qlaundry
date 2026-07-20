@@ -37,6 +37,7 @@ public class DefaultTokenProcessor implements TokenProcessor{
 		claims.put("type", userToken.sessionType());
 		claims.put("tenantName", userToken.tenantName());
 		claims.put("tenantId", userToken.tenantId());
+		claims.put("userId", userToken.userId());
 		return tokenGenerator.generateAccessToken(userToken.username(), claims, accessDurationInSeconds);
 	}
 

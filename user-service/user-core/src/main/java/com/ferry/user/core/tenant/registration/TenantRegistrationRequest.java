@@ -7,6 +7,6 @@ import java.util.List;
  * on Juli 2026         *
  ************************/
 
-public record TenantRegistrationRequest(String fullName, String description, String username, String password,
+public record TenantRegistrationRequest(String fullName, String tenantName, String description, String username, String password,
                                         List<String> emails, List<String> phones, List<String> addresses){
 }

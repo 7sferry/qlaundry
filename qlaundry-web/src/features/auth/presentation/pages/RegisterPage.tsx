@@ -5,35 +5,78 @@
 
 import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {ArrowLeft, ArrowRight, Building2, LockKeyhole, Mail, Phone, User2, WashingMachine} from 'lucide-react';
+import {ArrowLeft, ArrowRight, Building2, LockKeyhole, Mail, MapPin, Phone, User2, WashingMachine} from 'lucide-react';
 import {Button, Field, Input} from '@/core/ui';
 import {useAuth} from '../useAuth';
+
+const initialForm = {
+	fullName: '',
+	username: '',
+	email: '',
+	phone: '',
+	password: '',
+	confirmPassword: '',
+	outletName: '',
+	address: '',
+};
+
+type RegisterForm = typeof initialForm;
+type FieldKey = keyof RegisterForm;
+
+const REQUIRED_FIELDS: FieldKey[] = ['fullName', 'outletName', 'email', 'username', 'password', 'confirmPassword'];
+const REQUIRED_MESSAGE = 'Wajib diisi.';
+
+function validateForm(form: RegisterForm): Partial<Record<FieldKey, string>> {
+	const errors: Partial<Record<FieldKey, string>> = {};
+	for (const key of REQUIRED_FIELDS) {
+		if (!form[key].trim()) errors[key] = REQUIRED_MESSAGE;
+	}
+	if (!errors.password && form.password.length < 6) {
+		errors.password = 'Password minimal 6 karakter.';
+	}
+	if (!errors.confirmPassword && form.confirmPassword !== form.password) {
+		errors.confirmPassword = 'Konfirmasi password tidak cocok.';
+	}
+	return errors;
+}
 
 export default function RegisterPage() {
 	const {register} = useAuth();
 	const navigate = useNavigate();
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(false);
-	const [form, setForm] = useState({
-		fullName: '',
-		username: '',
-		email: '',
-		phone: '',
-		password: '',
-		confirmPassword: '',
-		outletName: '',
-	});
+	const [form, setForm] = useState<RegisterForm>(initialForm);
+	const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, string>>>({});
 
-	const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-			setForm((prev) => ({...prev, [key]: e.target.value}));
+	const update = (key: FieldKey) => (e: React.ChangeEvent<HTMLInputElement>) => {
+		const nextForm = {...form, [key]: e.target.value};
+		setForm(nextForm);
+		// Re-validate live so a message clears the moment the user fixes it,
+		// instead of only on the next submit attempt.
+		setFieldErrors((prevErrors) => {
+			if (Object.keys(prevErrors).length === 0) return prevErrors;
+			const errors = validateForm(nextForm);
+			const affected: FieldKey[] = key === 'password' || key === 'confirmPassword'
+					? ['password', 'confirmPassword']
+					: [key];
+			const merged = {...prevErrors};
+			for (const affectedKey of affected) {
+				if (errors[affectedKey]) merged[affectedKey] = errors[affectedKey];
+				else delete merged[affectedKey];
+			}
+			return merged;
+		});
+	};
 
 	const submit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setError('');
-		if (form.password !== form.confirmPassword) {
-			setError('Konfirmasi password tidak cocok.');
+		const errors = validateForm(form);
+		if (Object.keys(errors).length > 0) {
+			setFieldErrors(errors);
 			return;
 		}
+		setFieldErrors({});
 		setLoading(true);
 		try {
 			await register({
@@ -43,9 +86,11 @@ export default function RegisterPage() {
 				phone: form.phone,
 				password: form.password,
 				outletName: form.outletName,
+				address: form.address,
 			});
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Pendaftaran gagal.');
+		} finally {
 			setLoading(false);
 		}
 	};
@@ -63,50 +108,67 @@ export default function RegisterPage() {
 
 					{error && <div className="alert alert--error">{error}</div>}
 
-					<form onSubmit={submit} className="register-grid">
+					<form onSubmit={submit} className="register-grid" noValidate>
 						<div className="register-col">
-							<Field label="Nama lengkap" htmlFor="fullName">
+							<Field label="Nama lengkap" htmlFor="fullName" error={fieldErrors.fullName}>
 								<div className="input-with-icon">
 									<User2 size={16}/>
 									<Input
 											id="fullName"
 											required
+											autoComplete="off"
 											value={form.fullName}
 											onChange={update('fullName')}
 											placeholder="Ahmad Budi"
 									/>
 								</div>
 							</Field>
-							<Field label="Nama outlet / toko" htmlFor="outletName">
+							<Field label="Nama outlet / toko" htmlFor="outletName" error={fieldErrors.outletName}>
 								<div className="input-with-icon">
 									<Building2 size={16}/>
 									<Input
 											id="outletName"
+											required
+											autoComplete="off"
 											value={form.outletName}
 											onChange={update('outletName')}
 											placeholder="Laundry Bersih Jaya"
 									/>
 								</div>
 							</Field>
-							<Field label="Email" htmlFor="email">
+							<Field label="Alamat" htmlFor="address" error={fieldErrors.address}>
+								<div className="input-with-icon">
+									<MapPin size={16}/>
+									<Input
+											id="address"
+											autoComplete="off"
+											value={form.address}
+											onChange={update('address')}
+											placeholder="Jl. Merdeka No. 10, Jakarta"
+									/>
+								</div>
+							</Field>
+							<Field label="Email" htmlFor="email" error={fieldErrors.email}>
 								<div className="input-with-icon">
 									<Mail size={16}/>
 									<Input
 											id="email"
 											type="email"
 											required
+											autoComplete="off"
 											value={form.email}
 											onChange={update('email')}
 											placeholder="email@contoh.com"
 									/>
 								</div>
 							</Field>
-							<Field label="Nomor telepon" htmlFor="phone">
+							<Field label="Nomor telepon" htmlFor="phone" error={fieldErrors.phone}>
 								<div className="input-with-icon">
 									<Phone size={16}/>
 									<Input
 											id="phone"
 											type="tel"
+											autoComplete="off"
 											value={form.phone}
 											onChange={update('phone')}
 											placeholder="08xxxxxxxxxx"
@@ -116,19 +178,20 @@ export default function RegisterPage() {
 						</div>
 
 						<div className="register-col">
-							<Field label="Username" htmlFor="username">
+							<Field label="Username" htmlFor="username" error={fieldErrors.username}>
 								<div className="input-with-icon">
 									<User2 size={16}/>
 									<Input
 											id="username"
 											required
+											autoComplete="off"
 											value={form.username}
 											onChange={update('username')}
 											placeholder="Minimal 4 karakter"
 									/>
 								</div>
 							</Field>
-							<Field label="Password" htmlFor="password">
+							<Field label="Password" htmlFor="password" error={fieldErrors.password}>
 								<div className="input-with-icon">
 									<LockKeyhole size={16}/>
 									<Input
@@ -136,19 +199,21 @@ export default function RegisterPage() {
 											type="password"
 											required
 											minLength={6}
+											autoComplete="new-password"
 											value={form.password}
 											onChange={update('password')}
 											placeholder="Minimal 6 karakter"
 									/>
 								</div>
 							</Field>
-							<Field label="Konfirmasi password" htmlFor="confirmPassword">
+							<Field label="Konfirmasi password" htmlFor="confirmPassword" error={fieldErrors.confirmPassword}>
 								<div className="input-with-icon">
 									<LockKeyhole size={16}/>
 									<Input
 											id="confirmPassword"
 											type="password"
 											required
+											autoComplete="new-password"
 											value={form.confirmPassword}
 											onChange={update('confirmPassword')}
 											placeholder="Ulangi password"

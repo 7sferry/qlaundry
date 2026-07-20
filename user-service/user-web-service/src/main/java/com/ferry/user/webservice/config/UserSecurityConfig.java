@@ -33,6 +33,14 @@ import java.util.List;
 @Configuration
 public class UserSecurityConfig{
 
+	private static final String[] ALLOWED_MATCHERS = {
+			"/auth/tenant/registration",
+			"/auth/staff/login",
+			"/auth/staff/logout",
+			"/auth/staff/refresh",
+			"/auth/staff/registration"
+	};
+
 	@Bean
 	JwtAuthenticationFilter jwtAuthenticationFilter(TokenParser tokenParser){
 		return new JwtAuthenticationFilter(tokenParser);
@@ -75,7 +83,7 @@ public class UserSecurityConfig{
 				.sessionManagement(sessionManagementConfigurer ->
 						sessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(matcherRegistry -> matcherRegistry
-						.requestMatchers("/auth/tenant/registration", "/auth/staff/login", "/auth/staff/refresh", "/auth/staff/registration")
+						.requestMatchers(ALLOWED_MATCHERS)
 						.permitAll()
 						.anyRequest()
 						.authenticated())

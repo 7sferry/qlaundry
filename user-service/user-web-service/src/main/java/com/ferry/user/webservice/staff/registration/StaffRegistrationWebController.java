@@ -2,8 +2,10 @@ package com.ferry.user.webservice.staff.registration;
 
 import com.ferry.user.core.staff.registration.StaffRegistrationRequest;
 import com.ferry.user.core.staff.registration.StaffRegistrationUseCase;
+import com.ferry.user.domain.token.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,9 +23,10 @@ public class StaffRegistrationWebController{
 
 	@Transactional
 	@PostMapping("/auth/staff/registration")
-	public ResponseEntity<?> register(@RequestBody StaffRegistrationRequest request){
+	public ResponseEntity<?> register(@RequestBody StaffRegistrationRequest request,
+	                                  @AuthenticationPrincipal UserPrincipal principal){
 		StaffRegistrationWebPresenter presenter = new StaffRegistrationWebPresenter();
-		staffRegistrationUseCase.execute(request, presenter);
+		staffRegistrationUseCase.execute(request, principal, presenter);
 		return presenter.getResponseEntity();
 	}
 

@@ -458,6 +458,23 @@ button {
     box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
+.field--error .input,
+.field--error .select,
+.field--error .textarea {
+    border-color: var(--danger);
+}
+
+.field--error .input:focus,
+.field--error .select:focus,
+.field--error .textarea:focus {
+    box-shadow: 0 0 0 3px var(--danger-bg);
+}
+
+.field__error {
+    font-size: 12px;
+    color: var(--danger);
+}
+
 .input:disabled {
     opacity: .6;
     cursor: not-allowed;

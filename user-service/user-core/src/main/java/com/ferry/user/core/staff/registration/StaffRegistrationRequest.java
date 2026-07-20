@@ -7,7 +7,7 @@ import java.util.List;
  * on Juli 2026         *
  ************************/
 
-public record StaffRegistrationRequest(String username, String password, String fullName, String description, String tenantId,
-                                       List<String> emails, List<String> phones, List<String> addresses,
-                                       String createdBy){
+public record StaffRegistrationRequest(String username, String password, String fullName, String description,
+                                       String tenantId, List<String> emails, List<String> phones,
+                                       List<String> addresses){
 }

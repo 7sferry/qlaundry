@@ -5,15 +5,15 @@
 
 import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {ArrowRight, Building2, LockKeyhole, User2, WashingMachine} from 'lucide-react';
+import {ArrowRight, LockKeyhole, User2, WashingMachine} from 'lucide-react';
 import {Button, Field, Input} from '@/core/ui';
 import {useAuth} from '../useAuth';
 
 export default function LoginPage() {
 	const {login} = useAuth();
 	const navigate = useNavigate();
-	const [username, setUsername] = useState('admin');
-	const [password, setPassword] = useState('admin123');
+	const [username, setUsername] = useState('');
+	const [password, setPassword] = useState('');
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(false);
 
@@ -67,7 +67,7 @@ export default function LoginPage() {
 									id="username"
 									value={username}
 									onChange={(e) => setUsername(e.target.value)}
-									autoComplete="username"
+									autoComplete="off"
 									placeholder="Masukkan username"
 							/>
 						</div>
@@ -98,9 +98,6 @@ export default function LoginPage() {
 						</button>
 					</p>
 
-					<div className="demo-hint">
-						<Building2 size={12}/> Demo: <strong>admin</strong> / <strong>admin123</strong>
-					</div>
 				</form>
 			</div>
 	);
