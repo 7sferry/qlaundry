@@ -14,7 +14,6 @@ import com.ferry.user.gateway.staff.repository.StaffAddressJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffPhoneJpaRepository;
-import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
@@ -47,15 +46,7 @@ public class StaffRegistrationJpaGateway implements StaffRegistrationGateway{
 		entity.setCreatedAt(register.createdAt());
 		entity.setUpdatedBy(register.updatedBy());
 		StaffJpaEntity saved = staffJpaRepository.save(entity);
-		return constructUserDomain(saved);
-	}
-
-	private static StaffDomain constructUserDomain(StaffJpaEntity saved){
-		return new StaffDomain(saved.getId(), new UsernameDomain(saved.getUsername()),
-				new HashedPasswordDomain(saved.getPassword()), new FullNameDomain(saved.getFullName()),
-				new DescriptionDomain(saved.getDescription()), saved.getTenant().getId(), saved.getVersion(),
-				saved.isDeleted(), saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(),
-				saved.getUpdatedBy());
+		return StaffJpaEntity.constructUserDomain(saved);
 	}
 
 	@Override
@@ -69,12 +60,7 @@ public class StaffRegistrationJpaGateway implements StaffRegistrationGateway{
 		entity.setCreatedAt(register.createdAt());
 		entity.setUpdatedBy(register.updatedBy());
 		StaffEmailJpaEntity saved = staffEmailJpaRepository.save(entity);
-		return constructUserEmailDomain(saved);
-	}
-
-	private static StaffEmailDomain constructUserEmailDomain(StaffEmailJpaEntity saved){
-		return new StaffEmailDomain(saved.getId(), saved.getStaff().getId(), new EmailDomain(saved.getEmail()), saved.getVersion(),
-				saved.isDeleted(), saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
+		return StaffEmailJpaEntity.constructUserEmailDomain(saved);
 	}
 
 	@Override
@@ -88,12 +74,7 @@ public class StaffRegistrationJpaGateway implements StaffRegistrationGateway{
 		entity.setCreatedAt(register.createdAt());
 		entity.setUpdatedBy(register.updatedBy());
 		StaffAddressJpaEntity saved = staffAddressJpaRepository.save(entity);
-		return constructUserAddressDomain(saved);
-	}
-
-	private static StaffAddressDomain constructUserAddressDomain(StaffAddressJpaEntity saved){
-		return new StaffAddressDomain(saved.getId(), saved.getStaff().getId(), new AddressLineDomain(saved.getAddressLine()), saved.getVersion(),
-				saved.isDeleted(), saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
+		return StaffAddressJpaEntity.constructUserAddressDomain(saved);
 	}
 
 	@Override
@@ -107,7 +88,7 @@ public class StaffRegistrationJpaGateway implements StaffRegistrationGateway{
 		entity.setCreatedAt(register.createdAt());
 		entity.setUpdatedBy(register.updatedBy());
 		StaffPhoneJpaEntity saved = staffPhoneJpaRepository.save(entity);
-		return constructUserPhoneDomain(saved);
+		return StaffPhoneJpaEntity.constructUserPhoneDomain(saved);
 	}
 
 	@Override
@@ -115,8 +96,4 @@ public class StaffRegistrationJpaGateway implements StaffRegistrationGateway{
 		return staffJpaRepository.existsByUsername(username.value());
 	}
 
-	private static StaffPhoneDomain constructUserPhoneDomain(StaffPhoneJpaEntity saved){
-		return new StaffPhoneDomain(saved.getId(), saved.getStaff().getId(), new PhoneDomain(saved.getPhone()), saved.getVersion(),
-				saved.isDeleted(), saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
-	}
 }

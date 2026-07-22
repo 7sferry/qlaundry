@@ -1,5 +1,10 @@
 package com.ferry.user.gateway.staff.entity;
 
+import com.ferry.user.domain.DescriptionDomain;
+import com.ferry.user.domain.FullNameDomain;
+import com.ferry.user.domain.HashedPasswordDomain;
+import com.ferry.user.domain.UsernameDomain;
+import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
@@ -47,4 +52,11 @@ public class StaffJpaEntity{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
+	public static StaffDomain constructUserDomain(StaffJpaEntity saved){
+		return new StaffDomain(saved.id, new UsernameDomain(saved.username),
+				new HashedPasswordDomain(saved.password), new FullNameDomain(saved.fullName),
+				new DescriptionDomain(saved.description), saved.tenant.getId(), saved.version,
+				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt,
+				saved.updatedBy);
+	}
 }

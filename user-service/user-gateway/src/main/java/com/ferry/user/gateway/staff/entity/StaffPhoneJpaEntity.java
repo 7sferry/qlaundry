@@ -1,5 +1,7 @@
 package com.ferry.user.gateway.staff.entity;
 
+import com.ferry.user.domain.PhoneDomain;
+import com.ferry.user.domain.staff.StaffPhoneDomain;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,4 +42,8 @@ public class StaffPhoneJpaEntity{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
+	public static StaffPhoneDomain constructUserPhoneDomain(StaffPhoneJpaEntity saved){
+		return new StaffPhoneDomain(saved.id, saved.staff.getId(), new PhoneDomain(saved.phone), saved.version,
+				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+	}
 }

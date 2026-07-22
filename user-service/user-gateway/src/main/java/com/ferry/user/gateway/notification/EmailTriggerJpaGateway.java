@@ -55,7 +55,7 @@ public class EmailTriggerJpaGateway implements TenantRegistrationEmailGateway{
 		entity.setUpdatedBy(trigger.updatedBy());
 		entity.setUpdatedAt(trigger.updatedAt());
 		EmailTriggerJpaEntity saved = emailTriggerJpaRepository.save(entity);
-		return constructEmailTriggerDomain(saved);
+		return EmailTriggerJpaEntity.constructEmailTriggerDomain(saved);
 	}
 
 	@Override
@@ -94,13 +94,6 @@ public class EmailTriggerJpaGateway implements TenantRegistrationEmailGateway{
 			entity.setUpdatedAt(Instant.now());
 			emailTriggerJpaRepository.save(entity);
 		});
-	}
-
-	private static EmailTriggerDomain constructEmailTriggerDomain(EmailTriggerJpaEntity saved){
-		return new EmailTriggerDomain(saved.getId(), EmailTriggerType.valueOf(saved.getType()),
-				new EmailDomain(saved.getRecipient()), saved.getPayload(),
-				EmailTriggerStatus.valueOf(saved.getStatus()), saved.getVersion(), saved.isDeleted(),
-				saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 }

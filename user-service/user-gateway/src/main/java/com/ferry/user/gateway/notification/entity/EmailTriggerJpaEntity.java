@@ -1,5 +1,9 @@
 package com.ferry.user.gateway.notification.entity;
 
+import com.ferry.user.domain.EmailDomain;
+import com.ferry.user.domain.notification.EmailTriggerDomain;
+import com.ferry.user.domain.notification.EmailTriggerStatus;
+import com.ferry.user.domain.notification.EmailTriggerType;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -41,4 +45,11 @@ public class EmailTriggerJpaEntity{
 	private String updatedBy;
 	@Column(nullable = false)
 	private Instant updatedAt;
+
+	public static EmailTriggerDomain constructEmailTriggerDomain(EmailTriggerJpaEntity saved){
+		return new EmailTriggerDomain(saved.id, EmailTriggerType.valueOf(saved.type),
+				new EmailDomain(saved.recipient), saved.payload,
+				EmailTriggerStatus.valueOf(saved.status), saved.version, saved.deleted,
+				saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+	}
 }

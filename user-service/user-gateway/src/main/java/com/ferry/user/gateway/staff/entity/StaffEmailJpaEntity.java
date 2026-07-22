@@ -1,5 +1,7 @@
 package com.ferry.user.gateway.staff.entity;
 
+import com.ferry.user.domain.EmailDomain;
+import com.ferry.user.domain.staff.StaffEmailDomain;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,4 +42,8 @@ public class StaffEmailJpaEntity{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
+	public static StaffEmailDomain constructUserEmailDomain(StaffEmailJpaEntity saved){
+		return new StaffEmailDomain(saved.id, saved.staff.getId(), new EmailDomain(saved.email), saved.version,
+				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+	}
 }
