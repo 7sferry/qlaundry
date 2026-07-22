@@ -41,7 +41,7 @@ app:
     sender: email@email.com
   notification:
     stream:
-      tenant-registration:
-        key: notification:email:tenant-registration
+      email:
+        key: 'notification:email:'
         group: notification-service
         consumer: notification-web-service-1

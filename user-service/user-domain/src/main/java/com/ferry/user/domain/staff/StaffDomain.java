@@ -4,6 +4,7 @@ import com.ferry.user.domain.FullNameDomain;
 import com.ferry.user.domain.HashedPasswordDomain;
 import com.ferry.user.domain.DescriptionDomain;
 import com.ferry.user.domain.UsernameDomain;
+import lombok.Builder;
 
 import java.time.Instant;
 
@@ -12,6 +13,7 @@ import java.time.Instant;
  * on Juli 2026         *
  ************************/
 
+@Builder(toBuilder = true)
 public record StaffDomain(String id, UsernameDomain username, HashedPasswordDomain password, FullNameDomain fullName,
                           DescriptionDomain description, String tenantId,
                           Integer version, boolean deleted, Instant createdAt, String createdBy, Instant updatedAt,
@@ -41,6 +43,6 @@ public record StaffDomain(String id, UsernameDomain username, HashedPasswordDoma
 	}
 
 	public String passwordValue(){
-		return password.value();
+		return password != null ? password.value() : null;
 	}
 }

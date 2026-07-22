@@ -46,6 +46,20 @@ public class EmailTriggerJpaEntity{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
+	public static EmailTriggerJpaEntity create(String id, EmailTriggerDomain trigger){
+		EmailTriggerJpaEntity entity = new EmailTriggerJpaEntity();
+		entity.id = id;
+		entity.type = trigger.typeValue();
+		entity.recipient = trigger.recipientValue();
+		entity.payload = trigger.payload();
+		entity.status = trigger.statusValue();
+		entity.createdBy = trigger.createdBy();
+		entity.createdAt = trigger.createdAt();
+		entity.updatedBy = trigger.updatedBy();
+		entity.updatedAt = trigger.updatedAt();
+		return entity;
+	}
+
 	public static EmailTriggerDomain constructEmailTriggerDomain(EmailTriggerJpaEntity saved){
 		return new EmailTriggerDomain(saved.id, EmailTriggerType.valueOf(saved.type),
 				new EmailDomain(saved.recipient), saved.payload,

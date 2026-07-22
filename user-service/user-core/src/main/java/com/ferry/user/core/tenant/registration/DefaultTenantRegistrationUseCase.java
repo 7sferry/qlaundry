@@ -1,10 +1,13 @@
 package com.ferry.user.core.tenant.registration;
 
+import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.registration.StaffRegistrationRequest;
 import com.ferry.user.core.staff.registration.StaffRegistrationResponse;
 import com.ferry.user.domain.DescriptionDomain;
+import com.ferry.user.domain.EmailDomain;
 import com.ferry.user.domain.FullNameDomain;
 import com.ferry.user.domain.notification.EmailTriggerDomain;
+import com.ferry.user.domain.notification.EmailTriggerType;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.tenant.TenantDomain;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCase{
 	private final TenantRegistrationGateway gateway;
-	private final TenantRegistrationEmailGateway emailGateway;
+	private final UserEmailPublisher emailPublisher;
 
 	@Override
 	public void execute(TenantRegistrationRequest request, TenantRegistrationPresenter presenter){
@@ -48,8 +51,10 @@ public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCa
 		TenantRegistrationEmailMessage message = new TenantRegistrationEmailMessage(request.emails().getFirst(),
 				admin.fullNameValue(), admin.usernameValue(), tenant.id(), tenant.fullNameValue(),
 				tenant.descriptionValue(), tenant.createdAt());
-		EmailTriggerDomain trigger = emailGateway.save(message, tenant.createdBy());
-		emailGateway.publish(trigger);
+		EmailTriggerConfig config = new EmailTriggerConfig(message, tenant.createdBy(),
+				EmailTriggerType.TENANT_REGISTRATION, new EmailDomain(message.recipient()));
+		EmailTriggerDomain trigger = emailPublisher.save(config);
+		emailPublisher.publish(trigger);
 	}
 
 }

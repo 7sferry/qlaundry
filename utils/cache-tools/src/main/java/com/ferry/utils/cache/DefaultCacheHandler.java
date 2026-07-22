@@ -155,6 +155,11 @@ public class DefaultCacheHandler implements CacheHandler{
 	}
 
 	@Override
+	public Optional<String> getAndDelete(String key){
+		return Optional.ofNullable(redis.opsForValue().getAndDelete(key));
+	}
+
+	@Override
 	public boolean delete(String key){
 		return redis.delete(key);
 	}

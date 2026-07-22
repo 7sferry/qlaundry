@@ -14,6 +14,7 @@ import com.ferry.user.gateway.staff.repository.StaffAddressJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffPhoneJpaRepository;
+import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
@@ -34,60 +35,34 @@ public class StaffRegistrationJpaGateway implements StaffRegistrationGateway{
 
 	@Override
 	public StaffDomain save(StaffDomain register){
-		StaffJpaEntity entity = new StaffJpaEntity();
-		entity.setId(idGenerator.generateId());
-		entity.setUsername(register.usernameValue());
-		entity.setDescription(register.descriptionValue());
-		entity.setPassword(register.passwordValue());
-		entity.setFullName(register.fullNameValue());
-		entity.setTenant(tenantJpaRepository.findById(register.tenantId()).orElse(null));
-		entity.setCreatedBy(register.createdBy());
-		entity.setUpdatedAt(register.updatedAt());
-		entity.setCreatedAt(register.createdAt());
-		entity.setUpdatedBy(register.updatedBy());
+		String id = idGenerator.generateId();
+		TenantJpaEntity tenant = tenantJpaRepository.getReferenceById(register.tenantId());
+		StaffJpaEntity entity = StaffJpaEntity.create(id, register, tenant);
 		StaffJpaEntity saved = staffJpaRepository.save(entity);
-		return StaffJpaEntity.constructUserDomain(saved);
+		return StaffJpaEntity.construct(saved);
 	}
 
 	@Override
 	public StaffEmailDomain save(StaffEmailDomain register){
-		StaffEmailJpaEntity entity = new StaffEmailJpaEntity();
-		entity.setId(idGenerator.generateId());
-		entity.setStaff(staffJpaRepository.findById(register.staffId()).orElse(null));
-		entity.setEmail(register.email().value());
-		entity.setCreatedBy(register.createdBy());
-		entity.setUpdatedAt(register.updatedAt());
-		entity.setCreatedAt(register.createdAt());
-		entity.setUpdatedBy(register.updatedBy());
-		StaffEmailJpaEntity saved = staffEmailJpaRepository.save(entity);
+		String id = idGenerator.generateId();
+		StaffJpaEntity staff = staffJpaRepository.getReferenceById(register.staffId());
+		StaffEmailJpaEntity saved = staffEmailJpaRepository.save(StaffEmailJpaEntity.create(id, register, staff));
 		return StaffEmailJpaEntity.constructUserEmailDomain(saved);
 	}
 
 	@Override
 	public StaffAddressDomain save(StaffAddressDomain register){
-		StaffAddressJpaEntity entity = new StaffAddressJpaEntity();
-		entity.setId(idGenerator.generateId());
-		entity.setStaff(staffJpaRepository.findById(register.staffId()).orElse(null));
-		entity.setAddressLine(register.addressLine().value());
-		entity.setCreatedBy(register.createdBy());
-		entity.setUpdatedAt(register.updatedAt());
-		entity.setCreatedAt(register.createdAt());
-		entity.setUpdatedBy(register.updatedBy());
-		StaffAddressJpaEntity saved = staffAddressJpaRepository.save(entity);
+		String id = idGenerator.generateId();
+		StaffJpaEntity staff = staffJpaRepository.getReferenceById(register.staffId());
+		StaffAddressJpaEntity saved = staffAddressJpaRepository.save(StaffAddressJpaEntity.create(id, register, staff));
 		return StaffAddressJpaEntity.constructUserAddressDomain(saved);
 	}
 
 	@Override
 	public StaffPhoneDomain save(StaffPhoneDomain register){
-		StaffPhoneJpaEntity entity = new StaffPhoneJpaEntity();
-		entity.setId(idGenerator.generateId());
-		entity.setStaff(staffJpaRepository.findById(register.staffId()).orElse(null));
-		entity.setPhone(register.phone().value());
-		entity.setCreatedBy(register.createdBy());
-		entity.setUpdatedAt(register.updatedAt());
-		entity.setCreatedAt(register.createdAt());
-		entity.setUpdatedBy(register.updatedBy());
-		StaffPhoneJpaEntity saved = staffPhoneJpaRepository.save(entity);
+		String id = idGenerator.generateId();
+		StaffJpaEntity staff = staffJpaRepository.getReferenceById(register.staffId());
+		StaffPhoneJpaEntity saved = staffPhoneJpaRepository.save(StaffPhoneJpaEntity.create(id, register, staff));
 		return StaffPhoneJpaEntity.constructUserPhoneDomain(saved);
 	}
 

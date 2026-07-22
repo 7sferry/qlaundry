@@ -20,5 +20,7 @@ public interface UserCacheManager{
 	<T> Optional<T> get(String key, Class<T> clazz);
 	Optional<String> get(String key);
 
+	Optional<String> getAndDelete(String key);
+
 	boolean delete(String key);
 }

@@ -1,5 +1,6 @@
 package com.ferry.user.gateway.tenant.entity;
 
+import com.ferry.user.domain.tenant.TenantDomain;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,4 +38,18 @@ public class TenantJpaEntity{
 	private String updatedBy;
 	@Column(nullable = false)
 	private Instant updatedAt;
+
+	public static TenantJpaEntity create(String id, TenantDomain tenant){
+		TenantJpaEntity entity = new TenantJpaEntity();
+		entity.id = id;
+		entity.createdAt = tenant.createdAt();
+		entity.updatedAt = tenant.updatedAt();
+		entity.createdBy = entity.id;
+		entity.updatedBy = entity.id;
+		entity.description = tenant.descriptionValue();
+		entity.fullName = tenant.fullNameValue();
+		entity.version = tenant.version();
+		return entity;
+	}
+
 }

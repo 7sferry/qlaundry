@@ -1,7 +1,7 @@
 package com.ferry.user.gateway.staff;
 
 import com.ferry.user.core.staff.list.StaffListGateway;
-import com.ferry.user.domain.staff.StaffListFilter;
+import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.staff.list.StaffAddressListProjection;
 import com.ferry.user.domain.staff.list.StaffEmailListProjection;
 import com.ferry.user.domain.staff.list.StaffListProjection;
@@ -27,22 +27,22 @@ public class StaffListJpaGateway implements StaffListGateway{
 	private final StaffAddressJpaRepository addressJpaRepository;
 
 	@Override
-	public List<StaffListProjection> findByFilter(StaffListFilter filter){
+	public List<StaffListProjection> findByFilter(StaffFilter filter){
 		return staffJpaRepository.findAllWithFilter(filter, StaffListProjection.class);
 	}
 
 	@Override
-	public List<StaffPhoneListProjection> findPhonesByStaffIds(List<String> staffIds){
-		return phoneJpaRepository.findAllByStaffIds(staffIds);
+	public List<StaffPhoneListProjection> findPhonesByFilter(StaffPhoneFilter filter){
+		return phoneJpaRepository.findAllWithFilter(filter, StaffPhoneListProjection.class);
 	}
 
 	@Override
-	public List<StaffEmailListProjection> findEmailsByStaffIds(List<String> staffIds){
-		return emailJpaRepository.findAllByStaffIds(staffIds);
+	public List<StaffEmailListProjection> findEmailsByFilter(StaffEmailFilter filter){
+		return emailJpaRepository.findAllWithFilter(filter, StaffEmailListProjection.class);
 	}
 
 	@Override
-	public List<StaffAddressListProjection> findAddressesByStaffIds(List<String> staffIds){
-		return addressJpaRepository.findAllByStaffIds(staffIds);
+	public List<StaffAddressListProjection> findAddressesByFilter(StaffAddressFilter filter){
+		return addressJpaRepository.findAllWithFilter(filter, StaffAddressListProjection.class);
 	}
 }

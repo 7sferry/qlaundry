@@ -1,14 +1,15 @@
 package com.ferry.user.gateway.staff;
 
 import com.ferry.user.core.staff.detail.StaffDetailGateway;
+import com.ferry.user.domain.UsernameDomain;
 import com.ferry.user.domain.staff.StaffAddressFilter;
 import com.ferry.user.domain.staff.StaffEmailFilter;
-import com.ferry.user.domain.staff.StaffFilter;
 import com.ferry.user.domain.staff.StaffPhoneFilter;
 import com.ferry.user.domain.staff.detail.StaffAddressDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffEmailDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffPhoneDetailProjection;
+import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.gateway.staff.repository.StaffAddressJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
@@ -31,8 +32,8 @@ public class StaffDetailJpaGateway implements StaffDetailGateway{
 	private final StaffAddressJpaRepository addressJpaRepository;
 
 	@Override
-	public Optional<StaffDetailProjection> findByFilter(StaffFilter filter){
-		return staffJpaRepository.findWithFilter(filter, StaffDetailProjection.class);
+	public Optional<StaffDetailProjection> findDetail(UsernameDomain username, TenantIdDomain tenantId){
+		return staffJpaRepository.findByUsernameAndTenantId(username.value(), tenantId.value(), StaffDetailProjection.class);
 	}
 
 	@Override

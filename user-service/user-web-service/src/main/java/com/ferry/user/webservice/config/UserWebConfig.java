@@ -3,6 +3,9 @@ package com.ferry.user.webservice.config;
 import com.ferry.user.core.staff.detail.DefaultStaffDetailUseCase;
 import com.ferry.user.core.staff.detail.StaffDetailGateway;
 import com.ferry.user.core.staff.detail.StaffDetailUseCase;
+import com.ferry.user.core.staff.forgotpassword.DefaultStaffForgottenPasswordUseCase;
+import com.ferry.user.core.staff.forgotpassword.StaffForgottenPasswordGateway;
+import com.ferry.user.core.staff.forgotpassword.StaffForgottenPasswordUseCase;
 import com.ferry.user.core.staff.list.DefaultStaffListUseCase;
 import com.ferry.user.core.staff.list.StaffListGateway;
 import com.ferry.user.core.staff.list.StaffListUseCase;
@@ -18,14 +21,19 @@ import com.ferry.user.core.staff.refreshtoken.StaffRefreshTokenUseCase;
 import com.ferry.user.core.staff.registration.DefaultStaffRegistrationUseCase;
 import com.ferry.user.core.staff.registration.StaffRegistrationGateway;
 import com.ferry.user.core.staff.registration.StaffRegistrationUseCase;
+import com.ferry.user.core.staff.resetpassword.DefaultStaffResetPasswordUseCase;
+import com.ferry.user.core.staff.resetpassword.StaffResetPasswordGateway;
+import com.ferry.user.core.staff.resetpassword.StaffResetPasswordUseCase;
+import com.ferry.user.core.staff.submitotp.DefaultStaffSubmitOtpUseCase;
+import com.ferry.user.core.staff.submitotp.StaffSubmitOtpUseCase;
 import com.ferry.user.core.tenant.registration.DefaultTenantRegistrationUseCase;
-import com.ferry.user.core.tenant.registration.TenantRegistrationEmailGateway;
+import com.ferry.user.core.tenant.registration.UserEmailPublisher;
 import com.ferry.user.core.tenant.registration.TenantRegistrationGateway;
 import com.ferry.user.core.tenant.registration.TenantRegistrationUseCase;
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.gateway.notification.EmailTriggerJpaGateway;
+import com.ferry.user.gateway.notification.UserEmailRedisPublisher;
 import com.ferry.user.gateway.notification.repository.EmailTriggerJpaRepository;
 import com.ferry.user.gateway.session.repository.UserSessionJpaRepository;
 import com.ferry.user.gateway.session.repository.UserSessionTypeJpaRepository;
@@ -69,17 +77,18 @@ public class UserWebConfig{
 	}
 
 	@Bean
-	TenantRegistrationEmailGateway tenantRegistrationEmailGateway(EmailTriggerJpaRepository emailTriggerJpaRepository,
-	                                                              IdGenerator idGenerator, JsonManager jsonManager,
-	                                                              StringRedisTemplate stringRedisTemplate,
-	                                                              @Value("${app.notification.stream.tenant-registration.key}") String streamKey){
-		return new EmailTriggerJpaGateway(emailTriggerJpaRepository, idGenerator, jsonManager, stringRedisTemplate, streamKey);
+	UserEmailPublisher tenantRegistrationEmailGateway(EmailTriggerJpaRepository emailTriggerJpaRepository,
+	                                                  IdGenerator idGenerator, JsonManager jsonManager,
+	                                                  StringRedisTemplate stringRedisTemplate,
+	                                                  @Value("${app.notification.stream.email.key}") String streamEmailKey){
+		return new UserEmailRedisPublisher(emailTriggerJpaRepository, idGenerator, jsonManager, stringRedisTemplate,
+				streamEmailKey);
 	}
 
 	@Bean
 	TenantRegistrationUseCase tenantRegistrationUseCase(TenantRegistrationGateway tenantRegistrationGateway,
-	                                                    TenantRegistrationEmailGateway tenantRegistrationEmailGateway){
-		return new DefaultTenantRegistrationUseCase(tenantRegistrationGateway, tenantRegistrationEmailGateway);
+	                                                    UserEmailPublisher emailPublisher){
+		return new DefaultTenantRegistrationUseCase(tenantRegistrationGateway, emailPublisher);
 	}
 
 	@Bean
@@ -171,7 +180,7 @@ public class UserWebConfig{
 	@Bean
 	StaffRefreshTokenGateway staffRefreshTokenGateway(StaffJpaRepository staffJpaRepository,
 	                                                  UserSessionJpaRepository userSessionJpaRepository,
-	                                                  UserSessionTypeJpaRepository userSessionTypeJpaRepository,
+													  UserSessionTypeJpaRepository userSessionTypeJpaRepository,
 	                                                  TenantJpaRepository tenantJpaRepository){
 		return new StaffRefreshTokenJpaGateway(staffJpaRepository, userSessionJpaRepository,
 				userSessionTypeJpaRepository, tenantJpaRepository);
@@ -193,6 +202,35 @@ public class UserWebConfig{
 	StaffLogoutUseCase staffLogoutUseCase(StaffLogoutGateway staffLogoutGateway, TokenProcessor tokenProcessor,
 	                                      UserCacheManager userCacheManager){
 		return new DefaultStaffLogoutUseCase(staffLogoutGateway, tokenProcessor, userCacheManager);
+	}
+
+	@Bean
+	StaffForgottenPasswordGateway staffForgottenPasswordGateway(StaffEmailJpaRepository staffEmailJpaRepository){
+		return new StaffForgottenPasswordJpaGateway(staffEmailJpaRepository);
+	}
+
+	@Bean
+	StaffForgottenPasswordUseCase staffForgottenPasswordUseCase(StaffForgottenPasswordGateway staffForgottenPasswordGateway,
+	                                                            UserEmailPublisher emailPublisher,
+	                                                            UserCacheManager userCacheManager){
+		return new DefaultStaffForgottenPasswordUseCase(staffForgottenPasswordGateway, emailPublisher, userCacheManager);
+	}
+
+	@Bean
+	StaffSubmitOtpUseCase staffSubmitOtpUseCase(UserCacheManager userCacheManager){
+		return new DefaultStaffSubmitOtpUseCase(userCacheManager);
+	}
+
+	@Bean
+	StaffResetPasswordGateway staffResetPasswordGateway(StaffJpaRepository staffJpaRepository,
+	                                                    TenantJpaRepository tenantJpaRepository){
+		return new StaffResetPasswordJpaGateway(staffJpaRepository, tenantJpaRepository);
+	}
+
+	@Bean
+	StaffResetPasswordUseCase staffResetPasswordUseCase(StaffResetPasswordGateway staffResetPasswordGateway,
+	                                                    PasswordTool passwordTool, UserCacheManager userCacheManager){
+		return new DefaultStaffResetPasswordUseCase(staffResetPasswordGateway, passwordTool, userCacheManager);
 	}
 
 }

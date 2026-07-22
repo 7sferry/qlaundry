@@ -6,5 +6,6 @@ package com.ferry.notification.domain;
  ************************/
 
 public enum EmailType{
-	TENANT_REGISTRATION
+	TENANT_REGISTRATION,
+	FORGOTTEN_PASSWORD
 }

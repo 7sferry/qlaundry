@@ -13,6 +13,7 @@ import {
 } from '@/core/auth/tokenStore';
 import {refreshAccessToken} from '@/core/auth/refreshAccessToken';
 import type {AuthRepository} from '../domain/AuthRepository';
+import {ResetSessionExpiredError} from '../domain/errors';
 import type {AuthSession, LoginCredentials, RegisterData, User} from '../domain/User';
 
 interface LoginApiResponse {
@@ -84,6 +85,34 @@ export class AuthRepositoryImpl implements AuthRepository {
 		} finally {
 			setAccessToken(null);
 			clearRefreshTokenCookie();
+		}
+	}
+
+	async requestPasswordReset(username: string): Promise<string> {
+		try {
+			const response = await httpClient.post<{ email: string }>('/auth/staff/forgottenPassword', {username});
+			return response.email;
+		} catch {
+			throw new Error('Gagal mengirim kode verifikasi. Coba lagi nanti.');
+		}
+	}
+
+	async submitOtp(username: string, otp: string): Promise<string> {
+		try {
+			const response = await httpClient.post<{ resetToken: string }>('/auth/staff/submitOtp', {username, otp});
+			return response.resetToken;
+		} catch {
+			throw new Error('Kode verifikasi salah atau sudah kedaluwarsa.');
+		}
+	}
+
+	async resetPassword(username: string, password: string, resetToken: string): Promise<void> {
+		try {
+			await httpClient.post<{ message: string }>('/auth/staff/resetPassword', {username, password, resetToken});
+		} catch {
+			// The backend only rejects this call when the single-use token is
+			// expired or already consumed — the flow must restart from the top.
+			throw new ResetSessionExpiredError();
 		}
 	}
 

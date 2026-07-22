@@ -1,9 +1,15 @@
 package com.ferry.user.domain.staff;
 
+import lombok.Builder;
+
+import java.util.Collection;
+import java.util.List;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Juli 2026         *
  ************************/
 
-public record StaffEmailFilter(StaffIdDomain staffId){
+@Builder
+public record StaffEmailFilter(String staffId, Collection<String> staffIds) {
 }

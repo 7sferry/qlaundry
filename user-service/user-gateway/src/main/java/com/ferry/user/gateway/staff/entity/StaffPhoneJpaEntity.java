@@ -24,9 +24,11 @@ public class StaffPhoneJpaEntity{
 	@Id
 	@Column(nullable = false, length = 50)
 	private String id;
-	@JoinColumn(nullable = false)
-	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(nullable = false, insertable = false, updatable = false)
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private StaffJpaEntity staff;
+	@Column(name = "staff_id")
+	private String staffId;
 	@Column(nullable = false, length = 20)
 	private String phone;
 	@Version
@@ -42,8 +44,22 @@ public class StaffPhoneJpaEntity{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
+	public static StaffPhoneJpaEntity create(String id, StaffPhoneDomain register, StaffJpaEntity staff){
+		StaffPhoneJpaEntity entity = new StaffPhoneJpaEntity();
+		entity.id = id;
+		entity.staffId = register.staffId();
+		entity.staff = staff;
+		entity.phone = register.phone().value();
+		entity.createdBy = register.createdBy();
+		entity.updatedAt = register.updatedAt();
+		entity.createdAt = register.createdAt();
+		entity.updatedBy = register.updatedBy();
+		entity.version = register.version();
+		return entity;
+	}
+
 	public static StaffPhoneDomain constructUserPhoneDomain(StaffPhoneJpaEntity saved){
-		return new StaffPhoneDomain(saved.id, saved.staff.getId(), new PhoneDomain(saved.phone), saved.version,
+		return new StaffPhoneDomain(saved.id, saved.staffId, new PhoneDomain(saved.phone), saved.version,
 				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
 	}
 }

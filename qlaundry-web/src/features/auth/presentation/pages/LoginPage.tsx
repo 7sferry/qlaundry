@@ -92,6 +92,13 @@ export default function LoginPage() {
 					</Button>
 
 					<p className="auth-switch">
+						Lupa password?{' '}
+						<button type="button" onClick={() => navigate('/forgot-password')}>
+							Atur ulang di sini
+						</button>
+					</p>
+
+					<p className="auth-switch">
 						Belum punya akun?{' '}
 						<button type="button" onClick={() => navigate('/register')}>
 							Daftar sekarang

@@ -1,7 +1,6 @@
 package com.ferry.user.gateway.staff;
 
 import com.ferry.user.core.staff.refreshtoken.StaffRefreshTokenGateway;
-import com.ferry.user.domain.session.SessionType;
 import com.ferry.user.domain.session.UserSessionDomain;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.tenant.TenantIdDomain;
@@ -41,18 +40,14 @@ public class StaffRefreshTokenJpaGateway implements StaffRefreshTokenGateway{
 	@Override
 	public Optional<UserSessionDomain> findSessionById(String sessionId){
 		return userSessionJpaRepository.findById(sessionId)
-				.map(e -> {
-					SessionType sessionType = SessionType.fromValue(e.getSessionType().getId()).orElseThrow();
-					return UserSessionJpaEntity.construct(e, sessionType);
-				});
+				.map(UserSessionJpaEntity::construct);
 	}
 
 	@Override
 	public UserSessionDomain save(UserSessionDomain userSession){
-		UserSessionTypeJpaEntity sessionType = userSessionTypeJpaRepository.findById(userSession.sessionType().getValue())
-				.orElse(null);
+		UserSessionTypeJpaEntity sessionType = userSessionTypeJpaRepository.getReferenceById(userSession.sessionTypeValue());
 		UserSessionJpaEntity saved = userSessionJpaRepository.save(UserSessionJpaEntity.construct(userSession, sessionType));
-		return UserSessionJpaEntity.construct(saved, userSession.sessionType());
+		return UserSessionJpaEntity.construct(saved);
 	}
 
 }

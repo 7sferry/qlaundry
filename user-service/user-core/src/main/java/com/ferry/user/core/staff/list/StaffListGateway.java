@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.list;
 
-import com.ferry.user.domain.staff.StaffListFilter;
+import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.staff.list.StaffAddressListProjection;
 import com.ferry.user.domain.staff.list.StaffEmailListProjection;
 import com.ferry.user.domain.staff.list.StaffListProjection;
@@ -14,8 +14,8 @@ import java.util.List;
  ************************/
 
 public interface StaffListGateway{
-	List<StaffListProjection> findByFilter(StaffListFilter filter);
-	List<StaffPhoneListProjection> findPhonesByStaffIds(List<String> staffIds);
-	List<StaffEmailListProjection> findEmailsByStaffIds(List<String> staffIds);
-	List<StaffAddressListProjection> findAddressesByStaffIds(List<String> staffIds);
+	List<StaffListProjection> findByFilter(StaffFilter filter);
+	List<StaffPhoneListProjection> findPhonesByFilter(StaffPhoneFilter filter);
+	List<StaffEmailListProjection> findEmailsByFilter(StaffEmailFilter filter);
+	List<StaffAddressListProjection> findAddressesByFilter(StaffAddressFilter filter);
 }

@@ -26,9 +26,11 @@ public class UserSessionJpaEntity{
 	Instant expirationTime;
 	@Column(nullable = false)
 	String userId;
-	@JoinColumn(nullable = false)
-	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(nullable = false, insertable = false, updatable = false)
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	UserSessionTypeJpaEntity sessionType;
+	@Column(name = "session_type_id")
+	private int sessionTypeId;
 	@Version
 	private Integer version;
 	@Column(nullable = false, updatable = false)
@@ -42,15 +44,16 @@ public class UserSessionJpaEntity{
 		entity.createdAt = userSession.createdAt();
 		entity.expirationTime = userSession.expirationTime();
 		entity.userId = userSession.userId();
+		entity.sessionTypeId = userSession.sessionTypeValue();
 		entity.sessionType = sessionType;
 		entity.updatedAt = userSession.updatedAt();
 		entity.version = userSession.version();
 		return entity;
 	}
 
-	public static UserSessionDomain construct(UserSessionJpaEntity saved, SessionType sessionType){
+	public static UserSessionDomain construct(UserSessionJpaEntity saved){
 		return new UserSessionDomain(saved.id, saved.expirationTime, saved.userId,
-				sessionType, saved.version, saved.createdAt,
+				SessionType.fromValue(saved.sessionTypeId).orElseThrow(), saved.version, saved.createdAt,
 				saved.updatedAt);
 	}
 

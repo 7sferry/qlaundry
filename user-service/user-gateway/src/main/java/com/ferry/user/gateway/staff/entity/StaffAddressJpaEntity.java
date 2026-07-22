@@ -24,9 +24,11 @@ public class StaffAddressJpaEntity{
 	@Id
 	@Column(nullable = false, length = 50)
 	private String id;
-	@JoinColumn(nullable = false)
-	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(nullable = false, insertable = false, updatable = false)
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private StaffJpaEntity staff;
+	@Column(name = "staff_id")
+	private String staffId;
 	@Column(nullable = false)
 	private String addressLine;
 	@Version
@@ -42,8 +44,22 @@ public class StaffAddressJpaEntity{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
+	public static StaffAddressJpaEntity create(String id, StaffAddressDomain register, StaffJpaEntity staff){
+		StaffAddressJpaEntity entity = new StaffAddressJpaEntity();
+		entity.id = id;
+		entity.staffId = register.staffId();
+		entity.staff = staff;
+		entity.addressLine = register.addressLine().value();
+		entity.createdBy = register.createdBy();
+		entity.updatedAt = register.updatedAt();
+		entity.createdAt = register.createdAt();
+		entity.updatedBy = register.updatedBy();
+		entity.version = register.version();
+		return entity;
+	}
+
 	public static StaffAddressDomain constructUserAddressDomain(StaffAddressJpaEntity saved){
-		return new StaffAddressDomain(saved.id, saved.staff.getId(), new AddressLineDomain(saved.addressLine), saved.version,
+		return new StaffAddressDomain(saved.id, saved.staffId, new AddressLineDomain(saved.addressLine), saved.version,
 				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
 	}
 }

@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -67,6 +66,11 @@ public class DefaultUserCacheManager implements UserCacheManager{
 	@Override
 	public Optional<String> get(String key){
 		return cacheHandler.get(key);
+	}
+
+	@Override
+	public Optional<String> getAndDelete(String key){
+		return cacheHandler.getAndDelete(key);
 	}
 
 	@Override

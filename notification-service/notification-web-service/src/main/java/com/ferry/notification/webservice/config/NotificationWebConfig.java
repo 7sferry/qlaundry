@@ -1,5 +1,8 @@
 package com.ferry.notification.webservice.config;
 
+import com.ferry.notification.core.email.forgottenpassword.DefaultForgottenPasswordEmailUseCase;
+import com.ferry.notification.core.email.forgottenpassword.ForgottenPasswordEmailComposer;
+import com.ferry.notification.core.email.forgottenpassword.ForgottenPasswordEmailUseCase;
 import com.ferry.notification.core.email.history.EmailHistoryGateway;
 import com.ferry.notification.core.email.send.EmailSendGateway;
 import com.ferry.notification.core.email.tenantregistration.DefaultTenantRegistrationEmailUseCase;
@@ -7,6 +10,7 @@ import com.ferry.notification.core.email.tenantregistration.TenantRegistrationEm
 import com.ferry.notification.core.email.tenantregistration.TenantRegistrationEmailUseCase;
 import com.ferry.notification.gateway.email.EmailHistoryJpaGateway;
 import com.ferry.notification.gateway.email.EmailSendSmtpGateway;
+import com.ferry.notification.gateway.email.ForgottenPasswordEmailThymeleafComposer;
 import com.ferry.notification.gateway.email.TenantRegistrationEmailThymeleafComposer;
 import com.ferry.notification.gateway.email.repository.EmailNotificationJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
@@ -78,6 +82,18 @@ public class NotificationWebConfig{
 	                                                              EmailSendGateway emailSendGateway,
 	                                                              EmailHistoryGateway emailHistoryGateway){
 		return new DefaultTenantRegistrationEmailUseCase(tenantRegistrationEmailComposer, emailSendGateway, emailHistoryGateway);
+	}
+
+	@Bean
+	ForgottenPasswordEmailComposer forgottenPasswordEmailComposer(ITemplateEngine emailTemplateEngine){
+		return new ForgottenPasswordEmailThymeleafComposer(emailTemplateEngine);
+	}
+
+	@Bean
+	ForgottenPasswordEmailUseCase forgottenPasswordEmailUseCase(ForgottenPasswordEmailComposer forgottenPasswordEmailComposer,
+	                                                            EmailSendGateway emailSendGateway,
+	                                                            EmailHistoryGateway emailHistoryGateway){
+		return new DefaultForgottenPasswordEmailUseCase(forgottenPasswordEmailComposer, emailSendGateway, emailHistoryGateway);
 	}
 
 }

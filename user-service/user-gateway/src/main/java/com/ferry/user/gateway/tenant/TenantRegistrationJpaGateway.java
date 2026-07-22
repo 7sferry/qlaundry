@@ -26,15 +26,8 @@ public class TenantRegistrationJpaGateway implements TenantRegistrationGateway{
 
 	@Override
 	public TenantDomain save(TenantDomain tenant){
-		TenantJpaEntity entity = new TenantJpaEntity();
-		entity.setId(idGenerator.generateId());
-		entity.setCreatedAt(tenant.createdAt());
-		entity.setUpdatedAt(tenant.updatedAt());
-		entity.setCreatedBy(entity.getId());
-		entity.setUpdatedBy(entity.getId());
-		entity.setDescription(tenant.descriptionValue());
-		entity.setFullName(tenant.fullNameValue());
-		TenantJpaEntity saved = tenantRepository.save(entity);
+		String id = idGenerator.generateId();
+		TenantJpaEntity saved = tenantRepository.save(TenantJpaEntity.create(id, tenant));
 		return new TenantDomain(saved.getId(), new FullNameDomain(saved.getFullName()),
 				new DescriptionDomain(saved.getDescription()), saved.getVersion(), saved.isDeleted(),
 				saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());

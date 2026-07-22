@@ -13,4 +13,12 @@ export interface AuthRepository {
 	logout(): Promise<void>;
 
 	getProfile(): Promise<User>;
+
+	requestPasswordReset(username: string): Promise<string>;
+
+	/** Verifies the emailed OTP; resolves with a single-use reset token. */
+	submitOtp(username: string, otp: string): Promise<string>;
+
+	/** Sets the new password, authorized by the reset token from submitOtp. */
+	resetPassword(username: string, password: string, resetToken: string): Promise<void>;
 }

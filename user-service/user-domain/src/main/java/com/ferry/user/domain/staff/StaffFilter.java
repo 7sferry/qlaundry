@@ -1,12 +1,20 @@
 package com.ferry.user.domain.staff;
 
-import com.ferry.user.domain.UsernameDomain;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import lombok.Builder;
 
 /************************
  * Made by [MR Ferry™]  *
  * on Juli 2026         *
  ************************/
 
-public record StaffFilter(UsernameDomain username, TenantIdDomain tenantId){
+@Builder(toBuilder = true)
+public record StaffFilter(String fullName, String tenantId, String username){
+
+	public String fullNameStartsWith(){
+		if(fullName == null || fullName.isBlank()){
+			return null;
+		}
+		return fullName.toLowerCase() + '%';
+	}
+
 }

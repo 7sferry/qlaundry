@@ -36,9 +36,11 @@ public class StaffJpaEntity{
 	private String fullName;
 	@Column
 	private String description;
-	@JoinColumn(nullable = false)
+	@JoinColumn(nullable = false, insertable = false, updatable = false)
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private TenantJpaEntity tenant;
+	@Column(name = "tenant_id")
+	private String tenantId;
 	@Version
 	private Integer version;
 	@Column(nullable = false)
@@ -52,11 +54,33 @@ public class StaffJpaEntity{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
-	public static StaffDomain constructUserDomain(StaffJpaEntity saved){
+	public static StaffDomain construct(StaffJpaEntity saved){
 		return new StaffDomain(saved.id, new UsernameDomain(saved.username),
 				new HashedPasswordDomain(saved.password), new FullNameDomain(saved.fullName),
-				new DescriptionDomain(saved.description), saved.tenant.getId(), saved.version,
+				new DescriptionDomain(saved.description), saved.tenantId, saved.version,
 				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt,
 				saved.updatedBy);
 	}
+
+	public static StaffJpaEntity construct(StaffDomain register, TenantJpaEntity tenant){
+		return create(register.id(), register, tenant);
+	}
+
+	public static StaffJpaEntity create(String id, StaffDomain register, TenantJpaEntity tenant){
+		StaffJpaEntity entity = new StaffJpaEntity();
+		entity.id = id;
+		entity.username = register.usernameValue();
+		entity.description = register.descriptionValue();
+		entity.password = register.passwordValue();
+		entity.fullName = register.fullNameValue();
+		entity.tenantId = register.tenantId();
+		entity.tenant = tenant;
+		entity.createdBy = register.createdBy();
+		entity.updatedAt = register.updatedAt();
+		entity.createdAt = register.createdAt();
+		entity.updatedBy = register.updatedBy();
+		entity.version = register.version();
+		return entity;
+	}
+
 }

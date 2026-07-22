@@ -18,5 +18,7 @@ public interface CacheHandler{
 
 	Optional<String> get(String key);
 
+	Optional<String> getAndDelete(String key);
+
 	boolean delete(String key);
 }

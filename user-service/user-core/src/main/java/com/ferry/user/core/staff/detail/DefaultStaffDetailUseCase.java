@@ -26,15 +26,20 @@ public class DefaultStaffDetailUseCase implements StaffDetailUseCase{
 	public void execute(StaffDetailRequest request, UserPrincipal principal, StaffDetailPresenter presenter){
 		UsernameDomain username = new UsernameDomain(request.username());
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		StaffFilter staffFilter = new StaffFilter(username, tenantId);
-		StaffDetailProjection staff = gateway.findByFilter(staffFilter)
+		StaffDetailProjection staff = gateway.findDetail(username, tenantId)
 				.orElseThrow(() -> new NotFoundException("Staff Not Found"));
 		StaffIdDomain staffId = new StaffIdDomain(staff.id());
-		StaffPhoneFilter phoneFilter = new StaffPhoneFilter(staffId);
+		StaffPhoneFilter phoneFilter = StaffPhoneFilter.builder()
+				.staffId(staffId.value())
+				.build();
 		List<StaffPhoneDetailProjection> phones = gateway.findByFilter(phoneFilter);
-		StaffEmailFilter emailFilter = new StaffEmailFilter(staffId);
+		StaffEmailFilter emailFilter = StaffEmailFilter.builder()
+				.staffId(staffId.value())
+				.build();
 		List<StaffEmailDetailProjection> emails = gateway.findByFilter(emailFilter);
-		StaffAddressFilter addressFilter = new StaffAddressFilter(staffId);
+		StaffAddressFilter addressFilter = StaffAddressFilter.builder()
+				.staffId(staffId.value())
+				.build();
 		List<StaffAddressDetailProjection> addresses = gateway.findByFilter(addressFilter);
 		presenter.present(new StaffDetailResponse(staff, phones, emails, addresses));
 	}

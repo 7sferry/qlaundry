@@ -9,6 +9,7 @@ import {Loading, ToastProvider} from '@/core/ui';
 import {useAuth} from '@/features/auth/presentation/useAuth';
 import LoginPage from '@/features/auth/presentation/pages/LoginPage';
 import RegisterPage from '@/features/auth/presentation/pages/RegisterPage';
+import ForgotPasswordPage from '@/features/auth/presentation/pages/ForgotPasswordPage';
 import DashboardPage from '@/features/dashboard/presentation/pages/DashboardPage';
 import CreateOrderPage from '@/features/orders/presentation/pages/CreateOrderPage';
 import OrderHistoryPage from '@/features/orders/presentation/pages/OrderHistoryPage';
@@ -71,6 +72,7 @@ export default function App() {
                 <Route element={<AuthLayout/>}>
                   <Route path="/login" element={<LoginPage/>}/>
                   <Route path="/register" element={<RegisterPage/>}/>
+                  <Route path="/forgot-password" element={<ForgotPasswordPage/>}/>
                 </Route>
 
                 <Route element={<ProtectedLayout/>}>

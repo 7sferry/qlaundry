@@ -1,8 +1,7 @@
 package com.ferry.user.gateway.staff.repository;
 
 import com.ferry.user.domain.staff.StaffEmailFilter;
-import com.ferry.user.domain.staff.StaffFilter;
-import com.ferry.user.domain.staff.list.StaffEmailListProjection;
+import com.ferry.user.domain.staff.forgottenpassword.StaffEmailForgottenPasswordProjection;
 import com.ferry.user.gateway.staff.entity.StaffEmailJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,17 +16,21 @@ import java.util.Optional;
  ************************/
 
 public interface StaffEmailJpaRepository extends JpaRepository<StaffEmailJpaEntity, String>{
-	<T> List<T> findByStaffId(String staffId, Class<T> type);
-
 	@Query("select s " +
 			"from StaffEmailJpaEntity s " +
 			"where " +
-			"(:#{#filter?.staffId?.value} is null or s.staff.id = :#{#filter?.staffId?.value})")
+			"(:#{#filter?.staffId} is null or s.staff.id = :#{#filter?.staffId}) AND " +
+			"(coalesce(:#{#filter?.staffIds}, null) is null or s.staff.id IN :#{#filter?.staffIds}) " +
+			"and s.deleted IS FALSE ")
 	<T> List<T> findAllWithFilter(@Param("filter") StaffEmailFilter filter, Class<T> clazz);
 
-	@Query("select new com.ferry.user.domain.staff.list.StaffEmailListProjection(s.staff.id, s.email) " +
-			"from StaffEmailJpaEntity s " +
-			"where s.staff.id in :staffIds and s.deleted = false")
-	List<StaffEmailListProjection> findAllByStaffIds(@Param("staffIds") List<String> staffIds);
+	@Query(value = "select se.email email, se.staff_id staffId " +
+			"FROM staff_emails se " +
+			"WHERE exists(SELECT 1 FROM staffs s WHERE s.id = se.staff_id AND s.username = :username AND s.deleted IS FALSE) " +
+			"AND se.deleted IS FALSE " +
+			"ORDER BY se.id " +
+			"LIMIT 1",
+	nativeQuery = true)
+	Optional<StaffEmailForgottenPasswordProjection> findForForgottenPassword(@Param("username") String username);
 
 }

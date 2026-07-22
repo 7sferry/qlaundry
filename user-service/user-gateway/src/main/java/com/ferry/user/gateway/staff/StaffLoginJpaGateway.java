@@ -35,10 +35,9 @@ public class StaffLoginJpaGateway implements StaffLoginGateway{
 
 	@Override
 	public UserSessionDomain save(UserSessionDomain userSession){
-		UserSessionTypeJpaEntity sessionType = userSessionTypeJpaRepository.findById(userSession.sessionType().getValue())
-				.orElse(null);
+		UserSessionTypeJpaEntity sessionType = userSessionTypeJpaRepository.getReferenceById(userSession.sessionTypeValue());
 		UserSessionJpaEntity saved = userSessionJpaRepository.save(UserSessionJpaEntity.construct(userSession, sessionType));
-		return UserSessionJpaEntity.construct(saved, userSession.sessionType());
+		return UserSessionJpaEntity.construct(saved);
 	}
 
 	@Override
