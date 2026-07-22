@@ -3,8 +3,9 @@
  * on Juli 2026         *
  ************************/
 
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {useOnceEffect} from '@/core/hooks/useOnceEffect';
+import {onSessionExpired} from '@/core/auth/sessionEvents';
 import type {LoginCredentials, RegisterData, User} from '../domain/User';
 import {authRepository} from '../infrastructure/AuthRepositoryImpl';
 import {LoginUseCase} from '../application/LoginUseCase';
@@ -27,6 +28,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
 				.catch(() => setUser(null))
 				.finally(() => setIsLoading(false));
 	});
+
+	useEffect(() => {
+		return onSessionExpired(() => setUser(null));
+	}, []);
 
 	const login = useCallback(async (credentials: LoginCredentials) => {
 		const session = await loginUseCase.execute(credentials);

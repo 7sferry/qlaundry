@@ -4,7 +4,8 @@
  ************************/
 
 import {env} from '@/core/config/env';
-import {setAccessToken, setRefreshTokenCookie} from './tokenStore';
+import {clearRefreshTokenCookie, setAccessToken, setRefreshTokenCookie} from './tokenStore';
+import {emitSessionExpired} from './sessionEvents';
 
 interface RefreshResponse {
 	accessToken: string;
@@ -27,6 +28,11 @@ export function refreshAccessToken(): Promise<string | null> {
 	return refreshInFlight;
 }
 
+function forceLogout() {
+	clearRefreshTokenCookie();
+	emitSessionExpired();
+}
+
 async function doRefresh(): Promise<string | null> {
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), env.apiTimeoutMs);
@@ -40,6 +46,9 @@ async function doRefresh(): Promise<string | null> {
 
 		if (!response.ok) {
 			setAccessToken(null);
+			if (response.status === 401) {
+				forceLogout();
+			}
 			return null;
 		}
 
