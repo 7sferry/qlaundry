@@ -10,6 +10,12 @@
 	<modules>
 		<module>user-service/user-core</module>
 		<module>user-service/user-domain</module>
+		<module>user-service/user-web-service</module>
+		<module>user-service/user-gateway</module>
+		<module>notification-service/notification-core</module>
+		<module>notification-service/notification-domain</module>
+		<module>notification-service/notification-web-service</module>
+		<module>notification-service/notification-gateway</module>
 		<module>utils/identity-generator</module>
 		<module>utils/cache-tools</module>
 		<module>utils/token-manager</module>

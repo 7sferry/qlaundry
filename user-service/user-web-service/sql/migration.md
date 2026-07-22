@@ -26,4 +26,11 @@
 - address_line
 - staff_id
 
+## email_triggers
+- id
+- type (TENANT_REGISTRATION)
+- recipient
+- payload (json message published to the redis stream)
+- status (CREATED | PUBLISHED)
+
 

@@ -10,7 +10,7 @@
 		<relativePath/>
 	</parent>
 
-	<artifactId>user-domain</artifactId>
+	<artifactId>notification-core</artifactId>
 
 	<properties>
 		<maven.compiler.source>25</maven.compiler.source>
@@ -20,8 +20,14 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>com.ferry</groupId>
+			<artifactId>notification-domain</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 		</dependency>
 	</dependencies>
+
 </project>

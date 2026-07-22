@@ -1,4 +1,4 @@
-package com.ferry.user.gateway.tenant.entity;
+package com.ferry.notification.gateway.email.entity;
 
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
@@ -16,25 +16,25 @@ import java.time.Instant;
 @Setter
 @EqualsAndHashCode(of = "id")
 @Entity
-@Table(name = "tenants")
-public class TenantJpaEntity{
+@Table(name = "email_notifications")
+public class EmailNotificationJpaEntity{
 	@Id
 	@Column(nullable = false, length = 50)
 	private String id;
+	@Column(length = 50)
+	private String referenceId;
+	@Column(nullable = false, length = 50)
+	private String type;
 	@Column(nullable = false, length = 100)
-	private String fullName;
-	@Column
-	private String description;
+	private String recipient;
+	@Column(nullable = false, length = 200)
+	private String subject;
+	@Column(nullable = false, columnDefinition = "text")
+	private String content;
 	@Version
 	private Integer version;
-	@Column(nullable = false)
-	private boolean deleted;
-	@Column(nullable = false, length = 50, updatable = false)
-	private String createdBy;
 	@Column(nullable = false, updatable = false)
 	private Instant createdAt;
-	@Column(nullable = false, length = 50)
-	private String updatedBy;
 	@Column(nullable = false)
-	private Instant updatedAt;
+	private Instant sentAt;
 }

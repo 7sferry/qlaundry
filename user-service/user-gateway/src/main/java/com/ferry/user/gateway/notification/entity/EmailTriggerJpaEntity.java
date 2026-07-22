@@ -1,6 +1,5 @@
-package com.ferry.user.gateway.staff.entity;
+package com.ferry.user.gateway.notification.entity;
 
-import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -15,25 +14,21 @@ import java.time.Instant;
 
 @Getter
 @Setter
-@EqualsAndHashCode(of = "username")
+@EqualsAndHashCode(of = "id")
 @Entity
-@Table(name = "staffs")
-public class StaffJpaEntity{
-
+@Table(name = "email_triggers")
+public class EmailTriggerJpaEntity{
 	@Id
 	@Column(nullable = false, length = 50)
 	private String id;
-	@Column(unique = true, nullable = false, length = 50)
-	private String username;
-	@Column(nullable = false)
-	private String password;
+	@Column(nullable = false, length = 50)
+	private String type;
 	@Column(nullable = false, length = 100)
-	private String fullName;
-	@Column
-	private String description;
-	@JoinColumn(nullable = false)
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private TenantJpaEntity tenant;
+	private String recipient;
+	@Column(nullable = false, columnDefinition = "text")
+	private String payload;
+	@Column(nullable = false, length = 20)
+	private String status;
 	@Version
 	private Integer version;
 	@Column(nullable = false)
@@ -46,5 +41,4 @@ public class StaffJpaEntity{
 	private String updatedBy;
 	@Column(nullable = false)
 	private Instant updatedAt;
-
 }

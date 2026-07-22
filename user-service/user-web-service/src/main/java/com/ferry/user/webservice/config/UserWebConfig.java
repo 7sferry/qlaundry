@@ -19,11 +19,14 @@ import com.ferry.user.core.staff.registration.DefaultStaffRegistrationUseCase;
 import com.ferry.user.core.staff.registration.StaffRegistrationGateway;
 import com.ferry.user.core.staff.registration.StaffRegistrationUseCase;
 import com.ferry.user.core.tenant.registration.DefaultTenantRegistrationUseCase;
+import com.ferry.user.core.tenant.registration.TenantRegistrationEmailGateway;
 import com.ferry.user.core.tenant.registration.TenantRegistrationGateway;
 import com.ferry.user.core.tenant.registration.TenantRegistrationUseCase;
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
+import com.ferry.user.gateway.notification.EmailTriggerJpaGateway;
+import com.ferry.user.gateway.notification.repository.EmailTriggerJpaRepository;
 import com.ferry.user.gateway.session.repository.UserSessionJpaRepository;
 import com.ferry.user.gateway.session.repository.UserSessionTypeJpaRepository;
 import com.ferry.user.gateway.staff.*;
@@ -43,6 +46,7 @@ import com.ferry.utils.json.DefaultJsonManager;
 import com.ferry.utils.json.JsonManager;
 import com.password4j.Argon2Function;
 import com.password4j.types.Argon2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -65,8 +69,17 @@ public class UserWebConfig{
 	}
 
 	@Bean
-	TenantRegistrationUseCase tenantRegistrationUseCase(TenantRegistrationGateway tenantRegistrationGateway){
-		return new DefaultTenantRegistrationUseCase(tenantRegistrationGateway);
+	TenantRegistrationEmailGateway tenantRegistrationEmailGateway(EmailTriggerJpaRepository emailTriggerJpaRepository,
+	                                                              IdGenerator idGenerator, JsonManager jsonManager,
+	                                                              StringRedisTemplate stringRedisTemplate,
+	                                                              @Value("${app.notification.stream.tenant-registration.key}") String streamKey){
+		return new EmailTriggerJpaGateway(emailTriggerJpaRepository, idGenerator, jsonManager, stringRedisTemplate, streamKey);
+	}
+
+	@Bean
+	TenantRegistrationUseCase tenantRegistrationUseCase(TenantRegistrationGateway tenantRegistrationGateway,
+	                                                    TenantRegistrationEmailGateway tenantRegistrationEmailGateway){
+		return new DefaultTenantRegistrationUseCase(tenantRegistrationGateway, tenantRegistrationEmailGateway);
 	}
 
 	@Bean
