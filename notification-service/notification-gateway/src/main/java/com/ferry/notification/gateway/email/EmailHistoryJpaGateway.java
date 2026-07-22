@@ -23,15 +23,8 @@ public class EmailHistoryJpaGateway implements EmailHistoryGateway{
 
 	@Override
 	public EmailNotificationDomain save(EmailNotificationDomain notification){
-		EmailNotificationJpaEntity entity = new EmailNotificationJpaEntity();
-		entity.setId(idGenerator.generateId());
-		entity.setReferenceId(notification.referenceId());
-		entity.setType(notification.typeValue());
-		entity.setRecipient(notification.recipientValue());
-		entity.setSubject(notification.subjectValue());
-		entity.setContent(notification.contentValue());
-		entity.setCreatedAt(notification.createdAt());
-		entity.setSentAt(notification.sentAt());
+		String id = idGenerator.generateId();
+		EmailNotificationJpaEntity entity = EmailNotificationJpaEntity.create(id, notification);
 		EmailNotificationJpaEntity saved = emailNotificationJpaRepository.save(entity);
 		return constructEmailNotificationDomain(saved);
 	}
@@ -39,7 +32,7 @@ public class EmailHistoryJpaGateway implements EmailHistoryGateway{
 	private static EmailNotificationDomain constructEmailNotificationDomain(EmailNotificationJpaEntity saved){
 		return new EmailNotificationDomain(saved.getId(), saved.getReferenceId(), EmailType.valueOf(saved.getType()),
 				new EmailDomain(saved.getRecipient()), new SubjectDomain(saved.getSubject()),
-				new ContentDomain(saved.getContent()), saved.getCreatedAt(), saved.getSentAt());
+				new ContentDomain(saved.getContent()), saved.getCreatedAt(), saved.getVersion(), saved.getSentAt());
 	}
 
 }

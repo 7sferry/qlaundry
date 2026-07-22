@@ -33,7 +33,7 @@ public class StaffDetailJpaGateway implements StaffDetailGateway{
 
 	@Override
 	public Optional<StaffDetailProjection> findDetail(UsernameDomain username, TenantIdDomain tenantId){
-		return staffJpaRepository.findByUsernameAndTenantId(username.value(), tenantId.value(), StaffDetailProjection.class);
+		return staffJpaRepository.findByUsernameAndTenantIdAndDeletedIsFalse(username.value(), tenantId.value(), StaffDetailProjection.class);
 	}
 
 	@Override

@@ -57,6 +57,8 @@ public class EmailTriggerJpaEntity{
 		entity.createdAt = trigger.createdAt();
 		entity.updatedBy = trigger.updatedBy();
 		entity.updatedAt = trigger.updatedAt();
+		entity.deleted = trigger.deleted();
+		entity.version = trigger.version();
 		return entity;
 	}
 

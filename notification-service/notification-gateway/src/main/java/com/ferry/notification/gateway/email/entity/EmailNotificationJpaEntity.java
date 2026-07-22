@@ -1,5 +1,6 @@
 package com.ferry.notification.gateway.email.entity;
 
+import com.ferry.notification.domain.EmailNotificationDomain;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,4 +38,19 @@ public class EmailNotificationJpaEntity{
 	private Instant createdAt;
 	@Column(nullable = false)
 	private Instant sentAt;
+
+	public static EmailNotificationJpaEntity create(String id, EmailNotificationDomain notification){
+		EmailNotificationJpaEntity entity = new EmailNotificationJpaEntity();
+		entity.id = id;
+		entity.referenceId = notification.referenceId();
+		entity.type = notification.typeValue();
+		entity.recipient = notification.recipientValue();
+		entity.subject = notification.subjectValue();
+		entity.content = notification.contentValue();
+		entity.createdAt = notification.createdAt();
+		entity.sentAt = notification.sentAt();
+		entity.version = notification.version();
+		return entity;
+	}
+
 }

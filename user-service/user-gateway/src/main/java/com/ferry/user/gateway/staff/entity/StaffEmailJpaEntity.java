@@ -54,6 +54,7 @@ public class StaffEmailJpaEntity{
 		entity.updatedAt = register.updatedAt();
 		entity.createdAt = register.createdAt();
 		entity.updatedBy = register.updatedBy();
+		entity.deleted = register.deleted();
 		entity.version = register.version();
 		return entity;
 	}

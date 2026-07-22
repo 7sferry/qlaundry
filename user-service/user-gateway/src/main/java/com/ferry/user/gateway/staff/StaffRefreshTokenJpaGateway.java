@@ -29,7 +29,7 @@ public class StaffRefreshTokenJpaGateway implements StaffRefreshTokenGateway{
 
 	@Override
 	public Optional<TenantLoginProjection> findTenantById(TenantIdDomain tenantId){
-		return tenantJpaRepository.findById(tenantId.value(), TenantLoginProjection.class);
+		return tenantJpaRepository.findByIdAndDeletedIsFalse(tenantId.value(), TenantLoginProjection.class);
 	}
 
 	@Override

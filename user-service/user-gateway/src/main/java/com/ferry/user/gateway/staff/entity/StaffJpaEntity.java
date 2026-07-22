@@ -80,6 +80,7 @@ public class StaffJpaEntity{
 		entity.createdAt = register.createdAt();
 		entity.updatedBy = register.updatedBy();
 		entity.version = register.version();
+		entity.deleted = register.deleted();
 		return entity;
 	}
 

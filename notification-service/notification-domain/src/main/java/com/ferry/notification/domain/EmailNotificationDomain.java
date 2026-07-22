@@ -8,7 +8,7 @@ import java.time.Instant;
  ************************/
 
 public record EmailNotificationDomain(String id, String referenceId, EmailType type, EmailDomain recipient,
-                                      SubjectDomain subject, ContentDomain content, Instant createdAt,
+                                      SubjectDomain subject, ContentDomain content, Instant createdAt, Integer version,
                                       Instant sentAt){
 	public EmailNotificationDomain{
 		if(type == null || recipient == null || subject == null || content == null){
@@ -18,11 +18,11 @@ public record EmailNotificationDomain(String id, String referenceId, EmailType t
 
 	public static EmailNotificationDomain compose(EmailType type, String referenceId, EmailDomain recipient,
 	                                              SubjectDomain subject, ContentDomain content){
-		return new EmailNotificationDomain(null, referenceId, type, recipient, subject, content, Instant.now(), null);
+		return new EmailNotificationDomain(null, referenceId, type, recipient, subject, content, Instant.now(), null, null);
 	}
 
 	public EmailNotificationDomain markSent(){
-		return new EmailNotificationDomain(id, referenceId, type, recipient, subject, content, createdAt, Instant.now());
+		return new EmailNotificationDomain(id, referenceId, type, recipient, subject, content, createdAt, version, Instant.now());
 	}
 
 	public String recipientValue(){

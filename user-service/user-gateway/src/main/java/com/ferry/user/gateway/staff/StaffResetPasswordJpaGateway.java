@@ -23,7 +23,7 @@ public class StaffResetPasswordJpaGateway implements StaffResetPasswordGateway{
 
 	@Override
 	public Optional<StaffDomain> findByUsername(UsernameDomain username){
-		return staffJpaRepository.findByUsername(username.value(), StaffJpaEntity.class)
+		return staffJpaRepository.findByUsernameAndDeletedIsFalse(username.value(), StaffJpaEntity.class)
 				.map(StaffJpaEntity::construct);
 	}
 

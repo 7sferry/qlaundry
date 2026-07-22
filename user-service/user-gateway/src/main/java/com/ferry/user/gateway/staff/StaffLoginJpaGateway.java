@@ -30,7 +30,7 @@ public class StaffLoginJpaGateway implements StaffLoginGateway{
 
 	@Override
 	public Optional<StaffLoginProjection> findByUsername(UsernameDomain username){
-		return staffJpaRepository.findByUsername(username.value(), StaffLoginProjection.class);
+		return staffJpaRepository.findByUsernameAndDeletedIsFalse(username.value(), StaffLoginProjection.class);
 	}
 
 	@Override
@@ -42,7 +42,7 @@ public class StaffLoginJpaGateway implements StaffLoginGateway{
 
 	@Override
 	public Optional<TenantLoginProjection> findTenantById(TenantIdDomain tenantId){
-		return tenantJpaRepository.findById(tenantId.value(), TenantLoginProjection.class);
+		return tenantJpaRepository.findByIdAndDeletedIsFalse(tenantId.value(), TenantLoginProjection.class);
 	}
 
 }

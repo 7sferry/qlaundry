@@ -49,6 +49,7 @@ public class TenantJpaEntity{
 		entity.description = tenant.descriptionValue();
 		entity.fullName = tenant.fullNameValue();
 		entity.version = tenant.version();
+		entity.deleted = tenant.deleted();
 		return entity;
 	}
 
