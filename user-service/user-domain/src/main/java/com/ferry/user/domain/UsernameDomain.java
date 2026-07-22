@@ -16,7 +16,7 @@ public record UsernameDomain(String value) {
 		if (value.length() < 5) {
 			throw new InvalidUsernameException("Username must be at least 5 characters long");
 		}
-		value = value.trim();
+		value = value.toLowerCase().trim();
 	}
 
 }
