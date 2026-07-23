@@ -11,7 +11,12 @@ import {fileURLToPath, URL} from 'node:url'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 8100,
+    port: 5173,
+    strictPort: true,
+    hmr: {
+      host: 'localhost',
+      clientPort: 8100,
+    },
   },
   resolve: {
     alias: {

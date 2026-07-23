@@ -1,9 +1,7 @@
 package com.ferry.user.webservice.tenant.registration;
 
-import com.ferry.user.core.staff.registration.StaffRegistrationRequest;
 import com.ferry.user.core.tenant.registration.TenantRegistrationRequest;
 import com.ferry.user.core.tenant.registration.TenantRegistrationUseCase;
-import com.ferry.user.webservice.staff.registration.StaffRegistrationWebPresenter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;

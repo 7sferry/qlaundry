@@ -1,0 +1,11 @@
+# Made by [MR Ferry™] on Juli 2026
+
+services:
+  gateway:
+    image: nginx:alpine
+    container_name: qlaundry-gateway
+    ports:
+      - "8100:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+#    restart: unless-stopped

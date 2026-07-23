@@ -24,13 +24,12 @@ public interface StaffEmailJpaRepository extends JpaRepository<StaffEmailJpaEnti
 			"and s.deleted IS FALSE ")
 	<T> List<T> findAllWithFilter(@Param("filter") StaffEmailFilter filter, Class<T> clazz);
 
-	@Query(value = "select se.email email, se.staff_id staffId " +
-			"FROM staff_emails se " +
-			"WHERE exists(SELECT 1 FROM staffs s WHERE s.id = se.staff_id AND s.username = :username AND s.deleted IS FALSE) " +
+	@Query("select se " +
+			"FROM StaffEmailJpaEntity se " +
+			"WHERE exists(SELECT 1 FROM StaffJpaEntity s WHERE s.id = se.staffId AND s.username = :username AND s.deleted IS FALSE) " +
 			"AND se.deleted IS FALSE " +
 			"ORDER BY se.id " +
-			"LIMIT 1",
-	nativeQuery = true)
+			"LIMIT 1")
 	Optional<StaffEmailForgottenPasswordProjection> findForForgottenPassword(@Param("username") String username);
 
 }
