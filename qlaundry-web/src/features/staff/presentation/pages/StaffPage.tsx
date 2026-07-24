@@ -4,111 +4,14 @@
  ************************/
 
 import React, {useState} from 'react';
-import {AtSign, Edit2, Lock, Mail, MapPin, Phone, Plus, Search, Trash2, UserPlus, Users,} from 'lucide-react';
-import {
-	Badge,
-	Button,
-	Card,
-	Drawer,
-	Field,
-	Input,
-	Loading,
-	Modal,
-	PageHeader,
-	StatCard,
-	Textarea,
-	useToast
-} from '@/core/ui';
-import {formatDate} from '@/core/utils/format';
+import {UserPlus, Users} from 'lucide-react';
+import {Button, Loading, Modal, PageHeader, StatCard, useToast} from '@/core/ui';
 import {useStaff} from '../useStaff';
+import StaffForm from '../components/StaffForm';
+import {type StaffFormData, emptyStaffForm} from '../components/staffFormData';
+import StaffTable from '../components/StaffTable';
+import StaffDetailDrawer from '../components/StaffDetailDrawer';
 import type {CreateStaffInput, Staff, UpdateStaffInput} from '../../domain/Staff';
-
-interface StaffFormData {
-	username: string;
-	password: string;
-	fullName: string;
-	description: string;
-	email: string;
-	phone: string;
-	address: string;
-}
-
-const emptyForm: StaffFormData = {
-	username: '',
-	password: '',
-	fullName: '',
-	description: '',
-	email: '',
-	phone: '',
-	address: '',
-};
-
-interface StaffFormProps {
-	form: StaffFormData;
-	update: (key: keyof StaffFormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-	onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
-	onCancel: () => void;
-	saving: boolean;
-	editMode: boolean;
-}
-
-function StaffForm({form, update, onSubmit, onCancel, saving, editMode}: StaffFormProps) {
-	return (
-			<form onSubmit={onSubmit} style={{display: 'flex', flexDirection: 'column', gap: 0}}>
-				<Field label="Username" htmlFor="sfUsername">
-					<div className="input-with-icon">
-						<AtSign size={15}/>
-						<Input id="sfUsername" autoComplete="off" required disabled={editMode} value={form.username}
-						       onChange={update('username')} placeholder="username staf"/>
-					</div>
-				</Field>
-				{!editMode && (
-						<Field label="Password" htmlFor="sfPassword">
-							<div className="input-with-icon">
-								<Lock size={15}/>
-								<Input id="sfPassword" type="password" required minLength={8} value={form.password}
-								       onChange={update('password')} placeholder="minimal 8 karakter"/>
-							</div>
-						</Field>
-				)}
-				<Field label="Nama lengkap" htmlFor="sfName">
-					<Input id="sfName" required value={form.fullName} onChange={update('fullName')}
-					       placeholder="Nama staf" autoComplete="off"/>
-				</Field>
-				<Field label="Nomor telepon" htmlFor="sfPhone">
-					<div className="input-with-icon">
-						<Phone size={15}/>
-						<Input id="sfPhone" type="tel" value={form.phone} onChange={update('phone')}
-						       placeholder="08xxxxxxxxxx" autoComplete="off"/>
-					</div>
-				</Field>
-				<Field label="Email" htmlFor="sfEmail">
-					<div className="input-with-icon">
-						<Mail size={15}/>
-						<Input id="sfEmail" type="email" required value={form.email} onChange={update('email')}
-						       placeholder="xxx@xxx.xxx" autoComplete="off"/>
-					</div>
-				</Field>
-				<Field label="Alamat" htmlFor="sfAddr">
-					<div className="input-with-icon">
-						<MapPin size={15}/>
-						<Input id="sfAddr" value={form.address} onChange={update('address')}
-						       placeholder="opsional" autoComplete="off"/>
-					</div>
-				</Field>
-				<Field label="Deskripsi" htmlFor="sfDesc">
-					<Textarea id="sfDesc" value={form.description} onChange={update('description')}
-					          placeholder="tugas atau catatan, opsional" rows={2} autoComplete="off"/>
-				</Field>
-				<div className="row" style={{gap: 8, justifyContent: 'flex-end', marginTop: 8}}>
-					<Button type="button" variant="ghost" onClick={onCancel}>Batal</Button>
-					<Button type="submit" disabled={saving}>
-						{saving ? 'Menyimpan…' : editMode ? 'Simpan perubahan' : 'Tambah staf'}
-					</Button>
-				</div>
-			</form>
-	);
-}
 
 export default function StaffPage() {
 	const {staff, loading, createStaff, updateStaff, deleteStaff} = useStaff();
@@ -118,7 +21,7 @@ export default function StaffPage() {
 	const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [editMode, setEditMode] = useState(false);
-	const [form, setForm] = useState<StaffFormData>(emptyForm);
+	const [form, setForm] = useState<StaffFormData>(emptyStaffForm);
 	const [saving, setSaving] = useState(false);
 
 	if (loading) return <Loading label="Memuat staf…"/>;
@@ -141,7 +44,7 @@ export default function StaffPage() {
 	}).length;
 
 	const openAdd = () => {
-		setForm(emptyForm);
+		setForm(emptyStaffForm);
 		setShowAddModal(true);
 	};
 
@@ -190,9 +93,9 @@ export default function StaffPage() {
 				toast.success('Staf baru berhasil ditambahkan.');
 				setShowAddModal(false);
 			}
-			setForm(emptyForm);
-		} catch {
-			toast.error('Terjadi kesalahan. Coba lagi.');
+			setForm(emptyStaffForm);
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Terjadi kesalahan. Coba lagi.');
 		} finally {
 			setSaving(false);
 		}
@@ -216,7 +119,7 @@ export default function StaffPage() {
 	const handleCancel = () => {
 		setShowAddModal(false);
 		setEditMode(false);
-		setForm(emptyForm);
+		setForm(emptyStaffForm);
 	};
 
 	return (
@@ -237,87 +140,15 @@ export default function StaffPage() {
 					          hint="Bulan ini"/>
 				</div>
 
-				<Card style={{marginTop: 24, marginBottom: 20}}>
-					<div className="filters">
-						<Field>
-							<div className="input-with-icon">
-								<Search size={15}/>
-								<Input
-										value={search}
-										onChange={(e) => setSearch(e.target.value)}
-										placeholder="Cari nama, username, nomor HP, atau email…"
-								/>
-							</div>
-						</Field>
-					</div>
-
-					<div className="table-wrap">
-						<table className="table">
-							<thead>
-							<tr>
-								<th>Staf</th>
-								<th>Kontak</th>
-								<th>Alamat</th>
-								<th>Bergabung</th>
-								<th/>
-							</tr>
-							</thead>
-							<tbody>
-							{visible.map((s) => (
-									<tr
-											key={s.id}
-											className="table-row--clickable"
-											onClick={() => setSelectedStaff(s)}
-									>
-										<td>
-											<div className="row" style={{gap: 10}}>
-												<div className="customer-avatar">
-													{s.fullName.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase()}
-												</div>
-												<div>
-													<strong>{s.fullName}</strong>
-													<span className="table-sub">@{s.username}</span>
-												</div>
-											</div>
-										</td>
-										<td>
-											<div>
-												{s.phones[0] ?? '—'}
-												<span className="table-sub">{s.emails[0] ?? '—'}</span>
-											</div>
-										</td>
-										<td>{s.addresses[0] ?? '—'}</td>
-										<td>{formatDate(s.joinedAt)}</td>
-										<td onClick={(e) => e.stopPropagation()}>
-											<div className="row" style={{gap: 4}}>
-												<button className="icon-btn" onClick={() => openEdit(s)} title="Edit">
-													<Edit2 size={14}/>
-												</button>
-												<button className="icon-btn icon-btn--danger" onClick={() => void handleDelete(s)}
-												        title="Hapus">
-													<Trash2 size={14}/>
-												</button>
-											</div>
-										</td>
-									</tr>
-							))}
-							</tbody>
-						</table>
-
-						{!visible.length && (
-								<div className="empty-state">
-									<Users size={28}/>
-									<strong>Tidak ada staf</strong>
-									<span>
-                {search ? 'Coba ubah kata kunci pencarian.' : 'Tambahkan staf pertama Anda.'}
-              </span>
-									{!search && (
-											<Button onClick={openAdd}><Plus size={14}/> Tambah staf</Button>
-									)}
-								</div>
-						)}
-					</div>
-				</Card>
+				<StaffTable
+						staff={visible}
+						search={search}
+						onSearchChange={setSearch}
+						onSelect={setSelectedStaff}
+						onEdit={openEdit}
+						onDelete={(s) => void handleDelete(s)}
+						onAdd={openAdd}
+				/>
 
 				<Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Tambah staf baru">
 					<StaffForm
@@ -330,78 +161,17 @@ export default function StaffPage() {
 					/>
 				</Modal>
 
-				<Drawer
+				<StaffDetailDrawer
+						staff={selectedStaff}
 						open={!!selectedStaff && !editMode}
 						onClose={() => setSelectedStaff(null)}
-						title={selectedStaff?.fullName}
-						subtitle={selectedStaff ? `Bergabung ${formatDate(selectedStaff.joinedAt)}` : ''}
-						width="460px"
-						footer={
-								selectedStaff && (
-										<div className="row" style={{gap: 8, justifyContent: 'flex-end'}}>
-											<Button variant="danger" onClick={() => void handleDelete(selectedStaff)}>
-												<Trash2 size={14}/> Hapus
-											</Button>
-											<Button onClick={() => openEdit(selectedStaff)}>
-												<Edit2 size={14}/> Edit
-											</Button>
-										</div>
-								)
-						}
-				>
-					{selectedStaff && (
-							<div className="customer-detail">
-								<div className="customer-detail__hero">
-									<div className="customer-avatar customer-avatar--lg">
-										{selectedStaff.fullName.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase()}
-									</div>
-									<div>
-										<h3>{selectedStaff.fullName}</h3>
-										<Badge tone="info"><AtSign size={11}/> {selectedStaff.username}</Badge>
-									</div>
-								</div>
-
-								<div className="detail-section">
-									<h4>Kontak</h4>
-									<div className="detail-grid">
-										<div>
-											<small>Telepon</small>
-											<strong>{selectedStaff.phones.length ? selectedStaff.phones.join(', ') : '—'}</strong>
-										</div>
-										<div>
-											<small>Email</small>
-											<strong>{selectedStaff.emails.length ? selectedStaff.emails.join(', ') : '—'}</strong>
-										</div>
-										<div style={{gridColumn: '1/-1'}}>
-											<small>Alamat</small>
-											<strong>{selectedStaff.addresses.length ? selectedStaff.addresses.join('; ') : '—'}</strong>
-										</div>
-									</div>
-								</div>
-
-								{selectedStaff.description && (
-										<div className="detail-section">
-											<h4>Deskripsi</h4>
-											<p className="muted" style={{fontSize: 13}}>{selectedStaff.description}</p>
-										</div>
-								)}
-
-								<div className="detail-section">
-									<h4>Aktivitas</h4>
-									<div className="detail-grid">
-										<div>
-											<small>Bergabung</small>
-											<strong>{formatDate(selectedStaff.joinedAt)}</strong>
-										</div>
-									</div>
-								</div>
-							</div>
-					)}
-				</Drawer>
+						onEdit={openEdit}
+						onDelete={(s) => void handleDelete(s)}
+				/>
 
 				<Modal open={editMode} onClose={() => {
 					setEditMode(false);
-					setForm(emptyForm);
+					setForm(emptyStaffForm);
 				}} title={`Edit ${selectedStaff?.fullName}`}>
 					<StaffForm
 							form={form}

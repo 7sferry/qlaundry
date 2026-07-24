@@ -6,10 +6,16 @@
 import {useCallback, useState} from 'react';
 import {useOnceEffect} from '@/core/hooks/useOnceEffect';
 import type {CreateStaffInput, Staff, UpdateStaffInput} from '../domain/Staff';
-import {staffUseCases} from '../application/StaffUseCases';
+import {ListStaffUseCase} from '../application/ListStaffUseCase';
+import {CreateStaffUseCase} from '../application/CreateStaffUseCase';
+import {UpdateStaffUseCase} from '../application/UpdateStaffUseCase';
+import {DeleteStaffUseCase} from '../application/DeleteStaffUseCase';
 import {staffRepository} from '../infrastructure/StaffRepositoryImpl';
 
-const useCases = staffUseCases(staffRepository);
+const listStaffUseCase = new ListStaffUseCase(staffRepository);
+const createStaffUseCase = new CreateStaffUseCase(staffRepository);
+const updateStaffUseCase = new UpdateStaffUseCase(staffRepository);
+const deleteStaffUseCase = new DeleteStaffUseCase(staffRepository);
 
 export function useStaff() {
 	const [staff, setStaff] = useState<Staff[]>([]);
@@ -17,7 +23,7 @@ export function useStaff() {
 	const [error, setError] = useState<string | null>(null);
 
 	useOnceEffect(() => {
-		useCases.listStaff({})
+		listStaffUseCase.execute({})
 				.then(setStaff)
 				.catch((err) => setError(err instanceof Error ? err.message : 'Gagal memuat staf'))
 				.finally(() => setLoading(false));
@@ -27,7 +33,7 @@ export function useStaff() {
 		setLoading(true);
 		setError(null);
 		try {
-			setStaff(await useCases.listStaff({search}));
+			setStaff(await listStaffUseCase.execute({search}));
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Gagal memuat staf');
 		} finally {
@@ -36,19 +42,19 @@ export function useStaff() {
 	}, []);
 
 	const createStaff = useCallback(async (input: CreateStaffInput): Promise<Staff> => {
-		const s = await useCases.createStaff(input);
+		const s = await createStaffUseCase.execute(input);
 		setStaff((prev) => [s, ...prev]);
 		return s;
 	}, []);
 
 	const updateStaff = useCallback(async (input: UpdateStaffInput): Promise<Staff> => {
-		const updated = await useCases.updateStaff(input);
+		const updated = await updateStaffUseCase.execute(input);
 		setStaff((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
 		return updated;
 	}, []);
 
 	const deleteStaff = useCallback(async (id: string): Promise<void> => {
-		await useCases.deleteStaff(id);
+		await deleteStaffUseCase.execute(id);
 		setStaff((prev) => prev.filter((s) => s.id !== id));
 	}, []);
 
