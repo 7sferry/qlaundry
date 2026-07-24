@@ -3,6 +3,7 @@ package com.ferry.user.gateway.staff.entity;
 import com.ferry.user.domain.AddressLineDomain;
 import com.ferry.user.domain.staff.StaffAddressDomain;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,6 +29,7 @@ public class StaffAddressJpaEntity{
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private StaffJpaEntity staff;
 	@Column(name = "staff_id", insertable = false, updatable = false)
+	@Setter(AccessLevel.PRIVATE)
 	private String staffId;
 	@Column(nullable = false)
 	private String addressLine;
@@ -43,6 +45,11 @@ public class StaffAddressJpaEntity{
 	private String updatedBy;
 	@Column(nullable = false)
 	private Instant updatedAt;
+
+	public void setStaff(StaffJpaEntity staff){
+		this.staff = staff;
+		this.staffId = staff.getId();
+	}
 
 	public static StaffAddressJpaEntity construct(String id, StaffAddressDomain register, StaffJpaEntity staff){
 		StaffAddressJpaEntity entity = new StaffAddressJpaEntity();

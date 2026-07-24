@@ -7,6 +7,7 @@ import com.ferry.user.domain.UsernameDomain;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,6 +40,7 @@ public class StaffJpaEntity{
 	@JoinColumn(nullable = false)
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private TenantJpaEntity tenant;
+	@Setter(AccessLevel.PRIVATE)
 	@Column(name = "tenant_id", insertable = false, updatable = false)
 	private String tenantId;
 	@Version
@@ -53,6 +55,11 @@ public class StaffJpaEntity{
 	private String updatedBy;
 	@Column(nullable = false)
 	private Instant updatedAt;
+
+	public void setTenant(TenantJpaEntity tenant){
+		this.tenant = tenant;
+		this.tenantId = tenant.getId();
+	}
 
 	public static StaffDomain construct(StaffJpaEntity saved){
 		return new StaffDomain(saved.id, new UsernameDomain(saved.username),

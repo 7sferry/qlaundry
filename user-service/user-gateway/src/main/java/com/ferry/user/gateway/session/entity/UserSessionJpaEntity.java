@@ -2,7 +2,9 @@ package com.ferry.user.gateway.session.entity;
 
 import com.ferry.user.domain.session.SessionType;
 import com.ferry.user.domain.session.UserSessionDomain;
+import com.ferry.user.gateway.staff.entity.StaffJpaEntity;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +32,7 @@ public class UserSessionJpaEntity{
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	UserSessionTypeJpaEntity sessionType;
 	@Column(name = "session_type_id", insertable = false, updatable = false)
+	@Setter(AccessLevel.PRIVATE)
 	private int sessionTypeId;
 	@Version
 	private Integer version;
@@ -37,6 +40,11 @@ public class UserSessionJpaEntity{
 	private Instant createdAt;
 	@Column(nullable = false)
 	private Instant updatedAt;
+
+	public void setStaff(UserSessionTypeJpaEntity typeJpa){
+		this.sessionType = typeJpa;
+		this.sessionTypeId = typeJpa.getId();
+	}
 
 	public static UserSessionJpaEntity construct(UserSessionDomain userSession, UserSessionTypeJpaEntity sessionType){
 		UserSessionJpaEntity entity = new UserSessionJpaEntity();
