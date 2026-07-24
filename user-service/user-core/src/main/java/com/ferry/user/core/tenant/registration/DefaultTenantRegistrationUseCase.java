@@ -32,8 +32,8 @@ public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCa
 
 	private StaffRegistrationResponse registerAdmin(TenantRegistrationRequest request, TenantDomain saved){
 		StaffRegistrationRequest registrationRequest = new StaffRegistrationRequest(request.username(), request.password(), request.fullName(),
-				request.description() != null ? request.description() : "Super Admin", saved.id(), request.emails(), request.phones(), request.addresses());
-		return gateway.registerAdmin(registrationRequest, saved.createdBy());
+				request.description() != null ? request.description() : "Super Admin", request.emails(), request.phones(), request.addresses());
+		return gateway.registerAdmin(registrationRequest, saved.createdBy(), saved.id());
 	}
 
 	private TenantDomain saveTenant(TenantRegistrationRequest request){

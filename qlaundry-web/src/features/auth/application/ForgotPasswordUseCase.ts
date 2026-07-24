@@ -14,9 +14,13 @@ export class ForgotPasswordUseCase {
 
 	/** Resolves with the masked email the OTP was sent to. */
 	execute(username: string): Promise<string> {
-		if (!username.trim()) {
+		const trimmed = username.trim();
+		if (!trimmed) {
 			return Promise.reject(new Error('Masukkan username.'));
 		}
-		return this.repository.requestPasswordReset(username.trim());
+		if (trimmed.length < 5) {
+			return Promise.reject(new Error('Username minimal 5 karakter.'));
+		}
+		return this.repository.requestPasswordReset(trimmed);
 	}
 }

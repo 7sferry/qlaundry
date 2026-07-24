@@ -58,7 +58,7 @@ function StaffForm({form, update, onSubmit, onCancel, saving, editMode}: StaffFo
 				<Field label="Username" htmlFor="sfUsername">
 					<div className="input-with-icon">
 						<AtSign size={15}/>
-						<Input id="sfUsername" required disabled={editMode} value={form.username}
+						<Input id="sfUsername" autoComplete="off" required disabled={editMode} value={form.username}
 						       onChange={update('username')} placeholder="username staf"/>
 					</div>
 				</Field>
@@ -73,32 +73,32 @@ function StaffForm({form, update, onSubmit, onCancel, saving, editMode}: StaffFo
 				)}
 				<Field label="Nama lengkap" htmlFor="sfName">
 					<Input id="sfName" required value={form.fullName} onChange={update('fullName')}
-					       placeholder="Nama staf"/>
+					       placeholder="Nama staf" autoComplete="off"/>
 				</Field>
 				<Field label="Nomor telepon" htmlFor="sfPhone">
 					<div className="input-with-icon">
 						<Phone size={15}/>
-						<Input id="sfPhone" type="tel" required value={form.phone} onChange={update('phone')}
-						       placeholder="08xxxxxxxxxx"/>
+						<Input id="sfPhone" type="tel" value={form.phone} onChange={update('phone')}
+						       placeholder="08xxxxxxxxxx" autoComplete="off"/>
 					</div>
 				</Field>
 				<Field label="Email" htmlFor="sfEmail">
 					<div className="input-with-icon">
 						<Mail size={15}/>
-						<Input id="sfEmail" type="email" value={form.email} onChange={update('email')}
-						       placeholder="opsional"/>
+						<Input id="sfEmail" type="email" required value={form.email} onChange={update('email')}
+						       placeholder="xxx@xxx.xxx" autoComplete="off"/>
 					</div>
 				</Field>
 				<Field label="Alamat" htmlFor="sfAddr">
 					<div className="input-with-icon">
 						<MapPin size={15}/>
 						<Input id="sfAddr" value={form.address} onChange={update('address')}
-						       placeholder="opsional"/>
+						       placeholder="opsional" autoComplete="off"/>
 					</div>
 				</Field>
 				<Field label="Deskripsi" htmlFor="sfDesc">
 					<Textarea id="sfDesc" value={form.description} onChange={update('description')}
-					          placeholder="tugas atau catatan, opsional" rows={2}/>
+					          placeholder="tugas atau catatan, opsional" rows={2} autoComplete="off"/>
 				</Field>
 				<div className="row" style={{gap: 8, justifyContent: 'flex-end', marginTop: 8}}>
 					<Button type="button" variant="ghost" onClick={onCancel}>Batal</Button>

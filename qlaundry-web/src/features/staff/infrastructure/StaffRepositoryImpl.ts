@@ -67,7 +67,7 @@ export class StaffRepositoryImpl implements StaffRepository {
 	}
 
 	async createStaff(input: CreateStaffInput): Promise<Staff> {
-		await httpClient.post<{ username: string }>('/auth/staff/registration', {
+		await httpClient.post<{ username: string }>('/staff/registration', {
 			username: input.username,
 			password: input.password,
 			fullName: input.fullName,

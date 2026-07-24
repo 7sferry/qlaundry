@@ -11,5 +11,5 @@ import com.ferry.user.domain.tenant.TenantDomain;
 
 public interface TenantRegistrationGateway{
 	TenantDomain save(TenantDomain tenant);
-	StaffRegistrationResponse registerAdmin(StaffRegistrationRequest request, String userId);
+	StaffRegistrationResponse registerAdmin(StaffRegistrationRequest request, String userId, String tenantId);
 }

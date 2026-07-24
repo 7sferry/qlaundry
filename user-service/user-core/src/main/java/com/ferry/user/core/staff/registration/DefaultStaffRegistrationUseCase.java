@@ -39,7 +39,7 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 		HashedPasswordDomain hashedPassword = passwordTool.hash(new RawPasswordDomain(request.password()));
 		FullNameDomain fullName = new FullNameDomain(request.fullName());
 		DescriptionDomain note = new DescriptionDomain(request.description());
-		StaffDomain registered = StaffDomain.register(username, hashedPassword, fullName, note, request.tenantId(),
+		StaffDomain registered = StaffDomain.register(username, hashedPassword, fullName, note, principal.tenantId(),
 				principal.userId());
 		return gateway.save(registered);
 	}
@@ -61,6 +61,9 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 
 	private void saveEmail(StaffRegistrationRequest request, StaffDomain registeredUser, UserPrincipal principal){
 		List<String> emails = request.emails() == null ? List.of() : request.emails();
+		if(emails.isEmpty()){
+			throw new IllegalArgumentException("Emails cannot be empty");
+		}
 		for(String email : emails){
 			gateway.save(StaffEmailDomain.register(registeredUser.id(), new EmailDomain(email), principal.userId()));
 		}

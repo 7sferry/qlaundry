@@ -8,6 +8,5 @@ import java.util.List;
  ************************/
 
 public record StaffRegistrationRequest(String username, String password, String fullName, String description,
-                                       String tenantId, List<String> emails, List<String> phones,
-                                       List<String> addresses){
+                                      List<String> emails, List<String> phones, List<String> addresses){
 }

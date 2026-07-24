@@ -38,7 +38,6 @@ public class UserSecurityConfig{
 			"/auth/staff/login",
 			"/auth/staff/logout",
 			"/auth/staff/refresh",
-			"/auth/staff/registration",
 			"/auth/staff/forgottenPassword",
 			"/auth/staff/submitOtp",
 			"/auth/staff/resetPassword"

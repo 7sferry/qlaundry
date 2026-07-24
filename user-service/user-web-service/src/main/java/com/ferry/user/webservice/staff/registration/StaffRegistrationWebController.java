@@ -22,7 +22,7 @@ public class StaffRegistrationWebController{
 	private final StaffRegistrationUseCase staffRegistrationUseCase;
 
 	@Transactional
-	@PostMapping("/auth/staff/registration")
+	@PostMapping("/staff/registration")
 	public ResponseEntity<?> register(@RequestBody StaffRegistrationRequest request,
 	                                  @AuthenticationPrincipal UserPrincipal principal){
 		StaffRegistrationWebPresenter presenter = new StaffRegistrationWebPresenter();

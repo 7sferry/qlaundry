@@ -34,9 +34,10 @@ public class TenantRegistrationJpaGateway implements TenantRegistrationGateway{
 	}
 
 	@Override
-	public StaffRegistrationResponse registerAdmin(StaffRegistrationRequest request, String userId){
+	public StaffRegistrationResponse registerAdmin(StaffRegistrationRequest request, String userId, String tenantId){
 		StaffRegistrationResponse[] result = new StaffRegistrationResponse[1];
-		staffRegistrationUseCase.execute(request, UserPrincipal.ofUserId(userId), response -> result[0] = response);
+		UserPrincipal principal = UserPrincipal.registerFromTenant(userId, tenantId);
+		staffRegistrationUseCase.execute(request, principal, response -> result[0] = response);
 		return result[0];
 	}
 

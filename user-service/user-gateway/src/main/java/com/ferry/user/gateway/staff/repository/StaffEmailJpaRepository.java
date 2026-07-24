@@ -28,6 +28,7 @@ public interface StaffEmailJpaRepository extends JpaRepository<StaffEmailJpaEnti
 			"FROM StaffEmailJpaEntity se " +
 			"WHERE exists(SELECT 1 FROM StaffJpaEntity s WHERE s.id = se.staffId AND s.username = :username AND s.deleted IS FALSE) " +
 			"AND se.deleted IS FALSE " +
+			"AND se.email IS NOT NULL " +
 			"ORDER BY se.id " +
 			"LIMIT 1")
 	Optional<StaffEmailForgottenPasswordProjection> findForForgottenPassword(@Param("username") String username);
