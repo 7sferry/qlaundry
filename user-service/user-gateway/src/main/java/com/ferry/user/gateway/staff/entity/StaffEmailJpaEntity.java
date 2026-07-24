@@ -24,10 +24,10 @@ public class StaffEmailJpaEntity{
 	@Id
 	@Column(nullable = false, length = 50)
 	private String id;
-	@JoinColumn(nullable = false, insertable = false, updatable = false)
+	@JoinColumn(nullable = false)
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private StaffJpaEntity staff;
-	@Column(name = "staff_id")
+	@Column(name = "staff_id", insertable = false, updatable = false)
 	private String staffId;
 	@Column(nullable = false, length = 100)
 	private String email;
@@ -44,10 +44,10 @@ public class StaffEmailJpaEntity{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
-	public static StaffEmailJpaEntity create(String id, StaffEmailDomain register, StaffJpaEntity staff){
+	public static StaffEmailJpaEntity construct(String id, StaffEmailDomain register, StaffJpaEntity staff){
 		StaffEmailJpaEntity entity = new StaffEmailJpaEntity();
 		entity.id = id;
-		entity.staffId = register.staffId();
+		entity.staffId = staff.getId();
 		entity.staff = staff;
 		entity.email = register.email().value();
 		entity.createdBy = register.createdBy();
@@ -59,7 +59,7 @@ public class StaffEmailJpaEntity{
 		return entity;
 	}
 
-	public static StaffEmailDomain constructUserEmailDomain(StaffEmailJpaEntity saved){
+	public static StaffEmailDomain construct(StaffEmailJpaEntity saved){
 		return new StaffEmailDomain(saved.id, saved.staffId, new EmailDomain(saved.email), saved.version,
 				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
 	}

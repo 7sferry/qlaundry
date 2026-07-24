@@ -24,10 +24,10 @@ public class StaffPhoneJpaEntity{
 	@Id
 	@Column(nullable = false, length = 50)
 	private String id;
-	@JoinColumn(nullable = false, insertable = false, updatable = false)
+	@JoinColumn(nullable = false)
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private StaffJpaEntity staff;
-	@Column(name = "staff_id")
+	@Column(name = "staff_id", insertable = false, updatable = false)
 	private String staffId;
 	@Column(nullable = false, length = 20)
 	private String phone;
@@ -44,10 +44,10 @@ public class StaffPhoneJpaEntity{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
-	public static StaffPhoneJpaEntity create(String id, StaffPhoneDomain register, StaffJpaEntity staff){
+	public static StaffPhoneJpaEntity construct(String id, StaffPhoneDomain register, StaffJpaEntity staff){
 		StaffPhoneJpaEntity entity = new StaffPhoneJpaEntity();
 		entity.id = id;
-		entity.staffId = register.staffId();
+		entity.staffId = staff.getId();
 		entity.staff = staff;
 		entity.phone = register.phone().value();
 		entity.createdBy = register.createdBy();
@@ -59,7 +59,7 @@ public class StaffPhoneJpaEntity{
 		return entity;
 	}
 
-	public static StaffPhoneDomain constructUserPhoneDomain(StaffPhoneJpaEntity saved){
+	public static StaffPhoneDomain construct(StaffPhoneJpaEntity saved){
 		return new StaffPhoneDomain(saved.id, saved.staffId, new PhoneDomain(saved.phone), saved.version,
 				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
 	}

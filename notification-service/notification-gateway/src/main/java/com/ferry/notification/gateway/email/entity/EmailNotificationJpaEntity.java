@@ -39,7 +39,7 @@ public class EmailNotificationJpaEntity{
 	@Column(nullable = false)
 	private Instant sentAt;
 
-	public static EmailNotificationJpaEntity create(String id, EmailNotificationDomain notification){
+	public static EmailNotificationJpaEntity construct(String id, EmailNotificationDomain notification){
 		EmailNotificationJpaEntity entity = new EmailNotificationJpaEntity();
 		entity.id = id;
 		entity.referenceId = notification.referenceId();

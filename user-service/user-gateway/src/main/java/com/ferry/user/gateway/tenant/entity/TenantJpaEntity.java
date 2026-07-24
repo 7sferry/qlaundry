@@ -39,7 +39,7 @@ public class TenantJpaEntity{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
-	public static TenantJpaEntity create(String id, TenantDomain tenant){
+	public static TenantJpaEntity construct(String id, TenantDomain tenant){
 		TenantJpaEntity entity = new TenantJpaEntity();
 		entity.id = id;
 		entity.createdAt = tenant.createdAt();

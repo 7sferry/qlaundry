@@ -1,9 +1,7 @@
 package com.ferry.user.webservice.staff.resetpassword;
 
-import com.ferry.user.core.staff.forgotpassword.StaffForgottenPasswordRequest;
 import com.ferry.user.core.staff.resetpassword.StaffResetPasswordRequest;
 import com.ferry.user.core.staff.resetpassword.StaffResetPasswordUseCase;
-import com.ferry.user.webservice.staff.forgottenpassword.StaffForgottenPasswordWebPresenter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;

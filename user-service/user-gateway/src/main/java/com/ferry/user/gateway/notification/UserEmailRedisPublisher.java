@@ -47,8 +47,8 @@ public class UserEmailRedisPublisher implements UserEmailPublisher{
 		EmailTriggerDomain trigger = EmailTriggerDomain.create(config.triggerType(), config.recipient(), jsonPayload,
 				config.userId());
 		String id = idGenerator.generateId();
-		EmailTriggerJpaEntity saved = emailTriggerJpaRepository.saveAndFlush(EmailTriggerJpaEntity.create(id, trigger));
-		return EmailTriggerJpaEntity.constructEmailTriggerDomain(saved);
+		EmailTriggerJpaEntity saved = emailTriggerJpaRepository.saveAndFlush(EmailTriggerJpaEntity.construct(id, trigger));
+		return EmailTriggerJpaEntity.construct(saved);
 	}
 
 	@Override

@@ -36,10 +36,10 @@ public class StaffJpaEntity{
 	private String fullName;
 	@Column
 	private String description;
-	@JoinColumn(nullable = false, insertable = false, updatable = false)
+	@JoinColumn(nullable = false)
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private TenantJpaEntity tenant;
-	@Column(name = "tenant_id")
+	@Column(name = "tenant_id", insertable = false, updatable = false)
 	private String tenantId;
 	@Version
 	private Integer version;
@@ -62,18 +62,14 @@ public class StaffJpaEntity{
 				saved.updatedBy);
 	}
 
-	public static StaffJpaEntity construct(StaffDomain register, TenantJpaEntity tenant){
-		return create(register.id(), register, tenant);
-	}
-
-	public static StaffJpaEntity create(String id, StaffDomain register, TenantJpaEntity tenant){
+	public static StaffJpaEntity construct(String id, StaffDomain register, TenantJpaEntity tenant){
 		StaffJpaEntity entity = new StaffJpaEntity();
 		entity.id = id;
 		entity.username = register.usernameValue();
 		entity.description = register.descriptionValue();
 		entity.password = register.passwordValue();
 		entity.fullName = register.fullNameValue();
-		entity.tenantId = register.tenantId();
+		entity.tenantId = tenant.getId();
 		entity.tenant = tenant;
 		entity.createdBy = register.createdBy();
 		entity.updatedAt = register.updatedAt();

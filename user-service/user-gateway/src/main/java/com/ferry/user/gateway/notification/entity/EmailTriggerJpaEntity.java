@@ -46,7 +46,7 @@ public class EmailTriggerJpaEntity{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
-	public static EmailTriggerJpaEntity create(String id, EmailTriggerDomain trigger){
+	public static EmailTriggerJpaEntity construct(String id, EmailTriggerDomain trigger){
 		EmailTriggerJpaEntity entity = new EmailTriggerJpaEntity();
 		entity.id = id;
 		entity.type = trigger.typeValue();
@@ -62,10 +62,11 @@ public class EmailTriggerJpaEntity{
 		return entity;
 	}
 
-	public static EmailTriggerDomain constructEmailTriggerDomain(EmailTriggerJpaEntity saved){
+	public static EmailTriggerDomain construct(EmailTriggerJpaEntity saved){
 		return new EmailTriggerDomain(saved.id, EmailTriggerType.valueOf(saved.type),
 				new EmailDomain(saved.recipient), saved.payload,
 				EmailTriggerStatus.valueOf(saved.status), saved.version, saved.deleted,
 				saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
 	}
+
 }

@@ -24,7 +24,7 @@ public class EmailHistoryJpaGateway implements EmailHistoryGateway{
 	@Override
 	public EmailNotificationDomain save(EmailNotificationDomain notification){
 		String id = idGenerator.generateId();
-		EmailNotificationJpaEntity entity = EmailNotificationJpaEntity.create(id, notification);
+		EmailNotificationJpaEntity entity = EmailNotificationJpaEntity.construct(id, notification);
 		EmailNotificationJpaEntity saved = emailNotificationJpaRepository.save(entity);
 		return constructEmailNotificationDomain(saved);
 	}

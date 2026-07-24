@@ -24,10 +24,10 @@ public class StaffAddressJpaEntity{
 	@Id
 	@Column(nullable = false, length = 50)
 	private String id;
-	@JoinColumn(nullable = false, insertable = false, updatable = false)
+	@JoinColumn(nullable = false)
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private StaffJpaEntity staff;
-	@Column(name = "staff_id")
+	@Column(name = "staff_id", insertable = false, updatable = false)
 	private String staffId;
 	@Column(nullable = false)
 	private String addressLine;
@@ -44,10 +44,10 @@ public class StaffAddressJpaEntity{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
-	public static StaffAddressJpaEntity create(String id, StaffAddressDomain register, StaffJpaEntity staff){
+	public static StaffAddressJpaEntity construct(String id, StaffAddressDomain register, StaffJpaEntity staff){
 		StaffAddressJpaEntity entity = new StaffAddressJpaEntity();
 		entity.id = id;
-		entity.staffId = register.staffId();
+		entity.staffId = staff.getId();
 		entity.staff = staff;
 		entity.addressLine = register.addressLine().value();
 		entity.createdBy = register.createdBy();

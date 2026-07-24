@@ -26,10 +26,10 @@ public class UserSessionJpaEntity{
 	Instant expirationTime;
 	@Column(nullable = false)
 	String userId;
-	@JoinColumn(nullable = false, insertable = false, updatable = false)
+	@JoinColumn(nullable = false)
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	UserSessionTypeJpaEntity sessionType;
-	@Column(name = "session_type_id")
+	@Column(name = "session_type_id", insertable = false, updatable = false)
 	private int sessionTypeId;
 	@Version
 	private Integer version;
@@ -44,8 +44,8 @@ public class UserSessionJpaEntity{
 		entity.createdAt = userSession.createdAt();
 		entity.expirationTime = userSession.expirationTime();
 		entity.userId = userSession.userId();
-		entity.sessionTypeId = userSession.sessionTypeValue();
 		entity.sessionType = sessionType;
+		entity.sessionTypeId = sessionType.getId();
 		entity.updatedAt = userSession.updatedAt();
 		entity.version = userSession.version();
 		return entity;

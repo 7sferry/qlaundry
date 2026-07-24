@@ -30,7 +30,7 @@ public class StaffResetPasswordJpaGateway implements StaffResetPasswordGateway{
 	@Override
 	public void save(StaffDomain updatedStaff){
 		TenantJpaEntity tenant = tenantJpaRepository.getReferenceById(updatedStaff.tenantId());
-		staffJpaRepository.save(StaffJpaEntity.construct(updatedStaff, tenant));
+		staffJpaRepository.save(StaffJpaEntity.construct(updatedStaff.id(), updatedStaff, tenant));
 	}
 
 }
