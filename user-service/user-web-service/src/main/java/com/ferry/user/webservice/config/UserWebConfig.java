@@ -59,6 +59,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password4j.Argon2Password4jPasswordEncoder;
+import org.springframework.transaction.PlatformTransactionManager;
 import tools.jackson.databind.ObjectMapper;
 
 /************************
@@ -80,9 +81,10 @@ public class UserWebConfig{
 	UserEmailPublisher tenantRegistrationEmailGateway(EmailTriggerJpaRepository emailTriggerJpaRepository,
 	                                                  IdGenerator idGenerator, JsonManager jsonManager,
 	                                                  StringRedisTemplate stringRedisTemplate,
+	                                                  PlatformTransactionManager transactionManager,
 	                                                  @Value("${app.notification.stream.email.key}") String streamEmailKey){
 		return new UserEmailRedisPublisher(emailTriggerJpaRepository, idGenerator, jsonManager, stringRedisTemplate,
-				streamEmailKey);
+				transactionManager, streamEmailKey);
 	}
 
 	@Bean

@@ -16,6 +16,8 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -26,12 +28,15 @@ import java.util.List;
 public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPasswordUseCase {
 	private static final String ALPHABET = "qwertyuiopasdfghjklzxcvbnm";
 	private static final BigInteger ALPHABET_LENGTH = BigInteger.valueOf(ALPHABET.length());
-	private static final List<String> EMAIL_DOMAIN = List.of("gmail","yahoo","mail");
+	private static final List<String> EMAIL_DOMAIN_PREFIXES = List.of("g","y","m");
+	private static final BigInteger EMAIL_DOMAIN_LENGTH = BigInteger.valueOf(EMAIL_DOMAIN_PREFIXES.size());
 	private static final int MAX_REPEATED_ASTERISK = 7;
 	private static final int MIN_REPEATED_ASTERISK = 3;
 	private static final BigInteger REPEATED_ASTERISK_RANGE = BigInteger.valueOf(MAX_REPEATED_ASTERISK - MIN_REPEATED_ASTERISK + 1);
 	private static final char AT_SYMBOL = '@';
 	private static final String TLD = ".com";
+	private static final long MIN_RESPONSE_MILLIS = 300;
+	private static final long MAX_TIMEOUT_RANGE = 100;
 
 	private final StaffForgottenPasswordGateway gateway;
 	private final UserEmailPublisher emailPublisher;
@@ -39,11 +44,12 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 
 	@Override
 	public void execute(StaffForgottenPasswordRequest request, StaffForgottenPasswordPresenter presenter){
+		long startedAt = System.nanoTime();
 		UsernameDomain username = new UsernameDomain(request.username());
 		gateway.findEmailWithUsername(username).ifPresentOrElse(email -> {
-			String otp = String.format("%06d", PasswordConstant.GENERATOR.nextInt(1, 1000000));
+			String otp = String.format("%06d", PasswordConstant.getRandom().nextInt(0, 1_000_000));
 			userCacheManager.set(PasswordConstant.OTP_KEY + username.value(), otp,
-					PasswordConstant.OTP_DURATION_MINUTES);
+					PasswordConstant.OTP_DURATION);
 			ForgottenPasswordOtpDomain payload = new ForgottenPasswordOtpDomain(request.username(), otp);
 			EmailDomain recipient = new EmailDomain(email.email());
 			EmailTriggerConfig config = new EmailTriggerConfig(payload, email.staffId(),
@@ -51,11 +57,24 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 			EmailTriggerDomain saved = emailPublisher.save(config);
 			emailPublisher.publish(saved);
 			String maskedEmail = maskEmail(email.email());
+			awaitMinimumResponseTime(startedAt);
 			presenter.present(new StaffForgottenPasswordResponse(maskedEmail));
 		}, () -> {
 			String maskedFakeEmail = maskFakeEmail(username.value());
+			awaitMinimumResponseTime(startedAt);
 			presenter.present(new StaffForgottenPasswordResponse(maskedFakeEmail));
 		});
+	}
+
+	@SneakyThrows
+	private void awaitMinimumResponseTime(long startedAtNanos){
+		long elapsedMillis = (System.nanoTime() - startedAtNanos) / 1_000_000;
+		long remainingMillis = MIN_RESPONSE_MILLIS - elapsedMillis;
+		if(remainingMillis > 0){
+			long maxTimeout = remainingMillis + MAX_TIMEOUT_RANGE;
+			long timeout = ThreadLocalRandom.current().nextLong(remainingMillis, maxTimeout);
+			TimeUnit.MILLISECONDS.sleep(timeout);
+		}
 	}
 
 	private String maskFakeEmail(String username) {
@@ -68,7 +87,7 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 		int lastIndex = hashedInt.mod(ALPHABET_LENGTH).intValue();
 		hashedInt = hashedInt.divide(ALPHABET_LENGTH);
 
-		int domainIndex = hashedInt.mod(BigInteger.valueOf(EMAIL_DOMAIN.size())).intValue();
+		int domainIndex = hashedInt.mod(EMAIL_DOMAIN_LENGTH).intValue();
 		hashedInt = hashedInt.divide(ALPHABET_LENGTH);
 
 		int repeatedLocalNameAsterisk = hashedInt.mod(REPEATED_ASTERISK_RANGE).intValue();
@@ -80,7 +99,7 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 				"*".repeat(MIN_REPEATED_ASTERISK + repeatedLocalNameAsterisk) +
 				ALPHABET.charAt(lastIndex) +
 				AT_SYMBOL +
-				EMAIL_DOMAIN.get(domainIndex).charAt(0) +
+				EMAIL_DOMAIN_PREFIXES.get(domainIndex) +
 				"*".repeat(MIN_REPEATED_ASTERISK + repeatedDomainAsterisk) +
 				TLD;
 	}

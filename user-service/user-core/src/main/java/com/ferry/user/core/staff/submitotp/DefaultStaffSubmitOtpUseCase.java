@@ -6,7 +6,6 @@ import com.ferry.user.domain.UsernameDomain;
 import com.ferry.user.domain.exception.InvalidOtpException;
 import lombok.RequiredArgsConstructor;
 
-import java.security.SecureRandom;
 import java.util.HexFormat;
 
 /************************
@@ -32,13 +31,13 @@ public class DefaultStaffSubmitOtpUseCase implements StaffSubmitOtpUseCase {
 		cacheManager.delete(otpKey);
 		String resetToken = generateResetToken();
 		cacheManager.set(PasswordConstant.RESET_TOKEN_KEY + username.value(), resetToken,
-				PasswordConstant.RESET_TOKEN_DURATION_MINUTES);
+				PasswordConstant.RESET_TOKEN_DURATION);
 		presenter.present(new StaffSubmitOtpResponse(resetToken));
 	}
 
 	private String generateResetToken(){
 		byte[] tokenBytes = new byte[RESET_TOKEN_BYTES];
-		PasswordConstant.GENERATOR.nextBytes(tokenBytes);
+		PasswordConstant.getRandom().nextBytes(tokenBytes);
 		return HexFormat.of().formatHex(tokenBytes);
 	}
 

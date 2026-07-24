@@ -17,26 +17,15 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 public class DefaultTokenGenerator implements TokenGenerator{
-	private static final Base64.Encoder BASE_64_ENCODER = Base64.getUrlEncoder().withoutPadding();
-	private static final SecureRandom SECURE_RANDOM;
-
-	static{
-		SecureRandom instanceStrong;
-		try{
-			instanceStrong = SecureRandom.getInstanceStrong();
-		} catch(NoSuchAlgorithmException e){
-			instanceStrong = new SecureRandom();
-		}
-		SECURE_RANDOM = instanceStrong;
-	}
 
 	private final PrivateKey privateKey;
 
 	@Override
 	public String generateRefreshToken(){
 		byte[] bytes = new byte[32];
-		SECURE_RANDOM.nextBytes(bytes);
-		return CrockfordBase32.encodeTimestamp(System.currentTimeMillis()) + BASE_64_ENCODER.encodeToString(bytes);
+		GeneratorHolder.SECURE_RANDOM.nextBytes(bytes);
+		return CrockfordBase32.encodeTimestamp(System.currentTimeMillis()) +
+				GeneratorHolder.BASE_64_ENCODER.encodeToString(bytes);
 	}
 
 	@SneakyThrows
@@ -45,7 +34,7 @@ public class DefaultTokenGenerator implements TokenGenerator{
 		String uniquePart = token.substring(10);
 		MessageDigest sha256 = MessageDigest.getInstance("SHA256");
 		byte[] digest = sha256.digest(uniquePart.getBytes());
-		return token.substring(0, 10) + BASE_64_ENCODER.encodeToString(digest);
+		return token.substring(0, 10) + GeneratorHolder.BASE_64_ENCODER.encodeToString(digest);
 	}
 
 	@Override
@@ -56,6 +45,23 @@ public class DefaultTokenGenerator implements TokenGenerator{
 				.expiration(new Date(System.currentTimeMillis() + (expirationTimeInSeconds  * 1000L)))
 				.signWith(privateKey)
 				.compact();
+	}
+
+	static final class GeneratorHolder{
+
+		private static final SecureRandom SECURE_RANDOM;
+		private static final Base64.Encoder BASE_64_ENCODER = Base64.getUrlEncoder().withoutPadding();
+
+		static{
+			SecureRandom instanceStrong;
+			try{
+				instanceStrong = SecureRandom.getInstanceStrong();
+			} catch(NoSuchAlgorithmException e){
+				instanceStrong = new SecureRandom();
+			}
+			SECURE_RANDOM = instanceStrong;
+		}
+
 	}
 
 }
