@@ -16,6 +16,7 @@ import OrderHistoryPage from '@/features/orders/presentation/pages/OrderHistoryP
 import ReportsPage from '@/features/reports/presentation/pages/ReportsPage';
 import CustomersPage from '@/features/customers/presentation/pages/CustomersPage';
 import StaffPage from '@/features/staff/presentation/pages/StaffPage';
+import StaffSettingsPage from '@/features/staff/presentation/pages/StaffSettingsPage';
 import Sidebar from '@/shared/components/Sidebar';
 import Topbar from '@/shared/components/Topbar';
 import {AuthProvider} from "@/features/auth/presentation/AuthContextProvider";
@@ -82,6 +83,7 @@ export default function App() {
                   <Route path="/orders/history" element={<OrderHistoryPage/>}/>
                   <Route path="/customers" element={<CustomersPage/>}/>
                   <Route path="/staff" element={<StaffPage/>}/>
+                  <Route path="/settings" element={<StaffSettingsPage/>}/>
                   <Route path="/reports" element={<ReportsPage/>}/>
                   <Route path="*" element={<Navigate to="/dashboard" replace/>}/>
                 </Route>

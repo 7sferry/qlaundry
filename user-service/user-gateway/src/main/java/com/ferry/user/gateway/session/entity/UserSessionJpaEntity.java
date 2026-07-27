@@ -33,7 +33,7 @@ public class UserSessionJpaEntity{
 	UserSessionTypeJpaEntity sessionType;
 	@Column(name = "session_type_id", insertable = false, updatable = false)
 	@Setter(AccessLevel.PRIVATE)
-	private int sessionTypeId;
+	private short sessionTypeId;
 	@Version
 	private Integer version;
 	@Column(nullable = false, updatable = false)

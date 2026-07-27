@@ -17,17 +17,17 @@ import java.util.stream.Stream;
 @Getter
 @RequiredArgsConstructor
 public enum SessionType{
-	STAFF(1),
-	CUSTOMER(2),
+	STAFF((short) 1),
+	CUSTOMER((short) 2),
 	;
 
-	private static final Map<Integer,SessionType> SESSION_TYPE_MAP = Stream.of(SessionType.values())
+	private static final Map<Short,SessionType> SESSION_TYPE_MAP = Stream.of(SessionType.values())
 			.collect(Collectors.collectingAndThen(Collectors.toMap(o -> o.value, o -> o),
 					Collections::unmodifiableMap));
 
-	private final int value;
+	private final short value;
 
-	public static Optional<SessionType> fromValue(int value){
+	public static Optional<SessionType> fromValue(short value){
 		return Optional.ofNullable(SESSION_TYPE_MAP.get(value));
 	}
 

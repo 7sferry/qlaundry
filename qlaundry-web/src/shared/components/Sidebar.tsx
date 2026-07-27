@@ -3,7 +3,7 @@
  * on Juli 2026         *
  ************************/
 
-import type {FC} from 'react';
+import {type FC, useEffect, useRef, useState} from 'react';
 import {NavLink, useNavigate} from 'react-router-dom';
 import {
 	BarChart3,
@@ -12,6 +12,7 @@ import {
 	LogOut,
 	Moon,
 	PackagePlus,
+	Settings,
 	Sun,
 	UserCog,
 	Users,
@@ -33,6 +34,8 @@ const Sidebar: FC = () => {
 	const {user, logout} = useAuth();
 	const {theme, toggleTheme} = useTheme();
 	const navigate = useNavigate();
+	const [menuOpen, setMenuOpen] = useState(false);
+	const menuRef = useRef<HTMLDivElement>(null);
 
 	const initials =
 			user?.avatarInitials ??
@@ -40,9 +43,26 @@ const Sidebar: FC = () => {
 					? user.fullName.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase()
 					: '?');
 
+	useEffect(() => {
+		if (!menuOpen) return;
+		const handleClickOutside = (e: MouseEvent) => {
+			if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+				setMenuOpen(false);
+			}
+		};
+		document.addEventListener('mousedown', handleClickOutside);
+		return () => document.removeEventListener('mousedown', handleClickOutside);
+	}, [menuOpen]);
+
 	const handleLogout = async () => {
+		setMenuOpen(false);
 		await logout();
 		navigate('/login', {replace: true});
+	};
+
+	const goToSettings = () => {
+		setMenuOpen(false);
+		navigate('/settings');
 	};
 
 	return (
@@ -79,15 +99,28 @@ const Sidebar: FC = () => {
 						{theme === 'dark' ? <Sun size={17}/> : <Moon size={17}/>}
 						{theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
 					</button>
-					<button className="nav-item nav-item--logout" onClick={() => void handleLogout()}>
-						<LogOut size={17}/> Keluar
-					</button>
-					<div className="user-chip">
-						<span className="avatar">{initials}</span>
-						<span>
-            <strong>{user?.fullName ?? 'User'}</strong>
-            <small>{user?.role === 'owner' ? 'Pemilik' : user?.role === 'admin' ? 'Admin' : 'Staff'}</small>
-          </span>
+					<div className="user-menu-wrap" ref={menuRef}>
+						{menuOpen && (
+								<div className="user-menu">
+									<button className="user-menu__item" onClick={goToSettings}>
+										<Settings size={15}/> Pengaturan
+									</button>
+									<button className="user-menu__item user-menu__item--danger" onClick={() => void handleLogout()}>
+										<LogOut size={15}/> Keluar
+									</button>
+								</div>
+						)}
+						<button
+								className="user-chip user-chip--trigger"
+								onClick={() => setMenuOpen((o) => !o)}
+								aria-expanded={menuOpen}
+						>
+							<span className="avatar">{initials}</span>
+							<span>
+              <strong>{user?.fullName ?? 'User'}</strong>
+              <small>{user?.role === 'owner' ? 'Pemilik' : user?.role === 'admin' ? 'Admin' : 'Staff'}</small>
+            </span>
+						</button>
 					</div>
 				</div>
 			</aside>

@@ -56,14 +56,10 @@ export class StaffRepositoryImpl implements StaffRepository {
 	}
 
 	async getStaffById(id: string): Promise<Staff> {
-		return withFallback<Staff>(
-				() => httpClient.get<Staff>(`/api/staff/${id}`),
-				() => {
-					const s = localStaff.find((x) => x.id === id);
-					if (!s) throw new Error(`Staff ${id} not found`);
-					return s;
-				},
+		const res = await httpClient.get<StaffListApiResponse['staffs'][number]>(
+				`/staff/detail?username=${encodeURIComponent(id)}`,
 		);
+		return toStaff(res);
 	}
 
 	async createStaff(input: CreateStaffInput): Promise<Staff> {

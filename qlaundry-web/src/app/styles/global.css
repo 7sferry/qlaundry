@@ -217,14 +217,6 @@ button {
     font-weight: 600;
 }
 
-.nav-item--logout {
-    color: var(--danger);
-}
-
-.nav-item--logout:hover {
-    background: var(--danger-bg);
-}
-
 .sidebar__spacer {
     flex: 1;
 }
@@ -238,6 +230,70 @@ button {
     border-top: 1px solid var(--border);
     padding: 14px 8px 0;
     margin-top: 8px;
+}
+
+.user-menu-wrap {
+    position: relative;
+}
+
+button.user-chip--trigger {
+    background: none;
+    border: none;
+    font: inherit;
+    color: inherit;
+    width: 100%;
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    transition: background var(--transition);
+}
+
+button.user-chip--trigger:hover {
+    background: var(--surface-2);
+}
+
+.user-menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    margin-bottom: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    padding: 6px;
+    display: grid;
+    gap: 2px;
+    z-index: 20;
+}
+
+.user-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: background var(--transition);
+}
+
+.user-menu__item:hover {
+    background: var(--surface-2);
+}
+
+.user-menu__item--danger {
+    color: var(--danger);
+}
+
+.user-menu__item--danger:hover {
+    background: var(--danger-bg);
 }
 
 /* ── Topbar ── */
@@ -1923,14 +1979,27 @@ button {
     .sidebar__footer {
         display: flex;
         gap: 4px;
+        align-items: center;
+    }
+
+    .sidebar__footer .nav-item {
+        display: none;
     }
 
     .sidebar__footer .user-chip {
-        display: none;
+        border-top: none;
+        padding: 0;
+        margin-top: 0;
     }
 
-    .sidebar__footer .nav-item:not(.nav-item--logout) {
-        display: none;
+    .user-menu {
+        bottom: auto;
+        top: 100%;
+        left: auto;
+        right: 0;
+        margin-bottom: 0;
+        margin-top: 8px;
+        min-width: 190px;
     }
 
     .auth-shell {

@@ -37,6 +37,7 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 	private static final String TLD = ".com";
 	private static final long MIN_RESPONSE_MILLIS = 300;
 	private static final long MAX_TIMEOUT_RANGE = 100;
+	private static final long MILLIS_IN_NANO = 1_000_000L;
 
 	private final StaffForgottenPasswordGateway gateway;
 	private final UserEmailPublisher emailPublisher;
@@ -68,11 +69,11 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 
 	@SneakyThrows
 	private void awaitMinimumResponseTime(long startedAtNanos){
-		long elapsedMillis = (System.nanoTime() - startedAtNanos) / 1_000_000;
+		long elapsedMillis = (System.nanoTime() - startedAtNanos) / MILLIS_IN_NANO;
 		long remainingMillis = MIN_RESPONSE_MILLIS - elapsedMillis;
 		if(remainingMillis > 0){
 			long maxTimeout = remainingMillis + MAX_TIMEOUT_RANGE;
-			long timeout = ThreadLocalRandom.current().nextLong(remainingMillis, maxTimeout);
+			long timeout = PasswordConstant.getRandom().nextLong(remainingMillis, maxTimeout);
 			TimeUnit.MILLISECONDS.sleep(timeout);
 		}
 	}

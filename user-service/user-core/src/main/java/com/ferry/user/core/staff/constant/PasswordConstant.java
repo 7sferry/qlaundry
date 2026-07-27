@@ -12,8 +12,8 @@ import java.util.Random;
 public class PasswordConstant{
 	public static final String OTP_KEY = "forgottenPassword:otp:";
 	public static final String RESET_TOKEN_KEY = "forgottenPassword:resetToken:";
-	public static final Duration OTP_DURATION = Duration.ofMinutes(4);
-	public static final Duration RESET_TOKEN_DURATION = Duration.ofMinutes(5);
+	public static final Duration OTP_DURATION = Duration.ofMinutes(5);
+	public static final Duration RESET_TOKEN_DURATION = Duration.ofMinutes(7);
 
 	public static Random getRandom() {
 		return RandomHolder.GENERATOR;

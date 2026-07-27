@@ -20,7 +20,7 @@ import lombok.Setter;
 @Entity
 public class UserSessionTypeJpaEntity{
 	@Id
-	private int id;
+	private short id;
 	@Column(nullable = false, length = 25)
 	private String name;
 }

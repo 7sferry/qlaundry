@@ -11,16 +11,15 @@ import StaffForm from '../components/StaffForm';
 import {type StaffFormData, emptyStaffForm} from '../components/staffFormData';
 import StaffTable from '../components/StaffTable';
 import StaffDetailDrawer from '../components/StaffDetailDrawer';
-import type {CreateStaffInput, Staff, UpdateStaffInput} from '../../domain/Staff';
+import type {CreateStaffInput, Staff} from '../../domain/Staff';
 
 export default function StaffPage() {
-	const {staff, loading, createStaff, updateStaff, deleteStaff} = useStaff();
+	const {staff, loading, createStaff, deleteStaff} = useStaff();
 	const toast = useToast();
 
 	const [search, setSearch] = useState('');
 	const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
 	const [showAddModal, setShowAddModal] = useState(false);
-	const [editMode, setEditMode] = useState(false);
 	const [form, setForm] = useState<StaffFormData>(emptyStaffForm);
 	const [saving, setSaving] = useState(false);
 
@@ -48,51 +47,22 @@ export default function StaffPage() {
 		setShowAddModal(true);
 	};
 
-	const openEdit = (s: Staff) => {
-		setForm({
-			username: s.username,
-			password: '',
-			fullName: s.fullName,
-			description: s.description ?? '',
-			email: s.emails[0] ?? '',
-			phone: s.phones[0] ?? '',
-			address: s.addresses[0] ?? '',
-		});
-		setEditMode(true);
-		setSelectedStaff(s);
-	};
-
 	const handleSave = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setSaving(true);
 		try {
-			if (editMode && selectedStaff) {
-				const input: UpdateStaffInput = {
-					id: selectedStaff.id,
-					fullName: form.fullName,
-					description: form.description || undefined,
-					emails: form.email ? [form.email] : [],
-					phones: form.phone ? [form.phone] : [],
-					addresses: form.address ? [form.address] : [],
-				};
-				const updated = await updateStaff(input);
-				toast.success('Data staf diperbarui.');
-				setEditMode(false);
-				setSelectedStaff(updated);
-			} else {
-				const input: CreateStaffInput = {
-					username: form.username,
-					password: form.password,
-					fullName: form.fullName,
-					description: form.description || undefined,
-					emails: form.email ? [form.email] : [],
-					phones: form.phone ? [form.phone] : [],
-					addresses: form.address ? [form.address] : [],
-				};
-				await createStaff(input);
-				toast.success('Staf baru berhasil ditambahkan.');
-				setShowAddModal(false);
-			}
+			const input: CreateStaffInput = {
+				username: form.username,
+				password: form.password,
+				fullName: form.fullName,
+				description: form.description || undefined,
+				emails: form.email ? [form.email] : [],
+				phones: form.phone ? [form.phone] : [],
+				addresses: form.address ? [form.address] : [],
+			};
+			await createStaff(input);
+			toast.success('Staf baru berhasil ditambahkan.');
+			setShowAddModal(false);
 			setForm(emptyStaffForm);
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Terjadi kesalahan. Coba lagi.');
@@ -118,7 +88,6 @@ export default function StaffPage() {
 
 	const handleCancel = () => {
 		setShowAddModal(false);
-		setEditMode(false);
 		setForm(emptyStaffForm);
 	};
 
@@ -145,7 +114,6 @@ export default function StaffPage() {
 						search={search}
 						onSearchChange={setSearch}
 						onSelect={setSelectedStaff}
-						onEdit={openEdit}
 						onDelete={(s) => void handleDelete(s)}
 						onAdd={openAdd}
 				/>
@@ -157,31 +125,16 @@ export default function StaffPage() {
 							onSubmit={handleSave}
 							onCancel={handleCancel}
 							saving={saving}
-							editMode={editMode}
+							editMode={false}
 					/>
 				</Modal>
 
 				<StaffDetailDrawer
 						staff={selectedStaff}
-						open={!!selectedStaff && !editMode}
+						open={!!selectedStaff}
 						onClose={() => setSelectedStaff(null)}
-						onEdit={openEdit}
 						onDelete={(s) => void handleDelete(s)}
 				/>
-
-				<Modal open={editMode} onClose={() => {
-					setEditMode(false);
-					setForm(emptyStaffForm);
-				}} title={`Edit ${selectedStaff?.fullName}`}>
-					<StaffForm
-							form={form}
-							update={update}
-							onSubmit={handleSave}
-							onCancel={handleCancel}
-							saving={saving}
-							editMode={editMode}
-					/>
-				</Modal>
 			</>
 	);
 }

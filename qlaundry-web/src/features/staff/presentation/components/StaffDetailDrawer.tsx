@@ -3,7 +3,7 @@
  * on Juli 2026         *
  ************************/
 
-import {AtSign, Edit2, Trash2} from 'lucide-react';
+import {AtSign, Trash2} from 'lucide-react';
 import {Badge, Button, Drawer} from '@/core/ui';
 import {formatDate} from '@/core/utils/format';
 import type {Staff} from '../../domain/Staff';
@@ -12,11 +12,10 @@ interface StaffDetailDrawerProps {
 	staff: Staff | null;
 	open: boolean;
 	onClose: () => void;
-	onEdit: (staff: Staff) => void;
 	onDelete: (staff: Staff) => void;
 }
 
-export default function StaffDetailDrawer({staff, open, onClose, onEdit, onDelete}: StaffDetailDrawerProps) {
+export default function StaffDetailDrawer({staff, open, onClose, onDelete}: StaffDetailDrawerProps) {
 	return (
 			<Drawer
 					open={open}
@@ -29,9 +28,6 @@ export default function StaffDetailDrawer({staff, open, onClose, onEdit, onDelet
 									<div className="row" style={{gap: 8, justifyContent: 'flex-end'}}>
 										<Button variant="danger" onClick={() => onDelete(staff)}>
 											<Trash2 size={14}/> Hapus
-										</Button>
-										<Button onClick={() => onEdit(staff)}>
-											<Edit2 size={14}/> Edit
 										</Button>
 									</div>
 							)

@@ -3,7 +3,7 @@
  * on Juli 2026         *
  ************************/
 
-import {Edit2, Plus, Search, Trash2, Users} from 'lucide-react';
+import {Plus, Search, Trash2, Users} from 'lucide-react';
 import {Button, Card, Field, Input} from '@/core/ui';
 import {formatDate} from '@/core/utils/format';
 import type {Staff} from '../../domain/Staff';
@@ -13,12 +13,11 @@ interface StaffTableProps {
 	search: string;
 	onSearchChange: (value: string) => void;
 	onSelect: (staff: Staff) => void;
-	onEdit: (staff: Staff) => void;
 	onDelete: (staff: Staff) => void;
 	onAdd: () => void;
 }
 
-export default function StaffTable({staff, search, onSearchChange, onSelect, onEdit, onDelete, onAdd}: StaffTableProps) {
+export default function StaffTable({staff, search, onSearchChange, onSelect, onDelete, onAdd}: StaffTableProps) {
 	return (
 			<Card style={{marginTop: 24, marginBottom: 20}}>
 				<div className="filters">
@@ -73,9 +72,6 @@ export default function StaffTable({staff, search, onSearchChange, onSelect, onE
 									<td>{formatDate(s.joinedAt)}</td>
 									<td onClick={(e) => e.stopPropagation()}>
 										<div className="row" style={{gap: 4}}>
-											<button className="icon-btn" onClick={() => onEdit(s)} title="Edit">
-												<Edit2 size={14}/>
-											</button>
 											<button className="icon-btn icon-btn--danger" onClick={() => onDelete(s)}
 											        title="Hapus">
 												<Trash2 size={14}/>

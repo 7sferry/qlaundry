@@ -12,6 +12,8 @@ const PATH_TITLES: Record<string, string> = {
 	'/orders/new': 'Buat order baru',
 	'/orders/history': 'Riwayat order',
 	'/customers': 'Manajemen pelanggan',
+	'/staff': 'Manajemen staf',
+	'/settings': 'Pengaturan akun',
 	'/reports': 'Laporan & analitik',
 };
 
