@@ -23,11 +23,11 @@ import {useTheme} from '@/core/theme/useTheme';
 
 const NAV_ITEMS: { path: string; label: string; icon: FC<{ size?: number }> }[] = [
 	{path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard},
-	{path: '/orders/new', label: 'Order baru', icon: PackagePlus},
-	{path: '/orders/history', label: 'Riwayat order', icon: ClipboardList},
-	{path: '/customers', label: 'Pelanggan', icon: Users},
-	{path: '/staff', label: 'Staf', icon: UserCog},
-	{path: '/reports', label: 'Laporan', icon: BarChart3},
+	{path: '/orders/new', label: 'New order', icon: PackagePlus},
+	{path: '/orders/history', label: 'Order history', icon: ClipboardList},
+	{path: '/customers', label: 'Customers', icon: Users},
+	{path: '/staff', label: 'Staff', icon: UserCog},
+	{path: '/reports', label: 'Reports', icon: BarChart3},
 ];
 
 const Sidebar: FC = () => {
@@ -97,17 +97,17 @@ const Sidebar: FC = () => {
 				<div className="sidebar__footer">
 					<button className="nav-item" onClick={toggleTheme}>
 						{theme === 'dark' ? <Sun size={17}/> : <Moon size={17}/>}
-						{theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
+						{theme === 'dark' ? 'Light mode' : 'Dark mode'}
 					</button>
 					<div className="user-menu-wrap" ref={menuRef}>
 						{menuOpen && (
 								<div className="user-menu">
-									<button className="user-menu__item" onClick={goToSettings}>
-										<Settings size={15}/> Pengaturan
-									</button>
-									<button className="user-menu__item user-menu__item--danger" onClick={() => void handleLogout()}>
-										<LogOut size={15}/> Keluar
-									</button>
+ 								<button className="user-menu__item" onClick={goToSettings}>
+ 									<Settings size={15}/> Settings
+ 								</button>
+ 								<button className="user-menu__item user-menu__item--danger" onClick={() => void handleLogout()}>
+ 									<LogOut size={15}/> Sign out
+ 								</button>
 								</div>
 						)}
 						<button
@@ -116,10 +116,10 @@ const Sidebar: FC = () => {
 								aria-expanded={menuOpen}
 						>
 							<span className="avatar">{initials}</span>
-							<span>
-              <strong>{user?.fullName ?? 'User'}</strong>
-              <small>{user?.role === 'owner' ? 'Pemilik' : user?.role === 'admin' ? 'Admin' : 'Staff'}</small>
-            </span>
+								<span>
+				      <strong>{user?.fullName ?? 'User'}</strong>
+				      <small>{user?.role === 'owner' ? 'Owner' : user?.role === 'admin' ? 'Admin' : 'Staff'}</small>
+				    </span>
 						</button>
 					</div>
 				</div>

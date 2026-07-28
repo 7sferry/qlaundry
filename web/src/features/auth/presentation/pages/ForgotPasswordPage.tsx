@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
 		try {
 			await action();
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Terjadi kesalahan. Coba lagi.');
+			setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
 		} finally {
 			setLoading(false);
 		}
@@ -89,16 +89,16 @@ export default function ForgotPasswordPage() {
 						<span className="sidebar__logo"><WashingMachine size={20}/></span>
 						QLaundry
 					</div>
-					<p className="eyebrow">Lupa password</p>
-					<h2>Atur ulang password Anda</h2>
+					<p className="eyebrow">Forgot password</p>
+					<h2>Reset your password</h2>
 
 					{error && step !== 'done' && <div className="alert alert--error">{error}</div>}
 
 					{step === 'username' && (
 							<>
-								<p className="muted auth-intro">
-									Masukkan username Anda. Kami akan mengirim kode verifikasi ke email yang terdaftar.
-								</p>
+  						<p className="muted auth-intro">
+  							Enter your username. We’ll send a verification code to your registered email address.
+  						</p>
 
 								<Field label="Username" htmlFor="username">
 									<div className="input-with-icon">
@@ -108,25 +108,24 @@ export default function ForgotPasswordPage() {
 												value={username}
 												onChange={(e) => setUsername(e.target.value)}
 												autoComplete="off"
-												placeholder="Masukkan username"
+    								placeholder="Enter username"
 										/>
 									</div>
 								</Field>
 
 								<Button block type="submit" disabled={loading}>
-									{loading ? 'Mengirim…' : <><span>Kirim kode verifikasi</span> <ArrowRight size={16}/></>}
+  							{loading ? 'Sending…' : <><span>Send verification code</span> <ArrowRight size={16}/></>}
 								</Button>
 							</>
 					)}
 
 					{step === 'otp' && (
 							<>
-								<p className="muted auth-intro">
-									Kode verifikasi telah dikirim ke <strong>{maskedEmail}</strong>. Masukkan 6 digit
-									kode tersebut dalam 3 menit.
-								</p>
+  						<p className="muted auth-intro">
+  							We’ve sent a verification code to <strong>{maskedEmail}</strong>. Enter the 6-digit code within 3 minutes.
+  						</p>
 
-								<Field label="Kode verifikasi" htmlFor="otp">
+  						<Field label="Verification code" htmlFor="otp">
 									<div className="input-with-icon">
 										<KeyRound size={16}/>
 										<Input
@@ -142,18 +141,18 @@ export default function ForgotPasswordPage() {
 								</Field>
 
 								<Button block type="submit" disabled={loading}>
-									{loading ? 'Memverifikasi…' : <><span>Verifikasi kode</span> <ArrowRight size={16}/></>}
+  							{loading ? 'Verifying…' : <><span>Verify code</span> <ArrowRight size={16}/></>}
 								</Button>
 							</>
 					)}
 
 					{step === 'password' && (
 							<>
-								<p className="muted auth-intro">
-									Kode terverifikasi. Buat password baru untuk akun <strong>{username}</strong>.
-								</p>
+  						<p className="muted auth-intro">
+  							Code verified. Create a new password for <strong>{username}</strong>.
+  						</p>
 
-								<Field label="Password baru" htmlFor="new-password">
+  						<Field label="New password" htmlFor="new-password">
 									<div className="input-with-icon">
 										<LockKeyhole size={16}/>
 										<Input
@@ -162,12 +161,12 @@ export default function ForgotPasswordPage() {
 												value={password}
 												onChange={(e) => setPassword(e.target.value)}
 												autoComplete="new-password"
-												placeholder="Minimal 6 karakter"
+    								placeholder="At least 6 characters"
 										/>
 									</div>
 								</Field>
 
-								<Field label="Konfirmasi password baru" htmlFor="confirm-password">
+  						<Field label="Confirm new password" htmlFor="confirm-password">
 									<div className="input-with-icon">
 										<LockKeyhole size={16}/>
 										<Input
@@ -176,13 +175,13 @@ export default function ForgotPasswordPage() {
 												value={confirmPassword}
 												onChange={(e) => setConfirmPassword(e.target.value)}
 												autoComplete="new-password"
-												placeholder="Ulangi password baru"
+    								placeholder="Repeat new password"
 										/>
 									</div>
 								</Field>
 
 								<Button block type="submit" disabled={loading}>
-									{loading ? 'Menyimpan…' : <><span>Simpan password baru</span> <ArrowRight size={16}/></>}
+  							{loading ? 'Saving…' : <><span>Save new password</span> <ArrowRight size={16}/></>}
 								</Button>
 							</>
 					)}
@@ -191,19 +190,19 @@ export default function ForgotPasswordPage() {
 							<>
 								<div className="alert alert--info">
 									<CheckCircle2 size={16}/>{' '}
-									Password Anda berhasil diubah. Silakan masuk dengan password baru.
+  							Your password has been changed. Please sign in with the new password.
 								</div>
 								<Button block type="button" onClick={() => navigate('/login')}>
-									Masuk sekarang
+  							Sign in now
 								</Button>
 							</>
 					)}
 
 					{step !== 'done' && (
 							<p className="auth-switch">
-								Ingat password Anda?{' '}
+  						Remember your password?{' '}
 								<button type="button" onClick={() => navigate('/login')}>
-									Masuk
+  							Sign in
 								</button>
 							</p>
 					)}

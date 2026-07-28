@@ -46,7 +46,7 @@ export default function StaffSettingsPage() {
 					setForm(data);
 					setOriginal(data);
 				})
-				.catch((err) => setError(err instanceof Error ? err.message : 'Gagal memuat profil'))
+ 			.catch((err) => setError(err instanceof Error ? err.message : 'Failed to load profile'))
 				.finally(() => setLoading(false));
 	});
 
@@ -73,7 +73,7 @@ export default function StaffSettingsPage() {
 			const saved: StaffFormData = {...form, currentPassword: '', newPassword: ''};
 			setForm(saved);
 			setOriginal(saved);
-			toast.success('Profil berhasil diperbarui.');
+			toast.success('Profile updated.');
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Terjadi kesalahan. Coba lagi.');
 		} finally {
@@ -81,11 +81,11 @@ export default function StaffSettingsPage() {
 		}
 	};
 
-	if (loading) return <Loading label="Memuat profil…"/>;
+	if (loading) return <Loading label="Loading profile…"/>;
 
 	return (
 			<>
-				<PageHeader title="Pengaturan akun" description="Perbarui data profil Anda sendiri"/>
+				<PageHeader title="Account settings" description="Update your own profile details"/>
 
 				<Card style={{marginTop: 24, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto'}}>
 					{error ? (

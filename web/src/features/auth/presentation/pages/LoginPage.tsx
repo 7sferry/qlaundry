@@ -24,7 +24,7 @@ export default function LoginPage() {
 		try {
 			await login({username, password});
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Login gagal.');
+			setError(err instanceof Error ? err.message : 'Sign-in failed.');
 		} finally {
 			setLoading(false);
 		}
@@ -36,16 +36,16 @@ export default function LoginPage() {
 					<div className="sidebar__logo">
 						<WashingMachine size={26}/>
 					</div>
-					<h1>Kelola laundry Anda dengan lebih cerdas.</h1>
-					<p>Pantau pesanan, jadwal pengambilan, dan laporan bisnis — semua dalam satu tempat.</p>
+					<h1>Run your laundry smarter.</h1>
+					<p>Track orders, pickups, and business reports — all in one place.</p>
 					<div className="auth-features">
-						<div className="auth-feature"><span className="auth-feature__dot"/>Pelacakan pesanan real-time</div>
-						<div className="auth-feature"><span className="auth-feature__dot"/>Manajemen pelanggan</div>
-						<div className="auth-feature"><span className="auth-feature__dot"/>Laporan & analitik bisnis</div>
+						<div className="auth-feature"><span className="auth-feature__dot"/>Real-time order tracking</div>
+						<div className="auth-feature"><span className="auth-feature__dot"/>Customer management</div>
+						<div className="auth-feature"><span className="auth-feature__dot"/>Reports & analytics</div>
 					</div>
 					<div className="auth-quote">
-						"Bisnis laundry yang rapi dimulai dari pengelolaan yang terorganisir."
-						<small>— Tim QLaundry</small>
+						"A tidy laundry business starts with organised management."
+						<small>— QLaundry Team</small>
 					</div>
 				</div>
 
@@ -54,9 +54,9 @@ export default function LoginPage() {
 						<span className="sidebar__logo"><WashingMachine size={20}/></span>
 						QLaundry
 					</div>
-					<p className="eyebrow">Selamat datang kembali</p>
-					<h2>Masuk ke dashboard</h2>
-					<p className="muted auth-intro">Kelola semua aktivitas laundry Anda dari sini.</p>
+					<p className="eyebrow">Welcome back</p>
+					<h2>Sign in to the dashboard</h2>
+					<p className="muted auth-intro">Manage all your laundry operations from here.</p>
 
 					{error && <div className="alert alert--error">{error}</div>}
 
@@ -68,7 +68,7 @@ export default function LoginPage() {
 									value={username}
 									onChange={(e) => setUsername(e.target.value)}
 									autoComplete="off"
-									placeholder="Masukkan username"
+ 								placeholder="Enter username"
 							/>
 						</div>
 					</Field>
@@ -82,26 +82,26 @@ export default function LoginPage() {
 									value={password}
 									onChange={(e) => setPassword(e.target.value)}
 									autoComplete="current-password"
-									placeholder="Masukkan password"
+ 								placeholder="Enter password"
 							/>
 						</div>
 					</Field>
 
 					<Button block type="submit" disabled={loading}>
-						{loading ? 'Memproses…' : <><span>Masuk</span> <ArrowRight size={16}/></>}
+						{loading ? 'Processing…' : <><span>Sign in</span> <ArrowRight size={16}/></>}
 					</Button>
 
 					<p className="auth-switch">
-						Lupa password?{' '}
+						Forgot your password?{' '}
 						<button type="button" onClick={() => navigate('/forgot-password')}>
-							Atur ulang di sini
+							Reset it here
 						</button>
 					</p>
 
 					<p className="auth-switch">
-						Belum punya akun?{' '}
+						Don’t have an account?{' '}
 						<button type="button" onClick={() => navigate('/register')}>
-							Daftar sekarang
+							Register now
 						</button>
 					</p>
 

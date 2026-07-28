@@ -13,10 +13,10 @@ export class SubmitOtpUseCase {
 	}
 
 	/** Resolves with the single-use reset token for the resetPassword step. */
-	execute(username: string, otp: string): Promise<string> {
-		if (!/^\d{6}$/.test(otp.trim())) {
-			return Promise.reject(new Error('Masukkan 6 digit kode verifikasi.'));
+		execute(username: string, otp: string): Promise<string> {
+			if (!/^\d{6}$/.test(otp.trim())) {
+				return Promise.reject(new Error('Enter the 6-digit verification code.'));
+			}
+			return this.repository.submitOtp(username.trim(), otp.trim());
 		}
-		return this.repository.submitOtp(username.trim(), otp.trim());
-	}
 }

@@ -148,10 +148,10 @@ export default function CreateOrderPage() {
 	const applyPromo = () => {
 		setPromoError('');
 		const pct = PROMO_CODES[promoCode.toUpperCase()];
-		if (!pct) {
-			setPromoError('Kode promo tidak valid atau sudah kedaluwarsa.');
-			return;
-		}
+  if (!pct) {
+      setPromoError('Promo code is invalid or has expired.');
+      return;
+    }
 		setPromoApplied({code: promoCode.toUpperCase(), pct});
 	};
 
@@ -182,36 +182,36 @@ export default function CreateOrderPage() {
 		}
 	};
 
-	if (servicesLoading) {
-		return (
-				<div className="center-box">
-					<WashingMachine size={28} className="spin"/>
-					<span>Memuat layanan…</span>
-				</div>
-		);
-	}
+ if (servicesLoading) {
+    return (
+            <div className="center-box">
+              <WashingMachine size={28} className="spin"/>
+              <span>Loading services…</span>
+            </div>
+    );
+  }
 
 	if (success) {
 		return (
-				<div className="center-box" style={{flexDirection: 'column', gap: 16, paddingTop: 80}}>
-					<div className="success-circle"><Check size={32}/></div>
-					<h2>Order berhasil dibuat!</h2>
-					<p className="muted">Mengalihkan ke riwayat order…</p>
-				</div>
-		);
-	}
+        <div className="center-box" style={{flexDirection: 'column', gap: 16, paddingTop: 80}}>
+          <div className="success-circle"><Check size={32}/></div>
+          <h2>Order created successfully!</h2>
+          <p className="muted">Redirecting to order history…</p>
+        </div>
+    );
+  }
 
 	return (
 			<>
-				<PageHeader
-						title="Buat order baru"
-						description="Isi detail di bawah untuk menjadwalkan layanan laundry."
-				/>
+    <PageHeader
+            title="Create new order"
+            description="Fill in the details below to schedule the laundry service."
+        />
 
 				<form onSubmit={submit}>
 					<div className="order-layout">
 						<div className="stack">
-							<Card title="1. Pilih layanan" subtitle="Pilih jenis perawatan yang dibutuhkan.">
+       <Card title="1. Choose service" subtitle="Select the required care type.">
 								<div className="service-grid">
 									{services.map((s) => (
 											<button
@@ -228,7 +228,7 @@ export default function CreateOrderPage() {
 											>
 												<div className="service-card__top">
 													<span className="service-card__icon"><Sparkles size={16}/></span>
-													{s.popular && <Badge tone="info">Populer</Badge>}
+             {s.popular && <Badge tone="info">Popular</Badge>}
 												</div>
 												<strong>{s.name}</strong>
 												<p>{s.description}</p>
@@ -236,7 +236,7 @@ export default function CreateOrderPage() {
                       <span className="service-card__price">
                         {formatCurrency(s.pricePerUnit)}<small> / {s.unit}</small>
                       </span>
-													<span className="muted" style={{fontSize: 11}}>~{s.estimatedHours}j</span>
+                          <span className="muted" style={{fontSize: 11}}>~{s.estimatedHours}h</span>
 												</div>
 											</button>
 									))}
@@ -244,7 +244,7 @@ export default function CreateOrderPage() {
 
 								<div className="priority-row mt-16">
                 <span className="field__label" style={{fontSize: 13, fontWeight: 600, color: 'var(--text-muted)'}}>
-                  Prioritas pengerjaan
+                  Work priority
                 </span>
 									<div className="priority-toggle">
 										<button
@@ -252,14 +252,14 @@ export default function CreateOrderPage() {
 												className={`priority-btn ${priority === 'normal' ? 'priority-btn--active' : ''}`}
 												onClick={() => setPriority('normal')}
 										>
-											<WashingMachine size={14}/> Normal
+           <WashingMachine size={14}/> Normal
 										</button>
 										<button
 												type="button"
 												className={`priority-btn priority-btn--express ${priority === 'express' ? 'priority-btn--active priority-btn--express-active' : ''}`}
 												onClick={() => setPriority('express')}
 										>
-											<Zap size={14}/> Express
+           <Zap size={14}/> Express
 											{service && (
 													<Badge tone="warning">×{service.expressMultiplier}</Badge>
 											)}
@@ -268,9 +268,9 @@ export default function CreateOrderPage() {
 								</div>
 							</Card>
 
-							<Card title="2. Data pelanggan" subtitle="Masukkan atau cari data pelanggan.">
+       <Card title="2. Customer details" subtitle="Enter or look up the customer.">
 								<div className="phone-search">
-									<Field label="Cari pelanggan via nomor HP" htmlFor="phoneSearch">
+         <Field label="Find customer by phone number" htmlFor="phoneSearch">
 										<div className="input-with-icon">
 											<Phone size={16}/>
 											<Input
@@ -278,17 +278,17 @@ export default function CreateOrderPage() {
 													type="tel"
 													value={phoneSearch}
 													onChange={(e) => setPhoneSearch(e.target.value)}
-													placeholder="08xxxxxxxxxx"
+             placeholder="07XXXXXXXXX"
 											/>
 										</div>
 									</Field>
-									<Button type="button" variant="ghost" onClick={() => void lookupPhone()}>
-										<Search size={15}/> Cari
-									</Button>
+         <Button type="button" variant="ghost" onClick={() => void lookupPhone()}>
+                    <Search size={15}/> Search
+                  </Button>
 								</div>
 
 								<div className="form-grid">
-									<Field label="Nama pelanggan" htmlFor="custName">
+         <Field label="Customer name" htmlFor="custName">
 										<div className="input-with-icon">
 											<User2 size={16}/>
 											<Input
@@ -296,11 +296,11 @@ export default function CreateOrderPage() {
 													required
 													value={form.customerName}
 													onChange={update('customerName')}
-													placeholder="Nama lengkap"
+             placeholder="Full name"
 											/>
 										</div>
 									</Field>
-									<Field label="Nomor telepon" htmlFor="custPhone">
+         <Field label="Telephone" htmlFor="custPhone">
 										<div className="input-with-icon">
 											<Phone size={16}/>
 											<Input
@@ -309,12 +309,12 @@ export default function CreateOrderPage() {
 													required
 													value={form.customerPhone}
 													onChange={update('customerPhone')}
-													placeholder="08xxxxxxxxxx"
+             placeholder="07XXXXXXXXX"
 											/>
 										</div>
 									</Field>
 								</div>
-								<Field label="Alamat pengambilan" htmlFor="custAddr">
+        <Field label="Pickup address" htmlFor="custAddr">
 									<div className="input-with-icon">
 										<MapPin size={16}/>
 										<Input
@@ -322,13 +322,13 @@ export default function CreateOrderPage() {
 												required
 												value={form.customerAddress}
 												onChange={update('customerAddress')}
-												placeholder="Jl. contoh No. 1, Kota"
+            placeholder="e.g. 10 High Street, City"
 										/>
 									</div>
 								</Field>
 							</Card>
 
-							<Card title="3. Detail pakaian" subtitle="Tambahkan jenis dan jumlah pakaian.">
+       <Card title="3. Garment details" subtitle="Add garment types and quantities.">
 								<div className="items-list">
 									{items.map((item, idx) => (
 											<div key={idx} className="item-row">
@@ -370,13 +370,13 @@ export default function CreateOrderPage() {
 											</div>
 									))}
 								</div>
-								<Button type="button" variant="ghost" onClick={addItem} style={{marginTop: 10}}>
-									<Plus size={14}/> Tambah jenis pakaian
-								</Button>
+        <Button type="button" variant="ghost" onClick={addItem} style={{marginTop: 10}}>
+                  <Plus size={14}/> Add garment type
+                </Button>
 
-								{service?.unit === 'kg' && (
-										<Field label="Estimasi berat (kg)" htmlFor="weight"
-										       hint="Opsional — akan dihitung ulang saat timbang">
+        {service?.unit === 'kg' && (
+                    <Field label="Estimated weight (kg)" htmlFor="weight"
+                           hint="Optional — recalculated at weighing">
 											<Input
 													id="weight"
 													type="number"
@@ -384,26 +384,26 @@ export default function CreateOrderPage() {
 													min="0.1"
 													value={weightKg}
 													onChange={(e) => setWeightKg(e.target.value === '' ? '' : Number(e.target.value))}
-													placeholder="cth. 3.5"
+             placeholder="e.g. 3.5"
 													style={{maxWidth: 160}}
 											/>
 										</Field>
 								)}
 
-								<Field label="Catatan khusus" htmlFor="notes" hint="Opsional — instruksi untuk tim">
+        <Field label="Special notes" htmlFor="notes" hint="Optional — instructions for the team">
 									<Textarea
 											id="notes"
 											value={form.notes}
 											onChange={update('notes')}
-											placeholder="cth. pisahkan pakaian putih, jangan gunakan pewangi"
+           placeholder="e.g. separate whites, no softener"
 											rows={2}
 									/>
 								</Field>
 							</Card>
 
-							<Card title="4. Jadwal & pembayaran" subtitle="Tentukan tanggal dan metode pembayaran.">
+       <Card title="4. Schedule & payment" subtitle="Choose the dates and payment method.">
 								<div className="form-grid">
-									<Field label="Tanggal pengambilan" htmlFor="pickup">
+         <Field label="Pickup date" htmlFor="pickup">
 										<Input
 												id="pickup"
 												type="date"
@@ -413,7 +413,7 @@ export default function CreateOrderPage() {
 												min={new Date().toISOString().split('T')[0]}
 										/>
 									</Field>
-									<Field label="Estimasi selesai" htmlFor="delivery">
+         <Field label="Estimated completion" htmlFor="delivery">
 										<Input
 												id="delivery"
 												type="date"
@@ -425,7 +425,7 @@ export default function CreateOrderPage() {
 									</Field>
 								</div>
 
-								<Field label="Metode pembayaran">
+        <Field label="Payment method">
 									<div className="payment-grid">
 										{(['cash', 'transfer', 'qris'] as const).map((method) => (
 												<button
@@ -437,7 +437,7 @@ export default function CreateOrderPage() {
 													{method === 'cash' && '💵'}
 													{method === 'transfer' && '🏦'}
 													{method === 'qris' && '📱'}
-													<span>{method === 'cash' ? 'Tunai' : method === 'transfer' ? 'Transfer' : 'QRIS'}</span>
+             <span>{method === 'cash' ? 'Cash' : method === 'transfer' ? 'Bank transfer' : 'QRIS'}</span>
 												</button>
 										))}
 									</div>
@@ -446,7 +446,7 @@ export default function CreateOrderPage() {
 						</div>
 
 						<aside className="stack" style={{position: 'sticky', top: 80, alignSelf: 'start'}}>
-							<Card title="Ringkasan order">
+       <Card title="Order summary">
 								{service && (
 										<div className="summary-service">
 											<div className="order-icon"><WashingMachine size={18}/></div>
@@ -454,76 +454,76 @@ export default function CreateOrderPage() {
 												<strong>{service.name}</strong>
 												<span>
                       {priority === 'express' ? '⚡ Express' : 'Normal'} · ~
-													{Math.round(service.estimatedHours * (priority === 'express' ? 0.6 : 1))}j
+                    {Math.round(service.estimatedHours * (priority === 'express' ? 0.6 : 1))}h
                     </span>
 											</div>
 										</div>
 								)}
 
-								<div className="summary-line">
-									<span>Harga satuan</span>
+        <div className="summary-line">
+                  <span>Unit price</span>
 									<span>
                   {service ? formatCurrency(service.pricePerUnit * (priority === 'express' ? service.expressMultiplier : 1)) : '—'} / {service?.unit}
                 </span>
 								</div>
-								<div className="summary-line">
-									<span>Jumlah</span>
+        <div className="summary-line">
+                  <span>Quantity</span>
 									<span>
                   {service?.unit === 'kg' && weightKg ? `${weightKg} kg` : `${totalQty} pcs`}
                 </span>
 								</div>
-								<div className="summary-line">
-									<span>Subtotal</span>
+        <div className="summary-line">
+                  <span>Subtotal</span>
 									<span>{formatCurrency(subtotal)}</span>
 								</div>
-								<div className="summary-line">
-									<span>Antar-jemput</span>
-									<span className="summary-free">Gratis</span>
-								</div>
+        <div className="summary-line">
+                  <span>Pickup & delivery</span>
+                  <span className="summary-free">Free</span>
+                </div>
 
 								<div className="promo-row">
-									<Field>
-										<div className="input-with-icon">
-											<Tag size={14}/>
-											<Input
+         <Field>
+                    <div className="input-with-icon">
+                      <Tag size={14}/>
+                      <Input
 													value={promoCode}
 													onChange={(e) => {
 														setPromoCode(e.target.value);
 														setPromoApplied(null);
 														setPromoError('');
 													}}
-													placeholder="Kode promo"
-													disabled={!!promoApplied}
-											/>
-										</div>
-									</Field>
-									<Button
-											type="button"
-											variant="ghost"
-											onClick={applyPromo}
-											disabled={!promoCode || !!promoApplied}
-									>
-										Pakai
-									</Button>
-								</div>
-								{promoApplied && (
-										<div className="promo-success">
-											<Check size={13}/> Diskon {promoApplied.pct}% diterapkan
-										</div>
-								)}
+             placeholder="Promo code"
+             disabled={!!promoApplied}
+           />
+         </div>
+       </Field>
+       <Button
+         type="button"
+         variant="ghost"
+         onClick={applyPromo}
+         disabled={!promoCode || !!promoApplied}
+       >
+         Apply
+       </Button>
+     </div>
+     {promoApplied && (
+         <div className="promo-success">
+           <Check size={13}/> Discount {promoApplied.pct}% applied
+         </div>
+     )}
 								{promoError && <p style={{color: 'var(--danger)', fontSize: 12, marginTop: 4}}>{promoError}</p>}
 
-								{discount > 0 && (
-										<div className="summary-line" style={{color: 'var(--success)'}}>
-											<span>Diskon ({promoApplied?.pct}%)</span>
-											<span>−{formatCurrency(discount)}</span>
-										</div>
-								)}
+        {discount > 0 && (
+                    <div className="summary-line" style={{color: 'var(--success)'}}>
+                      <span>Discount ({promoApplied?.pct}%)</span>
+                      <span>−{formatCurrency(discount)}</span>
+                    </div>
+                )}
 
-								<div className="summary-total">
-									<span>Total</span>
-									<span>{formatCurrency(total)}</span>
-								</div>
+        <div className="summary-total">
+                  <span>Total</span>
+                  <span>{formatCurrency(total)}</span>
+                </div>
 
 								<div style={{
 									marginTop: 6,
@@ -534,21 +534,21 @@ export default function CreateOrderPage() {
 									gap: 6
 								}}>
 									<Truck size={13}/>
-									{paymentMethod === 'cash' ? 'Bayar tunai saat pengambilan' : paymentMethod === 'transfer' ? 'Transfer ke rekening outlet' : 'Scan QRIS di outlet'}
-								</div>
+         {paymentMethod === 'cash' ? 'Pay cash at pickup' : paymentMethod === 'transfer' ? 'Transfer to outlet account' : 'Scan QRIS at outlet'}
+                </div>
 
-								<Button block type="submit" disabled={submitting || !form.customerName} style={{marginTop: 20}}>
-									{submitting ? 'Membuat order…' : <><Check size={16}/> Buat order <ArrowRight size={16}/></>}
-								</Button>
+        <Button block type="submit" disabled={submitting || !form.customerName} style={{marginTop: 20}}>
+                  {submitting ? 'Creating order…' : <><Check size={16}/> Create order <ArrowRight size={16}/></>}
+                </Button>
 							</Card>
 
-							<Card className="help-card">
-								<p className="muted" style={{fontSize: 13}}>Butuh bantuan? Hubungi tim kami.</p>
-								<a href="tel:+6281234567890"
-								   style={{display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8, fontSize: 14}}>
-									<Phone size={14}/> 0812-3456-7890
-								</a>
-							</Card>
+       <Card className="help-card">
+              <p className="muted" style={{fontSize: 13}}>Need help? Contact our team.</p>
+              <a href="tel:+6281234567890"
+                 style={{display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8, fontSize: 14}}>
+                <Phone size={14}/> 0812-3456-7890
+              </a>
+            </Card>
 						</aside>
 					</div>
 				</form>

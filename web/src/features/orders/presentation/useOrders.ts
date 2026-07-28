@@ -20,7 +20,7 @@ export function useOrders() {
 	useOnceEffect(() => {
 		useCases.listOrders()
 				.then(setOrders)
-				.catch((err) => setError(err instanceof Error ? err.message : 'Gagal memuat pesanan'))
+				.catch((err) => setError(err instanceof Error ? err.message : 'Failed to load orders'))
 				.finally(() => setLoading(false));
 	});
 
@@ -30,7 +30,7 @@ export function useOrders() {
 		try {
 			setOrders(await useCases.listOrders());
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Gagal memuat pesanan');
+			setError(err instanceof Error ? err.message : 'Failed to load orders');
 		} finally {
 			setLoading(false);
 		}

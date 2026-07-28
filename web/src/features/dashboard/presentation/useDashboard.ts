@@ -19,7 +19,7 @@ export function useDashboard() {
 	useOnceEffect(() => {
 		useCases.getStats()
 				.then(setStats)
-				.catch((err) => setError(err instanceof Error ? err.message : 'Gagal memuat statistik'))
+				.catch((err) => setError(err instanceof Error ? err.message : 'Failed to load statistics'))
 				.finally(() => setLoading(false));
 	});
 
@@ -29,7 +29,7 @@ export function useDashboard() {
 		try {
 			setStats(await useCases.getStats());
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Gagal memuat statistik');
+			setError(err instanceof Error ? err.message : 'Failed to load statistics');
 		} finally {
 			setLoading(false);
 		}

@@ -19,7 +19,7 @@ export function useCustomers() {
 	useOnceEffect(() => {
 		useCases.listCustomers({})
 				.then(setCustomers)
-				.catch((err) => setError(err instanceof Error ? err.message : 'Gagal memuat pelanggan'))
+				.catch((err) => setError(err instanceof Error ? err.message : 'Failed to load customers'))
 				.finally(() => setLoading(false));
 	});
 
@@ -29,7 +29,7 @@ export function useCustomers() {
 		try {
 			setCustomers(await useCases.listCustomers({search}));
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Gagal memuat pelanggan');
+			setError(err instanceof Error ? err.message : 'Failed to load customers');
 		} finally {
 			setLoading(false);
 		}

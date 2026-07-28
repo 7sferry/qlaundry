@@ -28,7 +28,7 @@ export default function StaffTable({staff, search, onSearchChange, onSelect, onD
 							<Input
 									value={search}
 									onChange={(e) => onSearchChange(e.target.value)}
-									placeholder="Cari nama…"
+  							placeholder="Search name…"
 							/>
 						</div>
 					</Field>
@@ -38,10 +38,10 @@ export default function StaffTable({staff, search, onSearchChange, onSelect, onD
 					<table className="table">
 						<thead>
 						<tr>
-							<th>Staf</th>
-							<th>Kontak</th>
-							<th>Alamat</th>
-							<th>Bergabung</th>
+ 						<th>Staff</th>
+ 						<th>Contact</th>
+ 						<th>Address</th>
+ 						<th>Joined</th>
 							<th/>
 						</tr>
 						</thead>
@@ -74,8 +74,8 @@ export default function StaffTable({staff, search, onSearchChange, onSelect, onD
 									<td onClick={(e) => e.stopPropagation()}>
 										<div className="row" style={{gap: 4}}>
 											{canDelete(s) && (
-													<button className="icon-btn icon-btn--danger" onClick={() => onDelete(s)}
-													        title="Hapus">
+   										<button className="icon-btn icon-btn--danger" onClick={() => onDelete(s)}
+									        title="Delete">
 														<Trash2 size={14}/>
 													</button>
 											)}
@@ -87,16 +87,16 @@ export default function StaffTable({staff, search, onSearchChange, onSelect, onD
 					</table>
 
 					{!staff.length && (
-							<div className="empty-state">
-								<Users size={28}/>
-								<strong>Tidak ada staf</strong>
-								<span>
-              {search ? 'Coba ubah kata kunci pencarian.' : 'Tambahkan staf pertama Anda.'}
-            </span>
-								{!search && (
-										<Button onClick={onAdd}><Plus size={14}/> Tambah staf</Button>
-								)}
-							</div>
+ 						<div className="empty-state">
+ 							<Users size={28}/>
+ 							<strong>No staff</strong>
+ 							<span>
+ 							{search ? 'Try changing the search term.' : 'Add your first staff member.'}
+ 							</span>
+ 							{!search && (
+ 									<Button onClick={onAdd}><Plus size={14}/> Add staff</Button>
+ 							)}
+ 						</div>
 					)}
 				</div>
 			</Card>

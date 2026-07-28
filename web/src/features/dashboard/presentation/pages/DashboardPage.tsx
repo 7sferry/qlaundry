@@ -30,24 +30,24 @@ function statusTone(status: string): BadgeTone {
 }
 
 function statusLabel(status: string): string {
-	const map: Record<string, string> = {
-		pending: 'Pending',
-		confirmed: 'Dikonfirmasi',
-		picked_up: 'Diambil',
-		in_progress: 'Diproses',
-		ready: 'Siap',
-		out_for_delivery: 'Diantar',
-		completed: 'Selesai',
-		cancelled: 'Dibatalkan',
-	};
-	return map[status] ?? status;
+  const map: Record<string, string> = {
+    pending: 'Pending',
+    confirmed: 'Confirmed',
+    picked_up: 'Picked Up',
+    in_progress: 'In Progress',
+    ready: 'Ready',
+    out_for_delivery: 'Out for Delivery',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+  };
+  return map[status] ?? status;
 }
 
 export default function DashboardPage() {
 	const navigate = useNavigate();
 	const {stats, loading, refresh} = useDashboard();
 
-	if (loading && !stats) return <Loading label="Memuat dashboard…"/>;
+	if (loading && !stats) return <Loading label="Loading dashboard…"/>;
 
 	const growth = stats?.revenueGrowth ?? 0;
 	const ordersGrowth = stats?.ordersGrowth ?? 0;
@@ -55,16 +55,16 @@ export default function DashboardPage() {
 	return (
 			<>
 				<PageHeader
-						title="Selamat datang kembali 👋"
-						description="Berikut ringkasan aktivitas laundry Anda hari ini."
+						title="Welcome back 👋"
+						description="Here’s today’s summary of your laundry operations."
 						actions={
 							<div className="row" style={{gap: 10}}>
 								<Button variant="ghost" onClick={() => void refresh()}>
 									<RefreshCw size={15}/> Refresh
 								</Button>
-								<Button onClick={() => navigate('/orders/new')}>
-									<Plus size={15}/> Order baru
-								</Button>
+ 							<Button onClick={() => navigate('/orders/new')}>
+ 								<Plus size={15}/> New order
+ 							</Button>
 							</div>
 						}
 				/>
@@ -73,45 +73,45 @@ export default function DashboardPage() {
 					<StatCard
 							icon={<Package size={20}/>}
 							value={stats?.todayOrders ?? 0}
-							label="Order hari ini"
+ 						label="Orders today"
 							hint={
 								<span className={`trend ${ordersGrowth >= 0 ? 'trend--up' : 'trend--down'}`}>
-              {ordersGrowth >= 0 ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>}
-									{Math.abs(ordersGrowth)}% vs kemarin
-            </span>
+				      {ordersGrowth >= 0 ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>}
+								{Math.abs(ordersGrowth)}% vs yesterday
+				    </span>
 							}
 					/>
 					<StatCard
 							icon={<PackageCheck size={20}/>}
 							value={formatCurrency(stats?.todayRevenue ?? 0)}
-							label="Pendapatan hari ini"
+ 						label="Revenue today"
 							hint={
 								<span className={`trend ${growth >= 0 ? 'trend--up' : 'trend--down'}`}>
-              {growth >= 0 ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>}
-									{Math.abs(growth)}% vs kemarin
-            </span>
+				      {growth >= 0 ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>}
+								{Math.abs(growth)}% vs yesterday
+				    </span>
 							}
 					/>
 					<StatCard
 							icon={<Clock3 size={20}/>}
 							value={stats?.inProgressOrders ?? 0}
-							label="Sedang diproses"
-							hint="Order aktif saat ini"
+ 						label="In progress"
+ 						hint="Active orders now"
 					/>
 					<StatCard
 							icon={<WashingMachine size={20}/>}
 							value={stats?.pendingOrders ?? 0}
-							label="Menunggu konfirmasi"
-							hint="Perlu tindakan segera"
+ 						label="Awaiting confirmation"
+ 						hint="Needs attention"
 					/>
 				</div>
 
 				<div className="grid grid--2 mt-24">
 					<Card
-							title="Tren pendapatan"
-							subtitle="Pendapatan & jumlah order 6 bulan terakhir"
+							title="Revenue trend"
+							subtitle="Revenue & order count for the last 6 months"
 							actions={
-								<Badge tone="info">{stats?.monthOrders ?? 0} order bulan ini</Badge>
+								<Badge tone="info">{stats?.monthOrders ?? 0} orders this month</Badge>
 							}
 					>
 						<div className="chart-wrap">
@@ -146,9 +146,9 @@ export default function DashboardPage() {
 												borderRadius: 10,
 												fontSize: 13,
 											}}
-											formatter={(value, name) =>
-													name === 'revenue' ? [formatCurrency(value as number), 'Pendapatan'] : [value as number, 'Order']
-											}
+   								formatter={(value, name) =>
+   										name === 'revenue' ? [formatCurrency(value as number), 'Revenue'] : [value as number, 'Orders']
+   								}
 									/>
 									<Bar yAxisId="revenue" dataKey="revenue" fill="var(--brand)" radius={[5, 5, 0, 0]} barSize={28}
 									     opacity={0.85}/>
@@ -159,7 +159,7 @@ export default function DashboardPage() {
 						</div>
 					</Card>
 
-					<Card title="Jadwal hari ini" subtitle="Pengambilan & pengantaran yang dijadwalkan">
+						<Card title="Today’s schedule" subtitle="Scheduled pickups & deliveries">
 						{stats?.todaySchedule?.length ? (
 								<div className="schedule-list">
 									{stats.todaySchedule.map((item) => (
@@ -169,9 +169,9 @@ export default function DashboardPage() {
 												</div>
 												<div className="schedule-row__info">
 													<strong>{item.customerName}</strong>
-													<span>
-                      {item.orderNumber} · {item.type === 'pickup' ? 'Pengambilan' : 'Pengantaran'}
-                    </span>
+    									<span>
+									{item.orderNumber} · {item.type === 'pickup' ? 'Pickup' : 'Delivery'}
+									</span>
 												</div>
 												<div className="schedule-row__right">
 													<Badge tone={statusTone(item.status)}>{statusLabel(item.status)}</Badge>
@@ -181,17 +181,17 @@ export default function DashboardPage() {
 									))}
 								</div>
 						) : (
-								<div className="empty-state">
-									<Clock3 size={28}/>
-									<strong>Tidak ada jadwal hari ini</strong>
-									<span>Tambahkan order baru untuk memulai.</span>
-								</div>
+ 							<div className="empty-state">
+ 								<Clock3 size={28}/>
+ 								<strong>No schedule today</strong>
+ 								<span>Add a new order to get started.</span>
+ 							</div>
 						)}
 					</Card>
 				</div>
 
 				<div className="grid grid--2 mt-24">
-					<Card title="Distribusi layanan" subtitle="Breakdown layanan bulan ini">
+					<Card title="Service distribution" subtitle="This month’s service breakdown">
 						<div className="service-breakdown">
 							{(stats?.serviceBreakdown ?? []).map((s) => (
 									<div key={s.serviceId} className="breakdown-row">
@@ -211,7 +211,7 @@ export default function DashboardPage() {
 						</div>
 					</Card>
 
-					<Card title="Status order" subtitle="Distribusi status saat ini">
+					<Card title="Order status" subtitle="Current status distribution">
 						<div className="status-dist">
 							{(stats?.statusDistribution ?? []).map((s) => (
 									<div key={s.status} className="status-dist__row">

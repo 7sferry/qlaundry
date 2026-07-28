@@ -32,7 +32,7 @@ export default function ReportsPage() {
 	const {customers} = useCustomers();
 	const [period, setPeriod] = useState<Period>('month');
 
-	if (loading && !stats) return <Loading label="Menyiapkan laporan…"/>;
+	if (loading && !stats) return <Loading label="Preparing reports…"/>;
 
 	const topCustomers = [...customers]
 			.sort((a, b) => b.totalSpend - a.totalSpend)
@@ -41,24 +41,24 @@ export default function ReportsPage() {
 	return (
 			<>
 				<PageHeader
-						title="Laporan & analitik"
-						description="Pantau performa bisnis laundry Anda secara menyeluruh."
+						title="Reports & analytics"
+						description="Monitor overall performance of your laundry business."
 						actions={
 							<div className="row" style={{gap: 10}}>
 								<div className="period-tabs">
-									{(['week', 'month', 'quarter', 'year'] as Period[]).map((p) => (
-											<button
-													key={p}
-													className={`period-tab ${period === p ? 'period-tab--active' : ''}`}
-													onClick={() => setPeriod(p)}
-											>
-												{p === 'week' ? 'Minggu' : p === 'month' ? 'Bulan' : p === 'quarter' ? 'Kuartal' : 'Tahun'}
-											</button>
-									))}
+ 								{(['week', 'month', 'quarter', 'year'] as Period[]).map((p) => (
+ 										<button
+ 												key={p}
+ 												className={`period-tab ${period === p ? 'period-tab--active' : ''}`}
+ 												onClick={() => setPeriod(p)}
+ 										>
+ 											{p === 'week' ? 'Week' : p === 'month' ? 'Month' : p === 'quarter' ? 'Quarter' : 'Year'}
+ 										</button>
+ 								))}
 								</div>
-								<Button variant="ghost">
-									<Download size={15}/> Ekspor
-								</Button>
+  						<Button variant="ghost">
+  							<Download size={15}/> Export
+  						</Button>
 							</div>
 						}
 				/>
@@ -67,33 +67,33 @@ export default function ReportsPage() {
 					<StatCard
 							icon={<BarChart2 size={20}/>}
 							value={stats?.monthOrders ?? 0}
-							label="Total order"
-							hint={`Bulan ini · ${stats?.ordersGrowth ?? 0}% vs bulan lalu`}
+							label="Total orders"
+							hint={`This month · ${stats?.ordersGrowth ?? 0}% vs last month`}
 					/>
 					<StatCard
 							icon={<TrendingUp size={20}/>}
 							value={formatCurrency(stats?.monthRevenue ?? 0)}
-							label="Total pendapatan"
-							hint={`${stats?.revenueGrowth ?? 0}% vs bulan lalu`}
+							label="Total revenue"
+							hint={`${stats?.revenueGrowth ?? 0}% vs last month`}
 					/>
 					<StatCard
 							icon={<WashingMachine size={20}/>}
 							value={stats?.inProgressOrders ?? 0}
-							label="Sedang diproses"
-							hint="Order aktif"
+							label="In progress"
+							hint="Active orders"
 					/>
 					<StatCard
 							icon={<Users size={20}/>}
 							value={customers.length}
-							label="Total pelanggan"
-							hint="Terdaftar"
+							label="Total customers"
+							hint="Registered"
 					/>
 				</div>
 
 				<div className="grid grid--2 mt-24">
 					<Card
-							title="Tren pendapatan"
-							subtitle="Pendapatan bulanan 6 bulan terakhir"
+							title="Revenue trend"
+							subtitle="Monthly revenue for the last 6 months"
 					>
 						<div className="chart-wrap">
 							<ResponsiveContainer width="100%" height="100%">
@@ -126,9 +126,9 @@ export default function ReportsPage() {
 												borderRadius: 10,
 												fontSize: 13,
 											}}
-											formatter={(value, name) =>
-													name === 'revenue' ? [formatCurrency(value as number), 'Pendapatan'] : [value as number, 'Order']
-											}
+   								formatter={(value, name) =>
+   										name === 'revenue' ? [formatCurrency(value as number), 'Revenue'] : [value as number, 'Orders']
+   								}
 									/>
 									<Bar yAxisId="left" dataKey="revenue" fill="var(--brand)" radius={[5, 5, 0, 0]} barSize={28}
 									     opacity={0.9}/>
@@ -145,7 +145,7 @@ export default function ReportsPage() {
 						</div>
 					</Card>
 
-					<Card title="Distribusi layanan" subtitle="Kontribusi per layanan bulan ini">
+						<Card title="Service distribution" subtitle="Contribution by service this month">
 						<div style={{display: 'flex', gap: 20, alignItems: 'center'}}>
 							<div style={{flex: '0 0 160px', height: 160}}>
 								<ResponsiveContainer width="100%" height="100%">
@@ -193,7 +193,7 @@ export default function ReportsPage() {
 				</div>
 
 				<div className="grid grid--2 mt-24">
-					<Card title="Breakdown pendapatan per layanan" subtitle="Total pendapatan masing-masing layanan">
+						<Card title="Revenue by service" subtitle="Total revenue per service">
 						<div style={{height: 220}}>
 							<ResponsiveContainer width="100%" height="100%">
 								<BarChart
@@ -224,7 +224,7 @@ export default function ReportsPage() {
 												borderRadius: 8,
 												fontSize: 12,
 											}}
-											formatter={(v) => [formatCurrency(v as number), 'Pendapatan']}
+  									formatter={(v) => [formatCurrency(v as number), 'Revenue']}
 									/>
 									<Bar dataKey="revenue" fill="var(--brand)" radius={[0, 5, 5, 0]} barSize={18}/>
 								</BarChart>
@@ -232,14 +232,14 @@ export default function ReportsPage() {
 						</div>
 					</Card>
 
-					<Card title="Pelanggan teratas" subtitle="5 pelanggan dengan pengeluaran tertinggi">
+						<Card title="Top customers" subtitle="Top 5 customers by spend">
 						<div className="top-customers">
 							{topCustomers.map((c, idx) => (
 									<div key={c.id} className="top-customer-row">
 										<span className="top-rank">{idx + 1}</span>
 										<div className="top-customer-info">
 											<strong>{c.fullName}</strong>
-											<span className="muted" style={{fontSize: 12}}>{c.totalOrders} order</span>
+  									<span className="muted" style={{fontSize: 12}}>{c.totalOrders} orders</span>
 										</div>
 										<div style={{textAlign: 'right'}}>
 											<strong style={{display: 'block', fontSize: 14}}>{formatCurrency(c.totalSpend)}</strong>
@@ -255,18 +255,18 @@ export default function ReportsPage() {
 										</div>
 									</div>
 							))}
-							{!topCustomers.length && (
-									<div className="empty-state" style={{padding: 24}}>
-										<Users size={24}/>
-										<span>Belum ada data pelanggan</span>
-									</div>
-							)}
+						{!topCustomers.length && (
+								<div className="empty-state" style={{padding: 24}}>
+									<Users size={24}/>
+									<span>No customer data yet</span>
+								</div>
+						)}
 						</div>
 					</Card>
 				</div>
 
 				<div className="mt-24">
-					<Card title="Ringkasan status order" subtitle="Distribusi semua order berdasarkan status">
+						<Card title="Order status summary" subtitle="Distribution of all orders by status">
 						<div style={{height: 60, display: 'flex', gap: 4, borderRadius: 8, overflow: 'hidden'}}>
 							{(stats?.statusDistribution ?? []).filter(s => s.count > 0).map((s, idx) => {
 								const total = (stats?.statusDistribution ?? []).reduce((sum, x) => sum + x.count, 0);

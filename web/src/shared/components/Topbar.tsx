@@ -9,15 +9,15 @@ import {CheckCircle2} from 'lucide-react';
 
 const PATH_TITLES: Record<string, string> = {
 	'/dashboard': 'Dashboard',
-	'/orders/new': 'Buat order baru',
-	'/orders/history': 'Riwayat order',
-	'/customers': 'Manajemen pelanggan',
-	'/staff': 'Manajemen staf',
-	'/settings': 'Pengaturan akun',
-	'/reports': 'Laporan & analitik',
+	'/orders/new': 'Create new order',
+	'/orders/history': 'Order history',
+	'/customers': 'Customer management',
+	'/staff': 'Staff management',
+	'/settings': 'Account settings',
+	'/reports': 'Reports & analytics',
 };
 
-const DATE_STR = new Date().toLocaleDateString('id-ID', {
+const DATE_STR = new Date().toLocaleDateString('en-GB', {
 	weekday: 'long',
 	day: 'numeric',
 	month: 'long',
@@ -36,7 +36,7 @@ const Topbar: FC = () => {
 				</div>
 				<div className="topbar__status">
 					<CheckCircle2 size={14} style={{color: 'var(--success)'}}/>
-					Sistem berjalan normal
+					System operating normally
 				</div>
 			</div>
 	);

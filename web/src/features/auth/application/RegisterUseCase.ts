@@ -13,16 +13,16 @@ export class RegisterUseCase {
 		this.repository = repository;
 	}
 
-	execute(data: RegisterData): Promise<AuthSession> {
-		if (!data.fullName.trim() || !data.username.trim() || !data.email.trim() || !data.password.trim()) {
-			return Promise.reject(new Error('Semua field wajib diisi.'));
+		execute(data: RegisterData): Promise<AuthSession> {
+			if (!data.fullName.trim() || !data.username.trim() || !data.email.trim() || !data.password.trim()) {
+				return Promise.reject(new Error('All fields are required.'));
+			}
+			if (data.password.length < 6) {
+				return Promise.reject(new Error('Password must be at least 6 characters.'));
+			}
+			if (!data.captchaToken.trim()) {
+				return Promise.reject(new Error('Captcha verification is required.'));
+			}
+			return this.repository.register(data);
 		}
-		if (data.password.length < 6) {
-			return Promise.reject(new Error('Password minimal 6 karakter.'));
-		}
-		if (!data.captchaToken.trim()) {
-			return Promise.reject(new Error('Verifikasi captcha wajib diselesaikan.'));
-		}
-		return this.repository.register(data);
-	}
 }

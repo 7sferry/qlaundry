@@ -25,7 +25,7 @@ type RegisterForm = typeof initialForm;
 type FieldKey = keyof RegisterForm;
 
 const REQUIRED_FIELDS: FieldKey[] = ['fullName', 'outletName', 'email', 'username', 'password', 'confirmPassword'];
-const REQUIRED_MESSAGE = 'Wajib diisi.';
+const REQUIRED_MESSAGE = 'Required.';
 
 function validateForm(form: RegisterForm): Partial<Record<FieldKey, string>> {
 	const errors: Partial<Record<FieldKey, string>> = {};
@@ -33,10 +33,10 @@ function validateForm(form: RegisterForm): Partial<Record<FieldKey, string>> {
 		if (!form[key].trim()) errors[key] = REQUIRED_MESSAGE;
 	}
 	if (!errors.password && form.password.length < 6) {
-		errors.password = 'Password minimal 6 karakter.';
+		errors.password = 'Password must be at least 6 characters.';
 	}
 	if (!errors.confirmPassword && form.confirmPassword !== form.password) {
-		errors.confirmPassword = 'Konfirmasi password tidak cocok.';
+		errors.confirmPassword = 'Password confirmation does not match.';
 	}
 	return errors;
 }
@@ -82,7 +82,7 @@ export default function RegisterPage() {
 		}
 		setFieldErrors({});
 		if (!captchaToken) {
-			setCaptchaError('Verifikasi captcha wajib diselesaikan.');
+			setCaptchaError('Captcha verification is required.');
 			return;
 		}
 		setCaptchaError('');
@@ -99,7 +99,7 @@ export default function RegisterPage() {
 				captchaToken,
 			});
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Pendaftaran gagal.');
+			setError(err instanceof Error ? err.message : 'Registration failed.');
 			// Turnstile tokens are single-use — force a fresh challenge on retry.
 			turnstileRef.current?.reset();
 			setCaptchaToken('');
@@ -115,15 +115,15 @@ export default function RegisterPage() {
 						<span className="sidebar__logo"><WashingMachine size={20}/></span>
 						QLaundry
 					</div>
-					<p className="eyebrow">Mulai sekarang</p>
-					<h2>Buat akun baru</h2>
-					<p className="muted auth-intro">Daftarkan outlet laundry Anda dan mulai mengelola bisnis lebih efisien.</p>
+					<p className="eyebrow">Get started</p>
+					<h2>Create a new account</h2>
+					<p className="muted auth-intro">Register your laundry outlet and manage the business more efficiently.</p>
 
 					{error && <div className="alert alert--error">{error}</div>}
 
 					<form onSubmit={submit} className="register-grid" noValidate>
 						<div className="register-col">
-							<Field label="Nama lengkap" htmlFor="fullName" error={fieldErrors.fullName}>
+ 						<Field label="Full name" htmlFor="fullName" error={fieldErrors.fullName}>
 								<div className="input-with-icon">
 									<User2 size={16}/>
 									<Input
@@ -132,11 +132,11 @@ export default function RegisterPage() {
 											autoComplete="off"
 											value={form.fullName}
 											onChange={update('fullName')}
-											placeholder="Ahmad Budi"
+   								placeholder="John Smith"
 									/>
 								</div>
 							</Field>
-							<Field label="Nama outlet / toko" htmlFor="outletName" error={fieldErrors.outletName}>
+ 						<Field label="Outlet / shop name" htmlFor="outletName" error={fieldErrors.outletName}>
 								<div className="input-with-icon">
 									<Building2 size={16}/>
 									<Input
@@ -145,11 +145,11 @@ export default function RegisterPage() {
 											autoComplete="off"
 											value={form.outletName}
 											onChange={update('outletName')}
-											placeholder="Laundry Bersih Jaya"
+   								placeholder="Sparkle Clean Laundry"
 									/>
 								</div>
 							</Field>
-							<Field label="Alamat" htmlFor="address" error={fieldErrors.address}>
+ 						<Field label="Address" htmlFor="address" error={fieldErrors.address}>
 								<div className="input-with-icon">
 									<MapPin size={16}/>
 									<Input
@@ -157,11 +157,11 @@ export default function RegisterPage() {
 											autoComplete="off"
 											value={form.address}
 											onChange={update('address')}
-											placeholder="Jl. Merdeka No. 10, Jakarta"
+   								placeholder="10 High Street, London"
 									/>
 								</div>
 							</Field>
-							<Field label="Email" htmlFor="email" error={fieldErrors.email}>
+ 						<Field label="Email" htmlFor="email" error={fieldErrors.email}>
 								<div className="input-with-icon">
 									<Mail size={16}/>
 									<Input
@@ -171,11 +171,11 @@ export default function RegisterPage() {
 											autoComplete="off"
 											value={form.email}
 											onChange={update('email')}
-											placeholder="email@contoh.com"
+   								placeholder="name@example.com"
 									/>
 								</div>
 							</Field>
-							<Field label="Nomor telepon" htmlFor="phone" error={fieldErrors.phone}>
+ 						<Field label="Telephone" htmlFor="phone" error={fieldErrors.phone}>
 								<div className="input-with-icon">
 									<Phone size={16}/>
 									<Input
@@ -184,14 +184,14 @@ export default function RegisterPage() {
 											autoComplete="off"
 											value={form.phone}
 											onChange={update('phone')}
-											placeholder="08xxxxxxxxxx"
+   								placeholder="07XXXXXXXXX"
 									/>
 								</div>
 							</Field>
 						</div>
 
 						<div className="register-col">
-							<Field label="Username" htmlFor="username" error={fieldErrors.username}>
+ 						<Field label="Username" htmlFor="username" error={fieldErrors.username}>
 								<div className="input-with-icon">
 									<User2 size={16}/>
 									<Input
@@ -200,11 +200,11 @@ export default function RegisterPage() {
 											autoComplete="off"
 											value={form.username}
 											onChange={update('username')}
-											placeholder="Minimal 4 karakter"
+   								placeholder="At least 4 characters"
 									/>
 								</div>
 							</Field>
-							<Field label="Password" htmlFor="password" error={fieldErrors.password}>
+ 						<Field label="Password" htmlFor="password" error={fieldErrors.password}>
 								<div className="input-with-icon">
 									<LockKeyhole size={16}/>
 									<Input
@@ -215,11 +215,11 @@ export default function RegisterPage() {
 											autoComplete="new-password"
 											value={form.password}
 											onChange={update('password')}
-											placeholder="Minimal 6 karakter"
+   								placeholder="At least 6 characters"
 									/>
 								</div>
 							</Field>
-							<Field label="Konfirmasi password" htmlFor="confirmPassword" error={fieldErrors.confirmPassword}>
+ 						<Field label="Confirm password" htmlFor="confirmPassword" error={fieldErrors.confirmPassword}>
 								<div className="input-with-icon">
 									<LockKeyhole size={16}/>
 									<Input
@@ -229,7 +229,7 @@ export default function RegisterPage() {
 											autoComplete="new-password"
 											value={form.confirmPassword}
 											onChange={update('confirmPassword')}
-											placeholder="Ulangi password"
+   								placeholder="Repeat password"
 									/>
 								</div>
 							</Field>
@@ -246,15 +246,15 @@ export default function RegisterPage() {
 								/>
 							</Field>
 
-							<Button block type="submit" disabled={loading} style={{marginTop: 8}}>
-								{loading ? 'Mendaftarkan…' : <><span>Buat akun</span> <ArrowRight size={16}/></>}
-							</Button>
+ 						<Button block type="submit" disabled={loading} style={{marginTop: 8}}>
+ 							{loading ? 'Registering…' : <><span>Create account</span> <ArrowRight size={16}/></>}
+ 						</Button>
 						</div>
 					</form>
 
 					<p className="auth-switch">
 						<button type="button" onClick={() => navigate('/login')}>
-							<ArrowLeft size={14}/> Kembali ke halaman masuk
+							<ArrowLeft size={14}/> Back to sign-in
 						</button>
 					</p>
 				</div>

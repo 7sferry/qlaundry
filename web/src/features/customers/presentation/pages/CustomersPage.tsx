@@ -67,38 +67,38 @@ interface CustomerFormProps {
 function CustomerForm({form, update, onSubmit, onCancel, saving, editMode}: CustomerFormProps) {
 	return (
 			<form onSubmit={onSubmit} style={{display: 'flex', flexDirection: 'column', gap: 0}}>
-				<Field label="Nama lengkap" htmlFor="cfName">
+				<Field label="Full name" htmlFor="cfName">
 					<Input id="cfName" required value={form.fullName} onChange={update('fullName')}
-					       placeholder="Nama pelanggan"/>
+					       placeholder="Customer name"/>
 				</Field>
-				<Field label="Nomor telepon" htmlFor="cfPhone">
+				<Field label="Telephone" htmlFor="cfPhone">
 					<div className="input-with-icon">
 						<Phone size={15}/>
 						<Input id="cfPhone" type="tel" required value={form.phone} onChange={update('phone')}
-						       placeholder="08xxxxxxxxxx"/>
+					       placeholder="07XXXXXXXXX"/>
 					</div>
 				</Field>
 				<Field label="Email" htmlFor="cfEmail">
 					<div className="input-with-icon">
 						<Mail size={15}/>
 						<Input id="cfEmail" type="email" value={form.email} onChange={update('email')}
-						       placeholder="opsional"/>
+					       placeholder="optional"/>
 					</div>
 				</Field>
-				<Field label="Alamat" htmlFor="cfAddr">
+				<Field label="Address" htmlFor="cfAddr">
 					<div className="input-with-icon">
 						<MapPin size={15}/>
 						<Input id="cfAddr" required value={form.address} onChange={update('address')}
-						       placeholder="Alamat lengkap"/>
+					       placeholder="Full address"/>
 					</div>
 				</Field>
-				<Field label="Catatan" htmlFor="cfNotes">
-					<Textarea id="cfNotes" value={form.notes} onChange={update('notes')} placeholder="opsional" rows={2}/>
+				<Field label="Notes" htmlFor="cfNotes">
+					<Textarea id="cfNotes" value={form.notes} onChange={update('notes')} placeholder="optional" rows={2}/>
 				</Field>
 				<div className="row" style={{gap: 8, justifyContent: 'flex-end', marginTop: 8}}>
-					<Button type="button" variant="ghost" onClick={onCancel}>Batal</Button>
+					<Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
 					<Button type="submit" disabled={saving}>
-						{saving ? 'Menyimpan…' : editMode ? 'Simpan perubahan' : 'Tambah pelanggan'}
+						{saving ? 'Saving…' : editMode ? 'Save changes' : 'Add customer'}
 					</Button>
 				</div>
 			</form>
@@ -117,7 +117,7 @@ export default function CustomersPage() {
 	const [form, setForm] = useState<CustomerFormData>(emptyForm);
 	const [saving, setSaving] = useState(false);
 
-	if (loading) return <Loading label="Memuat pelanggan…"/>;
+	if (loading) return <Loading label="Loading customers…"/>;
 
 	const visible = customers.filter((c) => {
 		const q = search.toLowerCase();
@@ -156,30 +156,30 @@ export default function CustomersPage() {
 		try {
 			if (editMode && selectedCustomer) {
 				await updateCustomer({id: selectedCustomer.id, ...form});
-				toast.success('Data pelanggan diperbarui.');
+				toast.success('Customer updated.');
 				setEditMode(false);
 				setSelectedCustomer((prev) => prev ? {...prev, ...form} : null);
 			} else {
 				await createCustomer(form);
-				toast.success('Pelanggan baru berhasil ditambahkan.');
+				toast.success('New customer added.');
 				setShowAddModal(false);
 			}
 			setForm(emptyForm);
 		} catch {
-			toast.error('Terjadi kesalahan. Coba lagi.');
+			toast.error('Something went wrong. Please try again.');
 		} finally {
 			setSaving(false);
 		}
 	};
 
 	const handleDelete = async (c: Customer) => {
-		if (!confirm(`Hapus pelanggan ${c.fullName}? Data ini tidak dapat dipulihkan.`)) return;
+		if (!confirm(`Delete customer ${c.fullName}? This cannot be undone.`)) return;
 		try {
 			await deleteCustomer(c.id);
-			toast.success(`${c.fullName} dihapus.`);
+			toast.success(`${c.fullName} deleted.`);
 			setSelectedCustomer(null);
 		} catch {
-			toast.error('Gagal menghapus pelanggan.');
+			toast.error('Failed to delete customer.');
 		}
 	};
 
@@ -196,26 +196,26 @@ export default function CustomersPage() {
 	return (
 			<>
 				<PageHeader
-						title="Manajemen pelanggan"
-						description={`${customers.length} pelanggan terdaftar`}
+						title="Customer management"
+						description={`${customers.length} customers registered`}
 						actions={
 							<Button onClick={openAdd}>
-								<UserPlus size={15}/> Tambah pelanggan
+								<UserPlus size={15}/> Add customer
 							</Button>
 						}
 				/>
 
 				<div className="grid grid--stats">
-					<StatCard icon={<Users size={20}/>} value={customers.length} label="Total pelanggan" hint="Terdaftar"/>
-					<StatCard icon={<Award size={20}/>} value={platinumCount} label="Pelanggan platinum"
-					          hint="Loyalitas tertinggi"/>
-					<StatCard icon={<Star size={20}/>} value={formatCurrency(totalSpend)} label="Total pengeluaran"
-					          hint="Seluruh pelanggan"/>
+					<StatCard icon={<Users size={20}/>} value={customers.length} label="Total customers" hint="Registered"/>
+					<StatCard icon={<Award size={20}/>} value={platinumCount} label="Platinum customers"
+					          hint="Highest loyalty"/>
+					<StatCard icon={<Star size={20}/>} value={formatCurrency(totalSpend)} label="Total spend"
+					          hint="All customers"/>
 					<StatCard
 							icon={<Users size={20}/>}
 							value={customers.length > 0 ? formatCurrency(Math.round(totalSpend / customers.length)) : 'Rp0'}
-							label="Rata-rata spend"
-							hint="Per pelanggan"
+							label="Average spend"
+							hint="Per customer"
 					/>
 				</div>
 
@@ -227,13 +227,13 @@ export default function CustomersPage() {
 								<Input
 										value={search}
 										onChange={(e) => setSearch(e.target.value)}
-										placeholder="Cari nama, nomor HP, atau email…"
+  								placeholder="Search name, phone, or email…"
 								/>
 							</div>
 						</Field>
 						<Field>
 							<Select value={tierFilter} onChange={(e) => setTierFilter(e.target.value as typeof tierFilter)}>
-								<option value="all">Semua tier</option>
+								<option value="all">All tiers</option>
 								{(['bronze', 'silver', 'gold', 'platinum'] as CustomerTier[]).map((t) => (
 										<option key={t} value={t}>{TIER_LABELS[t]}</option>
 								))}
@@ -245,12 +245,12 @@ export default function CustomersPage() {
 						<table className="table">
 							<thead>
 							<tr>
-								<th>Pelanggan</th>
-								<th>Kontak</th>
+								<th>Customer</th>
+								<th>Contact</th>
 								<th>Tier</th>
-								<th>Total order</th>
-								<th>Total pengeluaran</th>
-								<th>Order terakhir</th>
+								<th>Total orders</th>
+								<th>Total spend</th>
+								<th>Last order</th>
 								<th/>
 							</tr>
 							</thead>
@@ -278,7 +278,7 @@ export default function CustomersPage() {
 												{tierIcon(c.tier)} {TIER_LABELS[c.tier]}
 											</Badge>
 										</td>
-										<td>{c.totalOrders} order</td>
+   							<td>{c.totalOrders} orders</td>
 										<td><strong>{formatCurrency(c.totalSpend)}</strong></td>
 										<td>{c.lastOrderAt ? formatDate(c.lastOrderAt) : '—'}</td>
 										<td onClick={(e) => e.stopPropagation()}>
@@ -286,8 +286,8 @@ export default function CustomersPage() {
 												<button className="icon-btn" onClick={() => openEdit(c)} title="Edit">
 													<Edit2 size={14}/>
 												</button>
-												<button className="icon-btn icon-btn--danger" onClick={() => void handleDelete(c)}
-												        title="Hapus">
+    								<button className="icon-btn icon-btn--danger" onClick={() => void handleDelete(c)}
+    								        title="Delete">
 													<Trash2 size={14}/>
 												</button>
 											</div>
@@ -298,23 +298,23 @@ export default function CustomersPage() {
 						</table>
 
 						{!visible.length && (
-								<div className="empty-state">
-									<Users size={28}/>
-									<strong>Tidak ada pelanggan</strong>
-									<span>
-                {search || tierFilter !== 'all'
-		                ? 'Coba ubah filter pencarian.'
-		                : 'Tambahkan pelanggan pertama Anda.'}
-              </span>
-									{!search && tierFilter === 'all' && (
-											<Button onClick={openAdd}><Plus size={14}/> Tambah pelanggan</Button>
-									)}
-								</div>
+ 							<div className="empty-state">
+ 								<Users size={28}/>
+ 								<strong>No customers</strong>
+ 								<span>
+ 								{search || tierFilter !== 'all'
+ 								        ? 'Try changing the filters.'
+ 								        : 'Add your first customer.'}
+ 								</span>
+ 								{!search && tierFilter === 'all' && (
+ 										<Button onClick={openAdd}><Plus size={14}/> Add customer</Button>
+ 								)}
+ 							</div>
 						)}
 					</div>
 				</Card>
 
-				<Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Tambah pelanggan baru">
+				<Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add new customer">
 					<CustomerForm
 							form={form}
 							update={update}
@@ -329,17 +329,17 @@ export default function CustomersPage() {
 						open={!!selectedCustomer && !editMode}
 						onClose={() => setSelectedCustomer(null)}
 						title={selectedCustomer?.fullName}
-						subtitle={selectedCustomer ? `Bergabung ${formatDate(selectedCustomer.joinedAt)}` : ''}
+						subtitle={selectedCustomer ? `Joined ${formatDate(selectedCustomer.joinedAt)}` : ''}
 						width="460px"
 						footer={
 								selectedCustomer && (
 										<div className="row" style={{gap: 8, justifyContent: 'flex-end'}}>
-											<Button variant="danger" onClick={() => void handleDelete(selectedCustomer)}>
-												<Trash2 size={14}/> Hapus
-											</Button>
-											<Button onClick={() => openEdit(selectedCustomer)}>
-												<Edit2 size={14}/> Edit
-											</Button>
+   								<Button variant="danger" onClick={() => void handleDelete(selectedCustomer)}>
+   									<Trash2 size={14}/> Delete
+   								</Button>
+   								<Button onClick={() => openEdit(selectedCustomer)}>
+   									<Edit2 size={14}/> Edit
+   								</Button>
 										</div>
 								)
 						}
@@ -362,19 +362,19 @@ export default function CustomersPage() {
 								     style={{gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, margin: '20px 0'}}>
 									<div className="mini-stat">
 										<span className="mini-stat__value">{selectedCustomer.totalOrders}</span>
-										<span className="mini-stat__label">Total order</span>
+   							<span className="mini-stat__label">Total orders</span>
 									</div>
 									<div className="mini-stat">
 										<span className="mini-stat__value">{formatCurrency(selectedCustomer.totalSpend)}</span>
-										<span className="mini-stat__label">Total belanja</span>
+   							<span className="mini-stat__label">Total spend</span>
 									</div>
 								</div>
 
 								<div className="detail-section">
-									<h4>Kontak</h4>
+   						<h4>Contact</h4>
 									<div className="detail-grid">
 										<div>
-											<small>Telepon</small>
+   								<small>Telephone</small>
 											<strong>{selectedCustomer.phone}</strong>
 										</div>
 										<div>
@@ -382,28 +382,28 @@ export default function CustomersPage() {
 											<strong>{selectedCustomer.email ?? '—'}</strong>
 										</div>
 										<div style={{gridColumn: '1/-1'}}>
-											<small>Alamat</small>
+   								<small>Address</small>
 											<strong>{selectedCustomer.address}</strong>
 										</div>
 									</div>
 								</div>
 
 								{selectedCustomer.notes && (
-										<div className="detail-section">
-											<h4>Catatan</h4>
+   							<div className="detail-section">
+   								<h4>Notes</h4>
 											<p className="muted" style={{fontSize: 13}}>{selectedCustomer.notes}</p>
 										</div>
 								)}
 
 								<div className="detail-section">
-									<h4>Aktivitas</h4>
+  							<h4>Activity</h4>
 									<div className="detail-grid">
 										<div>
-											<small>Bergabung</small>
+   								<small>Joined</small>
 											<strong>{formatDate(selectedCustomer.joinedAt)}</strong>
 										</div>
 										<div>
-											<small>Order terakhir</small>
+   								<small>Last order</small>
 											<strong>{selectedCustomer.lastOrderAt ? formatDate(selectedCustomer.lastOrderAt) : '—'}</strong>
 										</div>
 									</div>

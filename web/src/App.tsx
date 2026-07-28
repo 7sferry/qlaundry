@@ -27,7 +27,7 @@ function ProtectedLayout() {
   if (isLoading) {
     return (
         <div style={{height: '100vh', display: 'grid', placeItems: 'center'}}>
-          <Loading label="Memuat…"/>
+          <Loading label="Loading…"/>
         </div>
     );
   }
@@ -53,7 +53,7 @@ function AuthLayout() {
   if (isLoading) {
     return (
         <div style={{height: '100vh', display: 'grid', placeItems: 'center'}}>
-          <Loading label="Memuat…"/>
+          <Loading label="Loading…"/>
         </div>
     );
   }

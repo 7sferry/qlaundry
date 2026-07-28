@@ -44,12 +44,12 @@ const NEXT_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
 };
 
 const NEXT_STATUS_LABEL: Partial<Record<OrderStatus, string>> = {
-	pending: 'Konfirmasi',
-	confirmed: 'Sudah diambil',
-	picked_up: 'Mulai proses',
-	in_progress: 'Tandai siap',
-	ready: 'Kirim',
-	out_for_delivery: 'Selesai',
+	pending: 'Confirm',
+	confirmed: 'Picked up',
+	picked_up: 'Start process',
+	in_progress: 'Mark ready',
+	ready: 'Dispatch',
+	out_for_delivery: 'Complete',
 };
 
 export default function OrderHistoryPage() {
@@ -65,7 +65,7 @@ export default function OrderHistoryPage() {
 	const [showFilters, setShowFilters] = useState(false);
 	const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-	if (loading) return <Loading label="Memuat order…"/>;
+	if (loading) return <Loading label="Loading orders…"/>;
 
 	const visible = orders.filter((o) => {
 		const q = search.toLowerCase();
@@ -87,23 +87,23 @@ export default function OrderHistoryPage() {
 		if (!next) return;
 		try {
 			await updateStatus({orderId: order.id, status: next});
-			toast.success(`Status order ${order.orderNumber} diperbarui: ${ORDER_STATUS_LABELS[next]}`);
+			toast.success(`Order ${order.orderNumber} status updated: ${ORDER_STATUS_LABELS[next]}`);
 			if (selectedOrder?.id === order.id) {
 				setSelectedOrder((prev) => prev ? {...prev, status: next} : null);
 			}
 		} catch {
-			toast.error('Gagal memperbarui status.');
+			toast.error('Failed to update status.');
 		}
 	};
 
 	const handleCancel = async (order: Order) => {
-		if (!confirm(`Batalkan order ${order.orderNumber}?`)) return;
+		if (!confirm(`Cancel order ${order.orderNumber}?`)) return;
 		try {
-			await cancelOrder(order.id, 'Dibatalkan oleh operator');
-			toast.success(`Order ${order.orderNumber} dibatalkan.`);
+			await cancelOrder(order.id, 'Cancelled by operator');
+			toast.success(`Order ${order.orderNumber} cancelled.`);
 			setSelectedOrder(null);
 		} catch {
-			toast.error('Gagal membatalkan order.');
+			toast.error('Failed to cancel order.');
 		}
 	};
 
@@ -121,16 +121,16 @@ export default function OrderHistoryPage() {
 	return (
 			<>
 				<PageHeader
-						title="Riwayat order"
-						description={`${orders.length} total order · ${visible.length} ditampilkan`}
+						title="Order history"
+						description={`${orders.length} total orders · ${visible.length} shown`}
 						actions={
 							<div className="row" style={{gap: 8}}>
-								<Button variant="ghost" onClick={() => setShowFilters((v) => !v)}>
-									<Filter size={15}/> Filter {hasActiveFilters ? `(aktif)` : ''}
-								</Button>
-								<Button onClick={() => navigate('/orders/new')}>
-									<PackagePlus size={15}/> Order baru
-								</Button>
+ 							<Button variant="ghost" onClick={() => setShowFilters((v) => !v)}>
+ 								<Filter size={15}/> Filters {hasActiveFilters ? `(active)` : ''}
+ 							</Button>
+ 							<Button onClick={() => navigate('/orders/new')}>
+ 								<PackagePlus size={15}/> New order
+ 							</Button>
 							</div>
 						}
 				/>
@@ -138,46 +138,46 @@ export default function OrderHistoryPage() {
 				{showFilters && (
 						<Card style={{marginBottom: 20}}>
 							<div className="filters-grid">
-								<Field label="Cari">
+								<Field label="Search">
 									<div className="input-with-icon">
 										<Search size={15}/>
 										<Input
 												value={search}
 												onChange={(e) => setSearch(e.target.value)}
-												placeholder="No. order, nama, telepon…"
+												placeholder="Order no., name, phone…"
 										/>
 									</div>
 								</Field>
 								<Field label="Status">
 									<Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}>
-										<option value="all">Semua status</option>
+										<option value="all">All statuses</option>
 										{Object.entries(ORDER_STATUS_LABELS).map(([k, v]) => (
-												<option key={k} value={k}>{v}</option>
+											<option key={k} value={k}>{v}</option>
 										))}
 									</Select>
 								</Field>
-								<Field label="Prioritas">
+								<Field label="Priority">
 									<Select
 											value={filterPriority}
 											onChange={(e) => setFilterPriority(e.target.value as typeof filterPriority)}
 									>
-										<option value="all">Semua</option>
+										<option value="all">All</option>
 										<option value="normal">Normal</option>
 										<option value="express">Express</option>
 									</Select>
 								</Field>
-								<Field label="Dari tanggal">
+								<Field label="From date">
 									<Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}/>
 								</Field>
-								<Field label="Sampai tanggal">
+								<Field label="To date">
 									<Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}/>
 								</Field>
 								{hasActiveFilters && (
-										<div style={{display: 'flex', alignItems: 'flex-end', paddingBottom: 16}}>
-											<Button variant="ghost" onClick={clearFilters}>
-												<X size={14}/> Reset filter
-											</Button>
-										</div>
+									<div style={{display: 'flex', alignItems: 'flex-end', paddingBottom: 16}}>
+										<Button variant="ghost" onClick={clearFilters}>
+											<X size={14}/> Reset filters
+										</Button>
+									</div>
 								)}
 							</div>
 						</Card>
@@ -188,13 +188,13 @@ export default function OrderHistoryPage() {
 						<table className="table">
 							<thead>
 							<tr>
-								<th>No. Order</th>
-								<th>Pelanggan</th>
-								<th>Layanan</th>
-								<th>Jadwal</th>
+								<th>Order no.</th>
+								<th>Customer</th>
+								<th>Service</th>
+								<th>Schedule</th>
 								<th>Status</th>
 								<th>Total</th>
-								<th>Prioritas</th>
+								<th>Priority</th>
 								<th/>
 							</tr>
 							</thead>
@@ -249,11 +249,11 @@ export default function OrderHistoryPage() {
 						{!visible.length && (
 								<div className="empty-state">
 									<Package size={32}/>
-									<strong>Tidak ada order yang cocok</strong>
-									<span>Coba ubah filter atau kata kunci pencarian.</span>
+									<strong>No matching orders</strong>
+									<span>Try changing filters or the search term.</span>
 									{hasActiveFilters && (
-											<Button variant="ghost" onClick={clearFilters}>Reset filter</Button>
-									)}
+											<Button variant="ghost" onClick={clearFilters}>Reset filters</Button>
+										)}
 								</div>
 						)}
 					</div>
@@ -271,13 +271,13 @@ export default function OrderHistoryPage() {
 											{!['completed', 'cancelled'].includes(selectedOrder.status) && (
 													<>
 														{NEXT_STATUS[selectedOrder.status] && (
-																<Button onClick={() => void handleAdvance(selectedOrder)}>
-																	{NEXT_STATUS_LABEL[selectedOrder.status]}
-																</Button>
+       									<Button onClick={() => void handleAdvance(selectedOrder)}>
+       										{NEXT_STATUS_LABEL[selectedOrder.status]}
+       									</Button>
 														)}
-														<Button variant="danger" onClick={() => void handleCancel(selectedOrder)}>
-															Batalkan
-														</Button>
+     									<Button variant="danger" onClick={() => void handleCancel(selectedOrder)}>
+     										Cancel
+     									</Button>
 													</>
 											)}
 										</div>
@@ -287,36 +287,36 @@ export default function OrderHistoryPage() {
 					{selectedOrder && (
 							<div className="order-detail">
 								<div className="detail-section">
-									<h4>Informasi pelanggan</h4>
+  							<h4>Customer information</h4>
 									<div className="detail-grid">
-										<div><small>Nama</small><strong>{selectedOrder.customerName}</strong></div>
-										<div><small>Telepon</small><strong>{selectedOrder.customerPhone}</strong></div>
+  								<div><small>Name</small><strong>{selectedOrder.customerName}</strong></div>
+  								<div><small>Telephone</small><strong>{selectedOrder.customerPhone}</strong></div>
 										<div style={{gridColumn: '1/-1'}}>
-											<small>Alamat</small><strong>{selectedOrder.customerAddress}</strong></div>
+  									<small>Address</small><strong>{selectedOrder.customerAddress}</strong></div>
 									</div>
 								</div>
 
 								<div className="detail-section">
-									<h4>Detail layanan</h4>
+  							<h4>Service details</h4>
 									<div className="detail-grid">
-										<div><small>Layanan</small><strong>{selectedOrder.serviceName}</strong></div>
+  								<div><small>Service</small><strong>{selectedOrder.serviceName}</strong></div>
 										<div>
-											<small>Prioritas</small>
-											<strong>{selectedOrder.priority === 'express' ? '⚡ Express' : 'Normal'}</strong>
+  									<small>Priority</small>
+  									<strong>{selectedOrder.priority === 'express' ? '⚡ Express' : 'Normal'}</strong>
 										</div>
 										<div>
-											<small>Pengambilan</small>
+  									<small>Pickup</small>
 											<strong>{formatDate(selectedOrder.pickupDate)}</strong>
 										</div>
 										<div>
-											<small>Estimasi selesai</small>
+  									<small>Estimated completion</small>
 											<strong>{formatDate(selectedOrder.estimatedDelivery)}</strong>
 										</div>
 									</div>
 								</div>
 
 								<div className="detail-section">
-									<h4>Pakaian</h4>
+  							<h4>Garments</h4>
 									<div className="items-list">
 										{selectedOrder.items.map((item, idx) => (
 												<div key={idx} className="item-row item-row--view">
@@ -326,58 +326,58 @@ export default function OrderHistoryPage() {
 										))}
 									</div>
 									{selectedOrder.weightKg && (
-											<p className="muted" style={{marginTop: 8, fontSize: 13}}>
-												Berat: <strong>{selectedOrder.weightKg} kg</strong>
-											</p>
+  									<p className="muted" style={{marginTop: 8, fontSize: 13}}>
+  										Weight: <strong>{selectedOrder.weightKg} kg</strong>
+  									</p>
 									)}
 								</div>
 
 								<div className="detail-section">
-									<h4>Pembayaran</h4>
+  							<h4>Payment</h4>
 									<div className="detail-grid">
 										<div>
-											<small>Metode</small>
+   								<small>Method</small>
 											<strong>
-												{selectedOrder.paymentMethod === 'cash' ? 'Tunai' :
-														selectedOrder.paymentMethod === 'transfer' ? 'Transfer' : 'QRIS'}
+   									{selectedOrder.paymentMethod === 'cash' ? 'Cash' :
+   											selectedOrder.paymentMethod === 'transfer' ? 'Bank transfer' : 'QRIS'}
 											</strong>
 										</div>
 										<div>
-											<small>Status</small>
+   								<small>Status</small>
 											<Badge tone={
 												selectedOrder.paymentStatus === 'paid' ? 'success' :
 														selectedOrder.paymentStatus === 'partial' ? 'warning' : 'neutral'
 											}>
-												{selectedOrder.paymentStatus === 'paid' ? 'Lunas' :
-														selectedOrder.paymentStatus === 'partial' ? 'Cicilan' : 'Belum bayar'}
+   									{selectedOrder.paymentStatus === 'paid' ? 'Paid' :
+   											selectedOrder.paymentStatus === 'partial' ? 'Partial' : 'Unpaid'}
 											</Badge>
 										</div>
-										<div><small>Subtotal</small><strong>{formatCurrency(selectedOrder.subtotal)}</strong></div>
+   							<div><small>Subtotal</small><strong>{formatCurrency(selectedOrder.subtotal)}</strong></div>
 										{selectedOrder.discount > 0 && (
 												<div>
-													<small>Diskon {selectedOrder.promoCode && `(${selectedOrder.promoCode})`}</small>
-													<strong style={{color: 'var(--success)'}}>−{formatCurrency(selectedOrder.discount)}</strong>
+    									<small>Discount {selectedOrder.promoCode && `(${selectedOrder.promoCode})`}</small>
+    									<strong style={{color: 'var(--success)'}}>−{formatCurrency(selectedOrder.discount)}</strong>
 												</div>
 										)}
 										<div style={{gridColumn: '1/-1'}}>
-											<small>Total</small>
+   								<small>Total</small>
 											<strong style={{fontSize: 18}}>{formatCurrency(selectedOrder.totalPrice)}</strong>
 										</div>
 									</div>
 								</div>
 
-								{selectedOrder.notes && (
-										<div className="detail-section">
-											<h4>Catatan pelanggan</h4>
-											<p className="muted" style={{fontSize: 13}}>{selectedOrder.notes}</p>
-										</div>
-								)}
-								{selectedOrder.staffNotes && (
-										<div className="detail-section">
-											<h4>Catatan staff</h4>
-											<p className="muted" style={{fontSize: 13}}>{selectedOrder.staffNotes}</p>
-										</div>
-								)}
+  						{selectedOrder.notes && (
+  								<div className="detail-section">
+  									<h4>Customer notes</h4>
+  									<p className="muted" style={{fontSize: 13}}>{selectedOrder.notes}</p>
+  								</div>
+  						)}
+  						{selectedOrder.staffNotes && (
+  								<div className="detail-section">
+  									<h4>Staff notes</h4>
+  									<p className="muted" style={{fontSize: 13}}>{selectedOrder.staffNotes}</p>
+  								</div>
+  						)}
 
 								<div className="detail-section">
 									<div className="status-timeline">

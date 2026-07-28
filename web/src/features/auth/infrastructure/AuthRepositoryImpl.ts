@@ -62,7 +62,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 				password: credentials.password,
 			});
 		} catch {
-			throw new Error('Username atau password salah.');
+			throw new Error('Incorrect username or password.');
 		}
 		setAccessToken(tokens.accessToken);
 		setRefreshTokenCookie(tokens.refreshToken);
@@ -98,7 +98,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 			const response = await httpClient.post<{ email: string }>('/auth/staff/forgottenPassword', {username});
 			return response.email;
 		} catch {
-			throw new Error('Gagal mengirim kode verifikasi. Coba lagi nanti.');
+			throw new Error('Failed to send verification code. Please try again later.');
 		}
 	}
 
@@ -107,7 +107,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 			const response = await httpClient.post<{ resetToken: string }>('/auth/staff/submitOtp', {username, otp});
 			return response.resetToken;
 		} catch {
-			throw new Error('Kode verifikasi salah atau sudah kedaluwarsa.');
+			throw new Error('The verification code is incorrect or has expired.');
 		}
 	}
 

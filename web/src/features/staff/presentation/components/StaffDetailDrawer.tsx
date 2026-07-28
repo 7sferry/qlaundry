@@ -22,14 +22,14 @@ export default function StaffDetailDrawer({staff, open, onClose, onDelete, canDe
 					open={open}
 					onClose={onClose}
 					title={staff?.fullName}
-					subtitle={staff ? `Bergabung ${formatDate(staff.joinedAt)}` : ''}
+					subtitle={staff ? `Joined ${formatDate(staff.joinedAt)}` : ''}
 					width="460px"
 					footer={
 							staff && canDelete && (
 									<div className="row" style={{gap: 8, justifyContent: 'flex-end'}}>
-										<Button variant="danger" onClick={() => onDelete(staff)}>
-											<Trash2 size={14}/> Hapus
-										</Button>
+   							<Button variant="danger" onClick={() => onDelete(staff)}>
+   								<Trash2 size={14}/> Delete
+   							</Button>
 									</div>
 							)
 					}
@@ -47,10 +47,10 @@ export default function StaffDetailDrawer({staff, open, onClose, onDelete, canDe
 							</div>
 
 							<div className="detail-section">
-								<h4>Kontak</h4>
+  						<h4>Contact</h4>
 								<div className="detail-grid">
 									<div>
-										<small>Telepon</small>
+  								<small>Telephone</small>
 										<strong>{staff.phones.length ? staff.phones.join(', ') : '—'}</strong>
 									</div>
 									<div>
@@ -58,24 +58,24 @@ export default function StaffDetailDrawer({staff, open, onClose, onDelete, canDe
 										<strong>{staff.emails.length ? staff.emails.join(', ') : '—'}</strong>
 									</div>
 									<div style={{gridColumn: '1/-1'}}>
-										<small>Alamat</small>
+  								<small>Address</small>
 										<strong>{staff.addresses.length ? staff.addresses.join('; ') : '—'}</strong>
 									</div>
 								</div>
 							</div>
 
-							{staff.description && (
-									<div className="detail-section">
-										<h4>Deskripsi</h4>
-										<p className="muted" style={{fontSize: 13}}>{staff.description}</p>
-									</div>
-							)}
+ 						{staff.description && (
+ 								<div className="detail-section">
+ 									<h4>Description</h4>
+ 									<p className="muted" style={{fontSize: 13}}>{staff.description}</p>
+ 								</div>
+ 						)}
 
 							<div className="detail-section">
-								<h4>Aktivitas</h4>
+  						<h4>Activity</h4>
 								<div className="detail-grid">
 									<div>
-										<small>Bergabung</small>
+  								<small>Joined</small>
 										<strong>{formatDate(staff.joinedAt)}</strong>
 									</div>
 								</div>

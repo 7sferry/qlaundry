@@ -27,7 +27,7 @@ export default function StaffPage() {
 	const [form, setForm] = useState<StaffFormData>(emptyStaffForm);
 	const [saving, setSaving] = useState(false);
 
-	if (loading) return <Loading label="Memuat staf…"/>;
+	if (loading) return <Loading label="Loading staff…"/>;
 
 	const visible = staff.filter((s) => {
 		const q = search.toLowerCase();
@@ -66,24 +66,24 @@ export default function StaffPage() {
 				addresses: form.address ? [form.address] : [],
 			};
 			await createStaff(input);
-			toast.success('Staf baru berhasil ditambahkan.');
+			toast.success('New staff member added.');
 			setShowAddModal(false);
 			setForm(emptyStaffForm);
 		} catch (err) {
-			toast.error(err instanceof Error ? err.message : 'Terjadi kesalahan. Coba lagi.');
+			toast.error(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
 		} finally {
 			setSaving(false);
 		}
 	};
 
 	const handleDelete = async (s: Staff) => {
-		if (!confirm(`Hapus staf ${s.fullName}? Data ini tidak dapat dipulihkan.`)) return;
+		if (!confirm(`Delete staff ${s.fullName}? This cannot be undone.`)) return;
 		try {
 			await deleteStaff(s.id);
-			toast.success(`${s.fullName} dihapus.`);
+			toast.success(`${s.fullName} deleted.`);
 			setSelectedStaff(null);
 		} catch {
-			toast.error('Gagal menghapus staf.');
+			toast.error('Failed to delete staff.');
 		}
 	};
 
@@ -99,19 +99,19 @@ export default function StaffPage() {
 	return (
 			<>
 				<PageHeader
-						title="Manajemen staf"
-						description={`${staff.length} staf terdaftar`}
+						title="Staff management"
+						description={`${staff.length} staff registered`}
 						actions={
 							<Button onClick={openAdd}>
-								<UserPlus size={15}/> Tambah staf
+								<UserPlus size={15}/> Add staff
 							</Button>
 						}
 				/>
 
 				<div className="grid grid--stats">
-					<StatCard icon={<Users size={20}/>} value={staff.length} label="Total staf" hint="Terdaftar"/>
-					<StatCard icon={<UserPlus size={20}/>} value={newThisMonth} label="Staf baru"
-					          hint="Bulan ini"/>
+					<StatCard icon={<Users size={20}/>} value={staff.length} label="Total staff" hint="Registered"/>
+					<StatCard icon={<UserPlus size={20}/>} value={newThisMonth} label="New staff"
+					          hint="This month"/>
 				</div>
 
 				<StaffTable
@@ -124,7 +124,7 @@ export default function StaffPage() {
 						canDelete={canDelete}
 				/>
 
-				<Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Tambah staf baru">
+				<Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add new staff">
 					<StaffForm
 							form={form}
 							update={update}

@@ -15,7 +15,7 @@ export const formatCurrency = (value: number): string => idrFormatter.format(val
 export const formatDate = (value: string | Date): string => {
 	const date = typeof value === 'string' ? new Date(value) : value;
 	if (Number.isNaN(date.getTime())) return String(value);
-	return date.toLocaleDateString('id-ID', {
+	return date.toLocaleDateString('en-GB', {
 		year: 'numeric',
 		month: 'short',
 		day: 'numeric',
@@ -25,7 +25,7 @@ export const formatDate = (value: string | Date): string => {
 export const formatTime = (value: string | Date): string => {
 	const date = typeof value === 'string' ? new Date(value) : value;
 	if (Number.isNaN(date.getTime())) return '';
-	return date.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
+	return date.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'});
 };
 
 export const formatDatetime = (value: string | Date): string =>
@@ -35,12 +35,12 @@ export const formatRelative = (value: string | Date): string => {
 	const date = typeof value === 'string' ? new Date(value) : value;
 	const diffMs = Date.now() - date.getTime();
 	const diffMin = Math.floor(diffMs / 60000);
-	if (diffMin < 1) return 'Baru saja';
-	if (diffMin < 60) return `${diffMin} menit lalu`;
+	if (diffMin < 1) return 'Just now';
+	if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`;
 	const diffHr = Math.floor(diffMin / 60);
-	if (diffHr < 24) return `${diffHr} jam lalu`;
+	if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
 	const diffDay = Math.floor(diffHr / 24);
-	if (diffDay < 7) return `${diffDay} hari lalu`;
+	if (diffDay < 7) return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
 	return formatDate(date);
 };
 

@@ -17,7 +17,7 @@ export function loadTurnstileScript(): Promise<void> {
 			script.async = true;
 			script.defer = true;
 			script.onload = () => resolve();
-			script.onerror = () => reject(new Error('Gagal memuat Turnstile.'));
+			script.onerror = () => reject(new Error('Failed to load Turnstile.'));
 			document.head.appendChild(script);
 		});
 	}
