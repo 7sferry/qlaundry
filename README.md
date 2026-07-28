@@ -4,7 +4,7 @@ Laundry management system — monorepo with a React frontend and a Java/Spring B
 
 ## Stack
 
-- **Frontend** (`qlaundry-web/`) — React 19, TypeScript 6, Vite. Screaming + clean architecture, feature-vertical slices. See `qlaundry-web/CLAUDE.md` for commands, testing, and conventions.
+- **Frontend** (`web/`) — React 19, TypeScript 6, Vite. Screaming + clean architecture, feature-vertical slices. See `web/CLAUDE.md` for commands, testing, and conventions.
 - **Backend** — Java 25, Spring Boot 4.1, Maven. Clean Architecture, one Maven module per layer (`domain` → `core` → `gateway` → `web-service`) per service.
 - **Gateway** (`gateway/`) — nginx (Docker). Single entry point on `:8100`: proxies `/api/*` (prefix stripped) to `user-service` and everything else to the Vite dev server, so the frontend and backend API are served from the same origin/port.
 
@@ -57,7 +57,7 @@ cd gateway && docker compose up -d                                   # :8100
 docker exec qlaundry-gateway nginx -s reload
 ```
 
-Open the app at `http://localhost:8100` — nginx serves the frontend (proxying to Vite on `:5173`, including HMR websockets) and forwards `/api/*` to `user-service` on `:8101` via `host.docker.internal`, stripping the `/api` prefix so Spring controllers keep their existing paths (`/api/auth/staff/login` → `/auth/staff/login`). The frontend calls the backend with a relative base URL (`VITE_API_BASE_URL=/api`, see `qlaundry-web/.env`), so both are same-origin — no CORS involved at runtime.
+Open the app at `http://localhost:8100` — nginx serves the frontend (proxying to Vite on `:5173`, including HMR websockets) and forwards `/api/*` to `user-service` on `:8101` via `host.docker.internal`, stripping the `/api` prefix so Spring controllers keep their existing paths (`/api/auth/staff/login` → `/auth/staff/login`). The frontend calls the backend with a relative base URL (`VITE_API_BASE_URL=/api`, see `web/.env`), so both are same-origin — no CORS involved at runtime.
 
 JPA runs with `ddl-auto: update`, so tables are created automatically on first run — no migrations to apply.
 
