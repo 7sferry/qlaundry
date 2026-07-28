@@ -17,6 +17,14 @@ export class UpdateStaffUseCase {
 		if (!input.id.trim()) {
 			return Promise.reject(new Error('ID staf wajib diisi.'));
 		}
+		if (input.newPassword || input.currentPassword) {
+			if (!input.currentPassword || !input.newPassword) {
+				return Promise.reject(new Error('Password saat ini dan password baru wajib diisi bersamaan.'));
+			}
+			if (input.newPassword.length < 8) {
+				return Promise.reject(new Error('Password baru minimal 8 karakter.'));
+			}
+		}
 		return this.repository.updateStaff(input);
 	}
 }

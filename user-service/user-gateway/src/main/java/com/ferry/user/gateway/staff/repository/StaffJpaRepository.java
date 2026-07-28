@@ -18,6 +18,7 @@ public interface StaffJpaRepository extends JpaRepository<StaffJpaEntity, String
 	boolean existsByUsername(String username);
 	<T> Optional<T> findByUsernameAndDeletedIsFalse(String username, Class<T> clazz);
 	<T> Optional<T> findById(String id, Class<T> clazz);
+	<T> Optional<T> findByIdAndDeletedIsFalse(String id, Class<T> clazz);
 	<T> Optional<T> findByUsernameAndTenantIdAndDeletedIsFalse(String username, String tenantId, Class<T> clazz);
 
 	@Query("select s " +

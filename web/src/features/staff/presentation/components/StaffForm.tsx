@@ -38,6 +38,24 @@ export default function StaffForm({form, update, onSubmit, onCancel, saving, edi
 							</div>
 						</Field>
 				)}
+				{editMode && (
+						<>
+							<Field label="Password saat ini" htmlFor="sfCurrentPassword">
+								<div className="input-with-icon">
+									<Lock size={15}/>
+									<Input id="sfCurrentPassword" type="password" value={form.currentPassword}
+									       onChange={update('currentPassword')} placeholder="isi untuk mengganti password"/>
+								</div>
+							</Field>
+							<Field label="Password baru" htmlFor="sfNewPassword">
+								<div className="input-with-icon">
+									<Lock size={15}/>
+									<Input id="sfNewPassword" type="password" minLength={8} value={form.newPassword}
+									       onChange={update('newPassword')} placeholder="opsional, minimal 8 karakter"/>
+								</div>
+							</Field>
+						</>
+				)}
 				<Field label="Nama lengkap" htmlFor="sfName">
 					<Input id="sfName" required value={form.fullName} onChange={update('fullName')}
 					       placeholder="Nama staf" autoComplete="off"/>

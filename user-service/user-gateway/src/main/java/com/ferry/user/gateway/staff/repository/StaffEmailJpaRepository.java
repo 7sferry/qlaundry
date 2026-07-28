@@ -4,6 +4,7 @@ import com.ferry.user.domain.staff.StaffEmailFilter;
 import com.ferry.user.domain.staff.forgottenpassword.StaffEmailForgottenPasswordProjection;
 import com.ferry.user.gateway.staff.entity.StaffEmailJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -32,5 +33,10 @@ public interface StaffEmailJpaRepository extends JpaRepository<StaffEmailJpaEnti
 			"ORDER BY se.id " +
 			"LIMIT 1")
 	Optional<StaffEmailForgottenPasswordProjection> findForForgottenPassword(@Param("username") String username);
+
+	@Modifying
+	@Query("update StaffEmailJpaEntity e set e.deleted = true, e.updatedBy = :updatedBy, e.updatedAt = CURRENT_TIMESTAMP " +
+			"where e.staffId = :staffId and e.deleted is false")
+	void softDeleteByStaffId(@Param("staffId") String staffId, @Param("updatedBy") String updatedBy);
 
 }

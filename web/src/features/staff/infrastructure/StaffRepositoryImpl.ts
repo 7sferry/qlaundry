@@ -3,7 +3,7 @@
  * on Juli 2026         *
  ************************/
 
-import {httpClient, withFallback} from '@/core/http/httpClient';
+import {httpClient} from '@/core/http/httpClient';
 import type {StaffFilters, StaffRepository} from '../domain/StaffRepository';
 import type {CreateStaffInput, Staff, UpdateStaffInput} from '../domain/Staff';
 import {fallbackStaff} from './staffFallbackData';
@@ -37,7 +37,7 @@ function toStaff(item: StaffListApiResponse['staffs'][number]): Staff {
 
 function newStaffFromInput(input: CreateStaffInput): Staff {
 	return {
-		id: `staff-${Date.now()}`,
+		id: input.username,
 		username: input.username,
 		fullName: input.fullName,
 		description: input.description,
@@ -79,16 +79,16 @@ export class StaffRepositoryImpl implements StaffRepository {
 	}
 
 	async updateStaff(input: UpdateStaffInput): Promise<Staff> {
-		return withFallback<Staff>(
-				() => httpClient.put<Staff>(`/api/staff/${input.id}`, input),
-				() => {
-					const idx = localStaff.findIndex((s) => s.id === input.id);
-					if (idx === -1) throw new Error(`Staff ${input.id} not found`);
-					const updated: Staff = {...localStaff[idx], ...input};
-					localStaff = localStaff.map((s, i) => (i === idx ? updated : s));
-					return updated;
-				},
-		);
+		const res = await httpClient.put<StaffListApiResponse['staffs'][number]>('/staff/profile', {
+			fullName: input.fullName,
+			description: input.description,
+			currentPassword: input.currentPassword,
+			newPassword: input.newPassword,
+			emails: input.emails,
+			phones: input.phones,
+			addresses: input.addresses,
+		});
+		return toStaff(res);
 	}
 
 	async deleteStaff(id: string): Promise<void> {

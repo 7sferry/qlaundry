@@ -34,6 +34,8 @@ export default function StaffSettingsPage() {
 					const data: StaffFormData = {
 						username: s.username,
 						password: '',
+						currentPassword: '',
+						newPassword: '',
 						fullName: s.fullName,
 						description: s.description ?? '',
 						role: 'STAFF',
@@ -64,9 +66,13 @@ export default function StaffSettingsPage() {
 				emails: form.email ? [form.email] : [],
 				phones: form.phone ? [form.phone] : [],
 				addresses: form.address ? [form.address] : [],
+				currentPassword: form.currentPassword || undefined,
+				newPassword: form.newPassword || undefined,
 			};
 			await updateStaffUseCase.execute(input);
-			setOriginal(form);
+			const saved: StaffFormData = {...form, currentPassword: '', newPassword: ''};
+			setForm(saved);
+			setOriginal(saved);
 			toast.success('Profil berhasil diperbarui.');
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Terjadi kesalahan. Coba lagi.');

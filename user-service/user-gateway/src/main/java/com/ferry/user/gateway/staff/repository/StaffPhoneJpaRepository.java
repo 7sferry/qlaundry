@@ -5,6 +5,7 @@ import com.ferry.user.domain.staff.StaffPhoneFilter;
 import com.ferry.user.domain.staff.list.StaffPhoneListProjection;
 import com.ferry.user.gateway.staff.entity.StaffPhoneJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -24,5 +25,10 @@ public interface StaffPhoneJpaRepository extends JpaRepository<StaffPhoneJpaEnti
 			"(coalesce(:#{#filter?.staffIds}, null) is null or s.staff.id IN :#{#filter?.staffIds}) AND " +
 			"s.deleted IS FALSE")
 	<T> List<T> findAllWithFilter(@Param("filter") StaffPhoneFilter filter, Class<T> clazz);
+
+	@Modifying
+	@Query("update StaffPhoneJpaEntity e set e.deleted = true, e.updatedBy = :updatedBy, e.updatedAt = CURRENT_TIMESTAMP " +
+			"where e.staffId = :staffId and e.deleted is false")
+	void softDeleteByStaffId(@Param("staffId") String staffId, @Param("updatedBy") String updatedBy);
 
 }

@@ -29,4 +29,6 @@ export interface CreateStaffInput {
 
 export interface UpdateStaffInput extends Partial<Omit<CreateStaffInput, 'username' | 'password'>> {
 	id: string;
+	currentPassword?: string;
+	newPassword?: string;
 }

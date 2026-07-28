@@ -3,6 +3,7 @@ package com.ferry.user.webservice.config;
 import com.ferry.user.domain.exception.ExpiredSessionException;
 import com.ferry.user.domain.exception.ForbiddenActionException;
 import com.ferry.user.domain.exception.InvalidOtpException;
+import com.ferry.user.domain.exception.InvalidPasswordException;
 import com.ferry.user.domain.exception.InvalidUsernameException;
 import com.ferry.user.domain.exception.TurnstileVerificationException;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,8 @@ public class UserWebExceptionHandler{
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorWebResponse(e.getMessage()));
 	}
 
-	@ExceptionHandler({InvalidOtpException.class, InvalidUsernameException.class, TurnstileVerificationException.class})
+	@ExceptionHandler({InvalidOtpException.class, InvalidUsernameException.class, TurnstileVerificationException.class,
+			InvalidPasswordException.class})
 	ResponseEntity<ErrorWebResponse> handleBadRequest(RuntimeException e){
 		log.warn(e.getMessage());
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorWebResponse(e.getMessage()));

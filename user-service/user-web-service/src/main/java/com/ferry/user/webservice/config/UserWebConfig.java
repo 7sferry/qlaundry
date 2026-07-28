@@ -29,6 +29,9 @@ import com.ferry.user.core.staff.resetpassword.StaffResetPasswordGateway;
 import com.ferry.user.core.staff.resetpassword.StaffResetPasswordUseCase;
 import com.ferry.user.core.staff.submitotp.DefaultStaffSubmitOtpUseCase;
 import com.ferry.user.core.staff.submitotp.StaffSubmitOtpUseCase;
+import com.ferry.user.core.staff.update.DefaultStaffUpdateUseCase;
+import com.ferry.user.core.staff.update.StaffUpdateGateway;
+import com.ferry.user.core.staff.update.StaffUpdateUseCase;
 import com.ferry.user.core.tenant.registration.DefaultTenantRegistrationUseCase;
 import com.ferry.user.core.tenant.registration.UserEmailPublisher;
 import com.ferry.user.core.tenant.registration.TenantRegistrationGateway;
@@ -257,6 +260,23 @@ public class UserWebConfig{
 	@Bean
 	StaffDeleteUseCase staffDeleteUseCase(StaffDeleteGateway staffDeleteGateway){
 		return new DefaultStaffDeleteUseCase(staffDeleteGateway);
+	}
+
+	@Bean
+	StaffUpdateGateway staffUpdateGateway(StaffJpaRepository staffJpaRepository,
+	                                      StaffRoleJpaRepository staffRoleJpaRepository,
+	                                      StaffEmailJpaRepository staffEmailJpaRepository,
+	                                      StaffPhoneJpaRepository staffPhoneJpaRepository,
+	                                      StaffAddressJpaRepository staffAddressJpaRepository,
+	                                      TenantJpaRepository tenantJpaRepository,
+	                                      IdGenerator idGenerator){
+		return new StaffUpdateJpaGateway(staffJpaRepository, staffRoleJpaRepository, staffEmailJpaRepository,
+				staffPhoneJpaRepository, staffAddressJpaRepository, tenantJpaRepository, idGenerator);
+	}
+
+	@Bean
+	StaffUpdateUseCase staffUpdateUseCase(StaffUpdateGateway staffUpdateGateway, PasswordTool passwordTool){
+		return new DefaultStaffUpdateUseCase(staffUpdateGateway, passwordTool);
 	}
 
 }
