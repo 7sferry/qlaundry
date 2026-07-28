@@ -23,6 +23,10 @@ spring:
 server:
   port: 8101
 
+logging:
+  file:
+    name: logs/user-web-service.log
+
 app:
   notification:
     stream:
