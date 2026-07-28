@@ -9,6 +9,7 @@ const mockUser: User = {
 	username: 'newuser',
 	email: 'new@test.com',
 	role: 'staff',
+	staffRole: 'STAFF',
 };
 
 const mockSession: AuthSession = {

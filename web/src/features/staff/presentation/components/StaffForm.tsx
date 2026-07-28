@@ -4,13 +4,15 @@
  ************************/
 
 import React from 'react';
-import {AtSign, Lock, Mail, MapPin, Phone} from 'lucide-react';
-import {Button, Field, Input, Textarea} from '@/core/ui';
+import {AtSign, Lock, Mail, MapPin, Phone, Shield} from 'lucide-react';
+import {Button, Field, Input, Select, Textarea} from '@/core/ui';
 import type {StaffFormData} from './staffFormData';
 
 interface StaffFormProps {
 	form: StaffFormData;
-	update: (key: keyof StaffFormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+	update: (key: keyof StaffFormData) => (
+			e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+	) => void;
 	onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
 	onCancel: () => void;
 	saving: boolean;
@@ -40,6 +42,17 @@ export default function StaffForm({form, update, onSubmit, onCancel, saving, edi
 					<Input id="sfName" required value={form.fullName} onChange={update('fullName')}
 					       placeholder="Nama staf" autoComplete="off"/>
 				</Field>
+				{!editMode && (
+						<Field label="Role" htmlFor="sfRole">
+							<div className="input-with-icon">
+								<Shield size={15}/>
+								<Select id="sfRole" required value={form.role} onChange={update('role')}>
+									<option value="STAFF">Staf</option>
+									<option value="SUPER_STAFF">Super staf</option>
+								</Select>
+							</div>
+						</Field>
+				)}
 				<Field label="Nomor telepon" htmlFor="sfPhone">
 					<div className="input-with-icon">
 						<Phone size={15}/>

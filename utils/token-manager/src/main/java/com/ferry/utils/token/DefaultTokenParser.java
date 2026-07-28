@@ -20,7 +20,7 @@ public class DefaultTokenParser implements TokenParser{
 	@Override
 	public Map<String, Object> parseToken(String token){
 		if(token == null || token.isBlank()){
-			return null;
+			return Map.of();
 		}
 		try{
 			Jws<Claims> claims = Jwts.parser()
@@ -29,7 +29,7 @@ public class DefaultTokenParser implements TokenParser{
 					.parseSignedClaims(token);
 			return claims.getPayload();
 		} catch(Exception e){
-			return null;
+			return Map.of();
 		}
 	}
 

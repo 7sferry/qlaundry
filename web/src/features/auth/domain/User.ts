@@ -3,6 +3,8 @@
  * on Juli 2026         *
  ************************/
 
+import type {StaffRole} from '@/features/staff/domain/Staff';
+
 export type UserRole = 'owner' | 'admin' | 'staff';
 
 export interface User {
@@ -12,6 +14,7 @@ export interface User {
 	email: string;
 	phone?: string;
 	role: UserRole;
+	staffRole: StaffRole | null;
 	outletName?: string;
 	avatarInitials?: string;
 }

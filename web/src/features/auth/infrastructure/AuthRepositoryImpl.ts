@@ -7,11 +7,13 @@ import {httpClient} from '@/core/http/httpClient';
 import {
 	clearRefreshTokenCookie,
 	getAccessToken,
+	roleFromAccessToken,
 	setAccessToken,
 	setRefreshTokenCookie,
 	usernameFromAccessToken,
 } from '@/core/auth/tokenStore';
 import {refreshAccessToken} from '@/core/auth/refreshAccessToken';
+import type {StaffRole} from '@/features/staff/domain/Staff';
 import type {AuthRepository} from '../domain/AuthRepository';
 import {ResetSessionExpiredError} from '../domain/errors';
 import type {AuthSession, LoginCredentials, RegisterData, User} from '../domain/User';
@@ -32,6 +34,7 @@ interface StaffDetailApiResponse {
 }
 
 function toUser(detail: StaffDetailApiResponse): User {
+	const role = roleFromAccessToken();
 	return {
 		id: detail.username,
 		fullName: detail.fullName,
@@ -39,6 +42,7 @@ function toUser(detail: StaffDetailApiResponse): User {
 		email: detail.emails[0]?.email ?? '',
 		phone: detail.phones[0]?.phone,
 		role: 'owner',
+		staffRole: role === 'SUPER_STAFF' || role === 'STAFF' ? role as StaffRole : null,
 		avatarInitials: detail.fullName.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase(),
 	};
 }

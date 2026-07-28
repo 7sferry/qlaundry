@@ -22,6 +22,9 @@ export class CreateStaffUseCase {
 		if (!username || !password || !fullName || !email) {
 			return Promise.reject(new Error('Username, password, nama lengkap, dan email wajib diisi.'));
 		}
+		if (input.role !== 'STAFF' && input.role !== 'SUPER_STAFF') {
+			return Promise.reject(new Error('Role wajib dipilih.'));
+		}
 		if (username.length < 5) {
 			return Promise.reject(new Error('Username minimal 5 karakter.'));
 		}

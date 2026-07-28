@@ -10,6 +10,7 @@ import com.ferry.user.domain.exception.TurnstileVerificationException;
 import com.ferry.user.domain.notification.EmailTriggerDomain;
 import com.ferry.user.domain.notification.EmailTriggerType;
 import com.ferry.user.domain.staff.StaffDomain;
+import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.tenant.TenantDomain;
 import lombok.RequiredArgsConstructor;
 
@@ -41,8 +42,8 @@ public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCa
 
 	private StaffRegistrationResponse registerAdmin(TenantRegistrationRequest request, TenantDomain saved){
 		StaffRegistrationRequest registrationRequest = new StaffRegistrationRequest(request.username(), request.password(), request.fullName(),
-				request.description() != null ? request.description() : "Super Admin", request.emails(), request.phones(), request.addresses());
-		return gateway.registerAdmin(registrationRequest, saved.createdBy(), saved.id());
+				request.description() != null ? request.description() : "Super Admin", StaffRole.SUPER_STAFF, request.emails(), request.phones(), request.addresses());
+		return gateway.registerAdmin(registrationRequest, saved);
 	}
 
 	private TenantDomain saveTenant(TenantRegistrationRequest request){

@@ -24,7 +24,7 @@ public record UserSessionDomain(String id, Instant expirationTime, String userId
 		}
 	}
 
-	public int sessionTypeValue(){
+	public short sessionTypeValue(){
 		return sessionType.getValue();
 	}
 

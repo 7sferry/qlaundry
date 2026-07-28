@@ -36,6 +36,7 @@ export function clearRefreshTokenCookie(): void {
 interface JwtPayload {
 	sub?: string;
 	exp?: number;
+	role?: string;
 }
 
 function decodeJwtPayload(token: string): JwtPayload | null {
@@ -60,4 +61,10 @@ export function isAccessTokenExpired(token: string): boolean {
 export function usernameFromAccessToken(): string | null {
 	if (!accessToken) return null;
 	return decodeJwtPayload(accessToken)?.sub ?? null;
+}
+
+/** Staff role (`SUPER_STAFF` | `STAFF`) from the JWT `role` claim. */
+export function roleFromAccessToken(): string | null {
+	if (!accessToken) return null;
+	return decodeJwtPayload(accessToken)?.role ?? null;
 }

@@ -17,6 +17,7 @@ const validInput: CreateStaffInput = {
 	username: 'budi.s',
 	password: 'rahasia123',
 	fullName: 'Budi Setiawan',
+	role: 'STAFF',
 	emails: ['budi@qlaundry.id'],
 	phones: ['08111222333'],
 	addresses: [],
@@ -79,6 +80,12 @@ describe('CreateStaffUseCase', () => {
 		const useCase = new CreateStaffUseCase(makeRepo());
 		await expect(useCase.execute({...validInput, phones: ['+62 811-222-333']}))
 				.rejects.toThrow('Nomor telepon hanya boleh berisi angka.');
+	});
+
+	it('rejects when role is invalid', async () => {
+		const useCase = new CreateStaffUseCase(makeRepo());
+		await expect(useCase.execute({...validInput, role: 'OWNER' as CreateStaffInput['role']}))
+				.rejects.toThrow('Role wajib dipilih.');
 	});
 
 	it('delegates to the repository with valid input', async () => {

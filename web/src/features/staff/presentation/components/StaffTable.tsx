@@ -15,9 +15,10 @@ interface StaffTableProps {
 	onSelect: (staff: Staff) => void;
 	onDelete: (staff: Staff) => void;
 	onAdd: () => void;
+	canDelete: (staff: Staff) => boolean;
 }
 
-export default function StaffTable({staff, search, onSearchChange, onSelect, onDelete, onAdd}: StaffTableProps) {
+export default function StaffTable({staff, search, onSearchChange, onSelect, onDelete, onAdd, canDelete}: StaffTableProps) {
 	return (
 			<Card style={{marginTop: 24, marginBottom: 20}}>
 				<div className="filters">
@@ -72,10 +73,12 @@ export default function StaffTable({staff, search, onSearchChange, onSelect, onD
 									<td>{formatDate(s.joinedAt)}</td>
 									<td onClick={(e) => e.stopPropagation()}>
 										<div className="row" style={{gap: 4}}>
-											<button className="icon-btn icon-btn--danger" onClick={() => onDelete(s)}
-											        title="Hapus">
-												<Trash2 size={14}/>
-											</button>
+											{canDelete(s) && (
+													<button className="icon-btn icon-btn--danger" onClick={() => onDelete(s)}
+													        title="Hapus">
+														<Trash2 size={14}/>
+													</button>
+											)}
 										</div>
 									</td>
 								</tr>

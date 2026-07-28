@@ -9,5 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * on Juli 2026         *
  ************************/
 
-public interface UserSessionTypeJpaRepository extends JpaRepository<UserSessionTypeJpaEntity, Integer>{
+public interface UserSessionTypeJpaRepository extends JpaRepository<UserSessionTypeJpaEntity, Short>{
 }

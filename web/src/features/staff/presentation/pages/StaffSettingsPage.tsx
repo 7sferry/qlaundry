@@ -36,6 +36,7 @@ export default function StaffSettingsPage() {
 						password: '',
 						fullName: s.fullName,
 						description: s.description ?? '',
+						role: 'STAFF',
 						email: s.emails[0] ?? '',
 						phone: s.phones[0] ?? '',
 						address: s.addresses[0] ?? '',
@@ -48,7 +49,7 @@ export default function StaffSettingsPage() {
 	});
 
 	const update = (key: keyof StaffFormData) => (
-			e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+			e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
 	) => setForm((prev) => ({...prev, [key]: e.target.value}));
 
 	const handleSave = async (e: React.SubmitEvent<HTMLFormElement>) => {

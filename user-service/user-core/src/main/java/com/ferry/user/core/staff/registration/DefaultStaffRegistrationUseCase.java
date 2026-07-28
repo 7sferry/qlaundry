@@ -40,7 +40,7 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 		FullNameDomain fullName = new FullNameDomain(request.fullName());
 		DescriptionDomain note = new DescriptionDomain(request.description());
 		StaffDomain registered = StaffDomain.register(username, hashedPassword, fullName, note, principal.tenantId(),
-				principal.userId());
+				request.role(), principal.userId());
 		return gateway.save(registered);
 	}
 

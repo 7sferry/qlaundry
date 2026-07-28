@@ -6,14 +6,8 @@ import com.ferry.user.domain.staff.StaffAddressDomain;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffEmailDomain;
 import com.ferry.user.domain.staff.StaffPhoneDomain;
-import com.ferry.user.gateway.staff.entity.StaffAddressJpaEntity;
-import com.ferry.user.gateway.staff.entity.StaffEmailJpaEntity;
-import com.ferry.user.gateway.staff.entity.StaffJpaEntity;
-import com.ferry.user.gateway.staff.entity.StaffPhoneJpaEntity;
-import com.ferry.user.gateway.staff.repository.StaffAddressJpaRepository;
-import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
-import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
-import com.ferry.user.gateway.staff.repository.StaffPhoneJpaRepository;
+import com.ferry.user.gateway.staff.entity.*;
+import com.ferry.user.gateway.staff.repository.*;
 import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
@@ -30,6 +24,7 @@ public class StaffRegistrationJpaGateway implements StaffRegistrationGateway{
 	private final StaffEmailJpaRepository staffEmailJpaRepository;
 	private final StaffAddressJpaRepository staffAddressJpaRepository;
 	private final StaffPhoneJpaRepository staffPhoneJpaRepository;
+	private final StaffRoleJpaRepository staffRoleJpaRepository;
 	private final TenantJpaRepository tenantJpaRepository;
 	private final IdGenerator idGenerator;
 
@@ -37,7 +32,8 @@ public class StaffRegistrationJpaGateway implements StaffRegistrationGateway{
 	public StaffDomain save(StaffDomain register){
 		String id = idGenerator.generateId();
 		TenantJpaEntity tenant = tenantJpaRepository.getReferenceById(register.tenantId());
-		StaffJpaEntity entity = StaffJpaEntity.construct(id, register, tenant);
+		StaffRoleJpaEntity role = staffRoleJpaRepository.getReferenceById(register.role().getValue());
+		StaffJpaEntity entity = StaffJpaEntity.construct(id, register, tenant, role);
 		StaffJpaEntity saved = staffJpaRepository.save(entity);
 		return StaffJpaEntity.construct(saved);
 	}

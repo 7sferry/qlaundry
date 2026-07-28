@@ -68,6 +68,7 @@ export class StaffRepositoryImpl implements StaffRepository {
 			password: input.password,
 			fullName: input.fullName,
 			description: input.description,
+			role: input.role,
 			emails: input.emails,
 			phones: input.phones,
 			addresses: input.addresses,
@@ -91,12 +92,8 @@ export class StaffRepositoryImpl implements StaffRepository {
 	}
 
 	async deleteStaff(id: string): Promise<void> {
-		await withFallback(
-				() => httpClient.delete(`/api/staff/${id}`),
-				() => {
-					localStaff = localStaff.filter((s) => s.id !== id);
-				},
-		);
+		await httpClient.delete(`/staff/delete?username=${encodeURIComponent(id)}`);
+		localStaff = localStaff.filter((s) => s.id !== id);
 	}
 }
 

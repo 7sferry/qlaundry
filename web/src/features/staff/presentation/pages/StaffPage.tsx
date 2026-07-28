@@ -6,6 +6,7 @@
 import React, {useState} from 'react';
 import {UserPlus, Users} from 'lucide-react';
 import {Button, Loading, Modal, PageHeader, StatCard, useToast} from '@/core/ui';
+import {useAuth} from '@/features/auth/presentation/useAuth';
 import {useStaff} from '../useStaff';
 import StaffForm from '../components/StaffForm';
 import {type StaffFormData, emptyStaffForm} from '../components/staffFormData';
@@ -15,7 +16,10 @@ import type {CreateStaffInput, Staff} from '../../domain/Staff';
 
 export default function StaffPage() {
 	const {staff, loading, createStaff, deleteStaff} = useStaff();
+	const {user} = useAuth();
 	const toast = useToast();
+
+	const canDelete = (s: Staff) => user?.staffRole === 'SUPER_STAFF' && s.username !== user.username;
 
 	const [search, setSearch] = useState('');
 	const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
@@ -56,6 +60,7 @@ export default function StaffPage() {
 				password: form.password,
 				fullName: form.fullName,
 				description: form.description || undefined,
+				role: form.role,
 				emails: form.email ? [form.email] : [],
 				phones: form.phone ? [form.phone] : [],
 				addresses: form.address ? [form.address] : [],
@@ -83,7 +88,7 @@ export default function StaffPage() {
 	};
 
 	const update = (key: keyof StaffFormData) => (
-			e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+			e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
 	) => setForm((prev) => ({...prev, [key]: e.target.value}));
 
 	const handleCancel = () => {
@@ -116,6 +121,7 @@ export default function StaffPage() {
 						onSelect={setSelectedStaff}
 						onDelete={(s) => void handleDelete(s)}
 						onAdd={openAdd}
+						canDelete={canDelete}
 				/>
 
 				<Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Tambah staf baru">
@@ -134,6 +140,7 @@ export default function StaffPage() {
 						open={!!selectedStaff}
 						onClose={() => setSelectedStaff(null)}
 						onDelete={(s) => void handleDelete(s)}
+						canDelete={selectedStaff ? canDelete(selectedStaff) : false}
 				/>
 			</>
 	);

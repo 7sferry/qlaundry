@@ -1,5 +1,7 @@
 package com.ferry.user.core.staff.registration;
 
+import com.ferry.user.domain.staff.StaffRole;
+
 import java.util.List;
 
 /************************
@@ -8,5 +10,6 @@ import java.util.List;
  ************************/
 
 public record StaffRegistrationRequest(String username, String password, String fullName, String description,
-                                      List<String> emails, List<String> phones, List<String> addresses){
+                                       StaffRole role, List<String> emails, List<String> phones,
+                                       List<String> addresses){
 }

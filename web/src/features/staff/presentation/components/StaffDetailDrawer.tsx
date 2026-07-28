@@ -13,9 +13,10 @@ interface StaffDetailDrawerProps {
 	open: boolean;
 	onClose: () => void;
 	onDelete: (staff: Staff) => void;
+	canDelete: boolean;
 }
 
-export default function StaffDetailDrawer({staff, open, onClose, onDelete}: StaffDetailDrawerProps) {
+export default function StaffDetailDrawer({staff, open, onClose, onDelete, canDelete}: StaffDetailDrawerProps) {
 	return (
 			<Drawer
 					open={open}
@@ -24,7 +25,7 @@ export default function StaffDetailDrawer({staff, open, onClose, onDelete}: Staf
 					subtitle={staff ? `Bergabung ${formatDate(staff.joinedAt)}` : ''}
 					width="460px"
 					footer={
-							staff && (
+							staff && canDelete && (
 									<div className="row" style={{gap: 8, justifyContent: 'flex-end'}}>
 										<Button variant="danger" onClick={() => onDelete(staff)}>
 											<Trash2 size={14}/> Hapus

@@ -3,6 +3,8 @@
  * on Juli 2026         *
  ************************/
 
+export type StaffRole = 'SUPER_STAFF' | 'STAFF';
+
 export interface Staff {
 	id: string;
 	username: string;
@@ -19,6 +21,7 @@ export interface CreateStaffInput {
 	password: string;
 	fullName: string;
 	description?: string;
+	role: StaffRole;
 	emails: string[];
 	phones: string[];
 	addresses: string[];

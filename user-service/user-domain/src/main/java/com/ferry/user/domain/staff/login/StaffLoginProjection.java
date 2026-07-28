@@ -5,5 +5,5 @@ package com.ferry.user.domain.staff.login;
  * on Juli 2026         *
  ************************/
 
-public record StaffLoginProjection(String id, String username, String password, String fullName, String tenantId){
+public record StaffLoginProjection(String id, String username, String password, String fullName, String tenantId, short roleId) {
 }

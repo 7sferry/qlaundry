@@ -1,8 +1,9 @@
 package com.ferry.user.gateway.staff;
 
-import com.ferry.user.core.staff.resetpassword.StaffResetPasswordGateway;
+import com.ferry.user.core.staff.delete.StaffDeleteGateway;
 import com.ferry.user.domain.UsernameDomain;
 import com.ferry.user.domain.staff.StaffDomain;
+import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.gateway.staff.entity.StaffJpaEntity;
 import com.ferry.user.gateway.staff.entity.StaffRoleJpaEntity;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
@@ -19,22 +20,22 @@ import java.util.Optional;
  ************************/
 
 @RequiredArgsConstructor
-public class StaffResetPasswordJpaGateway implements StaffResetPasswordGateway{
+public class StaffDeleteJpaGateway implements StaffDeleteGateway{
 	private final StaffJpaRepository staffJpaRepository;
 	private final StaffRoleJpaRepository staffRoleJpaRepository;
 	private final TenantJpaRepository tenantJpaRepository;
 
 	@Override
-	public Optional<StaffDomain> findByUsername(UsernameDomain username){
-		return staffJpaRepository.findByUsernameAndDeletedIsFalse(username.value(), StaffJpaEntity.class)
+	public Optional<StaffDomain> findByUsername(UsernameDomain username, TenantIdDomain tenantId){
+		return staffJpaRepository.findByUsernameAndTenantIdAndDeletedIsFalse(username.value(), tenantId.value(), StaffJpaEntity.class)
 				.map(StaffJpaEntity::construct);
 	}
 
 	@Override
-	public void save(StaffDomain updatedStaff){
-		TenantJpaEntity tenant = tenantJpaRepository.getReferenceById(updatedStaff.tenantId());
-		StaffRoleJpaEntity role = staffRoleJpaRepository.getReferenceById(updatedStaff.role().getValue());
-		staffJpaRepository.save(StaffJpaEntity.construct(updatedStaff.id(), updatedStaff, tenant, role));
+	public void save(StaffDomain staff){
+		TenantJpaEntity tenant = tenantJpaRepository.getReferenceById(staff.tenantId());
+		StaffRoleJpaEntity role = staffRoleJpaRepository.getReferenceById(staff.role().getValue());
+		staffJpaRepository.save(StaffJpaEntity.construct(staff.id(), staff, tenant, role));
 	}
 
 }

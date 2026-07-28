@@ -9,6 +9,7 @@ import com.ferry.user.domain.exception.InvalidPasswordException;
 import com.ferry.user.domain.exception.NotFoundException;
 import com.ferry.user.domain.session.SessionType;
 import com.ferry.user.domain.session.UserSessionDomain;
+import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
@@ -49,7 +50,7 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 		TenantLoginProjection tenant = gateway.findTenantById(tenantId)
 				.orElseThrow(() -> new NotFoundException("tenant not found"));
 		UserPrincipal userToken = new UserPrincipal(staff.id(), staff.username(),
-				staff.fullName(), tenant.fullName(), staff.tenantId(), SessionType.STAFF);
+				staff.fullName(), tenant.fullName(), staff.tenantId(), SessionType.STAFF, StaffRole.findByValue(staff.roleId()).orElseThrow());
 		String accessToken = tokenProcessor.generateAccessToken(userToken);
 		long cacheDurationInSeconds = tokenProcessor.getAccessDurationInSeconds()
 				- TokenConstant.ACCESS_CACHE_EARLY_EXPIRY_SECONDS;

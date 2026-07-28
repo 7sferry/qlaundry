@@ -1,6 +1,7 @@
 package com.ferry.user.domain.token;
 
 import com.ferry.user.domain.session.SessionType;
+import com.ferry.user.domain.staff.StaffRole;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -8,10 +9,6 @@ import com.ferry.user.domain.session.SessionType;
  ************************/
 
 public record UserPrincipal(String userId, String username, String fullName, String tenantName,
-                            String tenantId, SessionType sessionType){
-
-	public static UserPrincipal registerFromTenant(String userId, String tenantId){
-		return new UserPrincipal(userId, null, null, null, tenantId, SessionType.STAFF);
-	}
+                            String tenantId, SessionType sessionType, StaffRole role){
 
 }

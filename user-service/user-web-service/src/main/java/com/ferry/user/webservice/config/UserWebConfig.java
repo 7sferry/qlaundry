@@ -1,5 +1,8 @@
 package com.ferry.user.webservice.config;
 
+import com.ferry.user.core.staff.delete.DefaultStaffDeleteUseCase;
+import com.ferry.user.core.staff.delete.StaffDeleteGateway;
+import com.ferry.user.core.staff.delete.StaffDeleteUseCase;
 import com.ferry.user.core.staff.detail.DefaultStaffDetailUseCase;
 import com.ferry.user.core.staff.detail.StaffDetailGateway;
 import com.ferry.user.core.staff.detail.StaffDetailUseCase;
@@ -39,10 +42,7 @@ import com.ferry.user.gateway.notification.repository.EmailTriggerJpaRepository;
 import com.ferry.user.gateway.session.repository.UserSessionJpaRepository;
 import com.ferry.user.gateway.session.repository.UserSessionTypeJpaRepository;
 import com.ferry.user.gateway.staff.*;
-import com.ferry.user.gateway.staff.repository.StaffAddressJpaRepository;
-import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
-import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
-import com.ferry.user.gateway.staff.repository.StaffPhoneJpaRepository;
+import com.ferry.user.gateway.staff.repository.*;
 import com.ferry.user.gateway.tenant.CloudflareTurnstileGateway;
 import com.ferry.user.gateway.tenant.TenantRegistrationJpaGateway;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
@@ -109,9 +109,10 @@ public class UserWebConfig{
 	                                                  StaffAddressJpaRepository staffAddressJpaRepository,
 	                                                  StaffPhoneJpaRepository staffPhoneJpaRepository,
 													  TenantJpaRepository tenantJpaRepository,
+													  StaffRoleJpaRepository staffRoleJpaRepository,
 	                                                  IdGenerator idGenerator){
 		return new StaffRegistrationJpaGateway(staffJpaRepository, staffEmailJpaRepository, staffAddressJpaRepository,
-				staffPhoneJpaRepository, tenantJpaRepository, idGenerator);
+				staffPhoneJpaRepository, staffRoleJpaRepository, tenantJpaRepository, idGenerator);
 	}
 
 	@Bean
@@ -235,14 +236,27 @@ public class UserWebConfig{
 
 	@Bean
 	StaffResetPasswordGateway staffResetPasswordGateway(StaffJpaRepository staffJpaRepository,
+	                                                    StaffRoleJpaRepository staffRoleJpaRepository,
 	                                                    TenantJpaRepository tenantJpaRepository){
-		return new StaffResetPasswordJpaGateway(staffJpaRepository, tenantJpaRepository);
+		return new StaffResetPasswordJpaGateway(staffJpaRepository, staffRoleJpaRepository, tenantJpaRepository);
 	}
 
 	@Bean
 	StaffResetPasswordUseCase staffResetPasswordUseCase(StaffResetPasswordGateway staffResetPasswordGateway,
 	                                                    PasswordTool passwordTool, UserCacheManager userCacheManager){
 		return new DefaultStaffResetPasswordUseCase(staffResetPasswordGateway, passwordTool, userCacheManager);
+	}
+
+	@Bean
+	StaffDeleteGateway staffDeleteGateway(StaffJpaRepository staffJpaRepository,
+	                                      StaffRoleJpaRepository staffRoleJpaRepository,
+	                                      TenantJpaRepository tenantJpaRepository){
+		return new StaffDeleteJpaGateway(staffJpaRepository, staffRoleJpaRepository, tenantJpaRepository);
+	}
+
+	@Bean
+	StaffDeleteUseCase staffDeleteUseCase(StaffDeleteGateway staffDeleteGateway){
+		return new DefaultStaffDeleteUseCase(staffDeleteGateway);
 	}
 
 }

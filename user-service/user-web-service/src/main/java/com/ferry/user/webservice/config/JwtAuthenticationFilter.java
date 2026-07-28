@@ -6,6 +6,7 @@ package com.ferry.user.webservice.config;
  ************************/
 
 import com.ferry.user.domain.session.SessionType;
+import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.token.UserPrincipal;
 import com.ferry.utils.token.TokenParser;
 import jakarta.servlet.*;
@@ -37,7 +38,7 @@ public class JwtAuthenticationFilter implements Filter{
 		}
 		String accessToken = header.substring(BEARER_PREFIX.length());
 		Map<String, Object> payload = tokenParser.parseToken(accessToken);
-		if(payload == null){
+		if(payload.isEmpty()){
 			chain.doFilter(request, response);
 			return;
 		}
@@ -47,7 +48,8 @@ public class JwtAuthenticationFilter implements Filter{
 				String.valueOf(payload.get("fullName")),
 				String.valueOf(payload.get("tenantName")),
 				String.valueOf(payload.get("tenantId")),
-				SessionType.valueOf(String.valueOf(payload.get("type")))
+				SessionType.valueOf(String.valueOf(payload.get("type"))),
+				StaffRole.valueOf(String.valueOf(payload.get("role")))
 		);
 		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
 		SecurityContextHolder.getContext().setAuthentication(auth);

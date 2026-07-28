@@ -15,7 +15,7 @@ import java.time.Instant;
 
 @Builder(toBuilder = true)
 public record StaffDomain(String id, UsernameDomain username, HashedPasswordDomain password, FullNameDomain fullName,
-                          DescriptionDomain description, String tenantId,
+                          DescriptionDomain description, String tenantId, StaffRole role,
                           Integer version, boolean deleted, Instant createdAt, String createdBy, Instant updatedAt,
                           String updatedBy){
 	public StaffDomain{
@@ -25,9 +25,9 @@ public record StaffDomain(String id, UsernameDomain username, HashedPasswordDoma
 	}
 
 	public static StaffDomain register(UsernameDomain username, HashedPasswordDomain password, FullNameDomain fullName,
-	                                   DescriptionDomain note, String tenantId, String createdBy){
+	                                   DescriptionDomain note, String tenantId, StaffRole role, String createdBy){
 		Instant now = Instant.now();
-		return new StaffDomain(null, username, password, fullName, note, tenantId, null, false, now, createdBy, now, createdBy);
+		return new StaffDomain(null, username, password, fullName, note, tenantId, role, null,false, now, createdBy, now, createdBy);
 	}
 
 	public String usernameValue(){
@@ -40,6 +40,10 @@ public record StaffDomain(String id, UsernameDomain username, HashedPasswordDoma
 
 	public String descriptionValue(){
 		return description == null ? null : description.value();
+	}
+
+	public StaffDomain markDeleted(String updatedBy){
+		return toBuilder().deleted(true).updatedBy(updatedBy).updatedAt(Instant.now()).build();
 	}
 
 	public String passwordValue(){

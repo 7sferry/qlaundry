@@ -1067,7 +1067,7 @@ button.user-chip--trigger:hover {
     pointer-events: none;
 }
 
-.input-with-icon .input {
+.input-with-icon .input, .input-with-icon select {
     padding-left: 38px;
 }
 
