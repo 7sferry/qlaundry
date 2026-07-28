@@ -75,6 +75,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 			emails: data.email ? [data.email] : [],
 			phones: data.phone ? [data.phone] : [],
 			addresses: data.address ? [data.address] : [],
+			captchaToken: data.captchaToken,
 		});
 		return await this.login({username: data.username, password: data.password});
 	}

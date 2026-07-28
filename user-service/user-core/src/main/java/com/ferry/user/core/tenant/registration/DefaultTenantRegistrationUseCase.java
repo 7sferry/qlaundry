@@ -6,6 +6,7 @@ import com.ferry.user.core.staff.registration.StaffRegistrationResponse;
 import com.ferry.user.domain.DescriptionDomain;
 import com.ferry.user.domain.EmailDomain;
 import com.ferry.user.domain.FullNameDomain;
+import com.ferry.user.domain.exception.TurnstileVerificationException;
 import com.ferry.user.domain.notification.EmailTriggerDomain;
 import com.ferry.user.domain.notification.EmailTriggerType;
 import com.ferry.user.domain.staff.StaffDomain;
@@ -21,13 +22,21 @@ import lombok.RequiredArgsConstructor;
 public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCase{
 	private final TenantRegistrationGateway gateway;
 	private final UserEmailPublisher emailPublisher;
+	private final TurnstileVerificationGateway turnstileVerificationGateway;
 
 	@Override
 	public void execute(TenantRegistrationRequest request, TenantRegistrationPresenter presenter){
+		verifyCaptcha(request);
 		TenantDomain savedTenant = saveTenant(request);
 		StaffRegistrationResponse registeredAdmin = registerAdmin(request, savedTenant);
 		triggerRegistrationEmail(request, savedTenant, registeredAdmin);
 		presenter.present(new TenantRegistrationResponse(savedTenant, registeredAdmin));
+	}
+
+	private void verifyCaptcha(TenantRegistrationRequest request){
+		if(!turnstileVerificationGateway.verify(request.captchaToken())){
+			throw new TurnstileVerificationException("Verifikasi captcha gagal.");
+		}
 	}
 
 	private StaffRegistrationResponse registerAdmin(TenantRegistrationRequest request, TenantDomain saved){

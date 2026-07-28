@@ -8,5 +8,6 @@ import java.util.List;
  ************************/
 
 public record TenantRegistrationRequest(String fullName, String tenantName, String description, String username, String password,
-                                        List<String> emails, List<String> phones, List<String> addresses){
+                                        List<String> emails, List<String> phones, List<String> addresses,
+                                        String captchaToken){
 }

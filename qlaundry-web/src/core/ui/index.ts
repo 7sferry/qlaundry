@@ -16,3 +16,5 @@ export {Drawer} from './Drawer';
 export {ToastProvider} from './Toast';
 export {Skeleton, SkeletonText, SkeletonCard} from './Skeleton';
 export {useToast} from "@/core/ui/useToast.ts";
+export {Turnstile} from './turnstile/Turnstile';
+export type {TurnstileHandle} from './turnstile/turnstileTypes';

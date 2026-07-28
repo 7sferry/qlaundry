@@ -30,6 +30,7 @@ import com.ferry.user.core.tenant.registration.DefaultTenantRegistrationUseCase;
 import com.ferry.user.core.tenant.registration.UserEmailPublisher;
 import com.ferry.user.core.tenant.registration.TenantRegistrationGateway;
 import com.ferry.user.core.tenant.registration.TenantRegistrationUseCase;
+import com.ferry.user.core.tenant.registration.TurnstileVerificationGateway;
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
@@ -42,6 +43,7 @@ import com.ferry.user.gateway.staff.repository.StaffAddressJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffPhoneJpaRepository;
+import com.ferry.user.gateway.tenant.CloudflareTurnstileGateway;
 import com.ferry.user.gateway.tenant.TenantRegistrationJpaGateway;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import com.ferry.user.webservice.tools.Argon2PasswordTool;
@@ -89,8 +91,16 @@ public class UserWebConfig{
 
 	@Bean
 	TenantRegistrationUseCase tenantRegistrationUseCase(TenantRegistrationGateway tenantRegistrationGateway,
-	                                                    UserEmailPublisher emailPublisher){
-		return new DefaultTenantRegistrationUseCase(tenantRegistrationGateway, emailPublisher);
+	                                                    UserEmailPublisher emailPublisher,
+	                                                    TurnstileVerificationGateway turnstileVerificationGateway){
+		return new DefaultTenantRegistrationUseCase(tenantRegistrationGateway, emailPublisher, turnstileVerificationGateway);
+	}
+
+	@Bean
+	TurnstileVerificationGateway turnstileVerificationGateway(JsonManager jsonManager,
+	                                                          @Value("${app.turnstile.secret-key}") String secretKey,
+	                                                          @Value("${app.turnstile.verify-url}") String verifyUrl){
+		return new CloudflareTurnstileGateway(jsonManager, secretKey, verifyUrl);
 	}
 
 	@Bean

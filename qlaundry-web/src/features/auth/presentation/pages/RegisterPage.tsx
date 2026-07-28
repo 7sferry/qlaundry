@@ -3,10 +3,11 @@
  * on Juli 2026         *
  ************************/
 
-import React, {useState} from 'react';
+import React, {useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {ArrowLeft, ArrowRight, Building2, LockKeyhole, Mail, MapPin, Phone, User2, WashingMachine} from 'lucide-react';
-import {Button, Field, Input} from '@/core/ui';
+import {Button, Field, Input, Turnstile, type TurnstileHandle} from '@/core/ui';
+import {env} from '@/core/config/env';
 import {useAuth} from '../useAuth';
 
 const initialForm = {
@@ -47,6 +48,9 @@ export default function RegisterPage() {
 	const [loading, setLoading] = useState(false);
 	const [form, setForm] = useState<RegisterForm>(initialForm);
 	const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, string>>>({});
+	const [captchaToken, setCaptchaToken] = useState('');
+	const [captchaError, setCaptchaError] = useState('');
+	const turnstileRef = useRef<TurnstileHandle>(null);
 
 	const update = (key: FieldKey) => (e: React.ChangeEvent<HTMLInputElement>) => {
 		const nextForm = {...form, [key]: e.target.value};
@@ -77,6 +81,11 @@ export default function RegisterPage() {
 			return;
 		}
 		setFieldErrors({});
+		if (!captchaToken) {
+			setCaptchaError('Verifikasi captcha wajib diselesaikan.');
+			return;
+		}
+		setCaptchaError('');
 		setLoading(true);
 		try {
 			await register({
@@ -87,9 +96,13 @@ export default function RegisterPage() {
 				password: form.password,
 				outletName: form.outletName,
 				address: form.address,
+				captchaToken,
 			});
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Pendaftaran gagal.');
+			// Turnstile tokens are single-use — force a fresh challenge on retry.
+			turnstileRef.current?.reset();
+			setCaptchaToken('');
 		} finally {
 			setLoading(false);
 		}
@@ -219,6 +232,18 @@ export default function RegisterPage() {
 											placeholder="Ulangi password"
 									/>
 								</div>
+							</Field>
+
+							<Field error={captchaError}>
+								<Turnstile
+										ref={turnstileRef}
+										siteKey={env.turnstileSiteKey}
+										onVerify={(token) => {
+											setCaptchaToken(token);
+											setCaptchaError('');
+										}}
+										onExpire={() => setCaptchaToken('')}
+								/>
 							</Field>
 
 							<Button block type="submit" disabled={loading} style={{marginTop: 8}}>

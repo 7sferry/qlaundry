@@ -29,6 +29,7 @@ export interface RegisterData {
 	password: string;
 	outletName?: string;
 	address?: string;
+	captchaToken: string;
 }
 
 export interface AuthTokens {

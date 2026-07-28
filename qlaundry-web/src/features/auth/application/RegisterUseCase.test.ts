@@ -21,6 +21,7 @@ const validData: RegisterData = {
 	username: 'newuser',
 	email: 'new@test.com',
 	password: 'secret123',
+	captchaToken: 'turnstile-token',
 };
 
 function makeRepo(registerImpl = vi.fn().mockResolvedValue(mockSession)): AuthRepository {
@@ -61,6 +62,12 @@ describe('RegisterUseCase', () => {
 		const useCase = new RegisterUseCase(makeRepo());
 		await expect(useCase.execute({...validData, password: 'abc'}))
 				.rejects.toThrow('Password minimal 6 karakter.');
+	});
+
+	it('rejects when captchaToken is missing', async () => {
+		const useCase = new RegisterUseCase(makeRepo());
+		await expect(useCase.execute({...validData, captchaToken: ''}))
+				.rejects.toThrow('Verifikasi captcha wajib diselesaikan.');
 	});
 
 	it('delegates to the repository with valid data', async () => {

@@ -20,6 +20,9 @@ export class RegisterUseCase {
 		if (data.password.length < 6) {
 			return Promise.reject(new Error('Password minimal 6 karakter.'));
 		}
+		if (!data.captchaToken.trim()) {
+			return Promise.reject(new Error('Verifikasi captcha wajib diselesaikan.'));
+		}
 		return this.repository.register(data);
 	}
 }
