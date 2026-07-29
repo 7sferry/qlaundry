@@ -56,7 +56,13 @@ async function request<T>(path: string, options: RequestOptions = {}, isRetry = 
 		}
 
 		if (!response.ok) {
-			throw new Error(`Request to ${path} failed with status ${response.status}`);
+			let message = ((await response.json()) as Record<string, string>).message;
+			if (message){
+				console.log(`Request to ${path} failed with status ${response.status}`)
+				throw new Error(message);
+			} else {
+				throw new Error(`Request to ${path} failed with status ${response.status}`);
+			}
 		}
 
 		return (await response.json()) as T;

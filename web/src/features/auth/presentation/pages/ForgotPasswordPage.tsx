@@ -6,7 +6,7 @@
 import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {ArrowRight, CheckCircle2, KeyRound, LockKeyhole, User2, WashingMachine} from 'lucide-react';
-import {Button, Field, Input} from '@/core/ui';
+import {Button, Field, Input, PasswordInput} from '@/core/ui';
 import {useToast} from '@/core/ui/useToast';
 import {ResetSessionExpiredError} from '../../domain/errors';
 import {authRepository} from '../../infrastructure/AuthRepositoryImpl';
@@ -155,9 +155,8 @@ export default function ForgotPasswordPage() {
   						<Field label="New password" htmlFor="new-password">
 									<div className="input-with-icon">
 										<LockKeyhole size={16}/>
-										<Input
+										<PasswordInput
 												id="new-password"
-												type="password"
 												value={password}
 												onChange={(e) => setPassword(e.target.value)}
 												autoComplete="new-password"
@@ -169,9 +168,8 @@ export default function ForgotPasswordPage() {
   						<Field label="Confirm new password" htmlFor="confirm-password">
 									<div className="input-with-icon">
 										<LockKeyhole size={16}/>
-										<Input
+										<PasswordInput
 												id="confirm-password"
-												type="password"
 												value={confirmPassword}
 												onChange={(e) => setConfirmPassword(e.target.value)}
 												autoComplete="new-password"

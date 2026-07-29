@@ -1,7 +1,7 @@
 package com.ferry.user.domain.tenant;
 
-import com.ferry.user.domain.DescriptionDomain;
-import com.ferry.user.domain.FullNameDomain;
+import com.ferry.user.domain.common.DescriptionDomain;
+import com.ferry.user.domain.common.FullNameDomain;
 
 import java.time.Instant;
 

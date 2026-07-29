@@ -5,15 +5,12 @@
 
 import type {StaffRole} from '@/features/staff/domain/Staff';
 
-export type UserRole = 'owner' | 'admin' | 'staff';
-
 export interface User {
 	id: string;
 	fullName: string;
 	username: string;
 	email: string;
 	phone?: string;
-	role: UserRole;
 	staffRole: StaffRole | null;
 	outletName?: string;
 	avatarInitials?: string;

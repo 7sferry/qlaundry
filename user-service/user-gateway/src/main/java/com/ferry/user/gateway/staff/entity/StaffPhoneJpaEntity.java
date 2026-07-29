@@ -1,6 +1,6 @@
 package com.ferry.user.gateway.staff.entity;
 
-import com.ferry.user.domain.PhoneDomain;
+import com.ferry.user.domain.common.PhoneDomain;
 import com.ferry.user.domain.staff.StaffPhoneDomain;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

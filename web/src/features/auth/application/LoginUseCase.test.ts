@@ -8,7 +8,6 @@ const mockUser: User = {
 	fullName: 'Admin User',
 	username: 'admin',
 	email: 'admin@test.com',
-	role: 'admin',
 	staffRole: 'SUPER_STAFF',
 };
 

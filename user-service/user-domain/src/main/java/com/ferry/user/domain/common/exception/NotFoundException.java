@@ -1,4 +1,4 @@
-package com.ferry.user.domain.exception;
+package com.ferry.user.domain.common.exception;
 
 /************************
  * Made by [MR Ferry™]  *

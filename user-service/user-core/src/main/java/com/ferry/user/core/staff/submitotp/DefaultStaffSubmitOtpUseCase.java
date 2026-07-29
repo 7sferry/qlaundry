@@ -2,8 +2,8 @@ package com.ferry.user.core.staff.submitotp;
 
 import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.UsernameDomain;
-import com.ferry.user.domain.exception.InvalidOtpException;
+import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.staff.submitotp.FailedToSubmitOtpException;
 import lombok.RequiredArgsConstructor;
 
 import java.util.HexFormat;
@@ -21,18 +21,24 @@ public class DefaultStaffSubmitOtpUseCase implements StaffSubmitOtpUseCase {
 
 	@Override
 	public void execute(StaffSubmitOtpRequest request, StaffSubmitOtpPresenter presenter){
-		UsernameDomain username = new UsernameDomain(request.username());
-		String otpKey = PasswordConstant.OTP_KEY + username.value();
-		String otp = cacheManager.get(otpKey)
-				.orElseThrow(() -> new InvalidOtpException("Invalid otp"));
-		if(!otp.equals(request.otp())){
-			throw new InvalidOtpException("Invalid otp");
+		try{
+			UsernameDomain username = new UsernameDomain(request.username());
+			String otpKey = PasswordConstant.OTP_KEY + username.value();
+			String otp = cacheManager.get(otpKey)
+					.orElseThrow(() -> new FailedToSubmitOtpException("Invalid otp"));
+			if(!otp.equals(request.otp())){
+				throw new FailedToSubmitOtpException("Invalid otp");
+			}
+			cacheManager.delete(otpKey);
+			String resetToken = generateResetToken();
+			cacheManager.set(PasswordConstant.RESET_TOKEN_KEY + username.value(), resetToken,
+					PasswordConstant.RESET_TOKEN_DURATION);
+			presenter.present(new StaffSubmitOtpResponse(resetToken));
+		} catch (FailedToSubmitOtpException e){
+			throw e;
+		} catch (Exception e){
+			throw new FailedToSubmitOtpException(e);
 		}
-		cacheManager.delete(otpKey);
-		String resetToken = generateResetToken();
-		cacheManager.set(PasswordConstant.RESET_TOKEN_KEY + username.value(), resetToken,
-				PasswordConstant.RESET_TOKEN_DURATION);
-		presenter.present(new StaffSubmitOtpResponse(resetToken));
 	}
 
 	private String generateResetToken(){

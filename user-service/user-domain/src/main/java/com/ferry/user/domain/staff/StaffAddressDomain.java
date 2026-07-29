@@ -1,6 +1,6 @@
 package com.ferry.user.domain.staff;
 
-import com.ferry.user.domain.AddressLineDomain;
+import com.ferry.user.domain.common.AddressLineDomain;
 
 import java.time.Instant;
 

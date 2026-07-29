@@ -1,8 +1,8 @@
 package com.ferry.user.webservice.tools;
 
 import com.ferry.user.core.tools.PasswordTool;
-import com.ferry.user.domain.HashedPasswordDomain;
-import com.ferry.user.domain.RawPasswordDomain;
+import com.ferry.user.domain.common.HashedPasswordDomain;
+import com.ferry.user.domain.common.RawPasswordDomain;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password4j.Argon2Password4jPasswordEncoder;
 

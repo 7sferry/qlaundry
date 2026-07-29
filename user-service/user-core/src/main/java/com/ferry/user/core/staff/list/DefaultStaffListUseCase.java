@@ -32,31 +32,40 @@ public class DefaultStaffListUseCase implements StaffListUseCase{
 				.build();
 		List<StaffListProjection> staffs = gateway.findByFilter(filter);
 		Set<String> staffIds = staffs.stream().map(StaffListProjection::id).collect(Collectors.toSet());
-		Map<String, List<StaffPhoneListProjection>> staffIdToPhones  = getStaffIdToPhones(staffIds);
-		Map<String, List<StaffEmailListProjection>> staffIdToEmails = getStaffIdToEmails(staffIds);
-		Map<String, List<StaffAddressListProjection>> staffIdToAddresses = getStaffIdToAddresses(staffIds);
-		presenter.present(new StaffListResponse(staffs, staffIdToPhones, staffIdToEmails, staffIdToAddresses));
+		Map<String, List<StaffPhoneListProjection>> phonesByStaffId  = getPhonesByStaffId(staffIds);
+		Map<String, List<StaffEmailListProjection>> emailsByStaffId = getEmailsByStaffId(staffIds);
+		Map<String, List<StaffAddressListProjection>> addressByStaffId = getAddressesByStaffId(staffIds);
+		presenter.present(new StaffListResponse(staffs, phonesByStaffId, emailsByStaffId, addressByStaffId));
 	}
 
-	private Map<String, List<StaffAddressListProjection>> getStaffIdToAddresses(Set<String> staffIds){
+	private Map<String, List<StaffAddressListProjection>> getAddressesByStaffId(Set<String> staffIds){
+		if(staffIds.isEmpty()){
+			return Map.of();
+		}
 		StaffAddressFilter filter = StaffAddressFilter.builder()
 				.staffIds(staffIds)
 				.build();
-		return staffIds.isEmpty() ? Map.of() : gateway.findAddressesByFilter(filter).stream().collect(Collectors.groupingBy(StaffAddressListProjection::staffId));
+		return gateway.findAddressesByFilter(filter).stream().collect(Collectors.groupingBy(StaffAddressListProjection::staffId));
 	}
 
-	private Map<String, List<StaffEmailListProjection>> getStaffIdToEmails(Set<String> staffIds){
+	private Map<String, List<StaffEmailListProjection>> getEmailsByStaffId(Set<String> staffIds){
+		if(staffIds.isEmpty()){
+			return Map.of();
+		}
 		StaffEmailFilter filter = StaffEmailFilter.builder()
 				.staffIds(staffIds)
 				.build();
-		return staffIds.isEmpty() ? Map.of() : gateway.findEmailsByFilter(filter).stream().collect(Collectors.groupingBy(StaffEmailListProjection::staffId));
+		return gateway.findEmailsByFilter(filter).stream().collect(Collectors.groupingBy(StaffEmailListProjection::staffId));
 	}
 
-	private Map<String, List<StaffPhoneListProjection>> getStaffIdToPhones(Set<String> staffIds){
+	private Map<String, List<StaffPhoneListProjection>> getPhonesByStaffId(Set<String> staffIds){
+		if(staffIds.isEmpty()){
+			return Map.of();
+		}
 		StaffPhoneFilter filter = StaffPhoneFilter.builder()
 				.staffIds(staffIds)
 				.build();
-		return staffIds.isEmpty() ? Map.of() : gateway.findPhonesByFilter(filter).stream().collect(Collectors.groupingBy(StaffPhoneListProjection::staffId));
+		return gateway.findPhonesByFilter(filter).stream().collect(Collectors.groupingBy(StaffPhoneListProjection::staffId));
 	}
 
 }

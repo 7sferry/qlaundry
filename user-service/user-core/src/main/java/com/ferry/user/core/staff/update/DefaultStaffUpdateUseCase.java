@@ -1,15 +1,15 @@
 package com.ferry.user.core.staff.update;
 
 import com.ferry.user.core.tools.PasswordTool;
-import com.ferry.user.domain.AddressLineDomain;
-import com.ferry.user.domain.DescriptionDomain;
-import com.ferry.user.domain.EmailDomain;
-import com.ferry.user.domain.FullNameDomain;
-import com.ferry.user.domain.HashedPasswordDomain;
-import com.ferry.user.domain.PhoneDomain;
-import com.ferry.user.domain.RawPasswordDomain;
-import com.ferry.user.domain.exception.InvalidPasswordException;
-import com.ferry.user.domain.exception.NotFoundException;
+import com.ferry.user.domain.common.AddressLineDomain;
+import com.ferry.user.domain.common.DescriptionDomain;
+import com.ferry.user.domain.common.EmailDomain;
+import com.ferry.user.domain.common.FullNameDomain;
+import com.ferry.user.domain.common.HashedPasswordDomain;
+import com.ferry.user.domain.common.PhoneDomain;
+import com.ferry.user.domain.common.RawPasswordDomain;
+import com.ferry.user.domain.staff.update.InvalidPasswordException;
+import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.staff.StaffAddressDomain;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffEmailDomain;

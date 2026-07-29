@@ -118,7 +118,6 @@ const Sidebar: FC = () => {
 							<span className="avatar">{initials}</span>
 								<span>
 				      <strong>{user?.fullName ?? 'User'}</strong>
-				      <small>{user?.role === 'owner' ? 'Owner' : user?.role === 'admin' ? 'Admin' : 'Staff'}</small>
 				    </span>
 						</button>
 					</div>

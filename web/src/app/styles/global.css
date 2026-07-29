@@ -228,7 +228,7 @@ button {
 
 .sidebar__footer .user-chip {
     border-top: 1px solid var(--border);
-    padding: 14px 8px 0;
+    padding: 8px;
     margin-top: 8px;
 }
 
@@ -1069,6 +1069,28 @@ button.user-chip--trigger:hover {
 
 .input-with-icon .input, .input-with-icon select {
     padding-left: 38px;
+}
+
+.input-with-icon .input.password-input {
+    padding-right: 36px;
+}
+
+.input-with-icon .password-toggle {
+    position: absolute;
+    right: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    cursor: pointer;
+    z-index: 1;
+}
+
+.input-with-icon .password-toggle:hover {
+    color: var(--text);
 }
 
 /* ── Auth ── */

@@ -5,7 +5,7 @@
 
 import React from 'react';
 import {AtSign, Lock, Mail, MapPin, Phone, Shield} from 'lucide-react';
-import {Button, Field, Input, Select, Textarea} from '@/core/ui';
+import {Button, Field, Input, PasswordInput, Select, Textarea} from '@/core/ui';
 import type {StaffFormData} from './staffFormData';
 
 interface StaffFormProps {
@@ -33,7 +33,7 @@ export default function StaffForm({form, update, onSubmit, onCancel, saving, edi
 						<Field label="Password" htmlFor="sfPassword">
 							<div className="input-with-icon">
 								<Lock size={15}/>
-								<Input id="sfPassword" type="password" required minLength={8} value={form.password}
+								<PasswordInput id="sfPassword" required minLength={8} value={form.password}
 								       onChange={update('password')} placeholder="at least 8 characters"/>
 							</div>
 						</Field>
@@ -43,15 +43,22 @@ export default function StaffForm({form, update, onSubmit, onCancel, saving, edi
 							<Field label="Current password" htmlFor="sfCurrentPassword">
 								<div className="input-with-icon">
 									<Lock size={15}/>
-									<Input id="sfCurrentPassword" type="password" value={form.currentPassword}
+									<PasswordInput id="sfCurrentPassword" value={form.currentPassword}
 									       onChange={update('currentPassword')} placeholder="fill to change password"/>
 								</div>
 							</Field>
 							<Field label="New password" htmlFor="sfNewPassword">
 								<div className="input-with-icon">
 									<Lock size={15}/>
-									<Input id="sfNewPassword" type="password" minLength={8} value={form.newPassword}
+									<PasswordInput id="sfNewPassword" minLength={8} value={form.newPassword}
 									       onChange={update('newPassword')} placeholder="optional, at least 8 characters"/>
+								</div>
+							</Field>
+							<Field label="Confirm new password" htmlFor="sfConfirmNewPassword">
+								<div className="input-with-icon">
+									<Lock size={15}/>
+									<PasswordInput id="sfConfirmNewPassword" minLength={8} value={form.confirmNewPassword}
+									       onChange={update('confirmNewPassword')} placeholder="repeat new password"/>
 								</div>
 							</Field>
 						</>

@@ -1,7 +1,7 @@
 package com.ferry.user.gateway.staff;
 
 import com.ferry.user.core.staff.login.StaffLoginGateway;
-import com.ferry.user.domain.UsernameDomain;
+import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.session.UserSessionDomain;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.tenant.TenantIdDomain;
@@ -30,7 +30,7 @@ public class StaffLoginJpaGateway implements StaffLoginGateway{
 
 	@Override
 	public Optional<StaffLoginProjection> findByUsername(UsernameDomain username){
-		return staffJpaRepository.findByUsernameAndDeletedIsFalse(username.value(), StaffLoginProjection.class);
+		return staffJpaRepository.fetchByUsername(username.value(), StaffLoginProjection.class);
 	}
 
 	@Override

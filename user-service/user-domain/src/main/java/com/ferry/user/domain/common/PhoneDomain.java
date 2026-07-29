@@ -1,4 +1,4 @@
-package com.ferry.user.domain;
+package com.ferry.user.domain.common;
 
 /************************
  * Made by [MR Ferry™]  *

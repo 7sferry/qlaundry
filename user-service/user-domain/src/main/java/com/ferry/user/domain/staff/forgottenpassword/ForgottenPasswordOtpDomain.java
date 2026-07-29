@@ -1,4 +1,4 @@
-package com.ferry.user.domain.forgottenpassword;
+package com.ferry.user.domain.staff.forgottenpassword;
 
 /************************
  * Made by [MR Ferry™]  *

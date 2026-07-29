@@ -1,7 +1,7 @@
 package com.ferry.user.gateway.staff;
 
 import com.ferry.user.core.staff.resetpassword.StaffResetPasswordGateway;
-import com.ferry.user.domain.UsernameDomain;
+import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.gateway.staff.entity.StaffJpaEntity;
 import com.ferry.user.gateway.staff.entity.StaffRoleJpaEntity;
@@ -26,7 +26,7 @@ public class StaffResetPasswordJpaGateway implements StaffResetPasswordGateway{
 
 	@Override
 	public Optional<StaffDomain> findByUsername(UsernameDomain username){
-		return staffJpaRepository.findByUsernameAndDeletedIsFalse(username.value(), StaffJpaEntity.class)
+		return staffJpaRepository.fetchByUsername(username.value(), StaffJpaEntity.class)
 				.map(StaffJpaEntity::construct);
 	}
 

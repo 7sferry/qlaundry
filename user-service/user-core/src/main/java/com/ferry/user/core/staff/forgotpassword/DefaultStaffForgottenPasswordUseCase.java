@@ -4,9 +4,9 @@ import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tenant.registration.UserEmailPublisher;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.EmailDomain;
-import com.ferry.user.domain.UsernameDomain;
-import com.ferry.user.domain.forgottenpassword.ForgottenPasswordOtpDomain;
+import com.ferry.user.domain.common.EmailDomain;
+import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.staff.forgottenpassword.ForgottenPasswordOtpDomain;
 import com.ferry.user.domain.notification.EmailTriggerDomain;
 import com.ferry.user.domain.notification.EmailTriggerType;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,6 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /************************
@@ -46,25 +45,31 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 	@Override
 	public void execute(StaffForgottenPasswordRequest request, StaffForgottenPasswordPresenter presenter){
 		long startedAt = System.nanoTime();
-		UsernameDomain username = new UsernameDomain(request.username());
-		gateway.findEmailWithUsername(username).ifPresentOrElse(email -> {
-			String otp = String.format("%06d", PasswordConstant.getRandom().nextInt(0, 1_000_000));
-			userCacheManager.set(PasswordConstant.OTP_KEY + username.value(), otp,
-					PasswordConstant.OTP_DURATION);
-			ForgottenPasswordOtpDomain payload = new ForgottenPasswordOtpDomain(request.username(), otp);
-			EmailDomain recipient = new EmailDomain(email.email());
-			EmailTriggerConfig config = new EmailTriggerConfig(payload, email.staffId(),
-					EmailTriggerType.FORGOTTEN_PASSWORD, recipient);
-			EmailTriggerDomain saved = emailPublisher.save(config);
-			emailPublisher.publish(saved);
-			String maskedEmail = maskEmail(email.email());
-			awaitMinimumResponseTime(startedAt);
-			presenter.present(new StaffForgottenPasswordResponse(maskedEmail));
-		}, () -> {
-			String maskedFakeEmail = maskFakeEmail(username.value());
+		try{
+			UsernameDomain username = new UsernameDomain(request.username());
+			gateway.findEmailWithUsername(username).ifPresentOrElse(email -> {
+				String otp = String.format("%06d", PasswordConstant.getRandom().nextInt(0, 1_000_000));
+				userCacheManager.set(PasswordConstant.OTP_KEY + username.value(), otp,
+						PasswordConstant.OTP_DURATION);
+				ForgottenPasswordOtpDomain payload = new ForgottenPasswordOtpDomain(request.username(), otp);
+				EmailDomain recipient = new EmailDomain(email.email());
+				EmailTriggerConfig config = new EmailTriggerConfig(payload, email.staffId(),
+						EmailTriggerType.FORGOTTEN_PASSWORD, recipient);
+				EmailTriggerDomain saved = emailPublisher.save(config);
+				emailPublisher.publish(saved);
+				String maskedEmail = maskEmail(email.email());
+				awaitMinimumResponseTime(startedAt);
+				presenter.present(new StaffForgottenPasswordResponse(maskedEmail));
+			}, () -> {
+				String maskedFakeEmail = maskFakeEmail(username.value());
+				awaitMinimumResponseTime(startedAt);
+				presenter.present(new StaffForgottenPasswordResponse(maskedFakeEmail));
+			});
+		} catch (Exception e){
+			String maskedFakeEmail = maskFakeEmail(request.username());
 			awaitMinimumResponseTime(startedAt);
 			presenter.present(new StaffForgottenPasswordResponse(maskedFakeEmail));
-		});
+		}
 	}
 
 	@SneakyThrows

@@ -1,7 +1,7 @@
 package com.ferry.user.gateway.staff;
 
 import com.ferry.user.core.staff.delete.StaffDeleteGateway;
-import com.ferry.user.domain.UsernameDomain;
+import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.gateway.staff.entity.StaffJpaEntity;

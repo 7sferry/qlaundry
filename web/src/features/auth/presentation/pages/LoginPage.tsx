@@ -6,7 +6,7 @@
 import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {ArrowRight, LockKeyhole, User2, WashingMachine} from 'lucide-react';
-import {Button, Field, Input} from '@/core/ui';
+import {Button, Field, Input, PasswordInput} from '@/core/ui';
 import {useAuth} from '../useAuth';
 
 export default function LoginPage() {
@@ -76,9 +76,8 @@ export default function LoginPage() {
 					<Field label="Password" htmlFor="password">
 						<div className="input-with-icon">
 							<LockKeyhole size={16}/>
-							<Input
+							<PasswordInput
 									id="password"
-									type="password"
 									value={password}
 									onChange={(e) => setPassword(e.target.value)}
 									autoComplete="current-password"

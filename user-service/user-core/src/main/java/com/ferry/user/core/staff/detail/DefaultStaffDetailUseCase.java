@@ -1,7 +1,7 @@
 package com.ferry.user.core.staff.detail;
 
-import com.ferry.user.domain.UsernameDomain;
-import com.ferry.user.domain.exception.NotFoundException;
+import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.staff.detail.StaffAddressDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffDetailProjection;

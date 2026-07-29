@@ -1,8 +1,8 @@
 package com.ferry.user.core.staff.delete;
 
-import com.ferry.user.domain.UsernameDomain;
-import com.ferry.user.domain.exception.ForbiddenActionException;
-import com.ferry.user.domain.exception.NotFoundException;
+import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.exception.ForbiddenActionException;
+import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.tenant.TenantIdDomain;

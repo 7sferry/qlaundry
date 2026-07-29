@@ -1,6 +1,6 @@
-package com.ferry.user.domain;
+package com.ferry.user.domain.common;
 
-import com.ferry.user.domain.exception.InvalidUsernameException;
+import com.ferry.user.domain.common.exception.InvalidUsernameException;
 
 /************************
  * Made by [MR Ferry™]  *

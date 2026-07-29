@@ -1,8 +1,8 @@
 package com.ferry.user.core.staff.registration;
 
 import com.ferry.user.core.tools.PasswordTool;
-import com.ferry.user.domain.*;
-import com.ferry.user.domain.exception.InvalidUsernameException;
+import com.ferry.user.domain.common.*;
+import com.ferry.user.domain.common.exception.InvalidUsernameException;
 import com.ferry.user.domain.staff.StaffAddressDomain;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffEmailDomain;

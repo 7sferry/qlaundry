@@ -3,7 +3,8 @@
  * on Juli 2026         *
  ************************/
 
-import React from 'react';
+import React, {useState} from 'react';
+import {Eye, EyeOff} from 'lucide-react';
 
 interface FieldProps {
 	label?: string;
@@ -32,6 +33,31 @@ export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({
 	                                                                             ...rest
                                                                              }) => <input
 		className={`input ${className}`.trim()} {...rest} />;
+
+export const PasswordInput: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({
+	                                                                                     className = '',
+	                                                                                     ...rest
+                                                                                     }) => {
+	const [visible, setVisible] = useState(false);
+	return (
+			<>
+				<input
+						className={`input password-input ${className}`.trim()}
+						type={visible ? 'text' : 'password'}
+						{...rest}
+				/>
+				<button
+						type="button"
+						className="password-toggle"
+						tabIndex={-1}
+						onClick={() => setVisible((prev) => !prev)}
+						aria-label={visible ? 'Hide password' : 'Show password'}
+				>
+					{visible ? <EyeOff size={15}/> : <Eye size={15}/>}
+				</button>
+			</>
+	);
+};
 
 export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = ({
 	                                                                                className = '',

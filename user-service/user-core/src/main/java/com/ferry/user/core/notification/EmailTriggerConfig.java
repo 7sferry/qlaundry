@@ -1,6 +1,6 @@
 package com.ferry.user.core.notification;
 
-import com.ferry.user.domain.EmailDomain;
+import com.ferry.user.domain.common.EmailDomain;
 import com.ferry.user.domain.notification.EmailTriggerType;
 
 /************************

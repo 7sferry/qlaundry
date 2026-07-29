@@ -6,7 +6,7 @@
 import React, {useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {ArrowLeft, ArrowRight, Building2, LockKeyhole, Mail, MapPin, Phone, User2, WashingMachine} from 'lucide-react';
-import {Button, Field, Input, Turnstile, type TurnstileHandle} from '@/core/ui';
+import {Button, Field, Input, PasswordInput, Turnstile, type TurnstileHandle} from '@/core/ui';
 import {env} from '@/core/config/env';
 import {useAuth} from '../useAuth';
 
@@ -207,9 +207,8 @@ export default function RegisterPage() {
  						<Field label="Password" htmlFor="password" error={fieldErrors.password}>
 								<div className="input-with-icon">
 									<LockKeyhole size={16}/>
-									<Input
+									<PasswordInput
 											id="password"
-											type="password"
 											required
 											minLength={6}
 											autoComplete="new-password"
@@ -222,9 +221,8 @@ export default function RegisterPage() {
  						<Field label="Confirm password" htmlFor="confirmPassword" error={fieldErrors.confirmPassword}>
 								<div className="input-with-icon">
 									<LockKeyhole size={16}/>
-									<Input
+									<PasswordInput
 											id="confirmPassword"
-											type="password"
 											required
 											autoComplete="new-password"
 											value={form.confirmPassword}

@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.delete;
 
-import com.ferry.user.domain.UsernameDomain;
+import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 

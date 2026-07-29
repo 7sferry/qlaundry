@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.registration;
 
-import com.ferry.user.domain.*;
+import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.staff.StaffAddressDomain;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffEmailDomain;

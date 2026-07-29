@@ -16,7 +16,13 @@ import java.util.Optional;
 
 public interface StaffJpaRepository extends JpaRepository<StaffJpaEntity, String>{
 	boolean existsByUsername(String username);
-	<T> Optional<T> findByUsernameAndDeletedIsFalse(String username, Class<T> clazz);
+
+	@Query("select s " +
+			"FROM StaffJpaEntity s " +
+			"WHERE exists(SELECT 1 FROM TenantJpaEntity t WHERE t.id = s.tenantId AND t.deleted IS FALSE) " +
+			"AND s.deleted IS FALSE " +
+			"AND s.username = :username ")
+	<T> Optional<T> fetchByUsername(@Param("username") String username, Class<T> clazz);
 	<T> Optional<T> findById(String id, Class<T> clazz);
 	<T> Optional<T> findByIdAndDeletedIsFalse(String id, Class<T> clazz);
 	<T> Optional<T> findByUsernameAndTenantIdAndDeletedIsFalse(String username, String tenantId, Class<T> clazz);

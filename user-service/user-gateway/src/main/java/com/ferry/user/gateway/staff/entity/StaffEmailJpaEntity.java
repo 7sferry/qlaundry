@@ -1,6 +1,6 @@
 package com.ferry.user.gateway.staff.entity;
 
-import com.ferry.user.domain.EmailDomain;
+import com.ferry.user.domain.common.EmailDomain;
 import com.ferry.user.domain.staff.StaffEmailDomain;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

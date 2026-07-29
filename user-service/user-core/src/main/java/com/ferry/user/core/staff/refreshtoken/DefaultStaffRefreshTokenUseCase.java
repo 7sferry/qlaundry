@@ -3,8 +3,8 @@ package com.ferry.user.core.staff.refreshtoken;
 import com.ferry.user.core.staff.constant.TokenConstant;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.exception.ExpiredSessionException;
-import com.ferry.user.domain.exception.NotFoundException;
+import com.ferry.user.domain.staff.refresh.ExpiredSessionException;
+import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.session.SessionType;
 import com.ferry.user.domain.session.UserSessionDomain;
 import com.ferry.user.domain.staff.StaffRole;
@@ -131,8 +131,10 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 		TenantIdDomain tenantId = new TenantIdDomain(staff.tenantId());
 		TenantLoginProjection tenant = gateway.findTenantById(tenantId)
 				.orElseThrow(() -> new NotFoundException("tenant not found"));
+		StaffRole role = StaffRole.findByValue(staff.roleId())
+				.orElseThrow(() -> new NotFoundException("role not found"));
 		UserPrincipal userToken = new UserPrincipal(staff.id(), staff.username(),
-				staff.fullName(), tenant.fullName(), staff.tenantId(), SessionType.STAFF, StaffRole.findByValue(staff.roleId()).orElseThrow());
+				staff.fullName(), tenant.fullName(), staff.tenantId(), SessionType.STAFF, role);
 		return tokenProcessor.generateAccessToken(userToken);
 	}
 

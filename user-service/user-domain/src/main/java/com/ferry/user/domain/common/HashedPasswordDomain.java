@@ -1,6 +1,6 @@
-package com.ferry.user.domain;
+package com.ferry.user.domain.common;
 
-import com.ferry.user.domain.exception.InvalidPasswordException;
+import com.ferry.user.domain.staff.update.InvalidPasswordException;
 
 /************************
  * Made by [MR Ferry™]  *

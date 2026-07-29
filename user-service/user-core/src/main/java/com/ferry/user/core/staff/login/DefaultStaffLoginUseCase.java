@@ -4,13 +4,14 @@ import com.ferry.user.core.staff.constant.TokenConstant;
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.UsernameDomain;
-import com.ferry.user.domain.exception.InvalidPasswordException;
-import com.ferry.user.domain.exception.NotFoundException;
+import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.exception.NotFoundException;
+import com.ferry.user.domain.staff.login.FailedToLoginException;
 import com.ferry.user.domain.session.SessionType;
 import com.ferry.user.domain.session.UserSessionDomain;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
+import com.ferry.user.domain.staff.update.InvalidPasswordException;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
 import com.ferry.user.domain.token.UserPrincipal;
@@ -33,24 +34,32 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 
 	@Override
 	public void execute(StaffLoginRequest request, StaffLoginPresenter presenter){
-		StaffLoginProjection staff = gateway.findByUsername(new UsernameDomain(request.username()))
-				.orElseThrow(() -> new NotFoundException("userId not found"));
-		if(!passwordTool.matches(request.password(), staff.password())){
-			throw new InvalidPasswordException("password not match");
+		try{
+			StaffLoginProjection staff = gateway.findByUsername(new UsernameDomain(request.username()))
+					.orElseThrow(() -> new InvalidPasswordException("userId not found"));
+			if(!passwordTool.matches(request.password(), staff.password())){
+				throw new InvalidPasswordException("password not match");
+			}
+			String refreshToken = tokenProcessor.generateRefreshToken();
+			String hashedRefreshToken = tokenProcessor.hashToken(refreshToken);
+			storeSession(hashedRefreshToken, staff);
+			String accessToken = generateAccessToken(staff, hashedRefreshToken);
+			presenter.present(new StaffLoginResponse(accessToken, refreshToken));
+		} catch (FailedToLoginException e){
+			throw e;
+		} catch (Exception e){
+			throw new FailedToLoginException(e);
 		}
-		String refreshToken = tokenProcessor.generateRefreshToken();
-		String hashedRefreshToken = tokenProcessor.hashToken(refreshToken);
-		storeSession(hashedRefreshToken, staff);
-		String accessToken = generateAccessToken(staff, hashedRefreshToken);
-		presenter.present(new StaffLoginResponse(accessToken, refreshToken));
 	}
 
 	private String generateAccessToken(StaffLoginProjection staff, String hashedRefreshToken){
 		TenantIdDomain tenantId = new TenantIdDomain(staff.tenantId());
 		TenantLoginProjection tenant = gateway.findTenantById(tenantId)
 				.orElseThrow(() -> new NotFoundException("tenant not found"));
+		StaffRole role = StaffRole.findByValue(staff.roleId())
+				.orElseThrow(() -> new NotFoundException("role not found"));
 		UserPrincipal userToken = new UserPrincipal(staff.id(), staff.username(),
-				staff.fullName(), tenant.fullName(), staff.tenantId(), SessionType.STAFF, StaffRole.findByValue(staff.roleId()).orElseThrow());
+				staff.fullName(), tenant.fullName(), staff.tenantId(), SessionType.STAFF, role);
 		String accessToken = tokenProcessor.generateAccessToken(userToken);
 		long cacheDurationInSeconds = tokenProcessor.getAccessDurationInSeconds()
 				- TokenConstant.ACCESS_CACHE_EARLY_EXPIRY_SECONDS;

@@ -3,10 +3,10 @@ package com.ferry.user.core.tenant.registration;
 import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.registration.StaffRegistrationRequest;
 import com.ferry.user.core.staff.registration.StaffRegistrationResponse;
-import com.ferry.user.domain.DescriptionDomain;
-import com.ferry.user.domain.EmailDomain;
-import com.ferry.user.domain.FullNameDomain;
-import com.ferry.user.domain.exception.TurnstileVerificationException;
+import com.ferry.user.domain.common.DescriptionDomain;
+import com.ferry.user.domain.common.EmailDomain;
+import com.ferry.user.domain.common.FullNameDomain;
+import com.ferry.user.domain.staff.registration.TurnstileVerificationException;
 import com.ferry.user.domain.notification.EmailTriggerDomain;
 import com.ferry.user.domain.notification.EmailTriggerType;
 import com.ferry.user.domain.staff.StaffDomain;
@@ -36,7 +36,7 @@ public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCa
 
 	private void verifyCaptcha(TenantRegistrationRequest request){
 		if(!turnstileVerificationGateway.verify(request.captchaToken())){
-			throw new TurnstileVerificationException("Verifikasi captcha gagal.");
+			throw new TurnstileVerificationException("Failed captcha verification");
 		}
 	}
 

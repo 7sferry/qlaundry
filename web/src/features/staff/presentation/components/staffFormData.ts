@@ -10,6 +10,7 @@ export interface StaffFormData {
 	password: string;
 	currentPassword: string;
 	newPassword: string;
+	confirmNewPassword: string;
 	fullName: string;
 	description: string;
 	role: StaffRole;
@@ -23,6 +24,7 @@ export const emptyStaffForm: StaffFormData = {
 	password: '',
 	currentPassword: '',
 	newPassword: '',
+	confirmNewPassword: '',
 	fullName: '',
 	description: '',
 	role: 'STAFF',

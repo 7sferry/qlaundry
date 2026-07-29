@@ -1,6 +1,6 @@
 package com.ferry.user.gateway.notification.entity;
 
-import com.ferry.user.domain.EmailDomain;
+import com.ferry.user.domain.common.EmailDomain;
 import com.ferry.user.domain.notification.EmailTriggerDomain;
 import com.ferry.user.domain.notification.EmailTriggerStatus;
 import com.ferry.user.domain.notification.EmailTriggerType;

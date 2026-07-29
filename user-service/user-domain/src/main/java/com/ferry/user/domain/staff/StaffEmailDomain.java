@@ -1,6 +1,6 @@
 package com.ferry.user.domain.staff;
 
-import com.ferry.user.domain.EmailDomain;
+import com.ferry.user.domain.common.EmailDomain;
 
 import java.time.Instant;
 

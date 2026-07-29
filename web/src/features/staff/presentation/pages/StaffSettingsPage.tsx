@@ -36,6 +36,7 @@ export default function StaffSettingsPage() {
 						password: '',
 						currentPassword: '',
 						newPassword: '',
+						confirmNewPassword: '',
 						fullName: s.fullName,
 						description: s.description ?? '',
 						role: 'STAFF',
@@ -57,6 +58,10 @@ export default function StaffSettingsPage() {
 	const handleSave = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (!user) return;
+		if (form.newPassword && form.newPassword !== form.confirmNewPassword) {
+			toast.error('New password and confirmation do not match.');
+			return;
+		}
 		setSaving(true);
 		try {
 			const input: UpdateStaffInput = {
@@ -70,7 +75,7 @@ export default function StaffSettingsPage() {
 				newPassword: form.newPassword || undefined,
 			};
 			await updateStaffUseCase.execute(input);
-			const saved: StaffFormData = {...form, currentPassword: '', newPassword: ''};
+			const saved: StaffFormData = {...form, currentPassword: '', newPassword: '', confirmNewPassword: ''};
 			setForm(saved);
 			setOriginal(saved);
 			toast.success('Profile updated.');

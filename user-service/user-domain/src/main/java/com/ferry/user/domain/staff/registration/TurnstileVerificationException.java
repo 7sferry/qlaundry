@@ -1,4 +1,4 @@
-package com.ferry.user.domain.exception;
+package com.ferry.user.domain.staff.registration;
 
 /************************
  * Made by [MR Ferry™]  *

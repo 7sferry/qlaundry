@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.forgotpassword;
 
-import com.ferry.user.domain.UsernameDomain;
+import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.staff.forgottenpassword.StaffEmailForgottenPasswordProjection;
 
 import java.util.Optional;

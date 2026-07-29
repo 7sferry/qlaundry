@@ -1,7 +1,7 @@
 package com.ferry.user.gateway.staff;
 
 import com.ferry.user.core.staff.detail.StaffDetailGateway;
-import com.ferry.user.domain.UsernameDomain;
+import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.staff.StaffAddressFilter;
 import com.ferry.user.domain.staff.StaffEmailFilter;
 import com.ferry.user.domain.staff.StaffPhoneFilter;

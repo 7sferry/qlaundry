@@ -5,7 +5,7 @@
 
 export {Button} from './Button';
 export {Card} from './Card';
-export {Field, Input, Select, Textarea} from './Field';
+export {Field, Input, PasswordInput, Select, Textarea} from './Field';
 export {Badge} from './Badge';
 export type {BadgeTone} from './Badge';
 export {Spinner, Loading} from './Spinner';

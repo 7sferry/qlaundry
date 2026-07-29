@@ -1,9 +1,9 @@
 package com.ferry.user.domain.staff;
 
-import com.ferry.user.domain.FullNameDomain;
-import com.ferry.user.domain.HashedPasswordDomain;
-import com.ferry.user.domain.DescriptionDomain;
-import com.ferry.user.domain.UsernameDomain;
+import com.ferry.user.domain.common.FullNameDomain;
+import com.ferry.user.domain.common.HashedPasswordDomain;
+import com.ferry.user.domain.common.DescriptionDomain;
+import com.ferry.user.domain.common.UsernameDomain;
 import lombok.Builder;
 
 import java.time.Instant;

@@ -1,7 +1,7 @@
 package com.ferry.user.gateway.staff;
 
 import com.ferry.user.core.staff.forgotpassword.StaffForgottenPasswordGateway;
-import com.ferry.user.domain.UsernameDomain;
+import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.staff.forgottenpassword.StaffEmailForgottenPasswordProjection;
 import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
 import lombok.RequiredArgsConstructor;

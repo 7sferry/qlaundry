@@ -41,7 +41,6 @@ function toUser(detail: StaffDetailApiResponse): User {
 		username: detail.username,
 		email: detail.emails[0]?.email ?? '',
 		phone: detail.phones[0]?.phone,
-		role: 'owner',
 		staffRole: role === 'SUPER_STAFF' || role === 'STAFF' ? role as StaffRole : null,
 		avatarInitials: detail.fullName.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase(),
 	};

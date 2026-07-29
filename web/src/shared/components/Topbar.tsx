@@ -5,7 +5,6 @@
 
 import type {FC} from 'react';
 import {useLocation} from 'react-router-dom';
-import {CheckCircle2} from 'lucide-react';
 
 const PATH_TITLES: Record<string, string> = {
 	'/dashboard': 'Dashboard',
@@ -33,10 +32,6 @@ const Topbar: FC = () => {
 				<div className="topbar__title">
 					<small>{DATE_STR}</small>
 					<strong>{title}</strong>
-				</div>
-				<div className="topbar__status">
-					<CheckCircle2 size={14} style={{color: 'var(--success)'}}/>
-					System operating normally
 				</div>
 			</div>
 	);

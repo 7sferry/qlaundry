@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.login;
 
-import com.ferry.user.domain.UsernameDomain;
+import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.session.UserSessionDomain;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.tenant.TenantIdDomain;
