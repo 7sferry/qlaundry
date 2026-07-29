@@ -1,9 +1,12 @@
 package com.ferry.user.core.staff.logout;
 
+import com.ferry.user.core.tools.UserValidation;
+import jakarta.validation.constraints.NotBlank;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Juli 2026         *
  ************************/
 
-public record StaffLogoutRequest(String refreshToken){
+public record StaffLogoutRequest(@NotBlank String refreshToken) implements UserValidation{
 }

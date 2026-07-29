@@ -1,14 +1,12 @@
 package com.ferry.user.webservice.config;
 
-import com.ferry.user.domain.common.exception.ForbiddenActionException;
-import com.ferry.user.domain.common.exception.InvalidUsernameException;
-import com.ferry.user.domain.common.exception.NotFoundException;
+import com.ferry.user.domain.common.exception.*;
 import com.ferry.user.domain.staff.forgottenpassword.FailedToResetPasswordException;
 import com.ferry.user.domain.staff.login.FailedToLoginException;
 import com.ferry.user.domain.staff.refresh.ExpiredSessionException;
 import com.ferry.user.domain.staff.registration.TurnstileVerificationException;
 import com.ferry.user.domain.staff.submitotp.FailedToSubmitOtpException;
-import com.ferry.user.domain.staff.update.InvalidPasswordException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,9 +32,16 @@ public class UserWebExceptionHandler{
 	}
 
 	@ExceptionHandler({InvalidUsernameException.class, TurnstileVerificationException.class,
-			InvalidPasswordException.class, IllegalArgumentException.class, NotFoundException.class})
+			InvalidPasswordException.class, IllegalArgumentException.class,
+			NotFoundException.class})
 	ResponseEntity<ErrorWebResponse> handleBadRequest(RuntimeException e){
 		log.warn(e.getMessage(), e);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorWebResponse(e.getMessage()));
+	}
+
+	@ExceptionHandler(ConstraintViolationException.class)
+	ResponseEntity<ErrorWebResponse> handleInvalidRequest(ConstraintViolationException e){
+		log.warn(e.getMessage());
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorWebResponse(e.getMessage()));
 	}
 

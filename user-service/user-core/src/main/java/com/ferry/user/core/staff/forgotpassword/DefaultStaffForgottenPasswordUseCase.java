@@ -46,6 +46,7 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 	public void execute(StaffForgottenPasswordRequest request, StaffForgottenPasswordPresenter presenter){
 		long startedAt = System.nanoTime();
 		try{
+			request.validate();
 			UsernameDomain username = new UsernameDomain(request.username());
 			gateway.findEmailWithUsername(username).ifPresentOrElse(email -> {
 				String otp = String.format("%06d", PasswordConstant.getRandom().nextInt(0, 1_000_000));

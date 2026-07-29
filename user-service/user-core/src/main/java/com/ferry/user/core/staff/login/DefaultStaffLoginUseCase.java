@@ -11,7 +11,7 @@ import com.ferry.user.domain.session.SessionType;
 import com.ferry.user.domain.session.UserSessionDomain;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
-import com.ferry.user.domain.staff.update.InvalidPasswordException;
+import com.ferry.user.domain.common.exception.InvalidPasswordException;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
 import com.ferry.user.domain.token.UserPrincipal;
@@ -35,6 +35,7 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 	@Override
 	public void execute(StaffLoginRequest request, StaffLoginPresenter presenter){
 		try{
+			request.validate();
 			StaffLoginProjection staff = gateway.findByUsername(new UsernameDomain(request.username()))
 					.orElseThrow(() -> new InvalidPasswordException("userId not found"));
 			if(!passwordTool.matches(request.password(), staff.password())){

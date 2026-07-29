@@ -22,6 +22,7 @@ public class DefaultStaffSubmitOtpUseCase implements StaffSubmitOtpUseCase {
 	@Override
 	public void execute(StaffSubmitOtpRequest request, StaffSubmitOtpPresenter presenter){
 		try{
+			request.validate();
 			UsernameDomain username = new UsernameDomain(request.username());
 			String otpKey = PasswordConstant.OTP_KEY + username.value();
 			String otp = cacheManager.get(otpKey)

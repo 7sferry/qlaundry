@@ -23,6 +23,7 @@ public class DefaultStaffDeleteUseCase implements StaffDeleteUseCase{
 		if(principal.role() != StaffRole.SUPER_STAFF){
 			throw new ForbiddenActionException("Only super staff can delete staff");
 		}
+		request.validate();
 		UsernameDomain username = new UsernameDomain(request.username());
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
 		StaffDomain target = gateway.findByUsername(username, tenantId)

@@ -24,6 +24,7 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 
 	@Override
 	public void execute(StaffRegistrationRequest request, UserPrincipal principal, StaffRegistrationPresenter presenter){
+		request.validate();
 		StaffDomain registeredUser = registerStaff(request, principal);
 		saveEmail(request, registeredUser, principal);
 		saveAddress(request, registeredUser, principal);

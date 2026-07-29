@@ -8,7 +8,7 @@ import com.ferry.user.domain.common.FullNameDomain;
 import com.ferry.user.domain.common.HashedPasswordDomain;
 import com.ferry.user.domain.common.PhoneDomain;
 import com.ferry.user.domain.common.RawPasswordDomain;
-import com.ferry.user.domain.staff.update.InvalidPasswordException;
+import com.ferry.user.domain.common.exception.InvalidPasswordException;
 import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.staff.StaffAddressDomain;
 import com.ferry.user.domain.staff.StaffDomain;
@@ -32,6 +32,7 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 
 	@Override
 	public void execute(StaffUpdateRequest request, UserPrincipal principal, StaffUpdatePresenter presenter){
+		request.validate();
 		StaffDomain staff = gateway.findById(principal.userId())
 				.orElseThrow(() -> new NotFoundException("Staff Not Found"));
 		StaffDomain saved = gateway.save(updateProfile(staff, request, principal));

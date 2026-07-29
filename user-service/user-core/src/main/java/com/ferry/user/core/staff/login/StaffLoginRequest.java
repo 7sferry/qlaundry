@@ -1,5 +1,8 @@
 package com.ferry.user.core.staff.login;
 
+import com.ferry.user.core.tools.UserValidation;
+import jakarta.validation.constraints.NotBlank;
+
 import java.util.List;
 
 /************************
@@ -7,5 +10,5 @@ import java.util.List;
  * on Juli 2026         *
  ************************/
 
-public record StaffLoginRequest(String username, String password){
+public record StaffLoginRequest(@NotBlank String username, @NotBlank String password) implements UserValidation{
 }

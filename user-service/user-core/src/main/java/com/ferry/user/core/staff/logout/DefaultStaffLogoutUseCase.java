@@ -22,6 +22,7 @@ public class DefaultStaffLogoutUseCase implements StaffLogoutUseCase{
 
 	@Override
 	public void execute(StaffLogoutRequest request, StaffLogoutPresenter presenter){
+		request.validate();
 		String refreshToken = request.refreshToken();
 		if(refreshToken != null){
 			revokeSession(tokenProcessor.hashToken(refreshToken));

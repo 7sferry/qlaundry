@@ -25,6 +25,7 @@ public class DefaultStaffListUseCase implements StaffListUseCase{
 
 	@Override
 	public void execute(StaffListRequest request, UserPrincipal principal, StaffListPresenter presenter){
+		request.validate();
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
 		StaffFilter filter = StaffFilter.builder()
 				.fullName(request.fullName())

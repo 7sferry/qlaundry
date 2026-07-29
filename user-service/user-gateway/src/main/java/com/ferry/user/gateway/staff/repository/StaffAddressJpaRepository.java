@@ -23,7 +23,7 @@ public interface StaffAddressJpaRepository extends JpaRepository<StaffAddressJpa
 			"(:#{#filter?.staffId} is null or s.staff.id = :#{#filter?.staffId}) AND " +
 			"(coalesce(:#{#filter?.staffIds}, null) is null or s.staff.id IN :#{#filter?.staffIds}) AND " +
 			"s.deleted IS FALSE")
-	<T> List<T> findAllWithFilter(StaffAddressFilter filter, Class<T> tClass);
+	<T> List<T> findAllWithFilter(@Param("filter") StaffAddressFilter filter, Class<T> tClass);
 
 	@Modifying
 	@Query("update StaffAddressJpaEntity e set e.deleted = true, e.updatedBy = :updatedBy, e.updatedAt = CURRENT_TIMESTAMP " +

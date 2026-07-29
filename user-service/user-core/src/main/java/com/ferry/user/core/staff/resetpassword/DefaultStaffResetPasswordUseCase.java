@@ -27,6 +27,7 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 	@Override
 	public void execute(StaffResetPasswordRequest request, StaffResetPasswordPresenter presenter){
 		try{
+			request.validate();
 			UsernameDomain username = new UsernameDomain(request.username());
 			RawPasswordDomain password = new RawPasswordDomain(request.password());
 			validateResetToken(username, request.resetToken());

@@ -24,6 +24,7 @@ public class DefaultStaffDetailUseCase implements StaffDetailUseCase{
 
 	@Override
 	public void execute(StaffDetailRequest request, UserPrincipal principal, StaffDetailPresenter presenter){
+		request.validate();
 		UsernameDomain username = new UsernameDomain(request.username());
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
 		StaffDetailProjection staff = gateway.findDetail(username, tenantId)

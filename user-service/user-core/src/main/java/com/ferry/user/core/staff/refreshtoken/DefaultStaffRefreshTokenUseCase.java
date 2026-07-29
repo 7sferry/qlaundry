@@ -30,10 +30,8 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 
 	@Override
 	public void execute(StaffRefreshTokenRequest request, StaffRefreshTokenPresenter presenter){
+		request.validate();
 		String oldRefreshToken = request.refreshToken();
-		if(oldRefreshToken == null){
-			throw new ExpiredSessionException("Refresh token is required");
-		}
 		String oldHashedRefreshToken = tokenProcessor.hashToken(oldRefreshToken);
 		StaffRefreshTokenResponse rotatedResponse = cacheManager.get(TokenConstant.ROTATED_KEY + oldHashedRefreshToken,
 						StaffRefreshTokenResponse.class)

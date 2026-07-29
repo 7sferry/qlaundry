@@ -27,6 +27,7 @@ public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCa
 
 	@Override
 	public void execute(TenantRegistrationRequest request, TenantRegistrationPresenter presenter){
+		request.validate();
 		verifyCaptcha(request);
 		TenantDomain savedTenant = saveTenant(request);
 		StaffRegistrationResponse registeredAdmin = registerAdmin(request, savedTenant);
