@@ -41,7 +41,7 @@ public class UserWebExceptionHandler{
 
 	@ExceptionHandler(ConstraintViolationException.class)
 	ResponseEntity<ErrorWebResponse> handleInvalidRequest(ConstraintViolationException e){
-		log.warn(e.getMessage());
+		log.warn(e.getMessage(), e);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorWebResponse(e.getMessage()));
 	}
 

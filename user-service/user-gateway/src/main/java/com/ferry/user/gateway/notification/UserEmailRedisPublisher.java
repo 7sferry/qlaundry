@@ -5,7 +5,11 @@ import com.ferry.user.core.tenant.registration.UserEmailPublisher;
 import com.ferry.user.domain.notification.EmailTriggerDomain;
 import com.ferry.user.domain.notification.EmailTriggerStatus;
 import com.ferry.user.gateway.notification.entity.EmailTriggerJpaEntity;
+import com.ferry.user.gateway.notification.entity.EmailTriggerStatusJpaEntity;
+import com.ferry.user.gateway.notification.entity.EmailTriggerTypeJpaEntity;
 import com.ferry.user.gateway.notification.repository.EmailTriggerJpaRepository;
+import com.ferry.user.gateway.notification.repository.EmailTriggerStatusJpaRepository;
+import com.ferry.user.gateway.notification.repository.EmailTriggerTypeJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
 import com.ferry.utils.json.JsonManager;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +39,8 @@ public class UserEmailRedisPublisher implements UserEmailPublisher{
 	private static final String PAYLOAD_FIELD = "payload";
 
 	private final EmailTriggerJpaRepository emailTriggerJpaRepository;
+	private final EmailTriggerTypeJpaRepository emailTriggerTypeJpaRepository;
+	private final EmailTriggerStatusJpaRepository emailTriggerStatusJpaRepository;
 	private final IdGenerator idGenerator;
 	private final JsonManager jsonManager;
 	private final StringRedisTemplate stringRedisTemplate;
@@ -47,7 +53,10 @@ public class UserEmailRedisPublisher implements UserEmailPublisher{
 		EmailTriggerDomain trigger = EmailTriggerDomain.create(config.triggerType(), config.recipient(), jsonPayload,
 				config.userId());
 		String id = idGenerator.generateId();
-		EmailTriggerJpaEntity saved = emailTriggerJpaRepository.saveAndFlush(EmailTriggerJpaEntity.construct(id, trigger));
+		EmailTriggerTypeJpaEntity type = emailTriggerTypeJpaRepository.getReferenceById(trigger.typeIdValue());
+		EmailTriggerStatusJpaEntity status = emailTriggerStatusJpaRepository.getReferenceById(trigger.statusIdValue());
+		EmailTriggerJpaEntity saved = emailTriggerJpaRepository.saveAndFlush(
+				EmailTriggerJpaEntity.construct(id, trigger, type, status));
 		return EmailTriggerJpaEntity.construct(saved);
 	}
 
@@ -86,7 +95,7 @@ public class UserEmailRedisPublisher implements UserEmailPublisher{
 		transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 		transactionTemplate.executeWithoutResult(_ -> emailTriggerJpaRepository.findById(triggerId)
 				.ifPresent(entity -> {
-					entity.setStatus(EmailTriggerStatus.PUBLISHED.name());
+					entity.setStatus(emailTriggerStatusJpaRepository.getReferenceById(EmailTriggerStatus.PUBLISHED.getValue()));
 					entity.setUpdatedAt(Instant.now());
 					emailTriggerJpaRepository.save(entity);
 				}));

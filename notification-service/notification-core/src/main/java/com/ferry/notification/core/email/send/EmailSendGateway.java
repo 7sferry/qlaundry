@@ -1,5 +1,6 @@
 package com.ferry.notification.core.email.send;
 
+import com.ferry.notification.domain.ContentDomain;
 import com.ferry.notification.domain.EmailNotificationDomain;
 
 /************************
@@ -8,5 +9,5 @@ import com.ferry.notification.domain.EmailNotificationDomain;
  ************************/
 
 public interface EmailSendGateway{
-	void send(EmailNotificationDomain notification);
+	void send(EmailNotificationDomain notification, ContentDomain content);
 }

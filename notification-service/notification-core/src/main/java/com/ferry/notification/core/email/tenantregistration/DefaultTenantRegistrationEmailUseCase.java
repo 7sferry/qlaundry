@@ -27,8 +27,8 @@ public class DefaultTenantRegistrationEmailUseCase implements TenantRegistration
 		String content = composer.compose(request);
 		EmailNotificationDomain notification = EmailNotificationDomain.compose(EmailType.TENANT_REGISTRATION,
 				request.triggerId(), new EmailDomain(request.recipient()),
-				new SubjectDomain(SUBJECT_PREFIX + request.tenantName()), new ContentDomain(content));
-		emailSendGateway.send(notification);
+				new SubjectDomain(SUBJECT_PREFIX + request.tenantName()));
+		emailSendGateway.send(notification, new ContentDomain(content));
 		EmailNotificationDomain saved = emailHistoryGateway.save(notification.markSent());
 		presenter.present(new TenantRegistrationEmailResponse(saved));
 	}

@@ -37,4 +37,12 @@ public record EmailTriggerDomain(String id, EmailTriggerType type, EmailDomain r
 		return status.name();
 	}
 
+	public short typeIdValue(){
+		return type.getValue();
+	}
+
+	public short statusIdValue(){
+		return status.getValue();
+	}
+
 }

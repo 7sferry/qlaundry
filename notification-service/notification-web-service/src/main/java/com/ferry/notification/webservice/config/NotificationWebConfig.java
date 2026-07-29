@@ -13,6 +13,7 @@ import com.ferry.notification.gateway.email.EmailSendSmtpGateway;
 import com.ferry.notification.gateway.email.ForgottenPasswordEmailThymeleafComposer;
 import com.ferry.notification.gateway.email.TenantRegistrationEmailThymeleafComposer;
 import com.ferry.notification.gateway.email.repository.EmailNotificationJpaRepository;
+import com.ferry.notification.gateway.email.repository.EmailTypeJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
 import com.ferry.utils.generator.UlidGenerator;
 import com.ferry.utils.json.DefaultJsonManager;
@@ -73,8 +74,9 @@ public class NotificationWebConfig{
 
 	@Bean
 	EmailHistoryGateway emailHistoryGateway(EmailNotificationJpaRepository emailNotificationJpaRepository,
+	                                        EmailTypeJpaRepository emailTypeJpaRepository,
 	                                        IdGenerator idGenerator){
-		return new EmailHistoryJpaGateway(emailNotificationJpaRepository, idGenerator);
+		return new EmailHistoryJpaGateway(emailNotificationJpaRepository, emailTypeJpaRepository, idGenerator);
 	}
 
 	@Bean

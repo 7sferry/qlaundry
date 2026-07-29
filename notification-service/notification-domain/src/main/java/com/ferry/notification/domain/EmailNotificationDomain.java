@@ -8,21 +8,21 @@ import java.time.Instant;
  ************************/
 
 public record EmailNotificationDomain(String id, String referenceId, EmailType type, EmailDomain recipient,
-                                      SubjectDomain subject, ContentDomain content, Instant createdAt, Integer version,
+                                      SubjectDomain subject, Instant createdAt, Integer version,
                                       Instant sentAt){
 	public EmailNotificationDomain{
-		if(type == null || recipient == null || subject == null || content == null){
+		if(type == null || recipient == null || subject == null){
 			throw new IllegalArgumentException("Type, recipient, subject, and content must not be null");
 		}
 	}
 
 	public static EmailNotificationDomain compose(EmailType type, String referenceId, EmailDomain recipient,
-	                                              SubjectDomain subject, ContentDomain content){
-		return new EmailNotificationDomain(null, referenceId, type, recipient, subject, content, Instant.now(), null, null);
+	                                              SubjectDomain subject){
+		return new EmailNotificationDomain(null, referenceId, type, recipient, subject, Instant.now(), null, null);
 	}
 
 	public EmailNotificationDomain markSent(){
-		return new EmailNotificationDomain(id, referenceId, type, recipient, subject, content, createdAt, version, Instant.now());
+		return new EmailNotificationDomain(id, referenceId, type, recipient, subject, createdAt, version, Instant.now());
 	}
 
 	public String recipientValue(){
@@ -33,11 +33,11 @@ public record EmailNotificationDomain(String id, String referenceId, EmailType t
 		return subject.value();
 	}
 
-	public String contentValue(){
-		return content.value();
-	}
-
 	public String typeValue(){
 		return type.name();
+	}
+
+	public short typeIdValue(){
+		return type.getValue();
 	}
 }

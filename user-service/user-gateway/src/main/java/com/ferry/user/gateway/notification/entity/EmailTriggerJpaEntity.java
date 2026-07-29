@@ -5,6 +5,7 @@ import com.ferry.user.domain.notification.EmailTriggerDomain;
 import com.ferry.user.domain.notification.EmailTriggerStatus;
 import com.ferry.user.domain.notification.EmailTriggerType;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,14 +26,20 @@ public class EmailTriggerJpaEntity{
 	@Id
 	@Column(nullable = false, length = 50)
 	private String id;
-	@Column(nullable = false, length = 50)
-	private String type;
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	private EmailTriggerTypeJpaEntity type;
+	@Setter(AccessLevel.PRIVATE)
+	@Column(nullable = false, name = "type_id", insertable = false, updatable = false)
+	private short typeId;
 	@Column(nullable = false, length = 100)
 	private String recipient;
 	@Column(nullable = false, columnDefinition = "text")
 	private String payload;
-	@Column(nullable = false, length = 20)
-	private String status;
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	private EmailTriggerStatusJpaEntity status;
+	@Setter(AccessLevel.PRIVATE)
+	@Column(nullable = false, name = "status_id", insertable = false, updatable = false)
+	private short statusId;
 	@Version
 	private Integer version;
 	@Column(nullable = false)
@@ -46,13 +53,16 @@ public class EmailTriggerJpaEntity{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
-	public static EmailTriggerJpaEntity construct(String id, EmailTriggerDomain trigger){
+	public static EmailTriggerJpaEntity construct(String id, EmailTriggerDomain trigger, EmailTriggerTypeJpaEntity type,
+	                                               EmailTriggerStatusJpaEntity status){
 		EmailTriggerJpaEntity entity = new EmailTriggerJpaEntity();
 		entity.id = id;
-		entity.type = trigger.typeValue();
+		entity.type = type;
+		entity.typeId = type.getId();
 		entity.recipient = trigger.recipientValue();
 		entity.payload = trigger.payload();
-		entity.status = trigger.statusValue();
+		entity.status = status;
+		entity.statusId = status.getId();
 		entity.createdBy = trigger.createdBy();
 		entity.createdAt = trigger.createdAt();
 		entity.updatedBy = trigger.updatedBy();
@@ -63,9 +73,9 @@ public class EmailTriggerJpaEntity{
 	}
 
 	public static EmailTriggerDomain construct(EmailTriggerJpaEntity saved){
-		return new EmailTriggerDomain(saved.id, EmailTriggerType.valueOf(saved.type),
+		return new EmailTriggerDomain(saved.id, EmailTriggerType.fromValue(saved.typeId).orElseThrow(),
 				new EmailDomain(saved.recipient), saved.payload,
-				EmailTriggerStatus.valueOf(saved.status), saved.version, saved.deleted,
+				EmailTriggerStatus.fromValue(saved.statusId).orElseThrow(), saved.version, saved.deleted,
 				saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
 	}
 

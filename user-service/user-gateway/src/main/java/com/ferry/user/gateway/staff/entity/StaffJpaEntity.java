@@ -38,17 +38,15 @@ public class StaffJpaEntity{
 	private String fullName;
 	@Column
 	private String description;
-	@JoinColumn(nullable = false)
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private TenantJpaEntity tenant;
+	@Column(nullable = false, name = "tenant_id", insertable = false, updatable = false)
 	@Setter(AccessLevel.PRIVATE)
-	@Column(name = "tenant_id", insertable = false, updatable = false)
 	private String tenantId;
-	@JoinColumn
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private StaffRoleJpaEntity role;
 	@Setter(AccessLevel.PRIVATE)
-	@Column(name = "role_id", insertable = false, updatable = false, nullable = false, columnDefinition = "SMALLINT DEFAULT 1")
+	@Column(nullable = false, name = "role_id", insertable = false, updatable = false, columnDefinition = "SMALLINT DEFAULT 1")
 	private short roleId;
 	@Version
 	private Integer version;

@@ -25,11 +25,10 @@ public class StaffAddressJpaEntity{
 	@Id
 	@Column(nullable = false, length = 50)
 	private String id;
-	@JoinColumn(nullable = false)
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private StaffJpaEntity staff;
-	@Column(name = "staff_id", insertable = false, updatable = false)
 	@Setter(AccessLevel.PRIVATE)
+	@Column(nullable = false, name = "staff_id", insertable = false, updatable = false)
 	private String staffId;
 	@Column(nullable = false)
 	private String addressLine;

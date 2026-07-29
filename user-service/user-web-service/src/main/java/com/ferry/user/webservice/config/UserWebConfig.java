@@ -42,6 +42,8 @@ import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.gateway.notification.UserEmailRedisPublisher;
 import com.ferry.user.gateway.notification.repository.EmailTriggerJpaRepository;
+import com.ferry.user.gateway.notification.repository.EmailTriggerStatusJpaRepository;
+import com.ferry.user.gateway.notification.repository.EmailTriggerTypeJpaRepository;
 import com.ferry.user.gateway.session.repository.UserSessionJpaRepository;
 import com.ferry.user.gateway.session.repository.UserSessionTypeJpaRepository;
 import com.ferry.user.gateway.staff.*;
@@ -84,11 +86,14 @@ public class UserWebConfig{
 
 	@Bean
 	UserEmailPublisher tenantRegistrationEmailGateway(EmailTriggerJpaRepository emailTriggerJpaRepository,
+	                                                  EmailTriggerTypeJpaRepository emailTriggerTypeJpaRepository,
+	                                                  EmailTriggerStatusJpaRepository emailTriggerStatusJpaRepository,
 	                                                  IdGenerator idGenerator, JsonManager jsonManager,
 	                                                  StringRedisTemplate stringRedisTemplate,
 	                                                  PlatformTransactionManager transactionManager,
 	                                                  @Value("${app.notification.stream.email.key}") String streamEmailKey){
-		return new UserEmailRedisPublisher(emailTriggerJpaRepository, idGenerator, jsonManager, stringRedisTemplate,
+		return new UserEmailRedisPublisher(emailTriggerJpaRepository, emailTriggerTypeJpaRepository,
+				emailTriggerStatusJpaRepository, idGenerator, jsonManager, stringRedisTemplate,
 				transactionManager, streamEmailKey);
 	}
 
