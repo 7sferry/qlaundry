@@ -3,6 +3,7 @@ package com.ferry.user.core.staff.registration;
 import com.ferry.user.core.tools.UserValidation;
 import com.ferry.user.domain.staff.StaffRole;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
@@ -13,6 +14,6 @@ import java.util.List;
 
 public record StaffRegistrationRequest(@NotBlank String username, @NotBlank String password, @NotBlank String fullName,
                                        String description,
-                                       @NotBlank StaffRole role, List<String> emails, List<String> phones,
+                                       @NotNull StaffRole role, List<String> emails, List<String> phones,
                                        List<String> addresses) implements UserValidation{
 }
