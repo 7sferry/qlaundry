@@ -24,10 +24,11 @@ public class DefaultForgottenPasswordEmailUseCase implements ForgottenPasswordEm
 
 	@Override
 	public void execute(ForgottenPasswordEmailRequest request, ForgottenPasswordEmailPresenter presenter){
-		String content = composer.compose(request);
+		request.validate();
+		ContentDomain content = new ContentDomain(composer.compose(request));
 		EmailNotificationDomain notification = EmailNotificationDomain.compose(EmailType.FORGOTTEN_PASSWORD,
 				request.triggerId(), new EmailDomain(request.recipient()), new SubjectDomain(SUBJECT));
-		emailSendGateway.send(notification, new ContentDomain(content));
+		emailSendGateway.send(notification, content);
 		EmailNotificationDomain saved = emailHistoryGateway.save(notification.markSent());
 		presenter.present(new ForgottenPasswordEmailResponse(saved));
 	}

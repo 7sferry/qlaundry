@@ -24,11 +24,12 @@ public class DefaultTenantRegistrationEmailUseCase implements TenantRegistration
 
 	@Override
 	public void execute(TenantRegistrationEmailRequest request, TenantRegistrationEmailPresenter presenter){
-		String content = composer.compose(request);
+		request.validate();
+		ContentDomain content = new ContentDomain(composer.compose(request));
 		EmailNotificationDomain notification = EmailNotificationDomain.compose(EmailType.TENANT_REGISTRATION,
 				request.triggerId(), new EmailDomain(request.recipient()),
 				new SubjectDomain(SUBJECT_PREFIX + request.tenantName()));
-		emailSendGateway.send(notification, new ContentDomain(content));
+		emailSendGateway.send(notification, content);
 		EmailNotificationDomain saved = emailHistoryGateway.save(notification.markSent());
 		presenter.present(new TenantRegistrationEmailResponse(saved));
 	}

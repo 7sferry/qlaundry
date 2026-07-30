@@ -1,5 +1,9 @@
 package com.ferry.notification.core.email.tenantregistration;
 
+import com.ferry.notification.core.tools.NotificationValidation;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.Instant;
 
 /************************
@@ -7,7 +11,8 @@ import java.time.Instant;
  * on Juli 2026         *
  ************************/
 
-public record TenantRegistrationEmailRequest(String triggerId, String recipient, String staffFullName,
-                                             String staffUsername, String tenantName, String tenantDescription,
-                                             Instant registeredAt){
+public record TenantRegistrationEmailRequest(@NotBlank String triggerId, @NotBlank String recipient,
+                                             @NotBlank String staffFullName, @NotBlank String staffUsername,
+                                             @NotBlank String tenantName, String tenantDescription,
+                                             @NotNull Instant registeredAt) implements NotificationValidation{
 }

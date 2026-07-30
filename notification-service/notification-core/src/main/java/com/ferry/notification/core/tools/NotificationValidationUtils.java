@@ -1,19 +1,22 @@
-package com.ferry.user.core.tools;
+package com.ferry.notification.core.tools;
 
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator;
+
+import java.util.Set;
 
 /************************
  * Made by [MR Ferry™]  *
  * on Juli 2026         *
  ************************/
 
-class ValidationUtils{
+class NotificationValidationUtils{
 
-	static Validator getValidator(){
-		return ValidationHolder.VALIDATOR;
+	static <T> Set<ConstraintViolation<T>> validate(T object){
+		return ValidationHolder.VALIDATOR.validate(object);
 	}
 
 	static class ValidationHolder{
