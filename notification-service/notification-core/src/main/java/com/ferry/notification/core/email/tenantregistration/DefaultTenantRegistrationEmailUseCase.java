@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class DefaultTenantRegistrationEmailUseCase implements TenantRegistrationEmailUseCase{
-	private static final String SUBJECT_PREFIX = "Selamat Datang di QLaundry - ";
+	private static final String SUBJECT_PREFIX = "Welcome to QLaundry - ";
 
 	private final TenantRegistrationEmailComposer composer;
 	private final EmailSendGateway emailSendGateway;

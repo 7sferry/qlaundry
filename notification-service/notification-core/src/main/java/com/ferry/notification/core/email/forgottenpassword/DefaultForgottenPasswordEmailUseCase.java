@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class DefaultForgottenPasswordEmailUseCase implements ForgottenPasswordEmailUseCase{
-	private static final String SUBJECT = "Kode Verifikasi Reset Password QLaundry";
+	private static final String SUBJECT = "QLaundry Password Reset Verification Code - ";
 
 	private final ForgottenPasswordEmailComposer composer;
 	private final EmailSendGateway emailSendGateway;
@@ -27,7 +27,8 @@ public class DefaultForgottenPasswordEmailUseCase implements ForgottenPasswordEm
 		request.validate();
 		ContentDomain content = new ContentDomain(composer.compose(request));
 		EmailNotificationDomain notification = EmailNotificationDomain.compose(EmailType.FORGOTTEN_PASSWORD,
-				request.triggerId(), new EmailDomain(request.recipient()), new SubjectDomain(SUBJECT));
+				request.triggerId(), new EmailDomain(request.recipient()),
+				new SubjectDomain(SUBJECT + request.username()));
 		emailSendGateway.send(notification, content);
 		EmailNotificationDomain saved = emailHistoryGateway.save(notification.markSent());
 		presenter.present(new ForgottenPasswordEmailResponse(saved));
