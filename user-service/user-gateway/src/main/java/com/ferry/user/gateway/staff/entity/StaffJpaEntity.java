@@ -22,7 +22,7 @@ import java.time.Instant;
 
 @Getter
 @Setter
-@EqualsAndHashCode(of = "username")
+@EqualsAndHashCode(of = "id")
 @Entity
 @Table(name = "staffs")
 public class StaffJpaEntity{
@@ -30,7 +30,7 @@ public class StaffJpaEntity{
 	@Id
 	@Column(nullable = false, length = 50)
 	private String id;
-	@Column(unique = true, nullable = false, length = 50)
+	@Column(unique = true, length = 50)
 	private String username;
 	@Column(nullable = false)
 	private String password;

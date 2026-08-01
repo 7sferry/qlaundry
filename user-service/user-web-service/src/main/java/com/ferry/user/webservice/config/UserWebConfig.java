@@ -35,6 +35,9 @@ import com.ferry.user.core.staff.update.StaffUpdateUseCase;
 import com.ferry.user.core.tenant.confirmregistration.DefaultTenantConfirmRegistrationUseCase;
 import com.ferry.user.core.tenant.confirmregistration.TenantConfirmRegistrationGateway;
 import com.ferry.user.core.tenant.confirmregistration.TenantConfirmRegistrationUseCase;
+import com.ferry.user.core.tenant.expiration.DefaultTenantExpirationUseCase;
+import com.ferry.user.core.tenant.expiration.TenantExpirationGateway;
+import com.ferry.user.core.tenant.expiration.TenantExpirationUseCase;
 import com.ferry.user.core.tenant.resendconfirmation.DefaultTenantResendConfirmationUseCase;
 import com.ferry.user.core.tenant.resendconfirmation.TenantResendConfirmationGateway;
 import com.ferry.user.core.tenant.resendconfirmation.TenantResendConfirmationUseCase;
@@ -56,10 +59,12 @@ import com.ferry.user.gateway.staff.*;
 import com.ferry.user.gateway.staff.repository.*;
 import com.ferry.user.gateway.tenant.CloudflareTurnstileGateway;
 import com.ferry.user.gateway.tenant.TenantConfirmRegistrationJpaGateway;
+import com.ferry.user.gateway.tenant.TenantExpirationJpaGateway;
 import com.ferry.user.gateway.tenant.TenantRegistrationJpaGateway;
 import com.ferry.user.gateway.tenant.TenantResendConfirmationJpaGateway;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import com.ferry.user.gateway.tenant.repository.TenantStatusJpaRepository;
+import com.ferry.user.webservice.tenant.expiration.TenantExpirationScheduler;
 import com.ferry.user.webservice.tools.Argon2PasswordTool;
 import com.ferry.user.webservice.tools.DefaultUserCacheManager;
 import com.ferry.utils.cache.CacheHandler;
@@ -73,9 +78,9 @@ import com.password4j.types.Argon2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password4j.Argon2Password4jPasswordEncoder;
-import org.springframework.transaction.PlatformTransactionManager;
 import tools.jackson.databind.ObjectMapper;
 
 /************************
@@ -140,6 +145,23 @@ public class UserWebConfig{
 	                                                                UserEmailPublisher emailPublisher,
 	                                                                UserCacheManager userCacheManager){
 		return new DefaultTenantResendConfirmationUseCase(tenantResendConfirmationGateway, emailPublisher, userCacheManager);
+	}
+
+	@Bean
+	TenantExpirationGateway tenantExpirationGateway(TenantJpaRepository tenantJpaRepository,
+	                                                StaffJpaRepository staffJpaRepository,
+	                                                PlatformTransactionManager transactionManager){
+		return new TenantExpirationJpaGateway(tenantJpaRepository, staffJpaRepository, transactionManager);
+	}
+
+	@Bean
+	TenantExpirationUseCase tenantExpirationUseCase(TenantExpirationGateway tenantExpirationGateway){
+		return new DefaultTenantExpirationUseCase(tenantExpirationGateway);
+	}
+
+	@Bean
+	TenantExpirationScheduler tenantExpirationScheduler(TenantExpirationUseCase tenantExpirationUseCase){
+		return new TenantExpirationScheduler(tenantExpirationUseCase);
 	}
 
 	@Bean

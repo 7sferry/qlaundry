@@ -3,6 +3,7 @@ package com.ferry.user.gateway.staff.repository;
 import com.ferry.user.domain.staff.StaffFilter;
 import com.ferry.user.gateway.staff.entity.StaffJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -35,5 +36,10 @@ public interface StaffJpaRepository extends JpaRepository<StaffJpaEntity, String
 			"s.deleted IS FALSE " +
 			"order by s.fullName")
 	<T> List<T> findAllWithFilter(@Param("filter") StaffFilter filter, Class<T> clazz);
+
+	@Modifying
+	@Query("update StaffJpaEntity s set s.username = null, s.deleted = true, s.updatedAt = CURRENT_TIMESTAMP " +
+			"where s.tenantId = :tenantId and s.deleted is false")
+	void clearUsernamesByTenantId(@Param("tenantId") String tenantId);
 
 }

@@ -17,7 +17,7 @@ import java.time.Instant;
 
 @Getter
 @Setter
-@EqualsAndHashCode(of = "phone")
+@EqualsAndHashCode(of = "id")
 @Entity
 @Table(name = "staff_phones")
 public class StaffPhoneJpaEntity{
