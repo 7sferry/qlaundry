@@ -4,7 +4,7 @@
  ************************/
 
 import type {AuthRepository} from '../domain/AuthRepository';
-import type {AuthSession, RegisterData} from '../domain/User';
+import type {RegisterData} from '../domain/User';
 
 export class RegisterUseCase {
 	private readonly repository: AuthRepository;
@@ -13,7 +13,7 @@ export class RegisterUseCase {
 		this.repository = repository;
 	}
 
-		execute(data: RegisterData): Promise<AuthSession> {
+		execute(data: RegisterData): Promise<void> {
 			if (!data.fullName.trim() || !data.username.trim() || !data.email.trim() || !data.password.trim()) {
 				return Promise.reject(new Error('All fields are required.'));
 			}

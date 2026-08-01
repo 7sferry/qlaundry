@@ -13,6 +13,7 @@ import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.common.exception.InvalidPasswordException;
 import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
 import com.ferry.user.domain.token.UserPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -41,10 +42,15 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 			if(!passwordTool.matches(request.password(), staff.password())){
 				throw new InvalidPasswordException("password not match");
 			}
+			TenantLoginProjection tenant = gateway.findTenantById(new TenantIdDomain(staff.tenantId()))
+					.orElseThrow(() -> new NotFoundException("tenant not found"));
+			if(TenantStatus.findByValue(tenant.statusId()).orElse(null) != TenantStatus.ACTIVE){
+				throw new FailedToLoginException("tenant not confirmed");
+			}
 			String refreshToken = tokenProcessor.generateRefreshToken();
 			String hashedRefreshToken = tokenProcessor.hashToken(refreshToken);
 			storeSession(hashedRefreshToken, staff);
-			String accessToken = generateAccessToken(staff, hashedRefreshToken);
+			String accessToken = generateAccessToken(staff, tenant, hashedRefreshToken);
 			presenter.present(new StaffLoginResponse(accessToken, refreshToken));
 		} catch (FailedToLoginException e){
 			throw e;
@@ -53,10 +59,7 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 		}
 	}
 
-	private String generateAccessToken(StaffLoginProjection staff, String hashedRefreshToken){
-		TenantIdDomain tenantId = new TenantIdDomain(staff.tenantId());
-		TenantLoginProjection tenant = gateway.findTenantById(tenantId)
-				.orElseThrow(() -> new NotFoundException("tenant not found"));
+	private String generateAccessToken(StaffLoginProjection staff, TenantLoginProjection tenant, String hashedRefreshToken){
 		StaffRole role = StaffRole.findByValue(staff.roleId())
 				.orElseThrow(() -> new NotFoundException("role not found"));
 		UserPrincipal userToken = new UserPrincipal(staff.id(), staff.username(),

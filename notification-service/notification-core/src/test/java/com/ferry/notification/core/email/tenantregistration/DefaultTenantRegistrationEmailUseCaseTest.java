@@ -35,6 +35,8 @@ class DefaultTenantRegistrationEmailUseCaseTest{
 	public static final String STAFF_FULL_NAME = "Dadang Supriatna";
 	public static final String STAFF_USERNAME = "dadangsuperstaff";
 	public static final String TENANT_NAME = "Q Laundry Bandung";
+	public static final String TENANT_ID = "tnt-bandung-11";
+	public static final String CONFIRMATION_TOKEN = "conf-token-abc123";
 
 	@Mock
 	TenantRegistrationEmailComposer composer;
@@ -54,7 +56,7 @@ class DefaultTenantRegistrationEmailUseCaseTest{
 	@Test
 	void givenBlankTriggerId_thenThrowsConstraintViolationException(){
 		TenantRegistrationEmailRequest request = new TenantRegistrationEmailRequest(" ", RECIPIENT, STAFF_FULL_NAME,
-				STAFF_USERNAME, TENANT_NAME, "desc", Instant.now());
+				STAFF_USERNAME, TENANT_ID, TENANT_NAME, "desc", Instant.now(), CONFIRMATION_TOKEN);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, presenter))
 				.isInstanceOf(ConstraintViolationException.class));
@@ -68,7 +70,7 @@ class DefaultTenantRegistrationEmailUseCaseTest{
 	@Test
 	void givenNullRegisteredAt_thenThrowsConstraintViolationException(){
 		TenantRegistrationEmailRequest request = new TenantRegistrationEmailRequest(TRIGGER_ID, RECIPIENT, STAFF_FULL_NAME,
-				STAFF_USERNAME, TENANT_NAME, "desc", null);
+				STAFF_USERNAME, TENANT_ID, TENANT_NAME, "desc", null, CONFIRMATION_TOKEN);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, presenter))
 				.isInstanceOf(ConstraintViolationException.class));
@@ -80,7 +82,7 @@ class DefaultTenantRegistrationEmailUseCaseTest{
 	@Test
 	void givenInvalidRecipientEmailFormat_thenThrowsIllegalArgumentException(){
 		TenantRegistrationEmailRequest request = new TenantRegistrationEmailRequest(TRIGGER_ID, "not-an-email", STAFF_FULL_NAME,
-				STAFF_USERNAME, TENANT_NAME, "desc", Instant.now());
+				STAFF_USERNAME, TENANT_ID, TENANT_NAME, "desc", Instant.now(), CONFIRMATION_TOKEN);
 		willReturn("<html>content</html>").given(composer).compose(request);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, presenter))
@@ -94,7 +96,7 @@ class DefaultTenantRegistrationEmailUseCaseTest{
 	@Test
 	void givenValidRequest_thenComposesSendsAndSavesEmailHistory(){
 		TenantRegistrationEmailRequest request = new TenantRegistrationEmailRequest(TRIGGER_ID, RECIPIENT, STAFF_FULL_NAME,
-				STAFF_USERNAME, TENANT_NAME, "A great laundry chain", Instant.now());
+				STAFF_USERNAME, TENANT_ID, TENANT_NAME, "A great laundry chain", Instant.now(), CONFIRMATION_TOKEN);
 		willReturn("<html>content</html>").given(composer).compose(request);
 		willAnswer(invocation -> invocation.getArgument(0)).given(emailHistoryGateway).save(any(EmailNotificationDomain.class));
 
@@ -109,7 +111,7 @@ class DefaultTenantRegistrationEmailUseCaseTest{
 			softly.then(notification.typeValue()).isEqualTo(EmailType.TENANT_REGISTRATION.name());
 			softly.then(notification.referenceId()).isEqualTo(TRIGGER_ID);
 			softly.then(notification.recipientValue()).isEqualTo(RECIPIENT);
-			softly.then(notification.subjectValue()).isEqualTo("Welcome to QLaundry - " + TENANT_NAME);
+			softly.then(notification.subjectValue()).isEqualTo("Confirm your QLaundry registration - " + TENANT_NAME);
 			softly.then(contentCaptor.getValue().value()).isEqualTo("<html>content</html>");
 		});
 	}
@@ -117,7 +119,7 @@ class DefaultTenantRegistrationEmailUseCaseTest{
 	@Test
 	void givenValidRequest_thenSavesNotificationMarkedAsSent(){
 		TenantRegistrationEmailRequest request = new TenantRegistrationEmailRequest(TRIGGER_ID, RECIPIENT, STAFF_FULL_NAME,
-				STAFF_USERNAME, TENANT_NAME, "A great laundry chain", Instant.now());
+				STAFF_USERNAME, TENANT_ID, TENANT_NAME, "A great laundry chain", Instant.now(), CONFIRMATION_TOKEN);
 		willReturn("<html>content</html>").given(composer).compose(request);
 		willAnswer(invocation -> invocation.getArgument(0)).given(emailHistoryGateway).save(notificationCaptor.capture());
 

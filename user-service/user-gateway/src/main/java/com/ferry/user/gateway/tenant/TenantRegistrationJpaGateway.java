@@ -4,14 +4,15 @@ import com.ferry.user.core.staff.registration.StaffRegistrationRequest;
 import com.ferry.user.core.staff.registration.StaffRegistrationResponse;
 import com.ferry.user.core.staff.registration.StaffRegistrationUseCase;
 import com.ferry.user.core.tenant.registration.TenantRegistrationGateway;
-import com.ferry.user.domain.common.DescriptionDomain;
-import com.ferry.user.domain.common.FullNameDomain;
 import com.ferry.user.domain.session.SessionType;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.tenant.TenantDomain;
+import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.token.UserPrincipal;
 import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
+import com.ferry.user.gateway.tenant.entity.TenantStatusJpaEntity;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
+import com.ferry.user.gateway.tenant.repository.TenantStatusJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
 
@@ -24,15 +25,15 @@ import lombok.RequiredArgsConstructor;
 public class TenantRegistrationJpaGateway implements TenantRegistrationGateway{
 	private final IdGenerator idGenerator;
 	private final TenantJpaRepository tenantRepository;
+	private final TenantStatusJpaRepository tenantStatusRepository;
 	private final StaffRegistrationUseCase staffRegistrationUseCase;
 
 	@Override
 	public TenantDomain save(TenantDomain tenant){
 		String id = idGenerator.generateId();
-		TenantJpaEntity saved = tenantRepository.save(TenantJpaEntity.construct(id, tenant));
-		return new TenantDomain(saved.getId(), new FullNameDomain(saved.getFullName()),
-				new DescriptionDomain(saved.getDescription()), saved.getVersion(), saved.isDeleted(),
-				saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
+		TenantStatusJpaEntity status = tenantStatusRepository.getReferenceById(TenantStatus.PENDING.getValue());
+		TenantJpaEntity saved = tenantRepository.save(TenantJpaEntity.construct(id, tenant, status));
+		return TenantJpaEntity.construct(saved);
 	}
 
 	@Override

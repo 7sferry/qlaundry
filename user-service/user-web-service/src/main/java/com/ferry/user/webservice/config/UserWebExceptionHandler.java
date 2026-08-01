@@ -6,6 +6,8 @@ import com.ferry.user.domain.staff.login.FailedToLoginException;
 import com.ferry.user.domain.staff.refresh.ExpiredSessionException;
 import com.ferry.user.domain.staff.registration.TurnstileVerificationException;
 import com.ferry.user.domain.staff.submitotp.FailedToSubmitOtpException;
+import com.ferry.user.domain.tenant.confirmregistration.FailedToConfirmTenantException;
+import com.ferry.user.domain.tenant.resendconfirmation.FailedToResendConfirmationException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -63,6 +65,19 @@ public class UserWebExceptionHandler{
 	ResponseEntity<ErrorWebResponse> handleSubmitOtpError(FailedToSubmitOtpException e){
 		log.warn(e.getMessage(), e);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorWebResponse("Invalid OTP."));
+	}
+
+	@ExceptionHandler(FailedToConfirmTenantException.class)
+	ResponseEntity<ErrorWebResponse> handleConfirmTenantError(FailedToConfirmTenantException e){
+		log.warn(e.getMessage(), e);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.body(new ErrorWebResponse("Invalid or expired confirmation link."));
+	}
+
+	@ExceptionHandler(FailedToResendConfirmationException.class)
+	ResponseEntity<ErrorWebResponse> handleResendConfirmationError(FailedToResendConfirmationException e){
+		log.warn(e.getMessage(), e);
+		return ResponseEntity.ok(new ErrorWebResponse("A new confirmation email has been sent."));
 	}
 
 	@ExceptionHandler(ForbiddenActionException.class)

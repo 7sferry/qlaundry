@@ -1,6 +1,6 @@
 import {describe, expect, it, vi} from 'vitest';
 import type {AuthRepository} from '../domain/AuthRepository';
-import type {AuthSession, RegisterData, User} from '../domain/User';
+import type {RegisterData, User} from '../domain/User';
 import {RegisterUseCase} from './RegisterUseCase';
 
 const mockUser: User = {
@@ -11,11 +11,6 @@ const mockUser: User = {
 	staffRole: 'STAFF',
 };
 
-const mockSession: AuthSession = {
-	user: mockUser,
-	tokens: {accessToken: 'tok_new123'},
-};
-
 const validData: RegisterData = {
 	fullName: 'New User',
 	username: 'newuser',
@@ -24,7 +19,7 @@ const validData: RegisterData = {
 	captchaToken: 'turnstile-token',
 };
 
-function makeRepo(registerImpl = vi.fn().mockResolvedValue(mockSession)): AuthRepository {
+function makeRepo(registerImpl = vi.fn().mockResolvedValue(undefined)): AuthRepository {
 	return {
 		login: vi.fn(),
 		register: registerImpl,
@@ -71,14 +66,14 @@ describe('RegisterUseCase', () => {
 	});
 
 	it('delegates to the repository with valid data', async () => {
-		const registerFn = vi.fn().mockResolvedValue(mockSession);
+		const registerFn = vi.fn().mockResolvedValue(undefined);
 		const useCase = new RegisterUseCase(makeRepo(registerFn));
 
 		const result = await useCase.execute(validData);
 
 		expect(registerFn).toHaveBeenCalledOnce();
 		expect(registerFn).toHaveBeenCalledWith(validData);
-		expect(result).toBe(mockSession);
+		expect(result).toBeUndefined();
 	});
 
 	it('propagates errors thrown by the repository', async () => {

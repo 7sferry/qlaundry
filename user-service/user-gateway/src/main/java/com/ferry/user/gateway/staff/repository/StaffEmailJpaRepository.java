@@ -2,6 +2,7 @@ package com.ferry.user.gateway.staff.repository;
 
 import com.ferry.user.domain.staff.StaffEmailFilter;
 import com.ferry.user.domain.staff.forgottenpassword.StaffEmailForgottenPasswordProjection;
+import com.ferry.user.domain.tenant.resendconfirmation.TenantAdminContactProjection;
 import com.ferry.user.gateway.staff.entity.StaffEmailJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -33,6 +34,16 @@ public interface StaffEmailJpaRepository extends JpaRepository<StaffEmailJpaEnti
 			"ORDER BY se.id " +
 			"LIMIT 1")
 	Optional<StaffEmailForgottenPasswordProjection> findForForgottenPassword(@Param("username") String username);
+
+	@Query("select new com.ferry.user.domain.tenant.resendconfirmation.TenantAdminContactProjection(se.email, s.fullName, s.username) " +
+			"FROM StaffEmailJpaEntity se " +
+			"JOIN StaffJpaEntity s ON s.id = se.staffId " +
+			"WHERE s.tenantId = :tenantId AND s.roleId = 1 AND s.deleted IS FALSE " +
+			"AND se.deleted IS FALSE " +
+			"AND se.email IS NOT NULL " +
+			"ORDER BY se.id " +
+			"LIMIT 1")
+	Optional<TenantAdminContactProjection> findAdminContactForTenant(@Param("tenantId") String tenantId);
 
 	@Modifying
 	@Query("update StaffEmailJpaEntity e set e.deleted = true, e.updatedBy = :updatedBy, e.updatedAt = CURRENT_TIMESTAMP " +

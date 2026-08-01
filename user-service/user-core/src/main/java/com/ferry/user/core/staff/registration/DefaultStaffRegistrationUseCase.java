@@ -2,11 +2,9 @@ package com.ferry.user.core.staff.registration;
 
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.domain.common.*;
+import com.ferry.user.domain.common.exception.ForbiddenActionException;
 import com.ferry.user.domain.common.exception.InvalidUsernameException;
-import com.ferry.user.domain.staff.StaffAddressDomain;
-import com.ferry.user.domain.staff.StaffDomain;
-import com.ferry.user.domain.staff.StaffEmailDomain;
-import com.ferry.user.domain.staff.StaffPhoneDomain;
+import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.token.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +23,9 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 	@Override
 	public void execute(StaffRegistrationRequest request, UserPrincipal principal, StaffRegistrationPresenter presenter){
 		request.validate();
+		if(principal.role() != StaffRole.SUPER_STAFF){
+			throw new ForbiddenActionException("Only super staff can register staff");
+		}
 		StaffDomain registeredUser = registerStaff(request, principal);
 		saveEmail(request, registeredUser, principal);
 		saveAddress(request, registeredUser, principal);

@@ -10,6 +10,7 @@ import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.staff.refresh.ExpiredSessionException;
 import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -171,7 +172,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of(new StaffLoginProjection(USER_ID, USERNAME, "hashed-pw", FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue())))
 				.given(gateway).findById(USER_ID);
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya"))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
 		willReturn(NEW_ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(60L).given(tokenProcessor).getRotationDurationBeforeExpireInSeconds();
 		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();
@@ -193,7 +194,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of(new StaffLoginProjection(USER_ID, USERNAME, "hashed-pw", FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue())))
 				.given(gateway).findById(USER_ID);
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya"))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
 		willReturn(NEW_ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(60L).given(tokenProcessor).getRotationDurationBeforeExpireInSeconds();
 		willReturn(30L).given(tokenProcessor).getAccessDurationInSeconds();
@@ -247,7 +248,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of(new StaffLoginProjection(USER_ID, USERNAME, "hashed-pw", FULL_NAME, TENANT_ID, (short) 99)))
 				.given(gateway).findById(USER_ID);
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya"))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter))
 				.isInstanceOf(NotFoundException.class)
@@ -266,7 +267,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of(new StaffLoginProjection(USER_ID, USERNAME, "hashed-pw", FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue())))
 				.given(gateway).findById(USER_ID);
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya"))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
 		willReturn(NEW_ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(60L).given(tokenProcessor).getRotationDurationBeforeExpireInSeconds();
 		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();

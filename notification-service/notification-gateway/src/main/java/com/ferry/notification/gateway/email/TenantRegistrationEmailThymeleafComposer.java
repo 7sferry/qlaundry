@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -24,6 +26,7 @@ public class TenantRegistrationEmailThymeleafComposer implements TenantRegistrat
 			.withZone(ZoneId.of("Asia/Jakarta"));
 
 	private final ITemplateEngine templateEngine;
+	private final String confirmationBaseUrl;
 
 	@Override
 	public String compose(TenantRegistrationEmailRequest request){
@@ -33,7 +36,14 @@ public class TenantRegistrationEmailThymeleafComposer implements TenantRegistrat
 		context.setVariable("tenantName", request.tenantName());
 		context.setVariable("tenantDescription", request.tenantDescription());
 		context.setVariable("registeredAt", REGISTERED_AT_FORMATTER.format(request.registeredAt()));
+		context.setVariable("confirmUrl", buildConfirmUrl(request));
 		return templateEngine.process(TEMPLATE_NAME, context);
+	}
+
+	private String buildConfirmUrl(TenantRegistrationEmailRequest request){
+		return confirmationBaseUrl + "/confirm-registration?tenantId="
+				+ URLEncoder.encode(request.tenantId(), StandardCharsets.UTF_8)
+				+ "&token=" + URLEncoder.encode(request.confirmationToken(), StandardCharsets.UTF_8);
 	}
 
 }

@@ -40,6 +40,8 @@ public class UserSecurityConfig{
 			"/auth/staff/refresh",
 			"/auth/staff/forgottenPassword",
 			"/auth/staff/submitOtp",
+			"/auth/tenant/confirmRegistration",
+			"/auth/tenant/resendConfirmation",
 			"/auth/staff/resetPassword"
 	};
 

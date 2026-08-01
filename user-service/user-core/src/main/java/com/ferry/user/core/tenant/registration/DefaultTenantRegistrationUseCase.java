@@ -1,8 +1,11 @@
 package com.ferry.user.core.tenant.registration;
 
 import com.ferry.user.core.notification.EmailTriggerConfig;
+import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.staff.registration.StaffRegistrationRequest;
 import com.ferry.user.core.staff.registration.StaffRegistrationResponse;
+import com.ferry.user.core.tenant.constant.TenantConfirmationConstant;
+import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.EmailDomain;
 import com.ferry.user.domain.common.FullNameDomain;
@@ -14,6 +17,8 @@ import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.tenant.TenantDomain;
 import lombok.RequiredArgsConstructor;
 
+import java.util.HexFormat;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Juli 2026         *
@@ -21,9 +26,12 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCase{
+	private static final int CONFIRMATION_TOKEN_BYTES = 32;
+
 	private final TenantRegistrationGateway gateway;
 	private final UserEmailPublisher emailPublisher;
 	private final TurnstileVerificationGateway turnstileVerificationGateway;
+	private final UserCacheManager cacheManager;
 
 	@Override
 	public void execute(TenantRegistrationRequest request, TenantRegistrationPresenter presenter){
@@ -59,13 +67,22 @@ public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCa
 			return;
 		}
 		StaffDomain admin = registeredAdmin.user();
+		String confirmationToken = generateConfirmationToken();
+		cacheManager.set(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + tenant.id(), confirmationToken,
+				TenantConfirmationConstant.CONFIRM_TOKEN_DURATION);
 		TenantRegistrationEmailMessage message = new TenantRegistrationEmailMessage(request.emails().getFirst(),
 				admin.fullNameValue(), admin.usernameValue(), tenant.id(), tenant.fullNameValue(),
-				tenant.descriptionValue(), tenant.createdAt());
+				tenant.descriptionValue(), tenant.createdAt(), confirmationToken);
 		EmailTriggerConfig config = new EmailTriggerConfig(message, tenant.createdBy(),
 				EmailTriggerType.TENANT_REGISTRATION, new EmailDomain(message.recipient()));
 		EmailTriggerDomain trigger = emailPublisher.save(config);
 		emailPublisher.publish(trigger);
+	}
+
+	private String generateConfirmationToken(){
+		byte[] tokenBytes = new byte[CONFIRMATION_TOKEN_BYTES];
+		PasswordConstant.getRandom().nextBytes(tokenBytes);
+		return HexFormat.of().formatHex(tokenBytes);
 	}
 
 }

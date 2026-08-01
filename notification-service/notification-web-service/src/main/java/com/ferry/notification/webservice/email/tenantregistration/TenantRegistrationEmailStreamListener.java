@@ -35,8 +35,9 @@ public class TenantRegistrationEmailStreamListener implements StreamListener<Str
 			Map<String, String> value = record.getValue();
 			TenantRegistrationEmailMessage message = jsonManager.readValue(value.get(PAYLOAD_FIELD), TenantRegistrationEmailMessage.class);
 			TenantRegistrationEmailRequest request = new TenantRegistrationEmailRequest(value.get(TRIGGER_ID_FIELD),
-					message.recipient(), message.staffFullName(), message.staffUsername(), message.tenantName(),
-					message.tenantDescription(), message.registeredAt());
+					message.recipient(), message.staffFullName(), message.staffUsername(), message.tenantId(),
+					message.tenantName(), message.tenantDescription(), message.registeredAt(),
+					message.confirmationToken());
 			TenantRegistrationEmailStreamPresenter presenter = new TenantRegistrationEmailStreamPresenter();
 			tenantRegistrationEmailUseCase.execute(request, presenter);
 			stringRedisTemplate.opsForStream().acknowledge(streamKey, group, record.getId());

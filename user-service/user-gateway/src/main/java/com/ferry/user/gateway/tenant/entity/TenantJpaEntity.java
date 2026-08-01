@@ -1,7 +1,11 @@
 package com.ferry.user.gateway.tenant.entity;
 
+import com.ferry.user.domain.common.DescriptionDomain;
+import com.ferry.user.domain.common.FullNameDomain;
 import com.ferry.user.domain.tenant.TenantDomain;
+import com.ferry.user.domain.tenant.TenantStatus;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,6 +30,11 @@ public class TenantJpaEntity{
 	private String fullName;
 	@Column
 	private String description;
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	private TenantStatusJpaEntity status;
+	@Setter(AccessLevel.PRIVATE)
+	@Column(nullable = false, name = "status_id", insertable = false, updatable = false, columnDefinition = "SMALLINT DEFAULT 1")
+	private short statusId;
 	@Version
 	private Integer version;
 	@Column(nullable = false)
@@ -39,7 +48,18 @@ public class TenantJpaEntity{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
-	public static TenantJpaEntity construct(String id, TenantDomain tenant){
+	public void setStatus(TenantStatusJpaEntity status){
+		this.status = status;
+		this.statusId = status.getId();
+	}
+
+	public static TenantDomain construct(TenantJpaEntity saved){
+		return new TenantDomain(saved.id, new FullNameDomain(saved.fullName), new DescriptionDomain(saved.description),
+				TenantStatus.findByValue(saved.statusId).orElseThrow(), saved.version, saved.deleted, saved.createdAt,
+				saved.createdBy, saved.updatedAt, saved.updatedBy);
+	}
+
+	public static TenantJpaEntity construct(String id, TenantDomain tenant, TenantStatusJpaEntity status){
 		TenantJpaEntity entity = new TenantJpaEntity();
 		entity.id = id;
 		entity.createdAt = tenant.createdAt();
@@ -48,6 +68,8 @@ public class TenantJpaEntity{
 		entity.updatedBy = entity.id;
 		entity.description = tenant.descriptionValue();
 		entity.fullName = tenant.fullNameValue();
+		entity.status = status;
+		entity.statusId = status.getId();
 		entity.version = tenant.version();
 		entity.deleted = tenant.deleted();
 		return entity;

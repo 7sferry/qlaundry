@@ -13,6 +13,7 @@ import java.time.Instant;
 
 public record TenantRegistrationEmailRequest(@NotBlank String triggerId, @NotBlank String recipient,
                                              @NotBlank String staffFullName, @NotBlank String staffUsername,
-                                             @NotBlank String tenantName, String tenantDescription,
-                                             @NotNull Instant registeredAt) implements NotificationValidation{
+                                             @NotBlank String tenantId, @NotBlank String tenantName,
+                                             String tenantDescription, @NotNull Instant registeredAt,
+                                             @NotBlank String confirmationToken) implements NotificationValidation{
 }

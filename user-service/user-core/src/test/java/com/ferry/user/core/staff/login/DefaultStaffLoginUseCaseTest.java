@@ -13,6 +13,7 @@ import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.login.FailedToLoginException;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -129,10 +130,6 @@ class DefaultStaffLoginUseCaseTest{
 				FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue());
 		willReturn(Optional.of(staff)).given(gateway).findByUsername(new UsernameDomain(USERNAME));
 		willReturn(true).given(passwordTool).matches(eq(PASSWORD), any());
-		willReturn(REFRESH_TOKEN).given(tokenProcessor).generateRefreshToken();
-		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
-		willReturn(86400L).given(tokenProcessor).getRefreshDurationInSeconds();
-		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(UserSessionDomain.class));
 		willReturn(Optional.empty()).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
 
 		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
@@ -141,6 +138,24 @@ class DefaultStaffLoginUseCaseTest{
 		thenSoftly(softly -> softly.then(thrown.getCause())
 				.isInstanceOf(NotFoundException.class)
 				.hasMessage("tenant not found"));
+		then(gateway).should(never()).save(any(UserSessionDomain.class));
+		then(presenter).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void givenTenantNotConfirmed_thenThrowsFailedToLoginExceptionWithTenantNotConfirmedMessage(){
+		StaffLoginProjection staff = new StaffLoginProjection(USER_ID, USERNAME, HASHED_PASSWORD,
+				FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue());
+		willReturn(Optional.of(staff)).given(gateway).findByUsername(new UsernameDomain(USERNAME));
+		willReturn(true).given(passwordTool).matches(eq(PASSWORD), any());
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", TenantStatus.PENDING.getValue())))
+				.given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
+
+		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter));
+
+		thenSoftly(softly -> softly.then(thrown).hasMessage("tenant not confirmed"));
+		then(gateway).should(never()).save(any(UserSessionDomain.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -154,7 +169,8 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(86400L).given(tokenProcessor).getRefreshDurationInSeconds();
 		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(UserSessionDomain.class));
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan"))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", TenantStatus.ACTIVE.getValue())))
+				.given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
 
 		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
 				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter));
@@ -175,7 +191,8 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(86400L).given(tokenProcessor).getRefreshDurationInSeconds();
 		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(UserSessionDomain.class));
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan"))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", TenantStatus.ACTIVE.getValue())))
+				.given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
 		willReturn(ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();
 
@@ -198,7 +215,8 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(86400L).given(tokenProcessor).getRefreshDurationInSeconds();
 		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(UserSessionDomain.class));
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan"))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", TenantStatus.ACTIVE.getValue())))
+				.given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
 		willReturn(ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(30L).given(tokenProcessor).getAccessDurationInSeconds();
 

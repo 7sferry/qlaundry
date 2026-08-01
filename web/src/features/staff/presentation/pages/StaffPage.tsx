@@ -20,6 +20,7 @@ export default function StaffPage() {
 	const toast = useToast();
 
 	const canDelete = (s: Staff) => user?.staffRole === 'SUPER_STAFF' && s.username !== user.username;
+	const canAdd = user?.staffRole === 'SUPER_STAFF';
 
 	const [search, setSearch] = useState('');
 	const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
@@ -32,11 +33,11 @@ export default function StaffPage() {
 	const visible = staff.filter((s) => {
 		const q = search.toLowerCase();
 		return (
-				!q ||
-				s.fullName.toLowerCase().includes(q) ||
-				s.username.toLowerCase().includes(q) ||
-				s.phones.some((p) => p.includes(q)) ||
-				s.emails.some((e) => e.toLowerCase().includes(q))
+			!q ||
+			s.fullName.toLowerCase().includes(q) ||
+			s.username.toLowerCase().includes(q) ||
+			s.phones.some((p) => p.includes(q)) ||
+			s.emails.some((e) => e.toLowerCase().includes(q))
 		);
 	});
 
@@ -53,6 +54,10 @@ export default function StaffPage() {
 
 	const handleSave = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
+		if (form.password !== form.confirmPassword) {
+			toast.error('Password confirmation does not match.');
+			return;
+		}
 		setSaving(true);
 		try {
 			const input: CreateStaffInput = {
@@ -88,7 +93,7 @@ export default function StaffPage() {
 	};
 
 	const update = (key: keyof StaffFormData) => (
-			e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
 	) => setForm((prev) => ({...prev, [key]: e.target.value}));
 
 	const handleCancel = () => {
@@ -97,51 +102,51 @@ export default function StaffPage() {
 	};
 
 	return (
-			<>
-				<PageHeader
-						title="Staff management"
-						description={`${staff.length} staff registered`}
-						actions={
-							<Button onClick={openAdd}>
-								<UserPlus size={15}/> Add staff
-							</Button>
-						}
+		<>
+			<PageHeader
+				title="Staff management"
+				description={`${staff.length} staff registered`}
+				actions={
+					(canAdd && <Button onClick={openAdd}>
+						<UserPlus size={15}/> Add staff
+					</Button>)
+				}
+			/>
+
+			<div className="grid grid--stats">
+				<StatCard icon={<Users size={20}/>} value={staff.length} label="Total staff" hint="Registered"/>
+				<StatCard icon={<UserPlus size={20}/>} value={newThisMonth} label="New staff"
+				          hint="This month"/>
+			</div>
+
+			<StaffTable
+				staff={visible}
+				search={search}
+				onSearchChange={setSearch}
+				onSelect={setSelectedStaff}
+				onDelete={(s) => void handleDelete(s)}
+				onAdd={openAdd}
+				canDelete={canDelete}
+			/>
+
+			<Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add new staff">
+				<StaffForm
+					form={form}
+					update={update}
+					onSubmit={handleSave}
+					onCancel={handleCancel}
+					saving={saving}
+					editMode={false}
 				/>
+			</Modal>
 
-				<div className="grid grid--stats">
-					<StatCard icon={<Users size={20}/>} value={staff.length} label="Total staff" hint="Registered"/>
-					<StatCard icon={<UserPlus size={20}/>} value={newThisMonth} label="New staff"
-					          hint="This month"/>
-				</div>
-
-				<StaffTable
-						staff={visible}
-						search={search}
-						onSearchChange={setSearch}
-						onSelect={setSelectedStaff}
-						onDelete={(s) => void handleDelete(s)}
-						onAdd={openAdd}
-						canDelete={canDelete}
-				/>
-
-				<Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add new staff">
-					<StaffForm
-							form={form}
-							update={update}
-							onSubmit={handleSave}
-							onCancel={handleCancel}
-							saving={saving}
-							editMode={false}
-					/>
-				</Modal>
-
-				<StaffDetailDrawer
-						staff={selectedStaff}
-						open={!!selectedStaff}
-						onClose={() => setSelectedStaff(null)}
-						onDelete={(s) => void handleDelete(s)}
-						canDelete={selectedStaff ? canDelete(selectedStaff) : false}
-				/>
-			</>
+			<StaffDetailDrawer
+				staff={selectedStaff}
+				open={!!selectedStaff}
+				onClose={() => setSelectedStaff(null)}
+				onDelete={(s) => void handleDelete(s)}
+				canDelete={selectedStaff ? canDelete(selectedStaff) : false}
+			/>
+		</>
 	);
 }

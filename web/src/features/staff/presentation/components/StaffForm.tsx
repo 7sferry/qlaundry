@@ -30,13 +30,22 @@ export default function StaffForm({form, update, onSubmit, onCancel, saving, edi
 					</div>
 				</Field>
 				{!editMode && (
-						<Field label="Password" htmlFor="sfPassword">
-							<div className="input-with-icon">
-								<Lock size={15}/>
-								<PasswordInput id="sfPassword" required minLength={8} value={form.password}
-								       onChange={update('password')} placeholder="at least 8 characters"/>
-							</div>
-						</Field>
+						<>
+							<Field label="Password" htmlFor="sfPassword">
+								<div className="input-with-icon">
+									<Lock size={15}/>
+									<PasswordInput id="sfPassword" required minLength={8} value={form.password}
+									       onChange={update('password')} placeholder="at least 8 characters"/>
+								</div>
+							</Field>
+							<Field label="Confirm password" htmlFor="sfConfirmPassword">
+								<div className="input-with-icon">
+									<Lock size={15}/>
+									<PasswordInput id="sfConfirmPassword" required minLength={8} value={form.confirmPassword}
+									       onChange={update('confirmPassword')} placeholder="repeat password"/>
+								</div>
+							</Field>
+						</>
 				)}
 				{editMode && (
 						<>

@@ -3,6 +3,8 @@ package com.ferry.user.core.tenant.registration;
 import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.registration.StaffRegistrationRequest;
 import com.ferry.user.core.staff.registration.StaffRegistrationResponse;
+import com.ferry.user.core.tenant.constant.TenantConfirmationConstant;
+import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.EmailDomain;
 import com.ferry.user.domain.common.FullNameDomain;
@@ -53,6 +55,8 @@ class DefaultTenantRegistrationUseCaseTest{
 	UserEmailPublisher emailPublisher;
 	@Mock
 	TurnstileVerificationGateway turnstileVerificationGateway;
+	@Mock
+	UserCacheManager cacheManager;
 	@InjectMocks
 	DefaultTenantRegistrationUseCase useCase;
 	@Mock
@@ -114,7 +118,7 @@ class DefaultTenantRegistrationUseCaseTest{
 		willReturn(true).given(turnstileVerificationGateway).verify(CAPTCHA_TOKEN);
 		willAnswer(invocation -> {
 			TenantDomain arg = invocation.getArgument(0);
-			return new TenantDomain(TENANT_ID, arg.fullName(), arg.description(), null, false,
+			return new TenantDomain(TENANT_ID, arg.fullName(), arg.description(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
 		}).given(gateway).save(any(TenantDomain.class));
 		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain("hashed"),
@@ -142,7 +146,7 @@ class DefaultTenantRegistrationUseCaseTest{
 		willReturn(true).given(turnstileVerificationGateway).verify(CAPTCHA_TOKEN);
 		willAnswer(invocation -> {
 			TenantDomain arg = invocation.getArgument(0);
-			return new TenantDomain(TENANT_ID, arg.fullName(), arg.description(), null, false,
+			return new TenantDomain(TENANT_ID, arg.fullName(), arg.description(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
 		}).given(gateway).save(any(TenantDomain.class));
 		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain("hashed"),
@@ -166,7 +170,7 @@ class DefaultTenantRegistrationUseCaseTest{
 		willReturn(true).given(turnstileVerificationGateway).verify(CAPTCHA_TOKEN);
 		willAnswer(invocation -> {
 			TenantDomain arg = invocation.getArgument(0);
-			return new TenantDomain(TENANT_ID, arg.fullName(), arg.description(), null, false,
+			return new TenantDomain(TENANT_ID, arg.fullName(), arg.description(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
 		}).given(gateway).save(any(TenantDomain.class));
 		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain("hashed"),
@@ -181,6 +185,8 @@ class DefaultTenantRegistrationUseCaseTest{
 		then(emailPublisher).should().publish(trigger);
 		EmailTriggerConfig config = emailConfigCaptor.getValue();
 		TenantRegistrationEmailMessage message = (TenantRegistrationEmailMessage) config.payload();
+		then(cacheManager).should().set(eq(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + TENANT_ID),
+				eq(message.confirmationToken()), eq(TenantConfirmationConstant.CONFIRM_TOKEN_DURATION));
 		thenSoftly(softly -> {
 			softly.then(config.triggerType()).isEqualTo(EmailTriggerType.TENANT_REGISTRATION);
 			softly.then(config.recipient().value()).isEqualTo(EMAIL);
@@ -189,6 +195,7 @@ class DefaultTenantRegistrationUseCaseTest{
 			softly.then(message.staffUsername()).isEqualTo(USERNAME);
 			softly.then(message.tenantId()).isEqualTo(TENANT_ID);
 			softly.then(message.tenantName()).isEqualTo(TENANT_NAME);
+			softly.then(message.confirmationToken()).isNotBlank();
 		});
 	}
 
@@ -200,7 +207,7 @@ class DefaultTenantRegistrationUseCaseTest{
 		willReturn(true).given(turnstileVerificationGateway).verify(CAPTCHA_TOKEN);
 		willAnswer(invocation -> {
 			TenantDomain arg = invocation.getArgument(0);
-			return new TenantDomain(TENANT_ID, arg.fullName(), arg.description(), null, false,
+			return new TenantDomain(TENANT_ID, arg.fullName(), arg.description(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
 		}).given(gateway).save(any(TenantDomain.class));
 		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain("hashed"),

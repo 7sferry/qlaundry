@@ -4,7 +4,7 @@
  ************************/
 
 import React, {useState} from 'react';
-import {useNavigate} from 'react-router-dom';
+import {useLocation, useNavigate} from 'react-router-dom';
 import {ArrowRight, LockKeyhole, User2, WashingMachine} from 'lucide-react';
 import {Button, Field, Input, PasswordInput} from '@/core/ui';
 import {useAuth} from '../useAuth';
@@ -12,6 +12,8 @@ import {useAuth} from '../useAuth';
 export default function LoginPage() {
 	const {login} = useAuth();
 	const navigate = useNavigate();
+	const location = useLocation();
+	const notice = (location.state as {notice?: string} | null)?.notice;
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
 	const [error, setError] = useState('');
@@ -58,6 +60,7 @@ export default function LoginPage() {
 					<h2>Sign in to the dashboard</h2>
 					<p className="muted auth-intro">Manage all your laundry operations from here.</p>
 
+					{notice && !error && <div className="alert alert--info">{notice}</div>}
 					{error && <div className="alert alert--error">{error}</div>}
 
 					<Field label="Username" htmlFor="username">

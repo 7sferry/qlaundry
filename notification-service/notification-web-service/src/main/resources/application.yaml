@@ -42,6 +42,8 @@ app:
   mail:
     sender: email@email.com
   notification:
+    confirmation:
+      base-url: http://localhost:8100
     stream:
       email:
         key: 'notification:email:'

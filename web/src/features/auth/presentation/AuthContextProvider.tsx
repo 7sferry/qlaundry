@@ -39,8 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
 	}, []);
 
 	const register = useCallback(async (data: RegisterData) => {
-		const session = await registerUseCase.execute(data);
-		setUser(session.user);
+		await registerUseCase.execute(data);
 	}, []);
 
 	const logout = useCallback(async () => {

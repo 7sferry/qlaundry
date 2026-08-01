@@ -10,6 +10,7 @@ import {useAuth} from '@/features/auth/presentation/useAuth';
 import LoginPage from '@/features/auth/presentation/pages/LoginPage';
 import RegisterPage from '@/features/auth/presentation/pages/RegisterPage';
 import ForgotPasswordPage from '@/features/auth/presentation/pages/ForgotPasswordPage';
+import ConfirmRegistrationPage from '@/features/auth/presentation/pages/ConfirmRegistrationPage';
 import DashboardPage from '@/features/dashboard/presentation/pages/DashboardPage';
 import CreateOrderPage from '@/features/orders/presentation/pages/CreateOrderPage';
 import OrderHistoryPage from '@/features/orders/presentation/pages/OrderHistoryPage';
@@ -70,6 +71,8 @@ export default function App() {
           <AuthProvider>
             <BrowserRouter>
               <Routes>
+                <Route path="/confirm-registration" element={<ConfirmRegistrationPage/>}/>
+
                 <Route element={<AuthLayout/>}>
                   <Route path="/login" element={<LoginPage/>}/>
                   <Route path="/register" element={<RegisterPage/>}/>

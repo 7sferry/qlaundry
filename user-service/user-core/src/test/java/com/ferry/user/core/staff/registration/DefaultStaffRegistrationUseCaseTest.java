@@ -4,6 +4,7 @@ import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.domain.common.HashedPasswordDomain;
 import com.ferry.user.domain.common.RawPasswordDomain;
 import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.exception.ForbiddenActionException;
 import com.ferry.user.domain.common.exception.InvalidPasswordException;
 import com.ferry.user.domain.common.exception.InvalidUsernameException;
 import com.ferry.user.domain.staff.StaffAddressDomain;
@@ -110,6 +111,20 @@ class DefaultStaffRegistrationUseCaseTest{
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(ConstraintViolationException.class));
+
+		then(gateway).shouldHaveNoInteractions();
+		then(presenter).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void givenNonSuperStaffRolePrincipal_thenThrowsConstraintViolationException(){
+		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
+				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
+		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+				.role(StaffRole.STAFF).build();
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(ForbiddenActionException.class));
 
 		then(gateway).shouldHaveNoInteractions();
 		then(presenter).shouldHaveNoInteractions();

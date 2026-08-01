@@ -98,6 +98,9 @@ export default function RegisterPage() {
 				address: form.address,
 				captchaToken,
 			});
+			navigate('/login', {
+				state: {notice: 'Registration successful. Check your email to confirm your account before signing in.'},
+			});
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Registration failed.');
 			// Turnstile tokens are single-use — force a fresh challenge on retry.

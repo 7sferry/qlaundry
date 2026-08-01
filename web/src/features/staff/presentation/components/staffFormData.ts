@@ -8,6 +8,7 @@ import type {StaffRole} from '../../domain/Staff';
 export interface StaffFormData {
 	username: string;
 	password: string;
+	confirmPassword: string;
 	currentPassword: string;
 	newPassword: string;
 	confirmNewPassword: string;
@@ -22,6 +23,7 @@ export interface StaffFormData {
 export const emptyStaffForm: StaffFormData = {
 	username: '',
 	password: '',
+	confirmPassword: '',
 	currentPassword: '',
 	newPassword: '',
 	confirmNewPassword: '',

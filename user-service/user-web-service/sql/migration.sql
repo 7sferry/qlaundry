@@ -29,3 +29,12 @@ CREATE TABLE email_triggers
     updated_by VARCHAR(50)  NOT NULL,
     updated_at TIMESTAMPTZ  NOT NULL
 );
+
+CREATE TABLE tenant_statuses
+(
+    id   SMALLINT PRIMARY KEY,
+    name VARCHAR(25) NOT NULL
+);
+
+ALTER TABLE tenants
+    ADD COLUMN status_id SMALLINT NOT NULL DEFAULT 1 REFERENCES tenant_statuses (id);

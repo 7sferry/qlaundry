@@ -65,6 +65,8 @@ JPA runs with `ddl-auto: update`, so tables are created automatically on first r
 
 ```
 POST   /api/auth/tenant/registration
+GET    /api/auth/tenant/confirmRegistration
+POST   /api/auth/tenant/resendConfirmation
 POST   /api/auth/staff/registration
 POST   /api/auth/staff/login
 POST   /api/auth/staff/refresh

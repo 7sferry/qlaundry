@@ -62,8 +62,9 @@ public class NotificationWebConfig{
 	}
 
 	@Bean
-	TenantRegistrationEmailComposer tenantRegistrationEmailComposer(ITemplateEngine emailTemplateEngine){
-		return new TenantRegistrationEmailThymeleafComposer(emailTemplateEngine);
+	TenantRegistrationEmailComposer tenantRegistrationEmailComposer(ITemplateEngine emailTemplateEngine,
+	                                                                @Value("${app.notification.confirmation.base-url}") String confirmationBaseUrl){
+		return new TenantRegistrationEmailThymeleafComposer(emailTemplateEngine, confirmationBaseUrl);
 	}
 
 	@Bean

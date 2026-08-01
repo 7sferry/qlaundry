@@ -9,5 +9,5 @@ import java.time.Instant;
 
 public record TenantRegistrationEmailMessage(String recipient, String staffFullName, String staffUsername,
                                              String tenantId, String tenantName, String tenantDescription,
-                                             Instant registeredAt){
+                                             Instant registeredAt, String confirmationToken){
 }

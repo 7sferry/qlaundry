@@ -32,6 +32,12 @@ import com.ferry.user.core.staff.submitotp.StaffSubmitOtpUseCase;
 import com.ferry.user.core.staff.update.DefaultStaffUpdateUseCase;
 import com.ferry.user.core.staff.update.StaffUpdateGateway;
 import com.ferry.user.core.staff.update.StaffUpdateUseCase;
+import com.ferry.user.core.tenant.confirmregistration.DefaultTenantConfirmRegistrationUseCase;
+import com.ferry.user.core.tenant.confirmregistration.TenantConfirmRegistrationGateway;
+import com.ferry.user.core.tenant.confirmregistration.TenantConfirmRegistrationUseCase;
+import com.ferry.user.core.tenant.resendconfirmation.DefaultTenantResendConfirmationUseCase;
+import com.ferry.user.core.tenant.resendconfirmation.TenantResendConfirmationGateway;
+import com.ferry.user.core.tenant.resendconfirmation.TenantResendConfirmationUseCase;
 import com.ferry.user.core.tenant.registration.DefaultTenantRegistrationUseCase;
 import com.ferry.user.core.tenant.registration.UserEmailPublisher;
 import com.ferry.user.core.tenant.registration.TenantRegistrationGateway;
@@ -49,8 +55,11 @@ import com.ferry.user.gateway.session.repository.UserSessionTypeJpaRepository;
 import com.ferry.user.gateway.staff.*;
 import com.ferry.user.gateway.staff.repository.*;
 import com.ferry.user.gateway.tenant.CloudflareTurnstileGateway;
+import com.ferry.user.gateway.tenant.TenantConfirmRegistrationJpaGateway;
 import com.ferry.user.gateway.tenant.TenantRegistrationJpaGateway;
+import com.ferry.user.gateway.tenant.TenantResendConfirmationJpaGateway;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
+import com.ferry.user.gateway.tenant.repository.TenantStatusJpaRepository;
 import com.ferry.user.webservice.tools.Argon2PasswordTool;
 import com.ferry.user.webservice.tools.DefaultUserCacheManager;
 import com.ferry.utils.cache.CacheHandler;
@@ -80,8 +89,10 @@ public class UserWebConfig{
 	@Bean
 	TenantRegistrationGateway tenantRegistrationGateway(IdGenerator idGenerator,
 	                                                    TenantJpaRepository tenantJpaRepository,
+	                                                    TenantStatusJpaRepository tenantStatusJpaRepository,
 	                                                    StaffRegistrationUseCase staffRegistrationUseCase){
-		return new TenantRegistrationJpaGateway(idGenerator, tenantJpaRepository, staffRegistrationUseCase);
+		return new TenantRegistrationJpaGateway(idGenerator, tenantJpaRepository, tenantStatusJpaRepository,
+				staffRegistrationUseCase);
 	}
 
 	@Bean
@@ -100,8 +111,35 @@ public class UserWebConfig{
 	@Bean
 	TenantRegistrationUseCase tenantRegistrationUseCase(TenantRegistrationGateway tenantRegistrationGateway,
 	                                                    UserEmailPublisher emailPublisher,
-	                                                    TurnstileVerificationGateway turnstileVerificationGateway){
-		return new DefaultTenantRegistrationUseCase(tenantRegistrationGateway, emailPublisher, turnstileVerificationGateway);
+	                                                    TurnstileVerificationGateway turnstileVerificationGateway,
+	                                                    UserCacheManager userCacheManager){
+		return new DefaultTenantRegistrationUseCase(tenantRegistrationGateway, emailPublisher,
+				turnstileVerificationGateway, userCacheManager);
+	}
+
+	@Bean
+	TenantConfirmRegistrationGateway tenantConfirmRegistrationGateway(TenantJpaRepository tenantJpaRepository,
+	                                                                  TenantStatusJpaRepository tenantStatusJpaRepository){
+		return new TenantConfirmRegistrationJpaGateway(tenantJpaRepository, tenantStatusJpaRepository);
+	}
+
+	@Bean
+	TenantConfirmRegistrationUseCase tenantConfirmRegistrationUseCase(TenantConfirmRegistrationGateway tenantConfirmRegistrationGateway,
+	                                                                  UserCacheManager userCacheManager){
+		return new DefaultTenantConfirmRegistrationUseCase(tenantConfirmRegistrationGateway, userCacheManager);
+	}
+
+	@Bean
+	TenantResendConfirmationGateway tenantResendConfirmationGateway(TenantJpaRepository tenantJpaRepository,
+	                                                                StaffEmailJpaRepository staffEmailJpaRepository){
+		return new TenantResendConfirmationJpaGateway(tenantJpaRepository, staffEmailJpaRepository);
+	}
+
+	@Bean
+	TenantResendConfirmationUseCase tenantResendConfirmationUseCase(TenantResendConfirmationGateway tenantResendConfirmationGateway,
+	                                                                UserEmailPublisher emailPublisher,
+	                                                                UserCacheManager userCacheManager){
+		return new DefaultTenantResendConfirmationUseCase(tenantResendConfirmationGateway, emailPublisher, userCacheManager);
 	}
 
 	@Bean

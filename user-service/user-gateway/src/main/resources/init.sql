@@ -14,3 +14,6 @@ INSERT INTO email_trigger_types (id, name) VALUES (2, 'FORGOTTEN_PASSWORD');
 
 INSERT INTO email_trigger_statuses (id, name) VALUES (1, 'CREATED');
 INSERT INTO email_trigger_statuses (id, name) VALUES (2, 'PUBLISHED');
+
+INSERT INTO tenant_statuses (id, name) VALUES (0, 'PENDING');
+INSERT INTO tenant_statuses (id, name) VALUES (1, 'ACTIVE');

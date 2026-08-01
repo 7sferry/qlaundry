@@ -69,7 +69,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 		return {user, tokens};
 	}
 
-	async register(data: RegisterData): Promise<AuthSession> {
+	async register(data: RegisterData): Promise<void> {
 		await httpClient.post<{ tenantName: string; username: string }>('/auth/tenant/registration', {
 			fullName: data.fullName,
 			tenantName: data.outletName,
@@ -80,7 +80,6 @@ export class AuthRepositoryImpl implements AuthRepository {
 			addresses: data.address ? [data.address] : [],
 			captchaToken: data.captchaToken,
 		});
-		return await this.login({username: data.username, password: data.password});
 	}
 
 	async logout(): Promise<void> {
@@ -118,6 +117,17 @@ export class AuthRepositoryImpl implements AuthRepository {
 			// expired or already consumed — the flow must restart from the top.
 			throw new ResetSessionExpiredError();
 		}
+	}
+
+	async confirmTenantRegistration(tenantId: string, token: string): Promise<void> {
+		await httpClient.get<{ message: string }>(
+				`/auth/tenant/confirmRegistration?tenantId=${encodeURIComponent(tenantId)}&token=${encodeURIComponent(token)}`,
+		);
+	}
+
+	async resendTenantConfirmation(tenantId: string): Promise<string> {
+		const response = await httpClient.post<{ message: string }>('/auth/tenant/resendConfirmation', {tenantId});
+		return response.message;
 	}
 
 	async getProfile(): Promise<User> {
