@@ -95,9 +95,10 @@ public class UserWebConfig{
 	TenantRegistrationGateway tenantRegistrationGateway(IdGenerator idGenerator,
 	                                                    TenantJpaRepository tenantJpaRepository,
 	                                                    TenantStatusJpaRepository tenantStatusJpaRepository,
+	                                                    StaffJpaRepository staffJpaRepository,
 	                                                    StaffRegistrationUseCase staffRegistrationUseCase){
 		return new TenantRegistrationJpaGateway(idGenerator, tenantJpaRepository, tenantStatusJpaRepository,
-				staffRegistrationUseCase);
+				staffJpaRepository, staffRegistrationUseCase);
 	}
 
 	@Bean

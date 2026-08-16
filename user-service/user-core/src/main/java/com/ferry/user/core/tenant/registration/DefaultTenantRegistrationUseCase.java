@@ -9,6 +9,8 @@ import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.EmailDomain;
 import com.ferry.user.domain.common.FullNameDomain;
+import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.exception.InvalidUsernameException;
 import com.ferry.user.domain.staff.registration.TurnstileVerificationException;
 import com.ferry.user.domain.notification.EmailTriggerDomain;
 import com.ferry.user.domain.notification.EmailTriggerType;
@@ -56,9 +58,13 @@ public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCa
 	}
 
 	private TenantDomain saveTenant(TenantRegistrationRequest request){
+		UsernameDomain username = new UsernameDomain(request.username());
+		if(gateway.existsByUsername(username)){
+			throw new InvalidUsernameException("Username already exists");
+		}
 		FullNameDomain name = new FullNameDomain(request.tenantName());
 		DescriptionDomain description = new DescriptionDomain(request.description());
-		TenantDomain tenant = TenantDomain.register(name, description);
+		TenantDomain tenant = TenantDomain.register(username, name, description);
 		return gateway.save(tenant);
 	}
 

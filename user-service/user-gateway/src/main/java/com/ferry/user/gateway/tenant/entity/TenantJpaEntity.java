@@ -2,6 +2,7 @@ package com.ferry.user.gateway.tenant.entity;
 
 import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.FullNameDomain;
+import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.tenant.TenantDomain;
 import com.ferry.user.domain.tenant.TenantStatus;
 import jakarta.persistence.*;
@@ -26,6 +27,8 @@ public class TenantJpaEntity{
 	@Id
 	@Column(nullable = false, length = 50)
 	private String id;
+	@Column(unique = true, length = 50)
+	private String username;
 	@Column(nullable = false, length = 100)
 	private String fullName;
 	@Column
@@ -54,9 +57,9 @@ public class TenantJpaEntity{
 	}
 
 	public static TenantDomain construct(TenantJpaEntity saved){
-		return new TenantDomain(saved.id, new FullNameDomain(saved.fullName), new DescriptionDomain(saved.description),
-				TenantStatus.findByValue(saved.statusId).orElseThrow(), saved.version, saved.deleted, saved.createdAt,
-				saved.createdBy, saved.updatedAt, saved.updatedBy);
+		return new TenantDomain(saved.id, new UsernameDomain(saved.username), new FullNameDomain(saved.fullName),
+				new DescriptionDomain(saved.description), TenantStatus.findByValue(saved.statusId).orElseThrow(),
+				saved.version, saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
 	}
 
 	public static TenantJpaEntity construct(String id, TenantDomain tenant, TenantStatusJpaEntity status){
@@ -66,6 +69,7 @@ public class TenantJpaEntity{
 		entity.updatedAt = tenant.updatedAt();
 		entity.createdBy = entity.id;
 		entity.updatedBy = entity.id;
+		entity.username = tenant.usernameValue();
 		entity.description = tenant.descriptionValue();
 		entity.fullName = tenant.fullNameValue();
 		entity.status = status;

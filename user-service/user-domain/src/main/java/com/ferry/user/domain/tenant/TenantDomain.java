@@ -2,6 +2,7 @@ package com.ferry.user.domain.tenant;
 
 import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.FullNameDomain;
+import com.ferry.user.domain.common.UsernameDomain;
 
 import java.time.Instant;
 
@@ -10,19 +11,23 @@ import java.time.Instant;
  * on Juli 2026         *
  ************************/
 
-public record TenantDomain(String id, FullNameDomain fullName, DescriptionDomain description, TenantStatus status,
-                           Integer version, boolean deleted, Instant createdAt, String createdBy, Instant updatedAt,
-                           String updatedBy){
+public record TenantDomain(String id, UsernameDomain username, FullNameDomain fullName, DescriptionDomain description,
+                           TenantStatus status, Integer version, boolean deleted, Instant createdAt, String createdBy,
+                           Instant updatedAt, String updatedBy){
 
 	public TenantDomain {
-		if(fullName == null){
-			throw new IllegalArgumentException("Name must not be null");
+		if(username == null || fullName == null){
+			throw new IllegalArgumentException("Username and name must not be null");
 		}
 	}
 
-	public static TenantDomain register(FullNameDomain name, DescriptionDomain description){
+	public static TenantDomain register(UsernameDomain username, FullNameDomain name, DescriptionDomain description){
 		Instant now = Instant.now();
-		return new TenantDomain(null, name, description, TenantStatus.PENDING, null, false, now, null, now, null);
+		return new TenantDomain(null, username, name, description, TenantStatus.PENDING, null, false, now, null, now, null);
+	}
+
+	public String usernameValue(){
+		return username.value();
 	}
 
 	public String descriptionValue(){
@@ -34,7 +39,7 @@ public record TenantDomain(String id, FullNameDomain fullName, DescriptionDomain
 	}
 
 	public TenantDomain activate(){
-		return new TenantDomain(id, fullName, description, TenantStatus.ACTIVE, version, deleted, createdAt,
+		return new TenantDomain(id, username, fullName, description, TenantStatus.ACTIVE, version, deleted, createdAt,
 				createdBy, Instant.now(), updatedBy);
 	}
 

@@ -21,7 +21,7 @@ public interface TenantJpaRepository extends JpaRepository<TenantJpaEntity, Stri
 	List<TenantJpaEntity> findAllByStatusIdAndDeletedIsFalseAndCreatedAtBefore(short statusId, Instant cutoff);
 
 	@Modifying
-	@Query("update TenantJpaEntity t set t.deleted = true, t.updatedAt = CURRENT_TIMESTAMP " +
+	@Query("update TenantJpaEntity t set t.username = null, t.deleted = true, t.updatedAt = CURRENT_TIMESTAMP " +
 			"where t.id = :tenantId and t.deleted is false")
 	void markDeleted(@Param("tenantId") String tenantId);
 }

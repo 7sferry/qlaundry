@@ -38,3 +38,6 @@ CREATE TABLE tenant_statuses
 
 ALTER TABLE tenants
     ADD COLUMN status_id SMALLINT NOT NULL DEFAULT 1 REFERENCES tenant_statuses (id);
+
+ALTER TABLE tenants
+    ADD COLUMN username VARCHAR(50) UNIQUE;

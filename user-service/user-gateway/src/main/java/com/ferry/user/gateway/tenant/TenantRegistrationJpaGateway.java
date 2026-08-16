@@ -4,11 +4,13 @@ import com.ferry.user.core.staff.registration.StaffRegistrationRequest;
 import com.ferry.user.core.staff.registration.StaffRegistrationResponse;
 import com.ferry.user.core.staff.registration.StaffRegistrationUseCase;
 import com.ferry.user.core.tenant.registration.TenantRegistrationGateway;
+import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.session.SessionType;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.tenant.TenantDomain;
 import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
 import com.ferry.user.gateway.tenant.entity.TenantStatusJpaEntity;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
@@ -26,7 +28,13 @@ public class TenantRegistrationJpaGateway implements TenantRegistrationGateway{
 	private final IdGenerator idGenerator;
 	private final TenantJpaRepository tenantRepository;
 	private final TenantStatusJpaRepository tenantStatusRepository;
+	private final StaffJpaRepository staffRepository;
 	private final StaffRegistrationUseCase staffRegistrationUseCase;
+
+	@Override
+	public boolean existsByUsername(UsernameDomain username){
+		return staffRepository.existsByUsername(username.value());
+	}
 
 	@Override
 	public TenantDomain save(TenantDomain tenant){

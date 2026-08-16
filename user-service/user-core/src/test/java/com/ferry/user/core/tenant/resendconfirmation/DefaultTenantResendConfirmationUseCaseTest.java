@@ -8,6 +8,7 @@ import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.EmailDomain;
 import com.ferry.user.domain.common.FullNameDomain;
+import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.notification.EmailTriggerDomain;
 import com.ferry.user.domain.notification.EmailTriggerType;
 import com.ferry.user.domain.tenant.TenantDomain;
@@ -42,6 +43,7 @@ import static org.mockito.Mockito.*;
 class DefaultTenantResendConfirmationUseCaseTest{
 
 	private static final String TENANT_ID = "tnt-semarang-03";
+	private static final String TENANT_USERNAME = "semarangkilat03";
 	private static final String TENANT_NAME = "Semarang Kilat Laundry";
 	private static final String ADMIN_EMAIL = "putri@qlaundry.com";
 	private static final String ADMIN_FULL_NAME = "Putri Handayani";
@@ -85,7 +87,7 @@ class DefaultTenantResendConfirmationUseCaseTest{
 
 	@Test
 	void givenTenantAlreadyActive_thenThrowsFailedToResendConfirmationExceptionWithAlreadyConfirmedMessage(){
-		TenantDomain tenant = new TenantDomain(TENANT_ID, new FullNameDomain(TENANT_NAME),
+		TenantDomain tenant = new TenantDomain(TENANT_ID, new UsernameDomain(TENANT_USERNAME), new FullNameDomain(TENANT_NAME),
 				new DescriptionDomain("desc"), TenantStatus.ACTIVE, null, false, Instant.now(), null, Instant.now(), null);
 		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantIdDomain(TENANT_ID));
 
@@ -100,7 +102,7 @@ class DefaultTenantResendConfirmationUseCaseTest{
 
 	@Test
 	void givenAdminContactNotFound_thenThrowsFailedToResendConfirmationExceptionWithTenantNotFoundMessage(){
-		TenantDomain tenant = new TenantDomain(TENANT_ID, new FullNameDomain(TENANT_NAME),
+		TenantDomain tenant = new TenantDomain(TENANT_ID, new UsernameDomain(TENANT_USERNAME), new FullNameDomain(TENANT_NAME),
 				new DescriptionDomain("desc"), TenantStatus.PENDING, null, false, Instant.now(), null, Instant.now(), null);
 		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantIdDomain(TENANT_ID));
 		willReturn(Optional.empty()).given(gateway).findAdminContact(new TenantIdDomain(TENANT_ID));
@@ -115,7 +117,7 @@ class DefaultTenantResendConfirmationUseCaseTest{
 
 	@Test
 	void givenValidRequest_thenCachesNewTokenPublishesEmailAndPresentsSuccessMessage(){
-		TenantDomain tenant = new TenantDomain(TENANT_ID, new FullNameDomain(TENANT_NAME),
+		TenantDomain tenant = new TenantDomain(TENANT_ID, new UsernameDomain(TENANT_USERNAME), new FullNameDomain(TENANT_NAME),
 				new DescriptionDomain("desc"), TenantStatus.PENDING, null, false, Instant.now(), null, Instant.now(), null);
 		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantIdDomain(TENANT_ID));
 		TenantAdminContactProjection admin = new TenantAdminContactProjection(ADMIN_EMAIL, ADMIN_FULL_NAME, ADMIN_USERNAME);

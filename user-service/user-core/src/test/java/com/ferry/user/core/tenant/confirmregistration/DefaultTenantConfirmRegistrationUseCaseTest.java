@@ -4,6 +4,7 @@ import com.ferry.user.core.tenant.constant.TenantConfirmationConstant;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.FullNameDomain;
+import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.tenant.TenantDomain;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.domain.tenant.TenantStatus;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.*;
 class DefaultTenantConfirmRegistrationUseCaseTest{
 
 	private static final String TENANT_ID = "tnt-bandung-07";
+	private static final String TENANT_USERNAME = "bandungfresh07";
 	private static final String TOKEN = "aa11bb22cc33";
 
 	@Mock
@@ -107,7 +109,7 @@ class DefaultTenantConfirmRegistrationUseCaseTest{
 				.get(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + TENANT_ID);
 		willReturn(true).given(cacheManager)
 				.delete(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + TENANT_ID);
-		TenantDomain tenant = new TenantDomain(TENANT_ID, new FullNameDomain("Bandung Fresh Laundry"),
+		TenantDomain tenant = new TenantDomain(TENANT_ID, new UsernameDomain(TENANT_USERNAME), new FullNameDomain("Bandung Fresh Laundry"),
 				new DescriptionDomain("desc"), TenantStatus.ACTIVE, null, false, Instant.now(), null, Instant.now(), null);
 		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantIdDomain(TENANT_ID));
 
@@ -125,7 +127,7 @@ class DefaultTenantConfirmRegistrationUseCaseTest{
 				.get(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + TENANT_ID);
 		willReturn(true).given(cacheManager)
 				.delete(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + TENANT_ID);
-		TenantDomain tenant = new TenantDomain(TENANT_ID, new FullNameDomain("Bandung Fresh Laundry"),
+		TenantDomain tenant = new TenantDomain(TENANT_ID, new UsernameDomain(TENANT_USERNAME), new FullNameDomain("Bandung Fresh Laundry"),
 				new DescriptionDomain("desc"), TenantStatus.PENDING, null, false, Instant.now(), null, Instant.now(), null);
 		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantIdDomain(TENANT_ID));
 		willReturn(tenant.activate()).given(gateway).save(any(TenantDomain.class));

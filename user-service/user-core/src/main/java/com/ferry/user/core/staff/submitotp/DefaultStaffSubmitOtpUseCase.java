@@ -6,6 +6,8 @@ import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.staff.submitotp.FailedToSubmitOtpException;
 import lombok.RequiredArgsConstructor;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.HexFormat;
 
 /************************
@@ -27,7 +29,7 @@ public class DefaultStaffSubmitOtpUseCase implements StaffSubmitOtpUseCase {
 			String otpKey = PasswordConstant.OTP_KEY + username.value();
 			String otp = cacheManager.get(otpKey)
 					.orElseThrow(() -> new FailedToSubmitOtpException("Invalid otp"));
-			if(!otp.equals(request.otp())){
+			if(!MessageDigest.isEqual(otp.getBytes(StandardCharsets.UTF_8), request.otp().getBytes(StandardCharsets.UTF_8))){
 				throw new FailedToSubmitOtpException("Invalid otp");
 			}
 			cacheManager.delete(otpKey);
