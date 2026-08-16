@@ -49,3 +49,4 @@ app:
         key: 'notification:email:'
         group: notification-service
         consumer: notification-web-service-1
+        retention-days: 7

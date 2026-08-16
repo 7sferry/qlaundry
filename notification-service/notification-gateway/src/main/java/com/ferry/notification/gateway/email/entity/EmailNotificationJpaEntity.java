@@ -23,7 +23,7 @@ public class EmailNotificationJpaEntity{
 	@Id
 	@Column(nullable = false, length = 50)
 	private String id;
-	@Column(length = 50)
+	@Column(length = 50, unique = true)
 	private String referenceId;
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private EmailTypeJpaEntity type;

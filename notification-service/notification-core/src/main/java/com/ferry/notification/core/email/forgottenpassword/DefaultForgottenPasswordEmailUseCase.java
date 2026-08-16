@@ -9,6 +9,8 @@ import com.ferry.notification.domain.EmailType;
 import com.ferry.notification.domain.SubjectDomain;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Optional;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Juli 2026         *
@@ -25,6 +27,15 @@ public class DefaultForgottenPasswordEmailUseCase implements ForgottenPasswordEm
 	@Override
 	public void execute(ForgottenPasswordEmailRequest request, ForgottenPasswordEmailPresenter presenter){
 		request.validate();
+		Optional<Boolean> emailSent = emailHistoryGateway.findByReferenceId(request.triggerId())
+				.filter(e -> e.sentAt() != null)
+				.map(e -> {
+					presenter.present(new ForgottenPasswordEmailResponse(e));
+					return true;
+				});
+		if(emailSent.isPresent()){
+			return;
+		}
 		ContentDomain content = new ContentDomain(composer.compose(request));
 		EmailNotificationDomain notification = EmailNotificationDomain.compose(EmailType.FORGOTTEN_PASSWORD,
 				request.triggerId(), new EmailDomain(request.recipient()),

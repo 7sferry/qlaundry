@@ -11,6 +11,7 @@ import com.ferry.user.domain.notification.EmailTriggerDomain;
 import com.ferry.user.domain.notification.EmailTriggerType;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -23,15 +24,14 @@ import java.util.concurrent.TimeUnit;
  * on Juli 2026         *
  ************************/
 
+@Slf4j
 @RequiredArgsConstructor
 public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPasswordUseCase {
 	private static final String ALPHABET = "qwertyuiopasdfghjklzxcvbnm";
 	private static final BigInteger ALPHABET_LENGTH = BigInteger.valueOf(ALPHABET.length());
 	private static final List<String> EMAIL_DOMAIN_PREFIXES = List.of("g","y","m");
 	private static final BigInteger EMAIL_DOMAIN_LENGTH = BigInteger.valueOf(EMAIL_DOMAIN_PREFIXES.size());
-	private static final int MAX_REPEATED_ASTERISK = 7;
-	private static final int MIN_REPEATED_ASTERISK = 3;
-	private static final BigInteger REPEATED_ASTERISK_RANGE = BigInteger.valueOf(MAX_REPEATED_ASTERISK - MIN_REPEATED_ASTERISK + 1);
+	private static final int REPEATED_ASTERISK = 5;
 	private static final char AT_SYMBOL = '@';
 	private static final String TLD = ".com";
 	private static final long MIN_RESPONSE_MILLIS = 300;
@@ -67,6 +67,7 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 				presenter.present(new StaffForgottenPasswordResponse(maskedFakeEmail));
 			});
 		} catch (Exception e){
+			log.error("Failed to process forgotten password request", e);
 			String maskedFakeEmail = maskFakeEmail(request.username());
 			awaitMinimumResponseTime(startedAt);
 			presenter.present(new StaffForgottenPasswordResponse(maskedFakeEmail));
@@ -95,19 +96,13 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 		hashedInt = hashedInt.divide(ALPHABET_LENGTH);
 
 		int domainIndex = hashedInt.mod(EMAIL_DOMAIN_LENGTH).intValue();
-		hashedInt = hashedInt.divide(ALPHABET_LENGTH);
-
-		int repeatedLocalNameAsterisk = hashedInt.mod(REPEATED_ASTERISK_RANGE).intValue();
-		hashedInt = hashedInt.divide(ALPHABET_LENGTH);
-
-		int repeatedDomainAsterisk = hashedInt.mod(REPEATED_ASTERISK_RANGE).intValue();
 
 		return ALPHABET.charAt(firstIndex) +
-				"*".repeat(MIN_REPEATED_ASTERISK + repeatedLocalNameAsterisk) +
+				"*".repeat(REPEATED_ASTERISK) +
 				ALPHABET.charAt(lastIndex) +
 				AT_SYMBOL +
 				EMAIL_DOMAIN_PREFIXES.get(domainIndex) +
-				"*".repeat(MIN_REPEATED_ASTERISK + repeatedDomainAsterisk) +
+				"*".repeat(REPEATED_ASTERISK) +
 				TLD;
 	}
 
@@ -128,10 +123,7 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 		if(!localName.isEmpty()){
 			result.append(localName.charAt(0));
 		}
-		byte[] hash = hash(email);
-		BigInteger hashedInt = new BigInteger(1, hash);
-		int repeatedLocalNameAsterisk = hashedInt.mod(REPEATED_ASTERISK_RANGE).intValue();
-		result.repeat("*", MIN_REPEATED_ASTERISK + repeatedLocalNameAsterisk);
+		result.repeat("*", REPEATED_ASTERISK);
 		if(localName.length() > 1){
 			result.append(localName.charAt(localName.length() - 1));
 		}
@@ -139,9 +131,7 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 		if(!domainName.isEmpty()){
 			result.append(domainName.charAt(0));
 		}
-		hashedInt = hashedInt.divide(ALPHABET_LENGTH);
-		int repeatedDomainAsterisk = hashedInt.mod(REPEATED_ASTERISK_RANGE).intValue();
-		result.repeat("*", MIN_REPEATED_ASTERISK + repeatedDomainAsterisk);
+		result.repeat("*", REPEATED_ASTERISK);
 		int dotPos = domainName.lastIndexOf(".");
 		if(dotPos >= 0){
 			result.append(domainName.substring(dotPos));

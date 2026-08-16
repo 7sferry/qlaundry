@@ -162,7 +162,9 @@ public class UserWebConfig{
 
 	@Bean
 	TenantExpirationScheduler tenantExpirationScheduler(TenantExpirationUseCase tenantExpirationUseCase){
-		return new TenantExpirationScheduler(tenantExpirationUseCase);
+		TenantExpirationScheduler scheduler = new TenantExpirationScheduler(tenantExpirationUseCase);
+		Thread.startVirtualThread(scheduler::expirePendingTenants);
+		return scheduler;
 	}
 
 	@Bean

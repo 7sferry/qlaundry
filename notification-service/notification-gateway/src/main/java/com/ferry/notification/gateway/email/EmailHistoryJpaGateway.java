@@ -12,6 +12,8 @@ import com.ferry.notification.gateway.email.repository.EmailTypeJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Optional;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Juli 2026         *
@@ -30,6 +32,12 @@ public class EmailHistoryJpaGateway implements EmailHistoryGateway{
 		EmailNotificationJpaEntity entity = EmailNotificationJpaEntity.construct(id, notification, type);
 		EmailNotificationJpaEntity saved = emailNotificationJpaRepository.save(entity);
 		return constructEmailNotificationDomain(saved);
+	}
+
+	@Override
+	public Optional<EmailNotificationDomain> findByReferenceId(String referenceId){
+		return emailNotificationJpaRepository.findByReferenceId(referenceId)
+				.map(EmailHistoryJpaGateway::constructEmailNotificationDomain);
 	}
 
 	private static EmailNotificationDomain constructEmailNotificationDomain(EmailNotificationJpaEntity saved){
