@@ -15,7 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 public class TenantExpirationScheduler{
 	private final TenantExpirationUseCase tenantExpirationUseCase;
 
-	@Scheduled(cron = "0 0 3 * * *")
+//	@Scheduled(cron = "0 0 3 * * *")
 	public void expirePendingTenants(){
 		int expired = tenantExpirationUseCase.execute();
 		if(expired > 0){

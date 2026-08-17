@@ -11,7 +11,7 @@ import com.ferry.user.domain.tenant.resendconfirmation.FailedToResendConfirmatio
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -24,72 +24,71 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 public class UserWebExceptionHandler{
 
-	public record ErrorWebResponse(String message){
-	}
-
 	@ExceptionHandler(ExpiredSessionException.class)
-	ResponseEntity<ErrorWebResponse> handleExpiredSession(ExpiredSessionException e){
+	ProblemDetail handleExpiredSession(ExpiredSessionException e){
 		log.warn(e.getMessage(), e);
-		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorWebResponse(e.getMessage()));
+		return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
 	}
 
 	@ExceptionHandler({InvalidUsernameException.class, TurnstileVerificationException.class,
-			InvalidPasswordException.class, IllegalArgumentException.class,
-			NotFoundException.class})
-	ResponseEntity<ErrorWebResponse> handleBadRequest(RuntimeException e){
+			InvalidPasswordException.class, IllegalArgumentException.class})
+	ProblemDetail handleBadRequest(RuntimeException e){
 		log.warn(e.getMessage(), e);
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorWebResponse(e.getMessage()));
+		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+	}
+
+	@ExceptionHandler(NotFoundException.class)
+	ProblemDetail handleNotFoundRequest(RuntimeException e){
+		log.warn(e.getMessage(), e);
+		return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
 	}
 
 	@ExceptionHandler(ConstraintViolationException.class)
-	ResponseEntity<ErrorWebResponse> handleInvalidRequest(ConstraintViolationException e){
+	ProblemDetail handleInvalidRequest(ConstraintViolationException e){
 		log.warn(e.getMessage(), e);
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorWebResponse(e.getMessage()));
+		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
 	}
 
 	@ExceptionHandler(FailedToLoginException.class)
-	ResponseEntity<ErrorWebResponse> handleLoginError(FailedToLoginException e){
+	ProblemDetail handleLoginError(FailedToLoginException e){
 		log.warn(e.getMessage(), e);
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-				.body(new ErrorWebResponse("Incorrect username or password"));
+		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Incorrect username or password");
 	}
 
 	@ExceptionHandler(FailedToResetPasswordException.class)
-	ResponseEntity<ErrorWebResponse> handleResetPasswordError(FailedToResetPasswordException e){
+	ProblemDetail handleResetPasswordError(FailedToResetPasswordException e){
 		log.warn(e.getMessage(), e);
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-				.body(new ErrorWebResponse("Failed to Reset Password. Please try again."));
+		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Failed to Reset Password. Please try again.");
 	}
 
 	@ExceptionHandler(FailedToSubmitOtpException.class)
-	ResponseEntity<ErrorWebResponse> handleSubmitOtpError(FailedToSubmitOtpException e){
+	ProblemDetail handleSubmitOtpError(FailedToSubmitOtpException e){
 		log.warn(e.getMessage(), e);
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorWebResponse("Invalid OTP."));
+		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid OTP.");
 	}
 
 	@ExceptionHandler(FailedToConfirmTenantException.class)
-	ResponseEntity<ErrorWebResponse> handleConfirmTenantError(FailedToConfirmTenantException e){
+	ProblemDetail handleConfirmTenantError(FailedToConfirmTenantException e){
 		log.warn(e.getMessage(), e);
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-				.body(new ErrorWebResponse("Invalid or expired confirmation link."));
+		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid or expired confirmation link.");
 	}
 
 	@ExceptionHandler(FailedToResendConfirmationException.class)
-	ResponseEntity<ErrorWebResponse> handleResendConfirmationError(FailedToResendConfirmationException e){
+	ProblemDetail handleResendConfirmationError(FailedToResendConfirmationException e){
 		log.warn(e.getMessage(), e);
-		return ResponseEntity.ok(new ErrorWebResponse("A new confirmation email has been sent."));
+		return ProblemDetail.forStatusAndDetail(HttpStatus.OK, "A new confirmation email has been sent.");
 	}
 
 	@ExceptionHandler(ForbiddenActionException.class)
-	ResponseEntity<ErrorWebResponse> handleForbidden(ForbiddenActionException e){
+	ProblemDetail handleForbidden(ForbiddenActionException e){
 		log.warn(e.getMessage(), e);
-		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorWebResponse(e.getMessage()));
+		return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
 	}
 
-	@ExceptionHandler(Exception.class)
-	ResponseEntity<ErrorWebResponse> handleError(Exception e){
+	@ExceptionHandler(Throwable.class)
+	ProblemDetail handleError(Throwable e){
 		log.error(e.getMessage(), e);
-		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorWebResponse("Internal Error"));
+		return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Error");
 	}
 
 }

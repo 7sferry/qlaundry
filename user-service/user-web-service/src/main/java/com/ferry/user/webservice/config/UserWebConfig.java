@@ -78,6 +78,7 @@ import com.password4j.types.Argon2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password4j.Argon2Password4jPasswordEncoder;
@@ -89,6 +90,7 @@ import tools.jackson.databind.ObjectMapper;
  ************************/
 
 @Configuration
+@Lazy
 public class UserWebConfig{
 
 	@Bean
