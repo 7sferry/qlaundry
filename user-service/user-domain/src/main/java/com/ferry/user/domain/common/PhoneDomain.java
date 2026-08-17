@@ -10,8 +10,8 @@ public record PhoneDomain(String value){
 		if(value == null || value.isBlank()){
 			throw new IllegalArgumentException("Phone must not be blank");
 		}
-		if(!value.matches("^[0-9]+$")){
-			throw new IllegalArgumentException("Invalid Phone");
+		if(!value.matches("^\\+[1-9]\\d{1,14}$")){
+			throw new IllegalArgumentException("Phone must be in E.164 format, e.g. +6281234567890");
 		}
 	}
 }

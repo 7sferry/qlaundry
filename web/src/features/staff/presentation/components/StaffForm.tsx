@@ -4,8 +4,8 @@
  ************************/
 
 import React from 'react';
-import {AtSign, Lock, Mail, MapPin, Phone, Shield} from 'lucide-react';
-import {Button, Field, Input, PasswordInput, Select, Textarea} from '@/core/ui';
+import {AtSign, Lock, Mail, MapPin, Shield} from 'lucide-react';
+import {Button, Field, Input, PasswordInput, PhoneInput, Select, Textarea} from '@/core/ui';
 import type {StaffFormData} from './staffFormData';
 
 interface StaffFormProps {
@@ -88,12 +88,7 @@ export default function StaffForm({form, update, onSubmit, onCancel, saving, edi
 						</Field>
 				)}
 				<Field label="Telephone" htmlFor="sfPhone">
-					<div className="input-with-icon">
-						<Phone size={15}/>
-						<Input id="sfPhone" type="tel" value={form.phone} onChange={update('phone')}
-					       placeholder="07XXXXXXXXX" autoComplete="off" pattern="[0-9]+"
-					       title="Telephone number must contain digits only"/>
-					</div>
+					<PhoneInput id="sfPhone" value={form.phone} onChange={update('phone')}/>
 				</Field>
 				<Field label="Email" htmlFor="sfEmail">
 					<div className="input-with-icon">

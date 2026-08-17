@@ -8,7 +8,7 @@ const mockStaff: Staff = {
 	username: 'budi.s',
 	fullName: 'Budi Setiawan',
 	emails: ['budi@qlaundry.id'],
-	phones: ['08111222333'],
+	phones: ['+628111222333'],
 	addresses: [],
 	joinedAt: '2025-03-01',
 };
@@ -19,7 +19,7 @@ const validInput: CreateStaffInput = {
 	fullName: 'Budi Setiawan',
 	role: 'STAFF',
 	emails: ['budi@qlaundry.id'],
-	phones: ['08111222333'],
+	phones: ['+628111222333'],
 	addresses: [],
 };
 
@@ -76,10 +76,10 @@ describe('CreateStaffUseCase', () => {
 				.rejects.toThrow('Format email tidak valid.');
 	});
 
-	it('rejects when a phone contains non-digit characters', async () => {
+	it('rejects when a phone is not in E.164 format', async () => {
 		const useCase = new CreateStaffUseCase(makeRepo());
 		await expect(useCase.execute({...validInput, phones: ['+62 811-222-333']}))
-				.rejects.toThrow('Nomor telepon hanya boleh berisi angka.');
+				.rejects.toThrow('Nomor telepon harus dalam format E.164, contoh: +6281234567890.');
 	});
 
 	it('rejects when role is invalid', async () => {

@@ -52,7 +52,7 @@ class DefaultStaffUpdateUseCaseTest{
 	private static final String USERNAME = "rahmatstaff01";
 	private static final String OLD_HASHED_PASSWORD = "old-hash-abc123";
 	private static final String TENANT_ID = "tnt-01";
-	private static final String PHONE = "081234567890";
+	private static final String PHONE = "+6281234567890";
 	private static final String ADDRESS_LINE = "Jl. Merdeka No. 1";
 
 	@Mock

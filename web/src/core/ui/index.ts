@@ -6,6 +6,8 @@
 export {Button} from './Button';
 export {Card} from './Card';
 export {Field, Input, PasswordInput, Select, Textarea} from './Field';
+export {PhoneInput, COUNTRY_DIAL_CODES, DEFAULT_DIAL_CODE} from './PhoneInput';
+export type {CountryDialCode} from './PhoneInput';
 export {Badge} from './Badge';
 export type {BadgeTone} from './Badge';
 export {Spinner, Loading} from './Spinner';

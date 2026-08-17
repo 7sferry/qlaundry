@@ -34,8 +34,8 @@ export class CreateStaffUseCase {
 		if (!email.includes('@') || !email.includes('.')) {
 			return Promise.reject(new Error('Format email tidak valid.'));
 		}
-		if (input.phones.some((phone) => !/^[0-9]+$/.test(phone))) {
-			return Promise.reject(new Error('Nomor telepon hanya boleh berisi angka.'));
+		if (input.phones.some((phone) => !/^\+[1-9]\d{1,14}$/.test(phone))) {
+			return Promise.reject(new Error('Nomor telepon harus dalam format E.164, contoh: +6281234567890.'));
 		}
 		return this.repository.createStaff(input);
 	}

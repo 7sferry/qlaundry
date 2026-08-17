@@ -253,7 +253,7 @@ class DefaultStaffRegistrationUseCaseTest{
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("Invalid Phone"));
+				.hasMessage("Phone must be in E.164 format, e.g. +6281234567890"));
 
 		then(gateway).should().save(any(StaffEmailDomain.class));
 		then(gateway).should(never()).save(any(StaffPhoneDomain.class));
@@ -285,7 +285,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenValidRequestWithEmailsPhonesAndAddresses_thenRegistersSuccessfully(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL, "budi.santoso@gmail.com"),
-				List.of("081234567890"), List.of("Jl. Sudirman No. 10"));
+				List.of("+6281234567890"), List.of("Jl. Sudirman No. 10"));
 		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));

@@ -5,8 +5,8 @@
 
 import React, {useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {ArrowLeft, ArrowRight, Building2, LockKeyhole, Mail, MapPin, Phone, User2, WashingMachine} from 'lucide-react';
-import {Button, Field, Input, PasswordInput, Turnstile, type TurnstileHandle} from '@/core/ui';
+import {ArrowLeft, ArrowRight, Building2, LockKeyhole, Mail, MapPin, User2, WashingMachine} from 'lucide-react';
+import {Button, Field, Input, PasswordInput, PhoneInput, Turnstile, type TurnstileHandle} from '@/core/ui';
 import {env} from '@/core/config/env';
 import {useAuth} from '../useAuth';
 
@@ -179,17 +179,7 @@ export default function RegisterPage() {
 								</div>
 							</Field>
  						<Field label="Telephone" htmlFor="phone" error={fieldErrors.phone}>
-								<div className="input-with-icon">
-									<Phone size={16}/>
-									<Input
-											id="phone"
-											type="tel"
-											autoComplete="off"
-											value={form.phone}
-											onChange={update('phone')}
-   								placeholder="07XXXXXXXXX"
-									/>
-								</div>
+								<PhoneInput id="phone" value={form.phone} onChange={update('phone')}/>
 							</Field>
 						</div>
 

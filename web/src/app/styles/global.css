@@ -1093,6 +1093,21 @@ button.user-chip--trigger:hover {
     color: var(--text);
 }
 
+.phone-input {
+    gap: 8px;
+}
+
+.phone-input .phone-input__code {
+    flex: 0 0 132px;
+    padding-right: 22px;
+}
+
+.phone-input .phone-input__number {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-left: 13px;
+}
+
 /* ── Auth ── */
 .auth-shell {
     min-height: 100vh;
