@@ -10,6 +10,8 @@ import com.ferry.user.domain.common.RawPasswordDomain;
 import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.common.exception.InvalidPasswordException;
 import com.ferry.user.domain.staff.StaffDomain;
+import com.ferry.user.domain.staff.StaffPasswordDomain;
+import com.ferry.user.domain.staff.StaffPasswordProjection;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.forgottenpassword.FailedToResetPasswordException;
 import jakarta.validation.ConstraintViolationException;
@@ -21,6 +23,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
@@ -38,6 +42,7 @@ import static org.mockito.Mockito.*;
 class DefaultStaffResetPasswordUseCaseTest{
 
 	private static final String USERNAME = "hendrastafflogin";
+	private static final String STAFF_ID = "stf-hendra-77";
 	private static final String PASSWORD = "ResetSecure2026!";
 	private static final String RESET_TOKEN = "ffeeddcc1234";
 
@@ -52,7 +57,7 @@ class DefaultStaffResetPasswordUseCaseTest{
 	@Mock
 	StaffResetPasswordPresenter presenter;
 	@Captor
-	ArgumentCaptor<StaffDomain> staffCaptor;
+	ArgumentCaptor<StaffPasswordDomain> passwordCaptor;
 
 	@Test
 	void givenBlankUsername_thenThrowsFailedToResetPasswordExceptionWithConstraintViolationCause(){
@@ -109,23 +114,66 @@ class DefaultStaffResetPasswordUseCaseTest{
 				() -> useCase.execute(new StaffResetPasswordRequest(USERNAME, PASSWORD, RESET_TOKEN), presenter));
 
 		thenSoftly(softly -> softly.then(thrown.getMessage()).isEqualTo("Invalid username"));
-		then(gateway).should(never()).save(any());
+		then(gateway).should(never()).save(any(StaffPasswordDomain.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
 	@Test
-	void givenValidRequest_thenHashesPasswordSavesStaffAndPresentsSuccessMessage(){
+	void givenPasswordWasUsedWithinLastThreeMonths_thenThrowsFailedToResetPasswordExceptionWithInvalidPasswordCause(){
 		willReturn(Optional.of(RESET_TOKEN)).given(cacheManager).getAndDelete(PasswordConstant.RESET_TOKEN_KEY + USERNAME);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain("old-hashed-password"),
-				new FullNameDomain("Hendra Wijaya"), new DescriptionDomain("desc"), "tnt-02", StaffRole.STAFF, null);
+		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new FullNameDomain("Hendra Wijaya"),
+						new DescriptionDomain("desc"), "tnt-02", StaffRole.STAFF, null)
+				.toBuilder().id(STAFF_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findByUsername(new UsernameDomain(USERNAME));
+		StaffPasswordProjection recentPassword = new StaffPasswordProjection("previously-used-hash");
+		willReturn(List.of(recentPassword)).given(gateway).findRecentPasswords(eq(STAFF_ID), any(Instant.class));
+		willReturn(true).given(passwordTool).matches(PASSWORD, "previously-used-hash");
+
+		FailedToResetPasswordException thrown = catchThrowableOfType(FailedToResetPasswordException.class,
+				() -> useCase.execute(new StaffResetPasswordRequest(USERNAME, PASSWORD, RESET_TOKEN), presenter));
+
+		thenSoftly(softly -> softly.then(thrown.getCause()).isInstanceOf(InvalidPasswordException.class));
+		then(gateway).should(never()).save(any(StaffPasswordDomain.class));
+		then(presenter).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void givenNewPasswordSameAsCurrentPassword_thenThrowsFailedToResetPasswordExceptionWithInvalidPasswordCause(){
+		willReturn(Optional.of(RESET_TOKEN)).given(cacheManager).getAndDelete(PasswordConstant.RESET_TOKEN_KEY + USERNAME);
+		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new FullNameDomain("Hendra Wijaya"),
+						new DescriptionDomain("desc"), "tnt-02", StaffRole.STAFF, null)
+				.toBuilder().id(STAFF_ID).build();
+		willReturn(Optional.of(existing)).given(gateway).findByUsername(new UsernameDomain(USERNAME));
+		StaffPasswordProjection currentPassword = new StaffPasswordProjection("current-hash");
+		willReturn(Optional.of(currentPassword)).given(gateway).findCurrentPassword(STAFF_ID);
+		willReturn(true).given(passwordTool).matches(PASSWORD, "current-hash");
+
+		FailedToResetPasswordException thrown = catchThrowableOfType(FailedToResetPasswordException.class,
+				() -> useCase.execute(new StaffResetPasswordRequest(USERNAME, PASSWORD, RESET_TOKEN), presenter));
+
+		thenSoftly(softly -> softly.then(thrown.getCause()).isInstanceOf(InvalidPasswordException.class));
+		then(gateway).should(never()).save(any(StaffPasswordDomain.class));
+		then(presenter).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void givenValidRequest_thenHashesPasswordSavesPasswordHistoryAndPresentsSuccessMessage(){
+		willReturn(Optional.of(RESET_TOKEN)).given(cacheManager).getAndDelete(PasswordConstant.RESET_TOKEN_KEY + USERNAME);
+		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new FullNameDomain("Hendra Wijaya"),
+						new DescriptionDomain("desc"), "tnt-02", StaffRole.STAFF, null)
+				.toBuilder().id(STAFF_ID).build();
+		willReturn(Optional.of(existing)).given(gateway).findByUsername(new UsernameDomain(USERNAME));
+		willReturn(List.of()).given(gateway).findRecentPasswords(eq(STAFF_ID), any(Instant.class));
 		willReturn(new HashedPasswordDomain("new-hashed-password")).given(passwordTool).hash(new RawPasswordDomain(PASSWORD));
 
 		useCase.execute(new StaffResetPasswordRequest(USERNAME, PASSWORD, RESET_TOKEN), presenter);
 
-		then(gateway).should().save(staffCaptor.capture());
+		then(gateway).should().save(passwordCaptor.capture());
 		then(presenter).should().present(new StaffResetPasswordResponse("password has been reset"));
-		thenSoftly(softly -> softly.then(staffCaptor.getValue().passwordValue()).isEqualTo("new-hashed-password"));
+		thenSoftly(softly -> {
+			softly.then(passwordCaptor.getValue().passwordValue()).isEqualTo("new-hashed-password");
+			softly.then(passwordCaptor.getValue().staffId()).isEqualTo(STAFF_ID);
+		});
 	}
 
 }

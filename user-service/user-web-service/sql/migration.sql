@@ -41,3 +41,22 @@ ALTER TABLE tenants
 
 ALTER TABLE tenants
     ADD COLUMN username VARCHAR(50) UNIQUE;
+
+CREATE TABLE staff_passwords
+(
+    id         VARCHAR(50) PRIMARY KEY,
+    staff_id   VARCHAR(50) NOT NULL REFERENCES staffs (id),
+    password   VARCHAR     NOT NULL,
+    version    INTEGER,
+    deleted    BOOLEAN     NOT NULL DEFAULT FALSE,
+    created_by VARCHAR(50) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    updated_by VARCHAR(50) NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL
+);
+
+-- backfill one history row per existing staff from their current password before dropping the column, e.g.:
+-- INSERT INTO staff_passwords (id, staff_id, password, created_by, created_at, updated_by, updated_at)
+-- SELECT '<ulid>', id, password, 'system', NOW(), 'system', NOW() FROM staffs WHERE password IS NOT NULL;
+ALTER TABLE staffs
+    DROP COLUMN password;

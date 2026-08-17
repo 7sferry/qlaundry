@@ -8,7 +8,6 @@ import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.EmailDomain;
 import com.ferry.user.domain.common.FullNameDomain;
-import com.ferry.user.domain.common.HashedPasswordDomain;
 import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.notification.EmailTriggerDomain;
 import com.ferry.user.domain.notification.EmailTriggerType;
@@ -138,7 +137,7 @@ class DefaultTenantRegistrationUseCaseTest{
 			return new TenantDomain(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
 		}).given(gateway).save(any(TenantDomain.class));
-		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain("hashed"),
+		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME),
 				new FullNameDomain(FULL_NAME), new DescriptionDomain("Super Admin"), TENANT_ID, StaffRole.SUPER_STAFF, null);
 		willReturn(new StaffRegistrationResponse(admin)).given(gateway).registerAdmin(staffRequestCaptor.capture(), any(TenantDomain.class));
 		EmailTriggerDomain trigger = EmailTriggerDomain.create(EmailTriggerType.TENANT_REGISTRATION,
@@ -166,7 +165,7 @@ class DefaultTenantRegistrationUseCaseTest{
 			return new TenantDomain(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
 		}).given(gateway).save(any(TenantDomain.class));
-		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain("hashed"),
+		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME),
 				new FullNameDomain(FULL_NAME), new DescriptionDomain("Super Admin"), TENANT_ID, StaffRole.SUPER_STAFF, null);
 		willReturn(new StaffRegistrationResponse(admin)).given(gateway).registerAdmin(staffRequestCaptor.capture(), any(TenantDomain.class));
 		EmailTriggerDomain trigger = EmailTriggerDomain.create(EmailTriggerType.TENANT_REGISTRATION,
@@ -190,7 +189,7 @@ class DefaultTenantRegistrationUseCaseTest{
 			return new TenantDomain(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
 		}).given(gateway).save(any(TenantDomain.class));
-		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain("hashed"),
+		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME),
 				new FullNameDomain(FULL_NAME), new DescriptionDomain("Super Admin"), TENANT_ID, StaffRole.SUPER_STAFF, null);
 		willReturn(new StaffRegistrationResponse(admin)).given(gateway).registerAdmin(any(StaffRegistrationRequest.class), any(TenantDomain.class));
 		EmailTriggerDomain trigger = EmailTriggerDomain.create(EmailTriggerType.TENANT_REGISTRATION,
@@ -227,7 +226,7 @@ class DefaultTenantRegistrationUseCaseTest{
 			return new TenantDomain(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
 		}).given(gateway).save(any(TenantDomain.class));
-		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain("hashed"),
+		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME),
 				new FullNameDomain(FULL_NAME), new DescriptionDomain("Super Admin"), TENANT_ID, StaffRole.SUPER_STAFF, null);
 		willReturn(new StaffRegistrationResponse(admin)).given(gateway).registerAdmin(any(StaffRegistrationRequest.class), any(TenantDomain.class));
 		EmailTriggerDomain trigger = EmailTriggerDomain.create(EmailTriggerType.TENANT_REGISTRATION,

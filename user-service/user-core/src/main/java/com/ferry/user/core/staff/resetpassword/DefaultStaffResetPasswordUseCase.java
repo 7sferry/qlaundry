@@ -6,12 +6,17 @@ import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.common.HashedPasswordDomain;
 import com.ferry.user.domain.common.RawPasswordDomain;
 import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.exception.InvalidPasswordException;
 import com.ferry.user.domain.staff.StaffDomain;
+import com.ferry.user.domain.staff.StaffPasswordDomain;
+import com.ferry.user.domain.staff.StaffPasswordProjection;
 import com.ferry.user.domain.staff.forgottenpassword.FailedToResetPasswordException;
 import lombok.RequiredArgsConstructor;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Instant;
+import java.util.List;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -33,17 +38,35 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 			validateResetToken(username, request.resetToken());
 			StaffDomain staff = gateway.findByUsername(username)
 					.orElseThrow(() -> new FailedToResetPasswordException("Invalid username"));
+			validateRecentPassword(staff, password);
+			validateLastUsedPasswords(staff, password);
 			HashedPasswordDomain hashedPassword = passwordTool.hash(password);
-			StaffDomain updatedStaff = staff.toBuilder()
-					.password(hashedPassword)
-					.build();
-			gateway.save(updatedStaff);
+			gateway.save(StaffPasswordDomain.register(staff.id(), hashedPassword, staff.id()));
 			presenter.present(new StaffResetPasswordResponse("password has been reset"));
 		} catch (FailedToResetPasswordException e){
 			throw e;
 		} catch (Exception e){
 			throw new FailedToResetPasswordException(e);
 		}
+	}
+
+	private void validateLastUsedPasswords(StaffDomain staff, RawPasswordDomain password){
+		List<StaffPasswordProjection> recentPasswords = gateway.findRecentPasswords(staff.id(),
+				Instant.now().minus(PasswordConstant.PASSWORD_REUSE_WINDOW));
+		boolean reused = recentPasswords.stream()
+				.anyMatch(recent -> passwordTool.matches(password.value(), recent.password()));
+		if(reused){
+			throw new InvalidPasswordException("Password was used within the last 3 months, please choose a different password");
+		}
+	}
+
+	private void validateRecentPassword(StaffDomain staff, RawPasswordDomain password){
+		gateway.findCurrentPassword(staff.id())
+				.ifPresent(current -> {
+					if(passwordTool.matches(password.value(), current.password())){
+						throw new InvalidPasswordException("New password must be different from your current password");
+					}
+				});
 	}
 
 	private void validateResetToken(UsernameDomain username, String resetToken){

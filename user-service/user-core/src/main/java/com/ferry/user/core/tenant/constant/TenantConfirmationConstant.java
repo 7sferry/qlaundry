@@ -4,7 +4,7 @@ import java.time.Duration;
 
 /************************
  * Made by [MR Ferry™]  *
- * on Agustus 2026       *
+ * on Agustus 2026      *
  ************************/
 
 public class TenantConfirmationConstant{

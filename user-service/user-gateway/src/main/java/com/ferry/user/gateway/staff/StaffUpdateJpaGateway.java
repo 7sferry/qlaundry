@@ -6,16 +6,20 @@ import com.ferry.user.domain.staff.StaffAddressFilter;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffEmailDomain;
 import com.ferry.user.domain.staff.StaffEmailFilter;
+import com.ferry.user.domain.staff.StaffPasswordDomain;
+import com.ferry.user.domain.staff.StaffPasswordProjection;
 import com.ferry.user.domain.staff.StaffPhoneDomain;
 import com.ferry.user.domain.staff.StaffPhoneFilter;
 import com.ferry.user.gateway.staff.entity.StaffAddressJpaEntity;
 import com.ferry.user.gateway.staff.entity.StaffEmailJpaEntity;
 import com.ferry.user.gateway.staff.entity.StaffJpaEntity;
+import com.ferry.user.gateway.staff.entity.StaffPasswordJpaEntity;
 import com.ferry.user.gateway.staff.entity.StaffPhoneJpaEntity;
 import com.ferry.user.gateway.staff.entity.StaffRoleJpaEntity;
 import com.ferry.user.gateway.staff.repository.StaffAddressJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
+import com.ferry.user.gateway.staff.repository.StaffPasswordJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffPhoneJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffRoleJpaRepository;
 import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
@@ -23,6 +27,7 @@ import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +39,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class StaffUpdateJpaGateway implements StaffUpdateGateway{
 	private final StaffJpaRepository staffJpaRepository;
+	private final StaffPasswordJpaRepository staffPasswordJpaRepository;
 	private final StaffRoleJpaRepository staffRoleJpaRepository;
 	private final StaffEmailJpaRepository staffEmailJpaRepository;
 	private final StaffPhoneJpaRepository staffPhoneJpaRepository;
@@ -52,6 +58,24 @@ public class StaffUpdateJpaGateway implements StaffUpdateGateway{
 		StaffRoleJpaEntity role = staffRoleJpaRepository.getReferenceById(staff.role().getValue());
 		StaffJpaEntity saved = staffJpaRepository.save(StaffJpaEntity.construct(staff.id(), staff, tenant, role));
 		return StaffJpaEntity.construct(saved);
+	}
+
+	@Override
+	public Optional<StaffPasswordProjection> findCurrentPassword(String staffId){
+		return staffPasswordJpaRepository.findCurrent(staffId);
+	}
+
+	@Override
+	public List<StaffPasswordProjection> findRecentPasswords(String staffId, Instant since){
+		return staffPasswordJpaRepository.findRecent(staffId, since);
+	}
+
+	@Override
+	public void save(StaffPasswordDomain password){
+		staffPasswordJpaRepository.softDeleteByStaffId(password.staffId(), password.createdBy());
+		String id = idGenerator.generateId();
+		StaffJpaEntity staff = staffJpaRepository.getReferenceById(password.staffId());
+		staffPasswordJpaRepository.save(StaffPasswordJpaEntity.construct(id, password, staff));
 	}
 
 	@Override

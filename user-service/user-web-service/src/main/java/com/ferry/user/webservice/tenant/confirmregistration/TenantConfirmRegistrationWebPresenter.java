@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 
 /************************
  * Made by [MR Ferry™]  *
- * on Agustus 2026       *
+ * on Agustus 2026      *
  ************************/
 
 @Getter

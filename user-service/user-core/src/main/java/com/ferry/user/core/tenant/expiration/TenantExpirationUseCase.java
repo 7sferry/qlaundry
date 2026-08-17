@@ -2,7 +2,7 @@ package com.ferry.user.core.tenant.expiration;
 
 /************************
  * Made by [MR Ferry™]  *
- * on Agustus 2026       *
+ * on Agustus 2026      *
  ************************/
 
 public interface TenantExpirationUseCase{

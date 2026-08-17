@@ -2,7 +2,6 @@ package com.ferry.user.core.staff.delete;
 
 import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.FullNameDomain;
-import com.ferry.user.domain.common.HashedPasswordDomain;
 import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.common.exception.ForbiddenActionException;
 import com.ferry.user.domain.common.exception.InvalidUsernameException;
@@ -67,7 +66,6 @@ class DefaultStaffDeleteUseCaseTest{
 		return StaffDomain.builder()
 				.id(id)
 				.username(new UsernameDomain(USERNAME))
-				.password(new HashedPasswordDomain("hashed-password"))
 				.fullName(new FullNameDomain("Full Name"))
 				.description(new DescriptionDomain("desc"))
 				.tenantId(TENANT_ID)

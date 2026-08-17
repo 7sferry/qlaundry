@@ -1,7 +1,6 @@
 package com.ferry.user.domain.staff;
 
 import com.ferry.user.domain.common.FullNameDomain;
-import com.ferry.user.domain.common.HashedPasswordDomain;
 import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.UsernameDomain;
 import lombok.Builder;
@@ -14,20 +13,24 @@ import java.time.Instant;
  ************************/
 
 @Builder(toBuilder = true)
-public record StaffDomain(String id, UsernameDomain username, HashedPasswordDomain password, FullNameDomain fullName,
+public record StaffDomain(String id, UsernameDomain username, FullNameDomain fullName,
                           DescriptionDomain description, String tenantId, StaffRole role,
                           Integer version, boolean deleted, Instant createdAt, String createdBy, Instant updatedAt,
                           String updatedBy){
 	public StaffDomain{
-		if(username == null || password == null || fullName == null){
-			throw new IllegalArgumentException("Username, password, and full fullName must not be null");
+		if(username == null || fullName == null){
+			throw new IllegalArgumentException("Username and full fullName must not be null");
 		}
 	}
 
-	public static StaffDomain register(UsernameDomain username, HashedPasswordDomain password, FullNameDomain fullName,
+	public static StaffDomain register(UsernameDomain username, FullNameDomain fullName,
 	                                   DescriptionDomain note, String tenantId, StaffRole role, String createdBy){
 		Instant now = Instant.now();
-		return new StaffDomain(null, username, password, fullName, note, tenantId, role, null,false, now, createdBy, now, createdBy);
+		return new StaffDomain(null, username, fullName, note, tenantId, role, null,false, now, createdBy, now, createdBy);
+	}
+
+	public StaffDomain update(FullNameDomain fullName, DescriptionDomain note, String updatedBy){
+		return new StaffDomain(id, username, fullName, note, tenantId, role, version, deleted, createdAt, createdBy, Instant.now(), updatedBy);
 	}
 
 	public String usernameValue(){
@@ -44,9 +47,5 @@ public record StaffDomain(String id, UsernameDomain username, HashedPasswordDoma
 
 	public StaffDomain markDeleted(String updatedBy){
 		return toBuilder().deleted(true).updatedBy(updatedBy).updatedAt(Instant.now()).build();
-	}
-
-	public String passwordValue(){
-		return password != null ? password.value() : null;
 	}
 }

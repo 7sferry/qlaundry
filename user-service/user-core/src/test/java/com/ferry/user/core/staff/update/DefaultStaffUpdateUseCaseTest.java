@@ -13,6 +13,8 @@ import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.staff.StaffAddressDomain;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffEmailDomain;
+import com.ferry.user.domain.staff.StaffPasswordDomain;
+import com.ferry.user.domain.staff.StaffPasswordProjection;
 import com.ferry.user.domain.staff.StaffPhoneDomain;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.token.UserPrincipal;
@@ -25,6 +27,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -63,6 +66,8 @@ class DefaultStaffUpdateUseCaseTest{
 	@Captor
 	ArgumentCaptor<StaffDomain> staffCaptor;
 	@Captor
+	ArgumentCaptor<StaffPasswordDomain> passwordCaptor;
+	@Captor
 	ArgumentCaptor<StaffUpdateResponse> responseCaptor;
 
 	@Test
@@ -97,7 +102,7 @@ class DefaultStaffUpdateUseCaseTest{
 		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				List.of(), null, null);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain(OLD_HASHED_PASSWORD),
+		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
 				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
@@ -118,7 +123,7 @@ class DefaultStaffUpdateUseCaseTest{
 		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				null, null, null);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain(OLD_HASHED_PASSWORD),
+		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
 				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
@@ -136,7 +141,7 @@ class DefaultStaffUpdateUseCaseTest{
 		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, "NewSecret2026",
 				List.of(EMAIL), null, null);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain(OLD_HASHED_PASSWORD),
+		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
 				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
@@ -145,6 +150,7 @@ class DefaultStaffUpdateUseCaseTest{
 				.isInstanceOf(InvalidPasswordException.class)
 				.hasMessage("Current password is incorrect"));
 
+		then(gateway).should(never()).findCurrentPassword(anyString());
 		then(gateway).should(never()).save(any(StaffDomain.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
@@ -154,10 +160,12 @@ class DefaultStaffUpdateUseCaseTest{
 		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "wrong-current-password",
 				"NewSecret2026", List.of(EMAIL), null, null);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain(OLD_HASHED_PASSWORD),
+		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
 				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
+		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
+				.given(gateway).findCurrentPassword(USER_ID);
 		willReturn(false).given(passwordTool).matches("wrong-current-password", OLD_HASHED_PASSWORD);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
@@ -169,11 +177,58 @@ class DefaultStaffUpdateUseCaseTest{
 	}
 
 	@Test
-	void givenNoNewPassword_thenKeepsExistingHashedPassword(){
+	void givenNewPasswordSameAsCurrentPassword_thenThrowsInvalidPasswordException(){
+		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
+		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
+				"current-password", List.of(EMAIL), null, null);
+		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
+				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+				.toBuilder().id(USER_ID).build();
+		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
+		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
+				.given(gateway).findCurrentPassword(USER_ID);
+		willReturn(true).given(passwordTool).matches("current-password", OLD_HASHED_PASSWORD);
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(InvalidPasswordException.class)
+				.hasMessage("New password must be different from your current password"));
+
+		then(gateway).should(never()).save(any(StaffDomain.class));
+		then(gateway).should(never()).save(any(StaffPasswordDomain.class));
+		then(gateway).should(never()).findRecentPasswords(anyString(), any(Instant.class));
+		then(presenter).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void givenNewPasswordUsedWithinLastThreeMonths_thenThrowsInvalidPasswordException(){
+		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
+		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
+				"OldSecret2025", List.of(EMAIL), null, null);
+		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
+				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+				.toBuilder().id(USER_ID).build();
+		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
+		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
+				.given(gateway).findCurrentPassword(USER_ID);
+		willReturn(true).given(passwordTool).matches("current-password", OLD_HASHED_PASSWORD);
+		StaffPasswordProjection usedThisQuarter = new StaffPasswordProjection("quarter-old-hash");
+		willReturn(List.of(usedThisQuarter)).given(gateway).findRecentPasswords(eq(USER_ID), any(Instant.class));
+		willReturn(true).given(passwordTool).matches("OldSecret2025", "quarter-old-hash");
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(InvalidPasswordException.class));
+
+		then(gateway).should(never()).save(any(StaffDomain.class));
+		then(gateway).should(never()).save(any(StaffPasswordDomain.class));
+		then(presenter).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void givenNoNewPassword_thenNeverTouchesPasswordHistory(){
 		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				List.of(EMAIL), null, null);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain(OLD_HASHED_PASSWORD),
+		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
 				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
@@ -185,30 +240,37 @@ class DefaultStaffUpdateUseCaseTest{
 		useCase.execute(request, principal, presenter);
 
 		then(passwordTool).shouldHaveNoInteractions();
-		then(gateway).should().save(staffCaptor.capture());
-		thenSoftly(softly -> softly.then(staffCaptor.getValue().passwordValue()).isEqualTo(OLD_HASHED_PASSWORD));
+		then(gateway).should(never()).findCurrentPassword(anyString());
+		then(gateway).should(never()).save(any(StaffPasswordDomain.class));
+		then(gateway).should().save(any(StaffDomain.class));
 	}
 
 	@Test
-	void givenValidNewPassword_thenHashesAndUpdatesPassword(){
+	void givenValidNewPassword_thenHashesAndSavesPasswordHistory(){
 		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
 				"NewSecret2026", List.of(EMAIL), null, null);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain(OLD_HASHED_PASSWORD),
+		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
 				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
-		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(StaffDomain.class));
+		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
+				.given(gateway).findCurrentPassword(USER_ID);
 		willReturn(true).given(passwordTool).matches("current-password", OLD_HASHED_PASSWORD);
+		willReturn(List.of()).given(gateway).findRecentPasswords(eq(USER_ID), any(Instant.class));
 		willReturn(new HashedPasswordDomain("new-hash-xyz789")).given(passwordTool).hash(any());
+		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(StaffDomain.class));
 		willReturn(List.of()).given(gateway).findEmailsByStaffId(USER_ID);
 		willReturn(List.of()).given(gateway).findPhonesByStaffId(USER_ID);
 		willReturn(List.of()).given(gateway).findAddressesByStaffId(USER_ID);
 
 		useCase.execute(request, principal, presenter);
 
-		then(gateway).should().save(staffCaptor.capture());
-		thenSoftly(softly -> softly.then(staffCaptor.getValue().passwordValue()).isEqualTo("new-hash-xyz789"));
+		then(gateway).should().save(passwordCaptor.capture());
+		thenSoftly(softly -> {
+			softly.then(passwordCaptor.getValue().passwordValue()).isEqualTo("new-hash-xyz789");
+			softly.then(passwordCaptor.getValue().staffId()).isEqualTo(USER_ID);
+		});
 	}
 
 	@Test
@@ -216,7 +278,7 @@ class DefaultStaffUpdateUseCaseTest{
 		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				List.of(EMAIL), List.of(PHONE), List.of(ADDRESS_LINE));
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain(OLD_HASHED_PASSWORD),
+		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
 				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
@@ -245,7 +307,7 @@ class DefaultStaffUpdateUseCaseTest{
 		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				List.of(EMAIL), List.of(), List.of());
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new HashedPasswordDomain(OLD_HASHED_PASSWORD),
+		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
 				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);

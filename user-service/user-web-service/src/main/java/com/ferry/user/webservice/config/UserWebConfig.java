@@ -176,14 +176,15 @@ public class UserWebConfig{
 
 	@Bean
 	StaffRegistrationGateway staffRegistrationGateway(StaffJpaRepository staffJpaRepository,
+	                                                  StaffPasswordJpaRepository staffPasswordJpaRepository,
 	                                                  StaffEmailJpaRepository staffEmailJpaRepository,
 	                                                  StaffAddressJpaRepository staffAddressJpaRepository,
 	                                                  StaffPhoneJpaRepository staffPhoneJpaRepository,
 													  TenantJpaRepository tenantJpaRepository,
 													  StaffRoleJpaRepository staffRoleJpaRepository,
 	                                                  IdGenerator idGenerator){
-		return new StaffRegistrationJpaGateway(staffJpaRepository, staffEmailJpaRepository, staffAddressJpaRepository,
-				staffPhoneJpaRepository, staffRoleJpaRepository, tenantJpaRepository, idGenerator);
+		return new StaffRegistrationJpaGateway(staffJpaRepository, staffPasswordJpaRepository, staffEmailJpaRepository,
+				staffAddressJpaRepository, staffPhoneJpaRepository, staffRoleJpaRepository, tenantJpaRepository, idGenerator);
 	}
 
 	@Bean
@@ -216,8 +217,8 @@ public class UserWebConfig{
 	                                    UserSessionJpaRepository userSessionJpaRepository,
 	                                    UserSessionTypeJpaRepository userSessionTypeJpaRepository,
 	                                    TenantJpaRepository tenantJpaRepository){
-		return new StaffLoginJpaGateway(staffJpaRepository, userSessionJpaRepository, userSessionTypeJpaRepository,
-				tenantJpaRepository);
+		return new StaffLoginJpaGateway(staffJpaRepository, userSessionJpaRepository,
+				userSessionTypeJpaRepository, tenantJpaRepository);
 	}
 
 	@Bean
@@ -307,9 +308,9 @@ public class UserWebConfig{
 
 	@Bean
 	StaffResetPasswordGateway staffResetPasswordGateway(StaffJpaRepository staffJpaRepository,
-	                                                    StaffRoleJpaRepository staffRoleJpaRepository,
-	                                                    TenantJpaRepository tenantJpaRepository){
-		return new StaffResetPasswordJpaGateway(staffJpaRepository, staffRoleJpaRepository, tenantJpaRepository);
+	                                                    StaffPasswordJpaRepository staffPasswordJpaRepository,
+	                                                    IdGenerator idGenerator){
+		return new StaffResetPasswordJpaGateway(staffJpaRepository, staffPasswordJpaRepository, idGenerator);
 	}
 
 	@Bean
@@ -332,14 +333,16 @@ public class UserWebConfig{
 
 	@Bean
 	StaffUpdateGateway staffUpdateGateway(StaffJpaRepository staffJpaRepository,
+	                                      StaffPasswordJpaRepository staffPasswordJpaRepository,
 	                                      StaffRoleJpaRepository staffRoleJpaRepository,
 	                                      StaffEmailJpaRepository staffEmailJpaRepository,
 	                                      StaffPhoneJpaRepository staffPhoneJpaRepository,
 	                                      StaffAddressJpaRepository staffAddressJpaRepository,
 	                                      TenantJpaRepository tenantJpaRepository,
 	                                      IdGenerator idGenerator){
-		return new StaffUpdateJpaGateway(staffJpaRepository, staffRoleJpaRepository, staffEmailJpaRepository,
-				staffPhoneJpaRepository, staffAddressJpaRepository, tenantJpaRepository, idGenerator);
+		return new StaffUpdateJpaGateway(staffJpaRepository, staffPasswordJpaRepository, staffRoleJpaRepository,
+				staffEmailJpaRepository, staffPhoneJpaRepository, staffAddressJpaRepository, tenantJpaRepository,
+				idGenerator);
 	}
 
 	@Bean

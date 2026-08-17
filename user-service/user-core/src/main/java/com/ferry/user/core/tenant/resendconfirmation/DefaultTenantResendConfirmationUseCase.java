@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 /************************
  * Made by [MR Ferry™]  *
- * on Agustus 2026       *
+ * on Agustus 2026      *
  ************************/
 
 @RequiredArgsConstructor

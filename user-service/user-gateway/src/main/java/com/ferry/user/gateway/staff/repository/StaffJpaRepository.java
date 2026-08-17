@@ -1,6 +1,7 @@
 package com.ferry.user.gateway.staff.repository;
 
 import com.ferry.user.domain.staff.StaffFilter;
+import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.gateway.staff.entity.StaffJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -24,6 +25,15 @@ public interface StaffJpaRepository extends JpaRepository<StaffJpaEntity, String
 			"AND s.deleted IS FALSE " +
 			"AND s.username = :username ")
 	<T> Optional<T> fetchByUsername(@Param("username") String username, Class<T> clazz);
+
+	@Query("select new com.ferry.user.domain.staff.login.StaffLoginProjection(s.id, s.username, p.password, s.fullName, s.tenantId, s.roleId) " +
+			"from StaffJpaEntity s " +
+			"join StaffPasswordJpaEntity p on p.staffId = s.id and p.deleted is false " +
+			"where s.username = :username and s.deleted is false " +
+			"and exists(select 1 from TenantJpaEntity t where t.id = s.tenantId and t.deleted is false)" +
+			" order by s.id desc limit 1")
+	Optional<StaffLoginProjection> findLoginByUsername(@Param("username") String username);
+
 	<T> Optional<T> findById(String id, Class<T> clazz);
 	<T> Optional<T> findByIdAndDeletedIsFalse(String id, Class<T> clazz);
 	<T> Optional<T> findByUsernameAndTenantIdAndDeletedIsFalse(String username, String tenantId, Class<T> clazz);

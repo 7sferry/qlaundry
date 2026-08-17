@@ -30,7 +30,7 @@ public class StaffLoginJpaGateway implements StaffLoginGateway{
 
 	@Override
 	public Optional<StaffLoginProjection> findByUsername(UsernameDomain username){
-		return staffJpaRepository.fetchByUsername(username.value(), StaffLoginProjection.class);
+		return staffJpaRepository.findLoginByUsername(username.value());
 	}
 
 	@Override

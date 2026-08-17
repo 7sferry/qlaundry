@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /************************
  * Made by [MR Ferry™]  *
- * on Agustus 2026       *
+ * on Agustus 2026      *
  ************************/
 
 @RestController

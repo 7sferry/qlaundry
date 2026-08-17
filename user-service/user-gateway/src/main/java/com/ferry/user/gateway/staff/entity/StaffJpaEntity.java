@@ -2,7 +2,6 @@ package com.ferry.user.gateway.staff.entity;
 
 import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.FullNameDomain;
-import com.ferry.user.domain.common.HashedPasswordDomain;
 import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffRole;
@@ -32,8 +31,6 @@ public class StaffJpaEntity{
 	private String id;
 	@Column(unique = true, length = 50)
 	private String username;
-	@Column(nullable = false)
-	private String password;
 	@Column(nullable = false, length = 100)
 	private String fullName;
 	@Column
@@ -73,7 +70,7 @@ public class StaffJpaEntity{
 
 	public static StaffDomain construct(StaffJpaEntity saved){
 		return new StaffDomain(saved.id, new UsernameDomain(saved.username),
-				new HashedPasswordDomain(saved.password), new FullNameDomain(saved.fullName),
+				new FullNameDomain(saved.fullName),
 				new DescriptionDomain(saved.description), saved.tenantId,
 				StaffRole.findByValue(saved.roleId).orElseThrow(), saved.version,
 				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt,
@@ -85,7 +82,6 @@ public class StaffJpaEntity{
 		entity.id = id;
 		entity.username = register.usernameValue();
 		entity.description = register.descriptionValue();
-		entity.password = register.passwordValue();
 		entity.fullName = register.fullNameValue();
 		entity.tenantId = tenant.getId();
 		entity.tenant = tenant;

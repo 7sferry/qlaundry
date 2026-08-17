@@ -41,9 +41,11 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 		HashedPasswordDomain hashedPassword = passwordTool.hash(new RawPasswordDomain(request.password()));
 		FullNameDomain fullName = new FullNameDomain(request.fullName());
 		DescriptionDomain note = new DescriptionDomain(request.description());
-		StaffDomain registered = StaffDomain.register(username, hashedPassword, fullName, note, principal.tenantId(),
+		StaffDomain registered = StaffDomain.register(username, fullName, note, principal.tenantId(),
 				request.role(), principal.userId());
-		return gateway.save(registered);
+		StaffDomain saved = gateway.save(registered);
+		gateway.save(StaffPasswordDomain.register(saved.id(), hashedPassword, principal.userId()));
+		return saved;
 	}
 
 	private void savePhone(StaffRegistrationRequest request, StaffDomain registeredUser, UserPrincipal principal){

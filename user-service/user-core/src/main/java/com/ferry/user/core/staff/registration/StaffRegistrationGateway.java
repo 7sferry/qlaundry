@@ -4,6 +4,7 @@ import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.staff.StaffAddressDomain;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffEmailDomain;
+import com.ferry.user.domain.staff.StaffPasswordDomain;
 import com.ferry.user.domain.staff.StaffPhoneDomain;
 
 /************************
@@ -13,6 +14,7 @@ import com.ferry.user.domain.staff.StaffPhoneDomain;
 
 public interface StaffRegistrationGateway{
 	StaffDomain save(StaffDomain register);
+	StaffPasswordDomain save(StaffPasswordDomain register);
 	StaffEmailDomain save(StaffEmailDomain register);
 	StaffAddressDomain save(StaffAddressDomain register);
 	StaffPhoneDomain save(StaffPhoneDomain register);

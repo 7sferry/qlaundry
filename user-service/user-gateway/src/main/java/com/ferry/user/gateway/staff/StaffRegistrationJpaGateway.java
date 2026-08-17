@@ -5,6 +5,7 @@ import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.staff.StaffAddressDomain;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffEmailDomain;
+import com.ferry.user.domain.staff.StaffPasswordDomain;
 import com.ferry.user.domain.staff.StaffPhoneDomain;
 import com.ferry.user.gateway.staff.entity.*;
 import com.ferry.user.gateway.staff.repository.*;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class StaffRegistrationJpaGateway implements StaffRegistrationGateway{
 	private final StaffJpaRepository staffJpaRepository;
+	private final StaffPasswordJpaRepository staffPasswordJpaRepository;
 	private final StaffEmailJpaRepository staffEmailJpaRepository;
 	private final StaffAddressJpaRepository staffAddressJpaRepository;
 	private final StaffPhoneJpaRepository staffPhoneJpaRepository;
@@ -36,6 +38,14 @@ public class StaffRegistrationJpaGateway implements StaffRegistrationGateway{
 		StaffJpaEntity entity = StaffJpaEntity.construct(id, register, tenant, role);
 		StaffJpaEntity saved = staffJpaRepository.save(entity);
 		return StaffJpaEntity.construct(saved);
+	}
+
+	@Override
+	public StaffPasswordDomain save(StaffPasswordDomain register){
+		String id = idGenerator.generateId();
+		StaffJpaEntity staff = staffJpaRepository.getReferenceById(register.staffId());
+		StaffPasswordJpaEntity saved = staffPasswordJpaRepository.save(StaffPasswordJpaEntity.construct(id, register, staff));
+		return StaffPasswordJpaEntity.construct(saved);
 	}
 
 	@Override

@@ -1,19 +1,11 @@
 package com.ferry.user.core.staff.update;
 
+import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tools.PasswordTool;
-import com.ferry.user.domain.common.AddressLineDomain;
-import com.ferry.user.domain.common.DescriptionDomain;
-import com.ferry.user.domain.common.EmailDomain;
-import com.ferry.user.domain.common.FullNameDomain;
-import com.ferry.user.domain.common.HashedPasswordDomain;
-import com.ferry.user.domain.common.PhoneDomain;
-import com.ferry.user.domain.common.RawPasswordDomain;
+import com.ferry.user.domain.common.*;
 import com.ferry.user.domain.common.exception.InvalidPasswordException;
 import com.ferry.user.domain.common.exception.NotFoundException;
-import com.ferry.user.domain.staff.StaffAddressDomain;
-import com.ferry.user.domain.staff.StaffDomain;
-import com.ferry.user.domain.staff.StaffEmailDomain;
-import com.ferry.user.domain.staff.StaffPhoneDomain;
+import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.token.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 
@@ -35,7 +27,11 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 		request.validate();
 		StaffDomain staff = gateway.findById(principal.userId())
 				.orElseThrow(() -> new NotFoundException("Staff Not Found"));
-		StaffDomain saved = gateway.save(updateProfile(staff, request, principal));
+		StaffPasswordDomain newPassword = validatePasswordChange(staff, request);
+		if(newPassword != null){
+			gateway.save(newPassword);
+		}
+		StaffDomain saved = updateProfile(staff, request, principal);
 		replaceEmails(request, saved, principal);
 		replacePhones(request, saved, principal);
 		replaceAddresses(request, saved, principal);
@@ -48,28 +44,45 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 	private StaffDomain updateProfile(StaffDomain staff, StaffUpdateRequest request, UserPrincipal principal){
 		FullNameDomain fullName = new FullNameDomain(request.fullName());
 		DescriptionDomain description = new DescriptionDomain(request.description());
-		HashedPasswordDomain password = getPassword(request, staff);
-		return staff.toBuilder()
-				.fullName(fullName)
-				.description(description)
-				.updatedBy(principal.userId())
-				.updatedAt(Instant.now())
-				.password(password)
-				.build();
+		return gateway.save(staff.update(fullName, description, principal.userId()));
 	}
 
-	private HashedPasswordDomain getPassword(StaffUpdateRequest request, StaffDomain staff){
+	private StaffPasswordDomain validatePasswordChange(StaffDomain staff, StaffUpdateRequest request){
 		if(request.newPassword() == null || request.newPassword().isBlank()){
-			return staff.password();
+			return null;
 		}
-		return changePassword(staff, request);
-	}
-
-	private HashedPasswordDomain changePassword(StaffDomain staff, StaffUpdateRequest request){
-		if(request.currentPassword() == null || !passwordTool.matches(request.currentPassword(), staff.passwordValue())){
+		if(request.currentPassword() == null){
 			throw new InvalidPasswordException("Current password is incorrect");
 		}
-		return passwordTool.hash(new RawPasswordDomain(request.newPassword()));
+		StaffPasswordProjection currentPassword = gateway.findCurrentPassword(staff.id())
+				.orElseThrow(() -> new InvalidPasswordException("Current password is incorrect"));
+		validateCurrentPassword(request, currentPassword);
+		RawPasswordDomain newRawPassword = new RawPasswordDomain(request.newPassword());
+		validateRecentPassword(newRawPassword, currentPassword);
+		validateLastUsedPasswords(staff, newRawPassword);
+		return StaffPasswordDomain.register(staff.id(), passwordTool.hash(newRawPassword), staff.id());
+	}
+
+	private void validateLastUsedPasswords(StaffDomain staff, RawPasswordDomain newRawPassword){
+		Instant passwordReuseCutoff = Instant.now().minus(PasswordConstant.PASSWORD_REUSE_WINDOW);
+		List<StaffPasswordProjection> recentPasswords = gateway.findRecentPasswords(staff.id(), passwordReuseCutoff);
+		boolean reused = recentPasswords.stream()
+				.anyMatch(recent -> passwordTool.matches(newRawPassword.value(), recent.password()));
+		if(reused){
+			throw new InvalidPasswordException("Password was used within the last 3 months, please choose a different password");
+		}
+	}
+
+	private void validateRecentPassword(RawPasswordDomain newRawPassword, StaffPasswordProjection currentPassword){
+		if(passwordTool.matches(newRawPassword.value(), currentPassword.password())){
+			throw new InvalidPasswordException("New password must be different from your current password");
+		}
+	}
+
+	private void validateCurrentPassword(StaffUpdateRequest request, StaffPasswordProjection currentPassword){
+		if(!passwordTool.matches(request.currentPassword(), currentPassword.password())){
+			throw new InvalidPasswordException("Current password is incorrect");
+		}
 	}
 
 	private void replaceEmails(StaffUpdateRequest request, StaffDomain staff, UserPrincipal principal){

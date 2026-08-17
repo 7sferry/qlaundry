@@ -2,7 +2,7 @@ package com.ferry.user.domain.tenant.confirmregistration;
 
 /************************
  * Made by [MR Ferry™]  *
- * on Agustus 2026       *
+ * on Agustus 2026      *
  ************************/
 
 public class FailedToConfirmTenantException extends RuntimeException{

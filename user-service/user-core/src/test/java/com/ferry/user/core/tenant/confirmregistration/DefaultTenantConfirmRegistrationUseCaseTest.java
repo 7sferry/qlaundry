@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 
 /************************
  * Made by [MR Ferry™]  *
- * on Agustus 2026       *
+ * on Agustus 2026      *
  ************************/
 
 @ExtendWith(MockitoExtension.class)

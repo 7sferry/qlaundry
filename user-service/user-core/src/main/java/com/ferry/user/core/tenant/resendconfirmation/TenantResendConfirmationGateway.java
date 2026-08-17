@@ -8,7 +8,7 @@ import java.util.Optional;
 
 /************************
  * Made by [MR Ferry™]  *
- * on Agustus 2026       *
+ * on Agustus 2026      *
  ************************/
 
 public interface TenantResendConfirmationGateway{

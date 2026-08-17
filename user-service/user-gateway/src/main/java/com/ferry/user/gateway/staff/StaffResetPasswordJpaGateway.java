@@ -3,14 +3,17 @@ package com.ferry.user.gateway.staff;
 import com.ferry.user.core.staff.resetpassword.StaffResetPasswordGateway;
 import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.staff.StaffDomain;
+import com.ferry.user.domain.staff.StaffPasswordDomain;
+import com.ferry.user.domain.staff.StaffPasswordProjection;
 import com.ferry.user.gateway.staff.entity.StaffJpaEntity;
-import com.ferry.user.gateway.staff.entity.StaffRoleJpaEntity;
+import com.ferry.user.gateway.staff.entity.StaffPasswordJpaEntity;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
-import com.ferry.user.gateway.staff.repository.StaffRoleJpaRepository;
-import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
-import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
+import com.ferry.user.gateway.staff.repository.StaffPasswordJpaRepository;
+import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 /************************
@@ -21,8 +24,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class StaffResetPasswordJpaGateway implements StaffResetPasswordGateway{
 	private final StaffJpaRepository staffJpaRepository;
-	private final StaffRoleJpaRepository staffRoleJpaRepository;
-	private final TenantJpaRepository tenantJpaRepository;
+	private final StaffPasswordJpaRepository staffPasswordJpaRepository;
+	private final IdGenerator idGenerator;
 
 	@Override
 	public Optional<StaffDomain> findByUsername(UsernameDomain username){
@@ -31,10 +34,21 @@ public class StaffResetPasswordJpaGateway implements StaffResetPasswordGateway{
 	}
 
 	@Override
-	public void save(StaffDomain updatedStaff){
-		TenantJpaEntity tenant = tenantJpaRepository.getReferenceById(updatedStaff.tenantId());
-		StaffRoleJpaEntity role = staffRoleJpaRepository.getReferenceById(updatedStaff.role().getValue());
-		staffJpaRepository.save(StaffJpaEntity.construct(updatedStaff.id(), updatedStaff, tenant, role));
+	public Optional<StaffPasswordProjection> findCurrentPassword(String staffId){
+		return staffPasswordJpaRepository.findCurrent(staffId);
+	}
+
+	@Override
+	public List<StaffPasswordProjection> findRecentPasswords(String staffId, Instant since){
+		return staffPasswordJpaRepository.findRecent(staffId, since);
+	}
+
+	@Override
+	public void save(StaffPasswordDomain password){
+		staffPasswordJpaRepository.softDeleteByStaffId(password.staffId(), password.createdBy());
+		String id = idGenerator.generateId();
+		StaffJpaEntity staff = staffJpaRepository.getReferenceById(password.staffId());
+		staffPasswordJpaRepository.save(StaffPasswordJpaEntity.construct(id, password, staff));
 	}
 
 }
