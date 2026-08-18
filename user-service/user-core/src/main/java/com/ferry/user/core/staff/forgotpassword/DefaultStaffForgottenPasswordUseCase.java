@@ -59,18 +59,18 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 				EmailTriggerDomain saved = emailPublisher.save(config);
 				emailPublisher.publish(saved);
 				String maskedEmail = maskEmail(email.email());
-				awaitMinimumResponseTime(startedAt);
 				presenter.present(new StaffForgottenPasswordResponse(maskedEmail));
+				awaitMinimumResponseTime(startedAt);
 			}, () -> {
 				String maskedFakeEmail = maskFakeEmail(username.value());
-				awaitMinimumResponseTime(startedAt);
 				presenter.present(new StaffForgottenPasswordResponse(maskedFakeEmail));
+				awaitMinimumResponseTime(startedAt);
 			});
 		} catch (Exception e){
 			log.error("Failed to process forgotten password request", e);
 			String maskedFakeEmail = maskFakeEmail(request.username());
-			awaitMinimumResponseTime(startedAt);
 			presenter.present(new StaffForgottenPasswordResponse(maskedFakeEmail));
+			awaitMinimumResponseTime(startedAt);
 		}
 	}
 

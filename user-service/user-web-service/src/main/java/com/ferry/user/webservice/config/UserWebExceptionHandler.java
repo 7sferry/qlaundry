@@ -1,5 +1,6 @@
 package com.ferry.user.webservice.config;
 
+import com.ferry.user.core.tenant.resendconfirmation.TenantResendConfirmationResponse;
 import com.ferry.user.domain.common.exception.*;
 import com.ferry.user.domain.staff.forgottenpassword.FailedToResetPasswordException;
 import com.ferry.user.domain.staff.login.FailedToLoginException;
@@ -12,6 +13,7 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -71,12 +73,6 @@ public class UserWebExceptionHandler{
 	ProblemDetail handleConfirmTenantError(FailedToConfirmTenantException e){
 		log.warn(e.getMessage(), e);
 		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid or expired confirmation link.");
-	}
-
-	@ExceptionHandler(FailedToResendConfirmationException.class)
-	ProblemDetail handleResendConfirmationError(FailedToResendConfirmationException e){
-		log.warn(e.getMessage(), e);
-		return ProblemDetail.forStatusAndDetail(HttpStatus.OK, "A new confirmation email has been sent.");
 	}
 
 	@ExceptionHandler(ForbiddenActionException.class)

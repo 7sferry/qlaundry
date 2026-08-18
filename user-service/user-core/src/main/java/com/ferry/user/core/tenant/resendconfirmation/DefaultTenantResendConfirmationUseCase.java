@@ -16,6 +16,7 @@ import com.ferry.user.domain.tenant.resendconfirmation.FailedToResendConfirmatio
 import com.ferry.user.domain.tenant.resendconfirmation.TenantAdminContactProjection;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HexFormat;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +26,7 @@ import java.util.concurrent.TimeUnit;
  * on Agustus 2026      *
  ************************/
 
+@Slf4j
 @RequiredArgsConstructor
 public class DefaultTenantResendConfirmationUseCase implements TenantResendConfirmationUseCase{
 	private static final int CONFIRMATION_TOKEN_BYTES = 32;
@@ -52,12 +54,10 @@ public class DefaultTenantResendConfirmationUseCase implements TenantResendConfi
 			resendConfirmationEmail(tenant, admin);
 			presenter.present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
 			awaitMinimumResponseTime(startedAt);
-		} catch (FailedToResendConfirmationException e){
-			awaitMinimumResponseTime(startedAt);
-			throw e;
 		} catch (Exception e){
+			log.error("Failed to process resend confirmation request", e);
+			presenter.present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
 			awaitMinimumResponseTime(startedAt);
-			throw new FailedToResendConfirmationException(e);
 		}
 	}
 
