@@ -23,6 +23,10 @@ public record StaffDomain(String id, UsernameDomain username, FullNameDomain ful
 		}
 	}
 
+	public static StaffDomain fake(FullNameDomain name){
+		return new StaffDomain(null, new UsernameDomain(name.value()), name, null, null, StaffRole.STAFF, null, false, null, null, null, null);
+	}
+
 	public static StaffDomain register(UsernameDomain username, FullNameDomain fullName,
 	                                   DescriptionDomain note, String tenantId, StaffRole role, String createdBy){
 		Instant now = Instant.now();

@@ -24,6 +24,7 @@ import com.ferry.user.gateway.staff.repository.StaffPhoneJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffRoleJpaRepository;
 import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
+import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
 
@@ -46,6 +47,7 @@ public class StaffUpdateJpaGateway implements StaffUpdateGateway{
 	private final StaffAddressJpaRepository staffAddressJpaRepository;
 	private final TenantJpaRepository tenantJpaRepository;
 	private final IdGenerator idGenerator;
+	private final CryptoTool cryptoTool;
 
 	@Override
 	public Optional<StaffDomain> findById(String id){
@@ -82,21 +84,21 @@ public class StaffUpdateJpaGateway implements StaffUpdateGateway{
 	public List<StaffEmailDomain> findEmailsByStaffId(String staffId){
 		StaffEmailFilter filter = StaffEmailFilter.builder().staffId(staffId).build();
 		return staffEmailJpaRepository.findAllWithFilter(filter, StaffEmailJpaEntity.class).stream()
-				.map(StaffEmailJpaEntity::construct).toList();
+				.map(entity -> StaffEmailJpaEntity.construct(entity, cryptoTool)).toList();
 	}
 
 	@Override
 	public List<StaffPhoneDomain> findPhonesByStaffId(String staffId){
 		StaffPhoneFilter filter = StaffPhoneFilter.builder().staffId(staffId).build();
 		return staffPhoneJpaRepository.findAllWithFilter(filter, StaffPhoneJpaEntity.class).stream()
-				.map(StaffPhoneJpaEntity::construct).toList();
+				.map(entity -> StaffPhoneJpaEntity.construct(entity, cryptoTool)).toList();
 	}
 
 	@Override
 	public List<StaffAddressDomain> findAddressesByStaffId(String staffId){
 		StaffAddressFilter filter = StaffAddressFilter.builder().staffId(staffId).build();
 		return staffAddressJpaRepository.findAllWithFilter(filter, StaffAddressJpaEntity.class).stream()
-				.map(StaffAddressJpaEntity::constructUserAddressDomain).toList();
+				.map(entity -> StaffAddressJpaEntity.constructUserAddressDomain(entity, cryptoTool)).toList();
 	}
 
 	@Override
@@ -118,24 +120,24 @@ public class StaffUpdateJpaGateway implements StaffUpdateGateway{
 	public StaffEmailDomain save(StaffEmailDomain email){
 		String id = idGenerator.generateId();
 		StaffJpaEntity staff = staffJpaRepository.getReferenceById(email.staffId());
-		StaffEmailJpaEntity saved = staffEmailJpaRepository.save(StaffEmailJpaEntity.construct(id, email, staff));
-		return StaffEmailJpaEntity.construct(saved);
+		StaffEmailJpaEntity saved = staffEmailJpaRepository.save(StaffEmailJpaEntity.construct(id, email, staff, cryptoTool));
+		return StaffEmailJpaEntity.construct(saved, cryptoTool);
 	}
 
 	@Override
 	public StaffPhoneDomain save(StaffPhoneDomain phone){
 		String id = idGenerator.generateId();
 		StaffJpaEntity staff = staffJpaRepository.getReferenceById(phone.staffId());
-		StaffPhoneJpaEntity saved = staffPhoneJpaRepository.save(StaffPhoneJpaEntity.construct(id, phone, staff));
-		return StaffPhoneJpaEntity.construct(saved);
+		StaffPhoneJpaEntity saved = staffPhoneJpaRepository.save(StaffPhoneJpaEntity.construct(id, phone, staff, cryptoTool));
+		return StaffPhoneJpaEntity.construct(saved, cryptoTool);
 	}
 
 	@Override
 	public StaffAddressDomain save(StaffAddressDomain address){
 		String id = idGenerator.generateId();
 		StaffJpaEntity staff = staffJpaRepository.getReferenceById(address.staffId());
-		StaffAddressJpaEntity saved = staffAddressJpaRepository.save(StaffAddressJpaEntity.construct(id, address, staff));
-		return StaffAddressJpaEntity.constructUserAddressDomain(saved);
+		StaffAddressJpaEntity saved = staffAddressJpaRepository.save(StaffAddressJpaEntity.construct(id, address, staff, cryptoTool));
+		return StaffAddressJpaEntity.constructUserAddressDomain(saved, cryptoTool);
 	}
 
 }

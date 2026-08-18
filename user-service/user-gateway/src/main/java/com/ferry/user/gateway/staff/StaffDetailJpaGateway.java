@@ -10,10 +10,14 @@ import com.ferry.user.domain.staff.detail.StaffDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffEmailDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffPhoneDetailProjection;
 import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.gateway.staff.entity.StaffAddressJpaEntity;
+import com.ferry.user.gateway.staff.entity.StaffEmailJpaEntity;
+import com.ferry.user.gateway.staff.entity.StaffPhoneJpaEntity;
 import com.ferry.user.gateway.staff.repository.StaffAddressJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffPhoneJpaRepository;
+import com.ferry.utils.crypto.CryptoTool;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -30,6 +34,7 @@ public class StaffDetailJpaGateway implements StaffDetailGateway{
 	private final StaffEmailJpaRepository emailJpaRepository;
 	private final StaffPhoneJpaRepository phoneJpaRepository;
 	private final StaffAddressJpaRepository addressJpaRepository;
+	private final CryptoTool cryptoTool;
 
 	@Override
 	public Optional<StaffDetailProjection> findDetail(UsernameDomain username, TenantIdDomain tenantId){
@@ -38,16 +43,25 @@ public class StaffDetailJpaGateway implements StaffDetailGateway{
 
 	@Override
 	public List<StaffPhoneDetailProjection> findByFilter(StaffPhoneFilter filter){
-		return phoneJpaRepository.findAllWithFilter(filter, StaffPhoneDetailProjection.class);
+		return phoneJpaRepository.findAllWithFilter(filter, StaffPhoneJpaEntity.class).stream()
+				.map(entity -> StaffPhoneJpaEntity.construct(entity, cryptoTool))
+				.map(domain -> new StaffPhoneDetailProjection(domain.phone().value()))
+				.toList();
 	}
 
 	@Override
 	public List<StaffAddressDetailProjection> findByFilter(StaffAddressFilter filter){
-		return addressJpaRepository.findAllWithFilter(filter, StaffAddressDetailProjection.class);
+		return addressJpaRepository.findAllWithFilter(filter, StaffAddressJpaEntity.class).stream()
+				.map(entity -> StaffAddressJpaEntity.constructUserAddressDomain(entity, cryptoTool))
+				.map(domain -> new StaffAddressDetailProjection(domain.addressLine().value()))
+				.toList();
 	}
 
 	@Override
 	public List<StaffEmailDetailProjection> findByFilter(StaffEmailFilter filter){
-		return emailJpaRepository.findAllWithFilter(filter, StaffEmailDetailProjection.class);
+		return emailJpaRepository.findAllWithFilter(filter, StaffEmailJpaEntity.class).stream()
+				.map(entity -> StaffEmailJpaEntity.construct(entity, cryptoTool))
+				.map(domain -> new StaffEmailDetailProjection(domain.email().value()))
+				.toList();
 	}
 }

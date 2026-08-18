@@ -2,6 +2,8 @@ package com.ferry.user.gateway.staff.entity;
 
 import com.ferry.user.domain.common.PhoneDomain;
 import com.ferry.user.domain.staff.StaffPhoneDomain;
+import com.ferry.utils.crypto.CryptoAad;
+import com.ferry.utils.crypto.CryptoTool;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -19,8 +21,10 @@ import java.time.Instant;
 @Setter
 @EqualsAndHashCode(of = "id")
 @Entity
-@Table(name = "staff_phones")
+@Table(name = StaffPhoneJpaEntity.TABLE, indexes = @Index(name = "idx_staff_phones_phone_hash", columnList = "phone_hash"))
 public class StaffPhoneJpaEntity{
+	static final String TABLE = "staff_phones";
+	private static final String COLUMN_PHONE = "phone";
 
 	@Id
 	@Column(nullable = false, length = 50)
@@ -30,8 +34,10 @@ public class StaffPhoneJpaEntity{
 	@Setter(AccessLevel.PRIVATE)
 	@Column(nullable = false, name = "staff_id", insertable = false, updatable = false)
 	private String staffId;
-	@Column(nullable = false, length = 20)
-	private String phone;
+	@Column(name = "phone", nullable = false, length = 128)
+	private String phoneCipher;
+	@Column(name = "phone_hash", length = 64)
+	private String phoneHash;
 	@Version
 	private Integer version;
 	@Column(nullable = false)
@@ -50,12 +56,19 @@ public class StaffPhoneJpaEntity{
 		this.staffId = staff.getId();
 	}
 
-	public static StaffPhoneJpaEntity construct(String id, StaffPhoneDomain register, StaffJpaEntity staff){
+	private static CryptoAad aad(String staffId){
+		return new CryptoAad(TABLE, COLUMN_PHONE, staffId);
+	}
+
+	public static StaffPhoneJpaEntity construct(String id, StaffPhoneDomain register, StaffJpaEntity staff,
+	                                            CryptoTool cryptoTool){
 		StaffPhoneJpaEntity entity = new StaffPhoneJpaEntity();
 		entity.id = id;
 		entity.staffId = staff.getId();
 		entity.staff = staff;
-		entity.phone = register.phone().value();
+		String phone = register.phone().value();
+		entity.phoneCipher = cryptoTool.encrypt(phone, aad(staff.getId()));
+		entity.phoneHash = cryptoTool.blindIndex(phone);
 		entity.createdBy = register.createdBy();
 		entity.updatedAt = register.updatedAt();
 		entity.createdAt = register.createdAt();
@@ -65,8 +78,17 @@ public class StaffPhoneJpaEntity{
 		return entity;
 	}
 
-	public static StaffPhoneDomain construct(StaffPhoneJpaEntity saved){
-		return new StaffPhoneDomain(saved.id, saved.staffId, new PhoneDomain(saved.phone), saved.version,
+	public static StaffPhoneDomain construct(StaffPhoneJpaEntity saved, CryptoTool cryptoTool){
+		String phone = cryptoTool.decrypt(saved.phoneCipher, aad(saved.staffId));
+		return new StaffPhoneDomain(saved.id, saved.staffId, new PhoneDomain(phone), saved.version,
 				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+	}
+
+	public void backfill(CryptoTool cryptoTool){
+		String phone = cryptoTool.decrypt(phoneCipher, aad(staffId));
+		if(phone.equals(phoneCipher)){
+			phoneCipher = cryptoTool.encrypt(phone, aad(staffId));
+		}
+		phoneHash = cryptoTool.blindIndex(phone);
 	}
 }

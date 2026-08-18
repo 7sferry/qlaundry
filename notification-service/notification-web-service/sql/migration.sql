@@ -21,3 +21,13 @@ CREATE TABLE email_notifications
     created_at   TIMESTAMPTZ  NOT NULL,
     sent_at      TIMESTAMPTZ  NOT NULL
 );
+
+-- encrypt recipient at rest (application-level AES-256-GCM, own key — independent from user-service):
+-- ciphertext is <keyId>:<base64url(nonce || ciphertext || tag)>, bound to AAD email_notifications:recipient:<row id>.
+-- ddl-auto: update never alters an existing column's type, so widen by hand:
+ALTER TABLE email_notifications ALTER COLUMN recipient TYPE VARCHAR(512);
+
+-- then encrypt the existing rows: run notification-web-service once with --spring.profiles.active=backfill
+-- (keeps app.crypto.allow-plaintext-read=true so plaintext rows read through), verify with
+--   SELECT count(*) FROM email_notifications WHERE recipient NOT LIKE 'v1:%';
+-- and flip app.crypto.allow-plaintext-read to false once it returns 0.

@@ -9,6 +9,7 @@ import com.ferry.notification.gateway.email.entity.EmailNotificationJpaEntity;
 import com.ferry.notification.gateway.email.entity.EmailTypeJpaEntity;
 import com.ferry.notification.gateway.email.repository.EmailNotificationJpaRepository;
 import com.ferry.notification.gateway.email.repository.EmailTypeJpaRepository;
+import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
 
@@ -24,12 +25,13 @@ public class EmailHistoryJpaGateway implements EmailHistoryGateway{
 	private final EmailNotificationJpaRepository emailNotificationJpaRepository;
 	private final EmailTypeJpaRepository emailTypeJpaRepository;
 	private final IdGenerator idGenerator;
+	private final CryptoTool cryptoTool;
 
 	@Override
 	public EmailNotificationDomain save(EmailNotificationDomain notification){
 		String id = idGenerator.generateId();
 		EmailTypeJpaEntity type = emailTypeJpaRepository.getReferenceById(notification.typeIdValue());
-		EmailNotificationJpaEntity entity = EmailNotificationJpaEntity.construct(id, notification, type);
+		EmailNotificationJpaEntity entity = EmailNotificationJpaEntity.construct(id, notification, type, cryptoTool);
 		EmailNotificationJpaEntity saved = emailNotificationJpaRepository.save(entity);
 		return constructEmailNotificationDomain(saved);
 	}
@@ -37,13 +39,13 @@ public class EmailHistoryJpaGateway implements EmailHistoryGateway{
 	@Override
 	public Optional<EmailNotificationDomain> findByReferenceId(String referenceId){
 		return emailNotificationJpaRepository.findByReferenceId(referenceId)
-				.map(EmailHistoryJpaGateway::constructEmailNotificationDomain);
+				.map(this::constructEmailNotificationDomain);
 	}
 
-	private static EmailNotificationDomain constructEmailNotificationDomain(EmailNotificationJpaEntity saved){
+	private EmailNotificationDomain constructEmailNotificationDomain(EmailNotificationJpaEntity saved){
 		return new EmailNotificationDomain(saved.getId(), saved.getReferenceId(),
 				EmailType.fromValue(saved.getTypeId()).orElseThrow(),
-				new EmailDomain(saved.getRecipient()), new SubjectDomain(saved.getSubject()),
+				new EmailDomain(saved.decryptRecipient(cryptoTool)), new SubjectDomain(saved.getSubject()),
 				saved.getCreatedAt(), saved.getVersion(), saved.getSentAt());
 	}
 

@@ -67,31 +67,79 @@ import com.ferry.user.gateway.tenant.repository.TenantStatusJpaRepository;
 import com.ferry.user.webservice.tenant.expiration.TenantExpirationScheduler;
 import com.ferry.user.webservice.tools.Argon2PasswordTool;
 import com.ferry.user.webservice.tools.DefaultUserCacheManager;
+import com.ferry.user.gateway.notification.entity.EmailTriggerJpaEntity;
+import com.ferry.user.gateway.staff.entity.StaffAddressJpaEntity;
+import com.ferry.user.gateway.staff.entity.StaffEmailJpaEntity;
+import com.ferry.user.gateway.staff.entity.StaffPhoneJpaEntity;
 import com.ferry.utils.cache.CacheHandler;
 import com.ferry.utils.cache.DefaultCacheHandler;
+import com.ferry.utils.crypto.AesGcmCryptoTool;
+import com.ferry.utils.crypto.CryptoKeyConfig;
+import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import com.ferry.utils.generator.UlidGenerator;
 import com.ferry.utils.json.DefaultJsonManager;
 import com.ferry.utils.json.JsonManager;
 import com.password4j.Argon2Function;
 import com.password4j.types.Argon2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Profile;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password4j.Argon2Password4jPasswordEncoder;
 import tools.jackson.databind.ObjectMapper;
+
+import java.util.List;
 
 /************************
  * Made by [MR Ferry™]  *
  * on Juli 2026         *
  ************************/
 
+@Slf4j
 @Configuration
 @Lazy
+@EnableConfigurationProperties(CryptoKeysProperties.class)
 public class UserWebConfig{
+
+	@Bean
+	CryptoTool cryptoTool(CryptoKeysProperties cryptoKeysProperties){
+		return new AesGcmCryptoTool(CryptoKeyConfig.of(cryptoKeysProperties.activeKeyId(),
+				cryptoKeysProperties.keys(), cryptoKeysProperties.blindIndexKey(),
+				cryptoKeysProperties.allowPlaintextRead()));
+	}
+
+	// one-off encryption backfill: run once with --spring.profiles.active=backfill while
+	// app.crypto.allow-plaintext-read is true, then flip it to false
+//	@Bean
+	ApplicationRunner cryptoBackfillRunner(StaffEmailJpaRepository staffEmailJpaRepository,
+	                                       StaffPhoneJpaRepository staffPhoneJpaRepository,
+	                                       StaffAddressJpaRepository staffAddressJpaRepository,
+	                                       EmailTriggerJpaRepository emailTriggerJpaRepository,
+	                                       CryptoTool cryptoTool){
+		return _ -> {
+			List<StaffEmailJpaEntity> emails = staffEmailJpaRepository.findAll();
+			emails.forEach(entity -> entity.backfill(cryptoTool));
+			staffEmailJpaRepository.saveAll(emails);
+			List<StaffPhoneJpaEntity> phones = staffPhoneJpaRepository.findAll();
+			phones.forEach(entity -> entity.backfill(cryptoTool));
+			staffPhoneJpaRepository.saveAll(phones);
+			List<StaffAddressJpaEntity> addresses = staffAddressJpaRepository.findAll();
+			addresses.forEach(entity -> entity.backfill(cryptoTool));
+			staffAddressJpaRepository.saveAll(addresses);
+			List<EmailTriggerJpaEntity> triggers = emailTriggerJpaRepository.findAll();
+			triggers.forEach(entity -> entity.backfill(cryptoTool));
+			emailTriggerJpaRepository.saveAll(triggers);
+			log.info("Crypto backfill done: {} staff emails, {} staff phones, {} staff addresses, {} email triggers",
+					emails.size(), phones.size(), addresses.size(), triggers.size());
+		};
+	}
 
 	@Bean
 	TenantRegistrationGateway tenantRegistrationGateway(IdGenerator idGenerator,
@@ -108,11 +156,12 @@ public class UserWebConfig{
 	                                                  EmailTriggerTypeJpaRepository emailTriggerTypeJpaRepository,
 	                                                  EmailTriggerStatusJpaRepository emailTriggerStatusJpaRepository,
 	                                                  IdGenerator idGenerator, JsonManager jsonManager,
+	                                                  CryptoTool cryptoTool,
 	                                                  StringRedisTemplate stringRedisTemplate,
 	                                                  PlatformTransactionManager transactionManager,
 	                                                  @Value("${app.notification.stream.email.key}") String streamEmailKey){
 		return new UserEmailRedisPublisher(emailTriggerJpaRepository, emailTriggerTypeJpaRepository,
-				emailTriggerStatusJpaRepository, idGenerator, jsonManager, stringRedisTemplate,
+				emailTriggerStatusJpaRepository, idGenerator, jsonManager, cryptoTool, stringRedisTemplate,
 				transactionManager, streamEmailKey);
 	}
 
@@ -139,8 +188,11 @@ public class UserWebConfig{
 
 	@Bean
 	TenantResendConfirmationGateway tenantResendConfirmationGateway(TenantJpaRepository tenantJpaRepository,
-	                                                                StaffEmailJpaRepository staffEmailJpaRepository){
-		return new TenantResendConfirmationJpaGateway(tenantJpaRepository, staffEmailJpaRepository);
+	                                                                StaffEmailJpaRepository staffEmailJpaRepository,
+	                                                                StaffJpaRepository staffJpaRepository,
+	                                                                CryptoTool cryptoTool){
+		return new TenantResendConfirmationJpaGateway(tenantJpaRepository, staffEmailJpaRepository,
+				staffJpaRepository, cryptoTool);
 	}
 
 	@Bean
@@ -184,9 +236,11 @@ public class UserWebConfig{
 	                                                  StaffPhoneJpaRepository staffPhoneJpaRepository,
 													  TenantJpaRepository tenantJpaRepository,
 													  StaffRoleJpaRepository staffRoleJpaRepository,
-	                                                  IdGenerator idGenerator){
+	                                                  IdGenerator idGenerator,
+	                                                  CryptoTool cryptoTool){
 		return new StaffRegistrationJpaGateway(staffJpaRepository, staffPasswordJpaRepository, staffEmailJpaRepository,
-				staffAddressJpaRepository, staffPhoneJpaRepository, staffRoleJpaRepository, tenantJpaRepository, idGenerator);
+				staffAddressJpaRepository, staffPhoneJpaRepository, staffRoleJpaRepository, tenantJpaRepository,
+				idGenerator, cryptoTool);
 	}
 
 	@Bean
@@ -242,8 +296,10 @@ public class UserWebConfig{
 	StaffDetailGateway staffDetailGateway(StaffJpaRepository staffJpaRepository,
 	                                      StaffEmailJpaRepository staffEmailJpaRepository,
 	                                      StaffPhoneJpaRepository staffPhoneJpaRepository,
-	                                      StaffAddressJpaRepository staffAddressJpaRepository){
-		return new StaffDetailJpaGateway(staffJpaRepository,  staffEmailJpaRepository, staffPhoneJpaRepository, staffAddressJpaRepository);
+	                                      StaffAddressJpaRepository staffAddressJpaRepository,
+	                                      CryptoTool cryptoTool){
+		return new StaffDetailJpaGateway(staffJpaRepository,  staffEmailJpaRepository, staffPhoneJpaRepository,
+				staffAddressJpaRepository, cryptoTool);
 	}
 
 	@Bean
@@ -255,8 +311,10 @@ public class UserWebConfig{
 	StaffListGateway staffListGateway(StaffJpaRepository staffJpaRepository,
 	                                  StaffEmailJpaRepository staffEmailJpaRepository,
 	                                  StaffPhoneJpaRepository staffPhoneJpaRepository,
-	                                  StaffAddressJpaRepository staffAddressJpaRepository){
-		return new StaffListJpaGateway(staffJpaRepository, staffEmailJpaRepository, staffPhoneJpaRepository, staffAddressJpaRepository);
+	                                  StaffAddressJpaRepository staffAddressJpaRepository,
+	                                  CryptoTool cryptoTool){
+		return new StaffListJpaGateway(staffJpaRepository, staffEmailJpaRepository, staffPhoneJpaRepository,
+				staffAddressJpaRepository, cryptoTool);
 	}
 
 	@Bean
@@ -292,8 +350,9 @@ public class UserWebConfig{
 	}
 
 	@Bean
-	StaffForgottenPasswordGateway staffForgottenPasswordGateway(StaffEmailJpaRepository staffEmailJpaRepository){
-		return new StaffForgottenPasswordJpaGateway(staffEmailJpaRepository);
+	StaffForgottenPasswordGateway staffForgottenPasswordGateway(StaffEmailJpaRepository staffEmailJpaRepository,
+	                                                            CryptoTool cryptoTool){
+		return new StaffForgottenPasswordJpaGateway(staffEmailJpaRepository, cryptoTool);
 	}
 
 	@Bean
@@ -341,10 +400,11 @@ public class UserWebConfig{
 	                                      StaffPhoneJpaRepository staffPhoneJpaRepository,
 	                                      StaffAddressJpaRepository staffAddressJpaRepository,
 	                                      TenantJpaRepository tenantJpaRepository,
-	                                      IdGenerator idGenerator){
+	                                      IdGenerator idGenerator,
+	                                      CryptoTool cryptoTool){
 		return new StaffUpdateJpaGateway(staffJpaRepository, staffPasswordJpaRepository, staffRoleJpaRepository,
 				staffEmailJpaRepository, staffPhoneJpaRepository, staffAddressJpaRepository, tenantJpaRepository,
-				idGenerator);
+				idGenerator, cryptoTool);
 	}
 
 	@Bean

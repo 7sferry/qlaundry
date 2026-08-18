@@ -39,6 +39,15 @@ logging:
     name: logs/notification-web-service.log
 
 app:
+  crypto:
+    # dev-only keys, independent from user-service's — the two services never read each other's rows
+    # (APP_CRYPTO_ACTIVE_KEY_ID, APP_CRYPTO_KEYS_V1, APP_CRYPTO_BLIND_INDEX_KEY, ...); generate with `openssl rand -base64 32`
+    active-key-id: v1
+    # read-through for pre-encryption plaintext rows; flip to false once the backfill profile has run
+    allow-plaintext-read: true
+    blind-index-key: 'jOYybWvudnVsMxcJUzZyoWvosgbN0hXHveyq/nUUqYc='
+    keys:
+      v1: 'J2LDhmCTROzotYye8FumETQvyIbTxDFmML07lbY0GKw='
   mail:
     sender: email@email.com
   notification:

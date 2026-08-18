@@ -41,8 +41,8 @@ public class TenantRegistrationEmailStreamListener implements StreamListener<Str
 			TenantRegistrationEmailStreamPresenter presenter = new TenantRegistrationEmailStreamPresenter();
 			tenantRegistrationEmailUseCase.execute(request, presenter);
 			stringRedisTemplate.opsForStream().acknowledge(streamKey, group, record.getId());
-			log.info("Tenant registration email sent to {} for record {}",
-					presenter.getNotification().recipientValue(), record.getId());
+			log.info("Tenant registration email sent for trigger {} and record {}",
+					value.get(TRIGGER_ID_FIELD), record.getId());
 		}catch(RuntimeException e){
 			// not acknowledged; the record stays pending on the consumer group for reprocessing
 			log.error("Failed to process tenant registration email for record {}", record.getId(), e);

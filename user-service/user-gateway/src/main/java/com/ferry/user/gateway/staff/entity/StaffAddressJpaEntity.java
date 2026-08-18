@@ -2,6 +2,8 @@ package com.ferry.user.gateway.staff.entity;
 
 import com.ferry.user.domain.common.AddressLineDomain;
 import com.ferry.user.domain.staff.StaffAddressDomain;
+import com.ferry.utils.crypto.CryptoAad;
+import com.ferry.utils.crypto.CryptoTool;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -19,8 +21,10 @@ import java.time.Instant;
 @Setter
 @EqualsAndHashCode(of = "id")
 @Entity
-@Table(name = "staff_addresses")
+@Table(name = StaffAddressJpaEntity.TABLE)
 public class StaffAddressJpaEntity{
+	static final String TABLE = "staff_addresses";
+	private static final String COLUMN_ADDRESS_LINE = "address_line";
 
 	@Id
 	@Column(nullable = false, length = 50)
@@ -30,8 +34,8 @@ public class StaffAddressJpaEntity{
 	@Setter(AccessLevel.PRIVATE)
 	@Column(nullable = false, name = "staff_id", insertable = false, updatable = false)
 	private String staffId;
-	@Column(nullable = false)
-	private String addressLine;
+	@Column(name = "address_line", nullable = false, columnDefinition = "text")
+	private String addressLineCipher;
 	@Version
 	private Integer version;
 	@Column(nullable = false)
@@ -50,12 +54,17 @@ public class StaffAddressJpaEntity{
 		this.staffId = staff.getId();
 	}
 
-	public static StaffAddressJpaEntity construct(String id, StaffAddressDomain register, StaffJpaEntity staff){
+	private static CryptoAad aad(String staffId){
+		return new CryptoAad(TABLE, COLUMN_ADDRESS_LINE, staffId);
+	}
+
+	public static StaffAddressJpaEntity construct(String id, StaffAddressDomain register, StaffJpaEntity staff,
+	                                              CryptoTool cryptoTool){
 		StaffAddressJpaEntity entity = new StaffAddressJpaEntity();
 		entity.id = id;
 		entity.staffId = staff.getId();
 		entity.staff = staff;
-		entity.addressLine = register.addressLine().value();
+		entity.addressLineCipher = cryptoTool.encrypt(register.addressLine().value(), aad(staff.getId()));
 		entity.createdBy = register.createdBy();
 		entity.updatedAt = register.updatedAt();
 		entity.createdAt = register.createdAt();
@@ -65,8 +74,16 @@ public class StaffAddressJpaEntity{
 		return entity;
 	}
 
-	public static StaffAddressDomain constructUserAddressDomain(StaffAddressJpaEntity saved){
-		return new StaffAddressDomain(saved.id, saved.staffId, new AddressLineDomain(saved.addressLine), saved.version,
+	public static StaffAddressDomain constructUserAddressDomain(StaffAddressJpaEntity saved, CryptoTool cryptoTool){
+		String addressLine = cryptoTool.decrypt(saved.addressLineCipher, aad(saved.staffId));
+		return new StaffAddressDomain(saved.id, saved.staffId, new AddressLineDomain(addressLine), saved.version,
 				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+	}
+
+	public void backfill(CryptoTool cryptoTool){
+		String addressLine = cryptoTool.decrypt(addressLineCipher, aad(staffId));
+		if(addressLine.equals(addressLineCipher)){
+			addressLineCipher = cryptoTool.encrypt(addressLine, aad(staffId));
+		}
 	}
 }

@@ -12,15 +12,23 @@ import com.ferry.notification.gateway.email.EmailHistoryJpaGateway;
 import com.ferry.notification.gateway.email.EmailSendSmtpGateway;
 import com.ferry.notification.gateway.email.ForgottenPasswordEmailThymeleafComposer;
 import com.ferry.notification.gateway.email.TenantRegistrationEmailThymeleafComposer;
+import com.ferry.notification.gateway.email.entity.EmailNotificationJpaEntity;
 import com.ferry.notification.gateway.email.repository.EmailNotificationJpaRepository;
 import com.ferry.notification.gateway.email.repository.EmailTypeJpaRepository;
+import com.ferry.utils.crypto.AesGcmCryptoTool;
+import com.ferry.utils.crypto.CryptoKeyConfig;
+import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import com.ferry.utils.generator.UlidGenerator;
 import com.ferry.utils.json.DefaultJsonManager;
 import com.ferry.utils.json.JsonManager;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.TemplateEngine;
@@ -29,18 +37,41 @@ import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import tools.jackson.databind.ObjectMapper;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /************************
  * Made by [MR Ferry™]  *
  * on Juli 2026         *
  ************************/
 
+@Slf4j
 @Configuration
+@EnableConfigurationProperties(CryptoKeysProperties.class)
 public class NotificationWebConfig{
 
 	@Bean
 	IdGenerator idGenerator(){
 		return new UlidGenerator();
+	}
+
+	@Bean
+	CryptoTool cryptoTool(CryptoKeysProperties cryptoKeysProperties){
+		return new AesGcmCryptoTool(CryptoKeyConfig.of(cryptoKeysProperties.activeKeyId(),
+				cryptoKeysProperties.keys(), cryptoKeysProperties.blindIndexKey(),
+				cryptoKeysProperties.allowPlaintextRead()));
+	}
+
+	// one-off encryption backfill: run once with --spring.profiles.active=backfill while
+	// app.crypto.allow-plaintext-read is true, then flip it to false
+//	@Bean
+	ApplicationRunner cryptoBackfillRunner(EmailNotificationJpaRepository emailNotificationJpaRepository,
+	                                       CryptoTool cryptoTool){
+		return _ -> {
+			List<EmailNotificationJpaEntity> notifications = emailNotificationJpaRepository.findAll();
+			notifications.forEach(entity -> entity.backfill(cryptoTool));
+			emailNotificationJpaRepository.saveAll(notifications);
+			log.info("Crypto backfill done: {} email notifications", notifications.size());
+		};
 	}
 
 	@Bean
@@ -76,8 +107,9 @@ public class NotificationWebConfig{
 	@Bean
 	EmailHistoryGateway emailHistoryGateway(EmailNotificationJpaRepository emailNotificationJpaRepository,
 	                                        EmailTypeJpaRepository emailTypeJpaRepository,
-	                                        IdGenerator idGenerator){
-		return new EmailHistoryJpaGateway(emailNotificationJpaRepository, emailTypeJpaRepository, idGenerator);
+	                                        IdGenerator idGenerator,
+	                                        CryptoTool cryptoTool){
+		return new EmailHistoryJpaGateway(emailNotificationJpaRepository, emailTypeJpaRepository, idGenerator, cryptoTool);
 	}
 
 	@Bean

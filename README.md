@@ -22,7 +22,7 @@ There is no orders/customers/dashboard backend yet — the frontend's `withFallb
 ```
 user-service/          user-domain, user-core, user-gateway, user-web-service
 notification-service/  notification-domain, notification-core, notification-gateway, notification-web-service
-utils/                  identity-generator, cache-tools, token-manager, json-tools, internal-commons
+utils/                  identity-generator, cache-tools, token-manager, json-tools, internal-commons, crypto-tools
 qlaundry-web/           React frontend
 gateway/                nginx reverse proxy (docker-compose)
 ```
@@ -59,7 +59,9 @@ docker exec qlaundry-gateway nginx -s reload
 
 Open the app at `http://localhost:8100` — nginx serves the frontend (proxying to Vite on `:5173`, including HMR websockets) and forwards `/api/*` to `user-service` on `:8101` via `host.docker.internal`, stripping the `/api` prefix so Spring controllers keep their existing paths (`/api/auth/staff/login` → `/auth/staff/login`). The frontend calls the backend with a relative base URL (`VITE_API_BASE_URL=/api`, see `web/.env`), so both are same-origin — no CORS involved at runtime.
 
-JPA runs with `ddl-auto: update`, so tables are created automatically on first run — no migrations to apply.
+JPA runs with `ddl-auto: update`, so tables are created automatically on first run — no migrations to apply. One exception: `ddl-auto` never *alters* an existing column, so on a database created before PII encryption landed, run the widening `ALTER`s documented in each web-service's `sql/migration.sql`, then run each service once with `--spring.profiles.active=backfill` to encrypt existing rows (see `CLAUDE.md`, "PII encryption at rest").
+
+PII columns (staff emails/phones/addresses, email-trigger recipient/payload, email-notification recipient) are stored AES-256-GCM-encrypted; dev keys live in each service's `application.yaml` under `app.crypto.*` — override them via environment variables for anything shared.
 
 ## Current API surface (`user-service`, via gateway at `/api/*`)
 

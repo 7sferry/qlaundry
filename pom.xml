@@ -20,6 +20,7 @@
 		<module>utils/cache-tools</module>
 		<module>utils/token-manager</module>
 		<module>utils/internal-commons</module>
+		<module>utils/crypto-tools</module>
 		<module>utils/json-tools</module>
 	</modules>
 	<packaging>pom</packaging>

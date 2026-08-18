@@ -10,6 +10,7 @@ import com.ferry.user.gateway.notification.entity.EmailTriggerTypeJpaEntity;
 import com.ferry.user.gateway.notification.repository.EmailTriggerJpaRepository;
 import com.ferry.user.gateway.notification.repository.EmailTriggerStatusJpaRepository;
 import com.ferry.user.gateway.notification.repository.EmailTriggerTypeJpaRepository;
+import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import com.ferry.utils.json.JsonManager;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class UserEmailRedisPublisher implements UserEmailPublisher{
 	private final EmailTriggerStatusJpaRepository emailTriggerStatusJpaRepository;
 	private final IdGenerator idGenerator;
 	private final JsonManager jsonManager;
+	private final CryptoTool cryptoTool;
 	private final StringRedisTemplate stringRedisTemplate;
 	private final PlatformTransactionManager transactionManager;
 	private final String streamKey;
@@ -56,8 +58,8 @@ public class UserEmailRedisPublisher implements UserEmailPublisher{
 		EmailTriggerTypeJpaEntity type = emailTriggerTypeJpaRepository.getReferenceById(trigger.typeIdValue());
 		EmailTriggerStatusJpaEntity status = emailTriggerStatusJpaRepository.getReferenceById(trigger.statusIdValue());
 		EmailTriggerJpaEntity saved = emailTriggerJpaRepository.saveAndFlush(
-				EmailTriggerJpaEntity.construct(id, trigger, type, status));
-		return EmailTriggerJpaEntity.construct(saved);
+				EmailTriggerJpaEntity.construct(id, trigger, type, status, cryptoTool));
+		return EmailTriggerJpaEntity.construct(saved, cryptoTool);
 	}
 
 	@Override

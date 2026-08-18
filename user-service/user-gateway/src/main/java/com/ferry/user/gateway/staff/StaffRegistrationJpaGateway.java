@@ -11,6 +11,7 @@ import com.ferry.user.gateway.staff.entity.*;
 import com.ferry.user.gateway.staff.repository.*;
 import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
+import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +30,7 @@ public class StaffRegistrationJpaGateway implements StaffRegistrationGateway{
 	private final StaffRoleJpaRepository staffRoleJpaRepository;
 	private final TenantJpaRepository tenantJpaRepository;
 	private final IdGenerator idGenerator;
+	private final CryptoTool cryptoTool;
 
 	@Override
 	public StaffDomain save(StaffDomain register){
@@ -52,24 +54,24 @@ public class StaffRegistrationJpaGateway implements StaffRegistrationGateway{
 	public StaffEmailDomain save(StaffEmailDomain register){
 		String id = idGenerator.generateId();
 		StaffJpaEntity staff = staffJpaRepository.getReferenceById(register.staffId());
-		StaffEmailJpaEntity saved = staffEmailJpaRepository.save(StaffEmailJpaEntity.construct(id, register, staff));
-		return StaffEmailJpaEntity.construct(saved);
+		StaffEmailJpaEntity saved = staffEmailJpaRepository.save(StaffEmailJpaEntity.construct(id, register, staff, cryptoTool));
+		return StaffEmailJpaEntity.construct(saved, cryptoTool);
 	}
 
 	@Override
 	public StaffAddressDomain save(StaffAddressDomain register){
 		String id = idGenerator.generateId();
 		StaffJpaEntity staff = staffJpaRepository.getReferenceById(register.staffId());
-		StaffAddressJpaEntity saved = staffAddressJpaRepository.save(StaffAddressJpaEntity.construct(id, register, staff));
-		return StaffAddressJpaEntity.constructUserAddressDomain(saved);
+		StaffAddressJpaEntity saved = staffAddressJpaRepository.save(StaffAddressJpaEntity.construct(id, register, staff, cryptoTool));
+		return StaffAddressJpaEntity.constructUserAddressDomain(saved, cryptoTool);
 	}
 
 	@Override
 	public StaffPhoneDomain save(StaffPhoneDomain register){
 		String id = idGenerator.generateId();
 		StaffJpaEntity staff = staffJpaRepository.getReferenceById(register.staffId());
-		StaffPhoneJpaEntity saved = staffPhoneJpaRepository.save(StaffPhoneJpaEntity.construct(id, register, staff));
-		return StaffPhoneJpaEntity.construct(saved);
+		StaffPhoneJpaEntity saved = staffPhoneJpaRepository.save(StaffPhoneJpaEntity.construct(id, register, staff, cryptoTool));
+		return StaffPhoneJpaEntity.construct(saved, cryptoTool);
 	}
 
 	@Override

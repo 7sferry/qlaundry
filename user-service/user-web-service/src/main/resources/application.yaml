@@ -28,6 +28,15 @@ logging:
     name: logs/user-web-service.log
 
 app:
+  crypto:
+    # dev-only keys — anything shared/production must come from the environment
+    # (APP_CRYPTO_ACTIVE_KEY_ID, APP_CRYPTO_KEYS_V1, APP_CRYPTO_BLIND_INDEX_KEY, ...); generate with `openssl rand -base64 32`
+    active-key-id: v1
+    # read-through for pre-encryption plaintext rows; flip to false once the backfill profile has run
+    allow-plaintext-read: true
+    blind-index-key: 'wvDlYLRAI5G7K3D1HkDZTEO9cqJ6Q7vmHCiBO50YhVA='
+    keys:
+      v1: 'QmfUJe4HNHNpsPfT9RRR0QvceqSPAYdhE5shmrWD2vI='
   notification:
     stream:
       email:

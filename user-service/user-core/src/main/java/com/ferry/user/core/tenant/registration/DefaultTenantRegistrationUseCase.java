@@ -18,6 +18,7 @@ import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.tenant.TenantDomain;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HexFormat;
 
@@ -26,6 +27,7 @@ import java.util.HexFormat;
  * on Juli 2026         *
  ************************/
 
+@Slf4j
 @RequiredArgsConstructor
 public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCase{
 	private static final int CONFIRMATION_TOKEN_BYTES = 32;
@@ -39,10 +41,17 @@ public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCa
 	public void execute(TenantRegistrationRequest request, TenantRegistrationPresenter presenter){
 		request.validate();
 		verifyCaptcha(request);
-		TenantDomain savedTenant = saveTenant(request);
-		StaffRegistrationResponse registeredAdmin = registerAdmin(request, savedTenant);
-		triggerRegistrationEmail(request, savedTenant, registeredAdmin);
-		presenter.present(new TenantRegistrationResponse(savedTenant, registeredAdmin));
+		try{
+			TenantDomain savedTenant = saveTenant(request);
+			StaffRegistrationResponse registeredAdmin = registerAdmin(request, savedTenant);
+			triggerRegistrationEmail(request, savedTenant, registeredAdmin);
+			presenter.present(new TenantRegistrationResponse(savedTenant, registeredAdmin));
+		} catch (InvalidUsernameException e){
+			log.warn("Failed to register tenant", e);
+			TenantDomain fakeTenant = TenantDomain.fake(new FullNameDomain(request.tenantName()));
+			StaffDomain fakeStaff = StaffDomain.fake(new FullNameDomain(request.fullName()));
+			presenter.present(new TenantRegistrationResponse(fakeTenant, new StaffRegistrationResponse(fakeStaff)));
+		}
 	}
 
 	private void verifyCaptcha(TenantRegistrationRequest request){
