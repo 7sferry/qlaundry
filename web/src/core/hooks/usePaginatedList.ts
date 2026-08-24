@@ -7,15 +7,23 @@ import {useCallback, useRef, useState} from 'react';
 import type {Page, PaginationParams} from '@/core/pagination/Pagination';
 import {useOnceEffect} from './useOnceEffect';
 
+interface UsePaginatedListOptions {
+	/** Skip the fetch-on-mount effect — use when the list only loads once the caller asks for it (e.g. an on-demand search). */
+	lazy?: boolean;
+}
+
 /**
  * Cursor-pagination state shared by every list feature (staff, customers, services, orders).
  * `refresh(filters)` is how a filter/sort change is applied — it always starts back at page 1,
  * since the caller is expected to never pass `cursor`/`direction` in `filters` itself. `goNext`/
  * `goPrevious` replay the last filters with the stored cursor swapped in.
  */
-export function usePaginatedList<T, F extends PaginationParams>(fetchPage: (filters?: F) => Promise<Page<T>>) {
+export function usePaginatedList<T, F extends PaginationParams>(
+		fetchPage: (filters?: F) => Promise<Page<T>>,
+		options?: UsePaginatedListOptions,
+) {
 	const [items, setItems] = useState<T[]>([]);
-	const [loading, setLoading] = useState(true);
+	const [loading, setLoading] = useState(!options?.lazy);
 	const [error, setError] = useState<string | null>(null);
 	const [hasNext, setHasNext] = useState(false);
 	const [hasPrev, setHasPrev] = useState(false);
@@ -32,6 +40,7 @@ export function usePaginatedList<T, F extends PaginationParams>(fetchPage: (filt
 	}, []);
 
 	useOnceEffect(() => {
+		if (options?.lazy) return;
 		fetchPage(undefined)
 				.then(applyPage)
 				.catch((err) => setError(err instanceof Error ? err.message : 'Failed to load'))

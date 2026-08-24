@@ -15,9 +15,9 @@ export interface CustomerRepository {
 
 	getCustomerById(id: string): Promise<Customer>;
 
-	searchCustomersByPhone(phone: string): Promise<Customer[]>;
+	searchCustomersByPhone(phone: string, pagination?: PaginationParams): Promise<Page<Customer>>;
 
-	searchCustomersByName(namePrefix: string): Promise<Customer[]>;
+	searchCustomersByName(namePrefix: string, pagination?: PaginationParams): Promise<Page<Customer>>;
 
 	createCustomer(input: CreateCustomerInput): Promise<Customer>;
 

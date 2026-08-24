@@ -4,7 +4,7 @@
  ************************/
 
 import {httpClient} from '@/core/http/httpClient';
-import type {Page} from '@/core/pagination/Pagination';
+import type {Page, PaginationParams} from '@/core/pagination/Pagination';
 import type {CustomerFilters, CustomerRepository} from '../domain/CustomerRepository';
 import type {CreateCustomerInput, Customer, UpdateCustomerInput} from '../domain/Customer';
 
@@ -84,6 +84,13 @@ function toCustomer(item: CustomerApiItem, totals: CustomerTotals): Customer {
 	};
 }
 
+function appendPaginationParams(params: URLSearchParams, pagination?: PaginationParams): void {
+	if (pagination?.cursor) params.set('cursor', pagination.cursor);
+	if (pagination?.direction) params.set('direction', pagination.direction.toUpperCase());
+	if (pagination?.sortBy) params.set('sortBy', pagination.sortBy.toUpperCase());
+	if (pagination?.sortDir) params.set('sortDir', pagination.sortDir.toUpperCase());
+}
+
 /**
  * The search box is one field but the backend filters name and phone separately, so a search that looks like
  * a number is sent as a phone (the backend normalises `0812…` to `+62812…` before matching its blind index).
@@ -95,10 +102,7 @@ function buildCustomerQuery(filters?: CustomerFilters): string {
 		const key = /^[+0-9][0-9\s().-]*$/.test(search) ? 'phone' : 'fullName';
 		params.set(key, search);
 	}
-	if (filters?.cursor) params.set('cursor', filters.cursor);
-	if (filters?.direction) params.set('direction', filters.direction.toUpperCase());
-	if (filters?.sortBy) params.set('sortBy', filters.sortBy.toUpperCase());
-	if (filters?.sortDir) params.set('sortDir', filters.sortDir.toUpperCase());
+	appendPaginationParams(params, filters);
 	const query = params.toString();
 	return query ? `?${query}` : '';
 }
@@ -121,18 +125,26 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 		return toCustomer(res, totals.get(id) ?? NO_TOTALS);
 	}
 
-	async searchCustomersByPhone(phone: string): Promise<Customer[]> {
-		const res = await httpClient.get<CustomerListApiResponse>(
-				`/customer/list?phone=${encodeURIComponent(phone)}`,
-		);
-		return res.customers.map((c) => toCustomer(c, NO_TOTALS));
+	async searchCustomersByPhone(phone: string, pagination?: PaginationParams): Promise<Page<Customer>> {
+		const params = new URLSearchParams({phone});
+		appendPaginationParams(params, pagination);
+		const res = await httpClient.get<CustomerListApiResponse>(`/customer/list?${params.toString()}`);
+		return {
+			items: res.customers.map((c) => toCustomer(c, NO_TOTALS)),
+			nextCursor: res.nextCursor,
+			prevCursor: res.prevCursor,
+		};
 	}
 
-	async searchCustomersByName(namePrefix: string): Promise<Customer[]> {
-		const res = await httpClient.get<CustomerListApiResponse>(
-				`/customer/list?fullName=${encodeURIComponent(namePrefix)}`,
-		);
-		return res.customers.map((c) => toCustomer(c, NO_TOTALS));
+	async searchCustomersByName(namePrefix: string, pagination?: PaginationParams): Promise<Page<Customer>> {
+		const params = new URLSearchParams({fullName: namePrefix});
+		appendPaginationParams(params, pagination);
+		const res = await httpClient.get<CustomerListApiResponse>(`/customer/list?${params.toString()}`);
+		return {
+			items: res.customers.map((c) => toCustomer(c, NO_TOTALS)),
+			nextCursor: res.nextCursor,
+			prevCursor: res.prevCursor,
+		};
 	}
 
 	async createCustomer(input: CreateCustomerInput): Promise<Customer> {

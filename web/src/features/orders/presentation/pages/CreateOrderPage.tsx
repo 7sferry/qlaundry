@@ -20,10 +20,10 @@ import {
 	X,
 	Zap,
 } from 'lucide-react';
-import {Badge, Button, Card, Field, Input, Modal, PageHeader, Select, Textarea} from '@/core/ui';
+import {Badge, Button, Card, Field, Input, Modal, PageHeader, Pagination, Select, Textarea} from '@/core/ui';
 import {formatCurrency} from '@/core/utils/format';
 import {useOrders, useServices} from '../useOrders';
-import {useCustomers} from '@/features/customers/presentation/useCustomers';
+import {useCustomerSearch} from '@/features/customers/presentation/useCustomers';
 import type {Customer} from '@/features/customers/domain/Customer';
 import type {ClothingItem, ClothingType, PaymentMethod} from '../../domain/Order';
 import {CLOTHING_TYPE_LABELS} from '../../domain/Order';
@@ -42,7 +42,8 @@ export default function CreateOrderPage() {
 	const navigate = useNavigate();
 	const {placeOrder} = useOrders();
 	const {services, loading: servicesLoading} = useServices();
-	const {searchByPhone, searchByName} = useCustomers();
+	const {matches: customerMatches, searching: searchingCustomers, hasNext, hasPrev, search, goNext, goPrevious} =
+			useCustomerSearch();
 
 	const [selectedServiceId, setSelectedServiceId] = useState('');
 	const [priority, setPriority] = useState<'normal' | 'express'>('normal');
@@ -55,8 +56,6 @@ export default function CreateOrderPage() {
 	const [success, setSuccess] = useState(false);
 	const [phoneSearch, setPhoneSearch] = useState('');
 	const [nameSearch, setNameSearch] = useState('');
-	const [customerMatches, setCustomerMatches] = useState<Customer[] | null>(null);
-	const [searchingCustomers, setSearchingCustomers] = useState(false);
 	const [searchModalOpen, setSearchModalOpen] = useState(false);
 	const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>(undefined);
 	const [form, setForm] = useState({
@@ -145,16 +144,7 @@ export default function CreateOrderPage() {
 		const name = nameSearch.trim();
 		if (!phone && !name) return;
 		setSearchModalOpen(true);
-		setSearchingCustomers(true);
-		setCustomerMatches(null);
-		try {
-			const results = phone ? await searchByPhone(phone) : await searchByName(name);
-			setCustomerMatches(results);
-		} catch {
-			setCustomerMatches([]);
-		} finally {
-			setSearchingCustomers(false);
-		}
+		await search(phone ? {phone} : {name});
 	};
 
 	const selectCustomer = (customer: Customer) => {
@@ -165,7 +155,6 @@ export default function CreateOrderPage() {
 			customerAddress: customer.address,
 		}));
 		setSelectedCustomerId(customer.id);
-		setCustomerMatches(null);
 		setSearchModalOpen(false);
 		setPhoneSearch('');
 		setNameSearch('');
@@ -561,18 +550,27 @@ export default function CreateOrderPage() {
 								<WashingMachine size={22} className="spin"/>
 								<span>Searching…</span>
 							</div>
-					) : customerMatches && customerMatches.length > 0 ? (
-							<div className="customer-match-list">
-								{customerMatches.map((c) => (
-										<button key={c.id} type="button" className="customer-match" onClick={() => selectCustomer(c)}>
-											<div className="customer-avatar">{initials(c.fullName)}</div>
-											<div className="customer-match__info">
-												<strong>{c.fullName}</strong>
-												<span>{c.phone}{c.address ? ` · ${c.address}` : ''}</span>
-											</div>
-										</button>
-								))}
-							</div>
+					) : customerMatches.length > 0 ? (
+							<>
+								<div className="customer-match-list">
+									{customerMatches.map((c) => (
+											<button key={c.id} type="button" className="customer-match" onClick={() => selectCustomer(c)}>
+												<div className="customer-avatar">{initials(c.fullName)}</div>
+												<div className="customer-match__info">
+													<strong>{c.fullName}</strong>
+													<span>{c.phone}{c.address ? ` · ${c.address}` : ''}</span>
+												</div>
+											</button>
+									))}
+								</div>
+								{(hasNext || hasPrev) && (
+										<Pagination
+												hasNext={hasNext} hasPrev={hasPrev}
+												onNext={() => void goNext()} onPrev={() => void goPrevious()}
+												loading={searchingCustomers}
+										/>
+								)}
+							</>
 					) : (
 							<p className="muted" style={{fontSize: 13}}>
 								No matching customer found — you can still fill in the details manually for a walk-in order.

@@ -19,8 +19,8 @@ function makeRepo(): { repo: CustomerRepository; fns: Record<string, ReturnType<
 	const fns = {
 		getCustomers: vi.fn().mockResolvedValue(mockCustomerPage),
 		getCustomerById: vi.fn().mockResolvedValue(mockCustomer),
-		searchCustomersByPhone: vi.fn().mockResolvedValue([mockCustomer]),
-		searchCustomersByName: vi.fn().mockResolvedValue([mockCustomer]),
+		searchCustomersByPhone: vi.fn().mockResolvedValue(mockCustomerPage),
+		searchCustomersByName: vi.fn().mockResolvedValue(mockCustomerPage),
 		createCustomer: vi.fn().mockResolvedValue(mockCustomer),
 		updateCustomer: vi.fn().mockResolvedValue(mockCustomer),
 		deleteCustomer: vi.fn().mockResolvedValue(undefined),
@@ -65,7 +65,17 @@ describe('customerUseCases', () => {
 
 		await useCases.searchByPhone('08987654321');
 
-		expect(fns.searchCustomersByPhone).toHaveBeenCalledWith('08987654321');
+		expect(fns.searchCustomersByPhone).toHaveBeenCalledWith('08987654321', undefined);
+	});
+
+	it('searchByPhone passes pagination params through to the repository', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = customerUseCases(repo);
+		const pagination = {cursor: 'abc', direction: 'next' as const};
+
+		await useCases.searchByPhone('08987654321', pagination);
+
+		expect(fns.searchCustomersByPhone).toHaveBeenCalledWith('08987654321', pagination);
 	});
 
 	it('searchByName delegates to repository.searchCustomersByName', async () => {
@@ -74,7 +84,17 @@ describe('customerUseCases', () => {
 
 		await useCases.searchByName('Siti');
 
-		expect(fns.searchCustomersByName).toHaveBeenCalledWith('Siti');
+		expect(fns.searchCustomersByName).toHaveBeenCalledWith('Siti', undefined);
+	});
+
+	it('searchByName passes pagination params through to the repository', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = customerUseCases(repo);
+		const pagination = {cursor: 'xyz', direction: 'prev' as const};
+
+		await useCases.searchByName('Siti', pagination);
+
+		expect(fns.searchCustomersByName).toHaveBeenCalledWith('Siti', pagination);
 	});
 
 	it('createCustomer delegates to repository.createCustomer with the input', async () => {
