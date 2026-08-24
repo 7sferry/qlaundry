@@ -34,7 +34,12 @@ public interface StaffJpaRepository extends JpaRepository<StaffJpaEntity, String
 			" order by s.id desc limit 1")
 	Optional<StaffLoginProjection> findLoginByUsername(@Param("username") String username);
 
-	<T> Optional<T> findById(String id, Class<T> clazz);
+	@Query("select new com.ferry.user.domain.staff.login.StaffLoginProjection(s.id, s.username, p.password, s.fullName, s.tenantId, s.roleId) " +
+			"from StaffJpaEntity s " +
+			"join StaffPasswordJpaEntity p on p.staffId = s.id and p.deleted is false " +
+			"where s.id = :id and s.deleted is false")
+	Optional<StaffLoginProjection> findLoginById(@Param("id") String id);
+
 	<T> Optional<T> findByIdAndDeletedIsFalse(String id, Class<T> clazz);
 	<T> Optional<T> findByUsernameAndTenantIdAndDeletedIsFalse(String username, String tenantId, Class<T> clazz);
 

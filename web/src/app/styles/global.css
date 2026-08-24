@@ -1393,6 +1393,80 @@ button.user-chip--trigger:hover {
     margin: 0;
 }
 
+/* ── Customer match list (order creation) ── */
+.customer-match-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.customer-match {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    background: var(--surface-2);
+    text-align: left;
+    color: var(--text);
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color var(--transition), transform .12s ease, box-shadow var(--transition);
+}
+
+.customer-match:hover {
+    border-color: var(--brand);
+    box-shadow: var(--shadow-sm);
+}
+
+.customer-match__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.customer-match__info strong {
+    font-size: 13px;
+}
+
+.customer-match__info span {
+    font-size: 12px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.customer-linked-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--brand);
+    background: var(--accent-soft);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    margin-bottom: 16px;
+    width: fit-content;
+}
+
+.customer-linked-chip button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 6px;
+    border: none;
+    background: none;
+    color: var(--brand);
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 /* ── Items list ── */
 .items-list {
     display: flex;

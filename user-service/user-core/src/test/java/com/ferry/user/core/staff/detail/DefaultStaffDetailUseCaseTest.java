@@ -98,9 +98,9 @@ class DefaultStaffDetailUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
 		StaffDetailProjection detail = new StaffDetailProjection(STAFF_ID, "desc", FULL_NAME, Instant.now(), USERNAME);
 		willReturn(Optional.of(detail)).given(gateway).findDetail(new UsernameDomain(USERNAME), new TenantIdDomain(TENANT_ID));
-		List<StaffPhoneDetailProjection> phones = List.of(new StaffPhoneDetailProjection("081234567890"));
-		List<StaffEmailDetailProjection> emails = List.of(new StaffEmailDetailProjection("gunawan@qlaundry.com"));
-		List<StaffAddressDetailProjection> addresses = List.of(new StaffAddressDetailProjection("Jl. Pandanaran No. 8"));
+		List<StaffPhoneDetailProjection> phones = List.of(new StaffPhoneDetailProjection("081234567890", STAFF_ID));
+		List<StaffEmailDetailProjection> emails = List.of(new StaffEmailDetailProjection("gunawan@qlaundry.com", STAFF_ID));
+		List<StaffAddressDetailProjection> addresses = List.of(new StaffAddressDetailProjection("Jl. Pandanaran No. 8", STAFF_ID));
 		willReturn(phones).given(gateway).findByFilter(phoneFilterCaptor.capture());
 		willReturn(emails).given(gateway).findByFilter(emailFilterCaptor.capture());
 		willReturn(addresses).given(gateway).findByFilter(addressFilterCaptor.capture());

@@ -29,9 +29,6 @@ public class InternalApiKeyAuthenticationFilter implements Filter{
 	private static final String API_KEY_HEADER = "X-Internal-Api-Key";
 	private static final String AUTHORITY_PREFIX = "SERVICE_";
 	private static final int CREDENTIAL_PARTS = 3;
-	// no real secret can hash to this, so an unknown client or version still runs a full-length compare
-	// instead of returning early — otherwise response timing would reveal which versions exist
-	private static final String ABSENT_DIGEST = "0".repeat(64);
 
 	private final InternalKeyResolver internalKeyResolver;
 
@@ -55,7 +52,7 @@ public class InternalApiKeyAuthenticationFilter implements Filter{
 		String clientId = parts[0];
 		String version = parts[1];
 		String expected = internalKeyResolver.digestOf(clientId, version)
-				.orElse(ABSENT_DIGEST);
+				.orElseThrow();
 		if(!matches(parts[2], expected)){
 			log.warn("rejected internal call to {} presenting {}:{}", req.getRequestURI(), clientId, version);
 			chain.doFilter(request, response);

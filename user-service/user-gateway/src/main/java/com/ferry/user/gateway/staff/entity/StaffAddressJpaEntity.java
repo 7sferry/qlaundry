@@ -80,6 +80,10 @@ public class StaffAddressJpaEntity{
 				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
 	}
 
+	public static String decryptAddressLine(String addressLineCipher, String staffId, CryptoTool cryptoTool){
+		return cryptoTool.decrypt(addressLineCipher, aad(staffId));
+	}
+
 	public void backfill(CryptoTool cryptoTool){
 		String addressLine = cryptoTool.decrypt(addressLineCipher, aad(staffId));
 		if(addressLine.equals(addressLineCipher)){

@@ -43,25 +43,25 @@ public class StaffDetailJpaGateway implements StaffDetailGateway{
 
 	@Override
 	public List<StaffPhoneDetailProjection> findByFilter(StaffPhoneFilter filter){
-		return phoneJpaRepository.findAllWithFilter(filter, StaffPhoneJpaEntity.class).stream()
-				.map(entity -> StaffPhoneJpaEntity.construct(entity, cryptoTool))
-				.map(domain -> new StaffPhoneDetailProjection(domain.phone().value()))
+		return phoneJpaRepository.findDetailCipherRowsWithFilter(filter).stream()
+				.map(row -> new StaffPhoneDetailProjection(
+						StaffPhoneJpaEntity.decryptPhone(row.phone(), row.staffId(), cryptoTool), row.staffId()))
 				.toList();
 	}
 
 	@Override
 	public List<StaffAddressDetailProjection> findByFilter(StaffAddressFilter filter){
-		return addressJpaRepository.findAllWithFilter(filter, StaffAddressJpaEntity.class).stream()
-				.map(entity -> StaffAddressJpaEntity.constructUserAddressDomain(entity, cryptoTool))
-				.map(domain -> new StaffAddressDetailProjection(domain.addressLine().value()))
+		return addressJpaRepository.findDetailCipherRowsWithFilter(filter).stream()
+				.map(row -> new StaffAddressDetailProjection(
+						StaffAddressJpaEntity.decryptAddressLine(row.addressLine(), row.staffId(), cryptoTool), row.staffId()))
 				.toList();
 	}
 
 	@Override
 	public List<StaffEmailDetailProjection> findByFilter(StaffEmailFilter filter){
-		return emailJpaRepository.findAllWithFilter(filter, StaffEmailJpaEntity.class).stream()
-				.map(entity -> StaffEmailJpaEntity.construct(entity, cryptoTool))
-				.map(domain -> new StaffEmailDetailProjection(domain.email().value()))
+		return emailJpaRepository.findDetailCipherRowsWithFilter(filter).stream()
+				.map(row -> new StaffEmailDetailProjection(
+						StaffEmailJpaEntity.decryptEmail(row.email(), row.staffId(), cryptoTool), row.staffId()))
 				.toList();
 	}
 }

@@ -316,10 +316,8 @@ public class UserWebConfig{
 	@Bean
 	TenantResendConfirmationGateway tenantResendConfirmationGateway(TenantJpaRepository tenantJpaRepository,
 	                                                                StaffEmailJpaRepository staffEmailJpaRepository,
-	                                                                StaffJpaRepository staffJpaRepository,
 	                                                                CryptoTool cryptoTool){
-		return new TenantResendConfirmationJpaGateway(tenantJpaRepository, staffEmailJpaRepository,
-				staffJpaRepository, cryptoTool);
+		return new TenantResendConfirmationJpaGateway(tenantJpaRepository, staffEmailJpaRepository, cryptoTool);
 	}
 
 	@Bean

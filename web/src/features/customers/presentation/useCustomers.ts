@@ -59,6 +59,7 @@ export function useCustomers() {
 		createCustomer,
 		updateCustomer,
 		deleteCustomer,
-		findByPhone: useCases.findByPhone,
+		searchByPhone: useCases.searchByPhone,
+		searchByName: useCases.searchByName,
 	};
 }

@@ -2,6 +2,7 @@ package com.ferry.user.gateway.tenant;
 
 import com.ferry.user.core.tenant.expiration.TenantExpirationGateway;
 import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantIdProjection;
 import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
@@ -25,9 +26,9 @@ public class TenantExpirationJpaGateway implements TenantExpirationGateway{
 
 	@Override
 	public List<TenantIdDomain> findPendingOlderThan(Instant cutoff){
-		return tenantJpaRepository.findAllByStatusIdAndDeletedIsFalseAndCreatedAtBefore(TenantStatus.PENDING.getValue(), cutoff)
+		return tenantJpaRepository.findAllByStatusIdAndDeletedIsFalseAndCreatedAtBefore(TenantStatus.PENDING.getValue(), cutoff, TenantIdProjection.class)
 				.stream()
-				.map(entity -> new TenantIdDomain(entity.getId()))
+				.map(entity -> new TenantIdDomain(entity.id()))
 				.toList();
 	}
 

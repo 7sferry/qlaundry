@@ -48,6 +48,7 @@ class DefaultTenantResendConfirmationUseCaseTest{
 	private static final String ADMIN_EMAIL = "putri@qlaundry.com";
 	private static final String ADMIN_FULL_NAME = "Putri Handayani";
 	private static final String ADMIN_USERNAME = "putrisuperstaff";
+	private static final String ADMIN_STAFF_ID = "stf-707";
 
 	@Mock
 	TenantResendConfirmationGateway gateway;
@@ -120,7 +121,7 @@ class DefaultTenantResendConfirmationUseCaseTest{
 		TenantDomain tenant = new TenantDomain(TENANT_ID, new UsernameDomain(TENANT_USERNAME), new FullNameDomain(TENANT_NAME),
 				new DescriptionDomain("desc"), TenantStatus.PENDING, null, false, Instant.now(), null, Instant.now(), null);
 		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantIdDomain(TENANT_ID));
-		TenantAdminContactProjection admin = new TenantAdminContactProjection(ADMIN_EMAIL, ADMIN_FULL_NAME, ADMIN_USERNAME);
+		TenantAdminContactProjection admin = new TenantAdminContactProjection(ADMIN_EMAIL, ADMIN_FULL_NAME, ADMIN_USERNAME, ADMIN_STAFF_ID);
 		willReturn(Optional.of(admin)).given(gateway).findAdminContact(new TenantIdDomain(TENANT_ID));
 		EmailTriggerDomain trigger = EmailTriggerDomain.create(EmailTriggerType.TENANT_REGISTRATION,
 				new EmailDomain(ADMIN_EMAIL), "{}", null);

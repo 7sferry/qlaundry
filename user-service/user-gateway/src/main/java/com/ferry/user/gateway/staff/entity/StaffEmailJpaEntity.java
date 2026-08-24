@@ -89,6 +89,10 @@ public class StaffEmailJpaEntity{
 				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
 	}
 
+	public static String decryptEmail(String emailCipher, String staffId, CryptoTool cryptoTool){
+		return cryptoTool.decrypt(emailCipher, aad(staffId));
+	}
+
 	public void backfill(CryptoTool cryptoTool){
 		String email = cryptoTool.decrypt(emailCipher, aad(staffId));
 		if(email.equals(emailCipher)){

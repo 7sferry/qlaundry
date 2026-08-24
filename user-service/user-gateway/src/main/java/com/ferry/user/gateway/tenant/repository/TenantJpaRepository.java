@@ -18,7 +18,7 @@ import java.util.Optional;
 public interface TenantJpaRepository extends JpaRepository<TenantJpaEntity, String>{
 	<T> Optional<T> findByIdAndDeletedIsFalse(String id, Class<T> clazz);
 
-	List<TenantJpaEntity> findAllByStatusIdAndDeletedIsFalseAndCreatedAtBefore(short statusId, Instant cutoff);
+	<T> List<T> findAllByStatusIdAndDeletedIsFalseAndCreatedAtBefore(short statusId, Instant cutoff, Class<T> clazz);
 
 	@Modifying
 	@Query("update TenantJpaEntity t set t.username = null, t.deleted = true, t.updatedAt = CURRENT_TIMESTAMP " +

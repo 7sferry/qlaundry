@@ -18,7 +18,8 @@ function makeRepo(): { repo: CustomerRepository; fns: Record<string, ReturnType<
 	const fns = {
 		getCustomers: vi.fn().mockResolvedValue([mockCustomer]),
 		getCustomerById: vi.fn().mockResolvedValue(mockCustomer),
-		getCustomerByPhone: vi.fn().mockResolvedValue(mockCustomer),
+		searchCustomersByPhone: vi.fn().mockResolvedValue([mockCustomer]),
+		searchCustomersByName: vi.fn().mockResolvedValue([mockCustomer]),
 		createCustomer: vi.fn().mockResolvedValue(mockCustomer),
 		updateCustomer: vi.fn().mockResolvedValue(mockCustomer),
 		deleteCustomer: vi.fn().mockResolvedValue(undefined),
@@ -57,13 +58,22 @@ describe('customerUseCases', () => {
 		expect(result).toBe(mockCustomer);
 	});
 
-	it('findByPhone delegates to repository.getCustomerByPhone', async () => {
+	it('searchByPhone delegates to repository.searchCustomersByPhone', async () => {
 		const {repo, fns} = makeRepo();
 		const useCases = customerUseCases(repo);
 
-		await useCases.findByPhone('08987654321');
+		await useCases.searchByPhone('08987654321');
 
-		expect(fns.getCustomerByPhone).toHaveBeenCalledWith('08987654321');
+		expect(fns.searchCustomersByPhone).toHaveBeenCalledWith('08987654321');
+	});
+
+	it('searchByName delegates to repository.searchCustomersByName', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = customerUseCases(repo);
+
+		await useCases.searchByName('Siti');
+
+		expect(fns.searchCustomersByName).toHaveBeenCalledWith('Siti');
 	});
 
 	it('createCustomer delegates to repository.createCustomer with the input', async () => {

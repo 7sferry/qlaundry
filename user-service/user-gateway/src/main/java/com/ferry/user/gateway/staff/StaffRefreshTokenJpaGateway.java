@@ -34,7 +34,7 @@ public class StaffRefreshTokenJpaGateway implements StaffRefreshTokenGateway{
 
 	@Override
 	public Optional<StaffLoginProjection> findById(String id){
-		return staffJpaRepository.findById(id, StaffLoginProjection.class);
+		return staffJpaRepository.findLoginById(id);
 	}
 
 	@Override

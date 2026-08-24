@@ -1,6 +1,7 @@
 package com.ferry.user.gateway.staff.repository;
 
 import com.ferry.user.domain.staff.StaffAddressFilter;
+import com.ferry.user.domain.staff.detail.StaffAddressDetailProjection;
 import com.ferry.user.domain.staff.list.StaffAddressListProjection;
 import com.ferry.user.gateway.staff.entity.StaffAddressJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,6 +25,22 @@ public interface StaffAddressJpaRepository extends JpaRepository<StaffAddressJpa
 			"(coalesce(:#{#filter?.staffIds}, null) is null or s.staff.id IN :#{#filter?.staffIds}) AND " +
 			"s.deleted IS FALSE")
 	<T> List<T> findAllWithFilter(@Param("filter") StaffAddressFilter filter, Class<T> tClass);
+
+	@Query("select new com.ferry.user.domain.staff.detail.StaffAddressDetailProjection(s.addressLineCipher, s.staffId) " +
+			"from StaffAddressJpaEntity s " +
+			"where " +
+			"(:#{#filter?.staffId} is null or s.staff.id = :#{#filter?.staffId}) AND " +
+			"(coalesce(:#{#filter?.staffIds}, null) is null or s.staff.id IN :#{#filter?.staffIds}) AND " +
+			"s.deleted IS FALSE")
+	List<StaffAddressDetailProjection> findDetailCipherRowsWithFilter(@Param("filter") StaffAddressFilter filter);
+
+	@Query("select new com.ferry.user.domain.staff.list.StaffAddressListProjection(s.staffId, s.addressLineCipher) " +
+			"from StaffAddressJpaEntity s " +
+			"where " +
+			"(:#{#filter?.staffId} is null or s.staff.id = :#{#filter?.staffId}) AND " +
+			"(coalesce(:#{#filter?.staffIds}, null) is null or s.staff.id IN :#{#filter?.staffIds}) AND " +
+			"s.deleted IS FALSE")
+	List<StaffAddressListProjection> findListCipherRowsWithFilter(@Param("filter") StaffAddressFilter filter);
 
 	@Modifying
 	@Query("update StaffAddressJpaEntity e set e.deleted = true, e.updatedBy = :updatedBy, e.updatedAt = CURRENT_TIMESTAMP " +

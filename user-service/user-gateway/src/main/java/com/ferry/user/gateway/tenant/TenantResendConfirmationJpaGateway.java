@@ -5,9 +5,7 @@ import com.ferry.user.domain.tenant.TenantDomain;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.domain.tenant.resendconfirmation.TenantAdminContactProjection;
 import com.ferry.user.gateway.staff.entity.StaffEmailJpaEntity;
-import com.ferry.user.gateway.staff.entity.StaffJpaEntity;
 import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
-import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
@@ -24,7 +22,6 @@ import java.util.Optional;
 public class TenantResendConfirmationJpaGateway implements TenantResendConfirmationGateway{
 	private final TenantJpaRepository tenantRepository;
 	private final StaffEmailJpaRepository staffEmailJpaRepository;
-	private final StaffJpaRepository staffJpaRepository;
 	private final CryptoTool cryptoTool;
 
 	@Override
@@ -37,10 +34,9 @@ public class TenantResendConfirmationJpaGateway implements TenantResendConfirmat
 	@Override
 	public Optional<TenantAdminContactProjection> findAdminContact(TenantIdDomain tenantId){
 		return staffEmailJpaRepository.findAdminContactForTenant(tenantId.value())
-				.flatMap(emailEntity -> staffJpaRepository.findByIdAndDeletedIsFalse(emailEntity.getStaffId(), StaffJpaEntity.class)
-						.map(staff -> new TenantAdminContactProjection(
-								StaffEmailJpaEntity.construct(emailEntity, cryptoTool).email().value(),
-								staff.getFullName(), staff.getUsername())));
+				.map(row -> new TenantAdminContactProjection(
+						StaffEmailJpaEntity.decryptEmail(row.email(), row.staffId(), cryptoTool),
+						row.staffFullName(), row.staffUsername(), row.staffId()));
 	}
 
 }

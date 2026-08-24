@@ -17,12 +17,14 @@ import {
 	Truck,
 	User2,
 	WashingMachine,
+	X,
 	Zap,
 } from 'lucide-react';
-import {Badge, Button, Card, Field, Input, PageHeader, Select, Textarea} from '@/core/ui';
+import {Badge, Button, Card, Field, Input, Modal, PageHeader, Select, Textarea} from '@/core/ui';
 import {formatCurrency} from '@/core/utils/format';
 import {useOrders, useServices} from '../useOrders';
 import {useCustomers} from '@/features/customers/presentation/useCustomers';
+import type {Customer} from '@/features/customers/domain/Customer';
 import type {ClothingItem, ClothingType, PaymentMethod} from '../../domain/Order';
 import {CLOTHING_TYPE_LABELS} from '../../domain/Order';
 
@@ -32,11 +34,15 @@ const CLOTHING_TYPES: ClothingType[] = [
 
 const PAYMENT_METHODS: PaymentMethod[] = ['cash'];
 
+function initials(fullName: string): string {
+	return fullName.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase();
+}
+
 export default function CreateOrderPage() {
 	const navigate = useNavigate();
 	const {placeOrder} = useOrders();
 	const {services, loading: servicesLoading} = useServices();
-	const {findByPhone} = useCustomers();
+	const {searchByPhone, searchByName} = useCustomers();
 
 	const [selectedServiceId, setSelectedServiceId] = useState('');
 	const [priority, setPriority] = useState<'normal' | 'express'>('normal');
@@ -48,6 +54,11 @@ export default function CreateOrderPage() {
 	const [submitting, setSubmitting] = useState(false);
 	const [success, setSuccess] = useState(false);
 	const [phoneSearch, setPhoneSearch] = useState('');
+	const [nameSearch, setNameSearch] = useState('');
+	const [customerMatches, setCustomerMatches] = useState<Customer[] | null>(null);
+	const [searchingCustomers, setSearchingCustomers] = useState(false);
+	const [searchModalOpen, setSearchModalOpen] = useState(false);
+	const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>(undefined);
 	const [form, setForm] = useState({
 		customerName: '',
 		customerPhone: '',
@@ -60,6 +71,15 @@ export default function CreateOrderPage() {
 	const update = (key: keyof typeof form) => (
 			e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
 	) => setForm((prev) => ({...prev, [key]: e.target.value}));
+
+	// Editing a customer field by hand after picking a match means the order no longer maps 1:1
+	// to that customer record, so the link is dropped and the fields become a plain walk-in entry.
+	const updateCustomerField = (key: 'customerName' | 'customerPhone' | 'customerAddress') => (
+			e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+	) => {
+		setSelectedCustomerId(undefined);
+		setForm((prev) => ({...prev, [key]: e.target.value}));
+	};
 
 	const service = useMemo(
 			() => services.find((s) => s.id === selectedServiceId) ?? services[0],
@@ -118,18 +138,40 @@ export default function CreateOrderPage() {
 					}),
 			);
 
-	const lookupPhone = async () => {
-		if (!phoneSearch) return;
-		const customer = await findByPhone(phoneSearch).catch(() => null);
-		if (customer) {
-			setForm((prev) => ({
-				...prev,
-				customerName: customer.fullName,
-				customerPhone: customer.phone,
-				customerAddress: customer.address,
-			}));
+	// Phone takes priority when both fields are filled — it is the more specific lookup (exact match
+	// on the blind index) while name is a prefix search likely to return more results.
+	const searchCustomers = async () => {
+		const phone = phoneSearch.trim();
+		const name = nameSearch.trim();
+		if (!phone && !name) return;
+		setSearchModalOpen(true);
+		setSearchingCustomers(true);
+		setCustomerMatches(null);
+		try {
+			const results = phone ? await searchByPhone(phone) : await searchByName(name);
+			setCustomerMatches(results);
+		} catch {
+			setCustomerMatches([]);
+		} finally {
+			setSearchingCustomers(false);
 		}
 	};
+
+	const selectCustomer = (customer: Customer) => {
+		setForm((prev) => ({
+			...prev,
+			customerName: customer.fullName,
+			customerPhone: customer.phone,
+			customerAddress: customer.address,
+		}));
+		setSelectedCustomerId(customer.id);
+		setCustomerMatches(null);
+		setSearchModalOpen(false);
+		setPhoneSearch('');
+		setNameSearch('');
+	};
+
+	const clearSelectedCustomer = () => setSelectedCustomerId(undefined);
 
 	const submit = async (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -137,6 +179,7 @@ export default function CreateOrderPage() {
 		setSubmitting(true);
 		try {
 			await placeOrder({
+				customerId: selectedCustomerId,
 				customerName: form.customerName,
 				customerPhone: form.customerPhone,
 				customerAddress: form.customerAddress,
@@ -244,23 +287,46 @@ export default function CreateOrderPage() {
 							</Card>
 
        <Card title="2. Customer details" subtitle="Enter or look up the customer.">
-								<div className="phone-search">
-         <Field label="Find customer by phone number" htmlFor="phoneSearch">
+								<div className="form-grid">
+       <Field label="Find by phone number" htmlFor="phoneSearch">
 										<div className="input-with-icon">
 											<Phone size={16}/>
 											<Input
-													id="phoneSearch"
-													type="tel"
-													value={phoneSearch}
-													onChange={(e) => setPhoneSearch(e.target.value)}
-             placeholder="07XXXXXXXXX"
+												id="phoneSearch"
+												type="tel"
+												value={phoneSearch}
+												onChange={(e) => setPhoneSearch(e.target.value)}
+           placeholder="07XXXXXXXXX"
 											/>
 										</div>
 									</Field>
-         <Button type="button" variant="ghost" onClick={() => void lookupPhone()}>
-                    <Search size={15}/> Search
-                  </Button>
+       <Field label="Find by name" htmlFor="nameSearch">
+										<div className="input-with-icon">
+											<User2 size={16}/>
+											<Input
+												id="nameSearch"
+												value={nameSearch}
+												onChange={(e) => setNameSearch(e.target.value)}
+           placeholder="Start typing a name…"
+											/>
+										</div>
+									</Field>
 								</div>
+
+								<Button type="button" variant="ghost"
+										disabled={searchingCustomers || (!phoneSearch.trim() && !nameSearch.trim())}
+										onClick={() => void searchCustomers()} style={{marginBottom: 16}}>
+                  <Search size={15}/> Search customer
+                </Button>
+
+								{selectedCustomerId && (
+									<div className="customer-linked-chip">
+										<Check size={13}/> Linked to an existing customer
+										<button type="button" onClick={clearSelectedCustomer}>
+											<X size={13}/> Clear
+										</button>
+									</div>
+								)}
 
 								<div className="form-grid">
          <Field label="Customer name" htmlFor="custName">
@@ -270,7 +336,7 @@ export default function CreateOrderPage() {
 													id="custName"
 													required
 													value={form.customerName}
-													onChange={update('customerName')}
+													onChange={updateCustomerField('customerName')}
              placeholder="Full name"
 											/>
 										</div>
@@ -283,7 +349,7 @@ export default function CreateOrderPage() {
 													type="tel"
 													required
 													value={form.customerPhone}
-													onChange={update('customerPhone')}
+													onChange={updateCustomerField('customerPhone')}
              placeholder="07XXXXXXXXX"
 											/>
 										</div>
@@ -296,7 +362,7 @@ export default function CreateOrderPage() {
 												id="custAddr"
 												required
 												value={form.customerAddress}
-												onChange={update('customerAddress')}
+												onChange={updateCustomerField('customerAddress')}
             placeholder="e.g. 10 High Street, City"
 										/>
 									</div>
@@ -488,6 +554,31 @@ export default function CreateOrderPage() {
 						</aside>
 					</div>
 				</form>
+
+				<Modal open={searchModalOpen} onClose={() => setSearchModalOpen(false)} title="Select a customer" size="sm">
+					{searchingCustomers ? (
+							<div className="center-box" style={{padding: '24px 0', minHeight: 0}}>
+								<WashingMachine size={22} className="spin"/>
+								<span>Searching…</span>
+							</div>
+					) : customerMatches && customerMatches.length > 0 ? (
+							<div className="customer-match-list">
+								{customerMatches.map((c) => (
+										<button key={c.id} type="button" className="customer-match" onClick={() => selectCustomer(c)}>
+											<div className="customer-avatar">{initials(c.fullName)}</div>
+											<div className="customer-match__info">
+												<strong>{c.fullName}</strong>
+												<span>{c.phone}{c.address ? ` · ${c.address}` : ''}</span>
+											</div>
+										</button>
+								))}
+							</div>
+					) : (
+							<p className="muted" style={{fontSize: 13}}>
+								No matching customer found — you can still fill in the details manually for a walk-in order.
+							</p>
+					)}
+				</Modal>
 			</>
 	);
 }

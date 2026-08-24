@@ -101,12 +101,18 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 		return toCustomer(res, totals.get(id) ?? NO_TOTALS);
 	}
 
-	async getCustomerByPhone(phone: string): Promise<Customer | null> {
+	async searchCustomersByPhone(phone: string): Promise<Customer[]> {
 		const res = await httpClient.get<CustomerListApiResponse>(
 				`/customer/list?phone=${encodeURIComponent(phone)}`,
 		);
-		const match = res.customers[0];
-		return match ? toCustomer(match, NO_TOTALS) : null;
+		return res.customers.map((c) => toCustomer(c, NO_TOTALS));
+	}
+
+	async searchCustomersByName(namePrefix: string): Promise<Customer[]> {
+		const res = await httpClient.get<CustomerListApiResponse>(
+				`/customer/list?fullName=${encodeURIComponent(namePrefix)}`,
+		);
+		return res.customers.map((c) => toCustomer(c, NO_TOTALS));
 	}
 
 	async createCustomer(input: CreateCustomerInput): Promise<Customer> {

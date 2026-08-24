@@ -5,5 +5,5 @@ package com.ferry.user.domain.tenant.resendconfirmation;
  * on Agustus 2026      *
  ************************/
 
-public record TenantAdminContactProjection(String email, String staffFullName, String staffUsername){
+public record TenantAdminContactProjection(String email, String staffFullName, String staffUsername, String staffId){
 }

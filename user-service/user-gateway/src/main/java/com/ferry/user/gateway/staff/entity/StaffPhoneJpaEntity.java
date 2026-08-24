@@ -84,6 +84,10 @@ public class StaffPhoneJpaEntity{
 				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
 	}
 
+	public static String decryptPhone(String phoneCipher, String staffId, CryptoTool cryptoTool){
+		return cryptoTool.decrypt(phoneCipher, aad(staffId));
+	}
+
 	public void backfill(CryptoTool cryptoTool){
 		String phone = cryptoTool.decrypt(phoneCipher, aad(staffId));
 		if(phone.equals(phoneCipher)){
