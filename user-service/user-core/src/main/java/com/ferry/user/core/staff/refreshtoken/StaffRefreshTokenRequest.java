@@ -1,7 +1,6 @@
 package com.ferry.user.core.staff.refreshtoken;
 
 import com.ferry.user.core.tools.UserValidation;
-import jakarta.validation.constraints.NotBlank;
 
 /************************
  * Made by [MR Ferry™]  *

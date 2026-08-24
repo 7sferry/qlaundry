@@ -14,9 +14,7 @@ import com.ferry.user.domain.notification.EmailTriggerType;
 import com.ferry.user.domain.tenant.TenantDomain;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.domain.tenant.TenantStatus;
-import com.ferry.user.domain.tenant.resendconfirmation.FailedToResendConfirmationException;
 import com.ferry.user.domain.tenant.resendconfirmation.TenantAdminContactProjection;
-import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -28,7 +26,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willReturn;
@@ -64,56 +61,48 @@ class DefaultTenantResendConfirmationUseCaseTest{
 	ArgumentCaptor<EmailTriggerConfig> emailConfigCaptor;
 
 	@Test
-	void givenBlankTenantId_thenThrowsFailedToResendConfirmationExceptionWithConstraintViolationCause(){
-		FailedToResendConfirmationException thrown = catchThrowableOfType(FailedToResendConfirmationException.class,
-				() -> useCase.execute(new TenantResendConfirmationRequest(" "), presenter));
+	void givenBlankTenantId_thenPresentsGenericSuccessMessageWithoutSendingEmail(){
+		useCase.execute(new TenantResendConfirmationRequest(" "), presenter);
 
-		thenSoftly(softly -> softly.then(thrown.getCause()).isInstanceOf(ConstraintViolationException.class));
+		then(presenter).should().present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
 		then(gateway).shouldHaveNoInteractions();
 		then(emailPublisher).shouldHaveNoInteractions();
-		then(presenter).shouldHaveNoInteractions();
 	}
 
 	@Test
-	void givenTenantNotFound_thenThrowsFailedToResendConfirmationExceptionWithTenantNotFoundMessage(){
+	void givenTenantNotFound_thenPresentsGenericSuccessMessageWithoutSendingEmail(){
 		willReturn(Optional.empty()).given(gateway).findById(new TenantIdDomain(TENANT_ID));
 
-		FailedToResendConfirmationException thrown = catchThrowableOfType(FailedToResendConfirmationException.class,
-				() -> useCase.execute(new TenantResendConfirmationRequest(TENANT_ID), presenter));
+		useCase.execute(new TenantResendConfirmationRequest(TENANT_ID), presenter);
 
-		thenSoftly(softly -> softly.then(thrown.getMessage()).isEqualTo("Tenant not found"));
+		then(presenter).should().present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
 		then(emailPublisher).shouldHaveNoInteractions();
-		then(presenter).shouldHaveNoInteractions();
 	}
 
 	@Test
-	void givenTenantAlreadyActive_thenThrowsFailedToResendConfirmationExceptionWithAlreadyConfirmedMessage(){
+	void givenTenantAlreadyActive_thenPresentsGenericSuccessMessageWithoutSendingEmail(){
 		TenantDomain tenant = new TenantDomain(TENANT_ID, new UsernameDomain(TENANT_USERNAME), new FullNameDomain(TENANT_NAME),
 				new DescriptionDomain("desc"), TenantStatus.ACTIVE, null, false, Instant.now(), null, Instant.now(), null);
 		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantIdDomain(TENANT_ID));
 
-		FailedToResendConfirmationException thrown = catchThrowableOfType(FailedToResendConfirmationException.class,
-				() -> useCase.execute(new TenantResendConfirmationRequest(TENANT_ID), presenter));
+		useCase.execute(new TenantResendConfirmationRequest(TENANT_ID), presenter);
 
-		thenSoftly(softly -> softly.then(thrown.getMessage()).isEqualTo("Tenant already confirmed"));
+		then(presenter).should().present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
 		then(gateway).should(never()).findAdminContact(any());
 		then(emailPublisher).shouldHaveNoInteractions();
-		then(presenter).shouldHaveNoInteractions();
 	}
 
 	@Test
-	void givenAdminContactNotFound_thenThrowsFailedToResendConfirmationExceptionWithTenantNotFoundMessage(){
+	void givenAdminContactNotFound_thenPresentsGenericSuccessMessageWithoutSendingEmail(){
 		TenantDomain tenant = new TenantDomain(TENANT_ID, new UsernameDomain(TENANT_USERNAME), new FullNameDomain(TENANT_NAME),
 				new DescriptionDomain("desc"), TenantStatus.PENDING, null, false, Instant.now(), null, Instant.now(), null);
 		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantIdDomain(TENANT_ID));
 		willReturn(Optional.empty()).given(gateway).findAdminContact(new TenantIdDomain(TENANT_ID));
 
-		FailedToResendConfirmationException thrown = catchThrowableOfType(FailedToResendConfirmationException.class,
-				() -> useCase.execute(new TenantResendConfirmationRequest(TENANT_ID), presenter));
+		useCase.execute(new TenantResendConfirmationRequest(TENANT_ID), presenter);
 
-		thenSoftly(softly -> softly.then(thrown.getMessage()).isEqualTo("Tenant not found"));
+		then(presenter).should().present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
 		then(emailPublisher).shouldHaveNoInteractions();
-		then(presenter).shouldHaveNoInteractions();
 	}
 
 	@Test

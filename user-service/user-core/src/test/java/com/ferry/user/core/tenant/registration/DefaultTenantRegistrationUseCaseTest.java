@@ -13,7 +13,6 @@ import com.ferry.user.domain.notification.EmailTriggerDomain;
 import com.ferry.user.domain.notification.EmailTriggerType;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffRole;
-import com.ferry.user.domain.common.exception.InvalidUsernameException;
 import com.ferry.user.domain.staff.registration.TurnstileVerificationException;
 import com.ferry.user.domain.tenant.TenantDomain;
 import jakarta.validation.ConstraintViolationException;
@@ -111,19 +110,20 @@ class DefaultTenantRegistrationUseCaseTest{
 	}
 
 	@Test
-	void givenUsernameAlreadyTaken_thenThrowsInvalidUsernameExceptionAndNeverSavesTenant(){
+	void givenUsernameAlreadyTaken_thenPresentsFakeResponseAndNeverSavesTenant(){
 		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME, "desc",
 				USERNAME, PASSWORD, List.of(EMAIL), null, null, CAPTCHA_TOKEN);
 		willReturn(true).given(turnstileVerificationGateway).verify(CAPTCHA_TOKEN);
 		willReturn(true).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
 
-		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, presenter))
-				.isInstanceOf(InvalidUsernameException.class)
-				.hasMessage("Username already exists"));
+		useCase.execute(request, presenter);
 
+		TenantDomain fakeTenant = TenantDomain.fake(new FullNameDomain(TENANT_NAME));
+		StaffDomain fakeStaff = StaffDomain.fake(new FullNameDomain(FULL_NAME));
+		then(presenter).should().present(new TenantRegistrationResponse(fakeTenant, new StaffRegistrationResponse(fakeStaff)));
 		then(gateway).should(never()).save(any(TenantDomain.class));
+		then(gateway).should(never()).registerAdmin(any(StaffRegistrationRequest.class), any(TenantDomain.class));
 		then(emailPublisher).shouldHaveNoInteractions();
-		then(presenter).shouldHaveNoInteractions();
 	}
 
 	@Test

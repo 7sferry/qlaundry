@@ -12,7 +12,6 @@ import com.ferry.user.domain.staff.refresh.ExpiredSessionException;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
-import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -66,14 +65,13 @@ class DefaultStaffRefreshTokenUseCaseTest{
 	ArgumentCaptor<StaffRefreshTokenResponse> responseCaptor;
 
 	@Test
-	void givenBlankRefreshToken_thenThrowsConstraintViolationException(){
-		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(new StaffRefreshTokenRequest(" "), presenter))
-				.isInstanceOf(ConstraintViolationException.class));
+	void givenBlankRefreshToken_thenPresentsUnauthorized(){
+		useCase.execute(new StaffRefreshTokenRequest(" "), presenter);
 
 		then(gateway).shouldHaveNoInteractions();
 		then(tokenProcessor).shouldHaveNoInteractions();
 		then(cacheManager).shouldHaveNoInteractions();
-		then(presenter).shouldHaveNoInteractions();
+		then(presenter).should().presentUnauthorized();
 	}
 
 	@Test
@@ -103,32 +101,28 @@ class DefaultStaffRefreshTokenUseCaseTest{
 	}
 
 	@Test
-	void givenSessionTypeIsNotStaff_thenThrowsExpiredSessionException(){
+	void givenSessionTypeIsNotStaff_thenPresentsUnauthorized(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN, StaffRefreshTokenResponse.class);
 		UserSessionDomain session = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.CUSTOMER);
 		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSessionDomain.class);
 
-		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter))
-				.isInstanceOf(ExpiredSessionException.class)
-				.hasMessage("session expired"));
+		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
 		then(gateway).shouldHaveNoInteractions();
-		then(presenter).shouldHaveNoInteractions();
+		then(presenter).should().presentUnauthorized();
 	}
 
 	@Test
-	void givenSessionExpired_thenThrowsExpiredSessionException(){
+	void givenSessionExpired_thenPresentsUnauthorized(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN, StaffRefreshTokenResponse.class);
 		UserSessionDomain session = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().minusSeconds(60), USER_ID, SessionType.STAFF);
 		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSessionDomain.class);
 
-		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter))
-				.isInstanceOf(ExpiredSessionException.class)
-				.hasMessage("session expired"));
+		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
-		then(presenter).shouldHaveNoInteractions();
+		then(presenter).should().presentUnauthorized();
 	}
 
 	@Test
@@ -143,7 +137,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
 		then(cacheManager).should().set(eq(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN), eq(fetchedSession), durationCaptor.capture());
-		then(presenter).should().presentRotatedToken(new StaffRefreshTokenResponse("cached-access-token", null));
+		then(presenter).should().presentCachedToken(new StaffRefreshTokenResponse("cached-access-token", null));
 
 		thenSoftly(softly -> softly.then(durationCaptor.getValue()).isEqualTo(Duration.ofSeconds(TokenConstant.REFRESH_CACHE_MAX_SECONDS)));
 	}
@@ -158,7 +152,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
-		then(presenter).should().presentRotatedToken(new StaffRefreshTokenResponse("cached-access-token", null));
+		then(presenter).should().presentCachedToken(new StaffRefreshTokenResponse("cached-access-token", null));
 		then(gateway).shouldHaveNoInteractions();
 		then(cacheManager).should(never()).set(eq(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN), any(), any());
 	}
@@ -179,7 +173,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
-		then(presenter).should().presentRotatedToken(new StaffRefreshTokenResponse(NEW_ACCESS_TOKEN, null));
+		then(presenter).should().presentCachedToken(new StaffRefreshTokenResponse(NEW_ACCESS_TOKEN, null));
 		then(cacheManager).should().set(eq(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN), eq(NEW_ACCESS_TOKEN), eq(Duration.ofSeconds(840)));
 		then(cacheManager).should(never()).set(eq(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN), any(), any());
 		then(gateway).should(never()).save(any());
@@ -201,7 +195,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
-		then(presenter).should().presentRotatedToken(new StaffRefreshTokenResponse(NEW_ACCESS_TOKEN, null));
+		then(presenter).should().presentCachedToken(new StaffRefreshTokenResponse(NEW_ACCESS_TOKEN, null));
 		then(cacheManager).should(never()).set(eq(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN), any(), any());
 	}
 

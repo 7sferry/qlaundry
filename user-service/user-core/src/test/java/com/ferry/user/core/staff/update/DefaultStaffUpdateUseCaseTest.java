@@ -34,6 +34,7 @@ import java.util.Optional;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willAnswer;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.Mockito.*;
 
@@ -211,6 +212,7 @@ class DefaultStaffUpdateUseCaseTest{
 		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
 				.given(gateway).findCurrentPassword(USER_ID);
 		willReturn(true).given(passwordTool).matches("current-password", OLD_HASHED_PASSWORD);
+		willReturn(false).given(passwordTool).matches("OldSecret2025", OLD_HASHED_PASSWORD);
 		StaffPasswordProjection usedThisQuarter = new StaffPasswordProjection("quarter-old-hash");
 		willReturn(List.of(usedThisQuarter)).given(gateway).findRecentPasswords(eq(USER_ID), any(Instant.class));
 		willReturn(true).given(passwordTool).matches("OldSecret2025", "quarter-old-hash");
@@ -259,6 +261,7 @@ class DefaultStaffUpdateUseCaseTest{
 		willReturn(true).given(passwordTool).matches("current-password", OLD_HASHED_PASSWORD);
 		willReturn(List.of()).given(gateway).findRecentPasswords(eq(USER_ID), any(Instant.class));
 		willReturn(new HashedPasswordDomain("new-hash-xyz789")).given(passwordTool).hash(any());
+		willDoNothing().given(gateway).save(any(StaffPasswordDomain.class));
 		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(StaffDomain.class));
 		willReturn(List.of()).given(gateway).findEmailsByStaffId(USER_ID);
 		willReturn(List.of()).given(gateway).findPhonesByStaffId(USER_ID);

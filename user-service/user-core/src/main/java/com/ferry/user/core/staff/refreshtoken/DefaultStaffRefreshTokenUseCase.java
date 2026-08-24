@@ -30,7 +30,7 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 
 	@Override
 	public void execute(StaffRefreshTokenRequest request, StaffRefreshTokenPresenter presenter){
-		if(request.refreshToken() == null){
+		if(request.refreshToken() == null || request.refreshToken().isBlank()){
 			presenter.presentUnauthorized();
 			return;
 		}
