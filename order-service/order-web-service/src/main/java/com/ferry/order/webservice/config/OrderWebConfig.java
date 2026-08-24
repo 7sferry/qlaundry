@@ -167,10 +167,10 @@ public class OrderWebConfig{
 	}
 
 	@Bean
-	CustomerVerificationGateway customerVerificationGateway(JsonManager jsonManager,
+	CustomerVerificationGateway customerVerificationGateway(JsonManager jsonManager, IdGenerator idGenerator,
 	                                                        @Value("${app.internal.user-service.base-url}") String baseUrl,
 	                                                        @Value("${app.internal.api-key}") String apiKey){
-		return new CustomerVerificationHttpGateway(jsonManager, baseUrl, apiKey);
+		return new CustomerVerificationHttpGateway(jsonManager, idGenerator, baseUrl, apiKey);
 	}
 
 	@Bean

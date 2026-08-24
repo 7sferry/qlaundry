@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +28,8 @@ public class InternalApiKeyAuthenticationFilter implements Filter{
 
 	private static final String INTERNAL_PATH_PREFIX = "/internal/";
 	private static final String API_KEY_HEADER = "X-Internal-Api-Key";
+	private static final String TRACE_ID_HEADER = "X-Trace-Id";
+	private static final String TRACE_ID_MDC_KEY = "traceId";
 	private static final String AUTHORITY_PREFIX = "SERVICE_";
 	private static final int CREDENTIAL_PARTS = 3;
 
@@ -39,6 +42,22 @@ public class InternalApiKeyAuthenticationFilter implements Filter{
 			chain.doFilter(request, response);
 			return;
 		}
+		// the caller sets this, so downstream logs on both sides of the call can be grepped by the same id
+		String traceId = req.getHeader(TRACE_ID_HEADER);
+		if(traceId != null){
+			MDC.put(TRACE_ID_MDC_KEY, traceId);
+		}
+		try{
+			doFilterInternal(req, request, response, chain);
+		}finally{
+			if(traceId != null){
+				MDC.remove(TRACE_ID_MDC_KEY);
+			}
+		}
+	}
+
+	private void doFilterInternal(HttpServletRequest req, ServletRequest request, ServletResponse response,
+	                               FilterChain chain) throws IOException, ServletException{
 		String presented = req.getHeader(API_KEY_HEADER);
 		if(presented == null){
 			chain.doFilter(request, response);
@@ -61,6 +80,7 @@ public class InternalApiKeyAuthenticationFilter implements Filter{
 		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(clientId, null,
 				List.of(new SimpleGrantedAuthority(AUTHORITY_PREFIX + clientId.toUpperCase(Locale.ROOT))));
 		SecurityContextHolder.getContext().setAuthentication(auth);
+		log.info("authenticated as {} using key {}", clientId, version);
 		chain.doFilter(request, response);
 	}
 
