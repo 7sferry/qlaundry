@@ -13,6 +13,7 @@ export type {BadgeTone} from './Badge';
 export {Spinner, Loading} from './Spinner';
 export {StatCard} from './StatCard';
 export {PageHeader} from './PageHeader';
+export {Pagination} from './Pagination';
 export {Modal} from './Modal';
 export {Drawer} from './Drawer';
 export {ToastProvider} from './Toast';

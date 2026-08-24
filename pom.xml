@@ -26,6 +26,7 @@
 		<module>utils/internal-commons</module>
 		<module>utils/crypto-tools</module>
 		<module>utils/json-tools</module>
+		<module>utils/pagination-tools</module>
 	</modules>
 	<packaging>pom</packaging>
 	<description>qlaundry</description>

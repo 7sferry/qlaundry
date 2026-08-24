@@ -4,9 +4,9 @@
  ************************/
 
 import {httpClient} from '@/core/http/httpClient';
+import type {Page} from '@/core/pagination/Pagination';
 import type {CustomerFilters, CustomerRepository} from '../domain/CustomerRepository';
 import type {CreateCustomerInput, Customer, UpdateCustomerInput} from '../domain/Customer';
-import {computeTier} from '../domain/Customer';
 
 interface CustomerApiItem {
 	id: string;
@@ -20,11 +20,14 @@ interface CustomerApiItem {
 
 interface CustomerListApiResponse {
 	customers: CustomerApiItem[];
+	nextCursor: string | null;
+	prevCursor: string | null;
 }
 
 /** Only the three fields the spend rollup needs — the full order shape belongs to the orders feature. */
 interface OrderTotalsApiResponse {
 	orders: { customerId: string | null; totalPrice: number; createdAt: number }[];
+	nextCursor: string | null;
 }
 
 interface CustomerTotals {
@@ -37,20 +40,31 @@ const NO_TOTALS: CustomerTotals = {totalOrders: 0, totalSpend: 0};
 
 /**
  * user-service owns the customer, order-service owns the orders, and neither reads the other's tables — so
- * "how much has this customer spent" is a join that only exists here. One extra request per customer list.
+ * "how much has this customer spent" is a join that only exists here. `/order/list` is now cursor-paginated
+ * (20 per page), so a full rollup means walking every page until `nextCursor` is null — still one round of
+ * requests per customer list, just N requests instead of 1 when there are more than 20 matching orders.
  */
-async function fetchTotals(query = ''): Promise<Map<string, CustomerTotals>> {
+async function fetchTotals(customerId?: string): Promise<Map<string, CustomerTotals>> {
 	const totals = new Map<string, CustomerTotals>();
-	const res = await httpClient.get<OrderTotalsApiResponse>(`/order/list${query}`);
-	for (const order of res.orders) {
-		if (!order.customerId) continue;
-		const current = totals.get(order.customerId) ?? {totalOrders: 0, totalSpend: 0};
-		const createdAt = new Date(order.createdAt).toISOString();
-		totals.set(order.customerId, {
-			totalOrders: current.totalOrders + 1,
-			totalSpend: current.totalSpend + order.totalPrice,
-			lastOrderAt: !current.lastOrderAt || createdAt > current.lastOrderAt ? createdAt : current.lastOrderAt,
-		});
+	let cursor: string | undefined;
+	for (;;) {
+		const params = new URLSearchParams();
+		if (customerId) params.set('customerId', customerId);
+		if (cursor) params.set('cursor', cursor);
+		const query = params.toString();
+		const res = await httpClient.get<OrderTotalsApiResponse>(`/order/list${query ? `?${query}` : ''}`);
+		for (const order of res.orders) {
+			if (!order.customerId) continue;
+			const current = totals.get(order.customerId) ?? {totalOrders: 0, totalSpend: 0};
+			const createdAt = new Date(order.createdAt).toISOString();
+			totals.set(order.customerId, {
+				totalOrders: current.totalOrders + 1,
+				totalSpend: current.totalSpend + order.totalPrice,
+				lastOrderAt: !current.lastOrderAt || createdAt > current.lastOrderAt ? createdAt : current.lastOrderAt,
+			});
+		}
+		if (!res.nextCursor) break;
+		cursor = res.nextCursor;
 	}
 	return totals;
 }
@@ -65,7 +79,6 @@ function toCustomer(item: CustomerApiItem, totals: CustomerTotals): Customer {
 		notes: item.notes ?? undefined,
 		totalOrders: totals.totalOrders,
 		totalSpend: totals.totalSpend,
-		tier: computeTier(totals.totalSpend),
 		joinedAt: new Date(item.joinedAt).toISOString(),
 		lastOrderAt: totals.lastOrderAt,
 	};
@@ -76,27 +89,34 @@ function toCustomer(item: CustomerApiItem, totals: CustomerTotals): Customer {
  * a number is sent as a phone (the backend normalises `0812…` to `+62812…` before matching its blind index).
  */
 function buildCustomerQuery(filters?: CustomerFilters): string {
-	if (!filters?.search) return '';
-	const search = filters.search.trim();
-	const key = /^[+0-9][0-9\s().-]*$/.test(search) ? 'phone' : 'fullName';
-	return `?${key}=${encodeURIComponent(search)}`;
+	const params = new URLSearchParams();
+	if (filters?.search) {
+		const search = filters.search.trim();
+		const key = /^[+0-9][0-9\s().-]*$/.test(search) ? 'phone' : 'fullName';
+		params.set(key, search);
+	}
+	if (filters?.cursor) params.set('cursor', filters.cursor);
+	if (filters?.direction) params.set('direction', filters.direction.toUpperCase());
+	if (filters?.sortBy) params.set('sortBy', filters.sortBy.toUpperCase());
+	if (filters?.sortDir) params.set('sortDir', filters.sortDir.toUpperCase());
+	const query = params.toString();
+	return query ? `?${query}` : '';
 }
 
 export class CustomerRepositoryImpl implements CustomerRepository {
-	async getCustomers(filters?: CustomerFilters): Promise<Customer[]> {
+	async getCustomers(filters?: CustomerFilters): Promise<Page<Customer>> {
 		const [res, totals] = await Promise.all([
 			httpClient.get<CustomerListApiResponse>(`/customer/list${buildCustomerQuery(filters)}`),
 			fetchTotals(),
 		]);
 		const customers = res.customers.map((c) => toCustomer(c, totals.get(c.id) ?? NO_TOTALS));
-		const filtered = filters?.tier ? customers.filter((c) => c.tier === filters.tier) : customers;
-		return filtered.sort((a, b) => b.totalSpend - a.totalSpend);
+		return {items: customers, nextCursor: res.nextCursor, prevCursor: res.prevCursor};
 	}
 
 	async getCustomerById(id: string): Promise<Customer> {
 		const [res, totals] = await Promise.all([
 			httpClient.get<CustomerApiItem>(`/customer/detail?customerId=${encodeURIComponent(id)}`),
-			fetchTotals(`?customerId=${encodeURIComponent(id)}`),
+			fetchTotals(id),
 		]);
 		return toCustomer(res, totals.get(id) ?? NO_TOTALS);
 	}
@@ -139,7 +159,7 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 			address: input.address,
 			notes: input.notes,
 		});
-		const totals = await fetchTotals(`?customerId=${encodeURIComponent(input.id)}`);
+		const totals = await fetchTotals(input.id);
 		return toCustomer(res, totals.get(input.id) ?? NO_TOTALS);
 	}
 

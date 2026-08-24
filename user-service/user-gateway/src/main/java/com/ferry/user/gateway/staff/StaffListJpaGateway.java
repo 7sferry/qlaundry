@@ -1,6 +1,11 @@
 package com.ferry.user.gateway.staff;
 
 import com.ferry.user.core.staff.list.StaffListGateway;
+import com.ferry.utils.pagination.CursorFetch;
+import com.ferry.utils.pagination.PaginationConstant;
+import com.ferry.utils.pagination.PageDirection;
+import com.ferry.utils.pagination.SortBy;
+import com.ferry.utils.pagination.SortDirection;
 import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.staff.list.StaffAddressListProjection;
 import com.ferry.user.domain.staff.list.StaffEmailListProjection;
@@ -15,6 +20,9 @@ import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffPhoneJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
@@ -32,8 +40,24 @@ public class StaffListJpaGateway implements StaffListGateway{
 	private final CryptoTool cryptoTool;
 
 	@Override
-	public List<StaffListProjection> findByFilter(StaffFilter filter){
-		return staffJpaRepository.findAllWithFilter(filter, StaffListProjection.class);
+	public CursorFetch<StaffListProjection> findByFilter(StaffFilter filter){
+		List<StaffListProjection> raw = fetchByFilter(filter);
+		return CursorFetch.of(raw, PaginationConstant.PAGE_SIZE, filter.pageDirection());
+	}
+
+	private List<StaffListProjection> fetchByFilter(StaffFilter filter){
+		Pageable pageable = PageRequest.ofSize(PaginationConstant.PAGE_SIZE + 1);
+		boolean forward = filter.pageDirection() == PageDirection.NEXT;
+		boolean ascending = filter.sortDir() == SortDirection.ASC;
+		boolean useAfterQuery = forward == ascending;
+		if(filter.sortBy() == SortBy.NAME){
+			return useAfterQuery
+					? staffJpaRepository.findAfterByFullName(filter, StaffListProjection.class, pageable)
+					: staffJpaRepository.findBeforeByFullName(filter, StaffListProjection.class, pageable);
+		}
+		return useAfterQuery
+				? staffJpaRepository.findAfterById(filter, StaffListProjection.class, pageable)
+				: staffJpaRepository.findBeforeById(filter, StaffListProjection.class, pageable);
 	}
 
 	@Override

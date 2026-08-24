@@ -37,7 +37,7 @@ public class CustomerListWebPresenter implements CustomerListPresenter{
 							o.notesValue(), o.createdAt().toEpochMilli());
 				})
 				.toList();
-		responseEntity = ResponseEntity.ok(new CustomerListWebResponse(customers));
+		responseEntity = ResponseEntity.ok(new CustomerListWebResponse(customers, response.nextCursor(), response.prevCursor()));
 	}
 
 }

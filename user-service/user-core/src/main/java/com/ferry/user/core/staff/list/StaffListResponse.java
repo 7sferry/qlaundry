@@ -15,5 +15,6 @@ import java.util.Map;
 
 public record StaffListResponse(List<StaffListProjection> staffs, Map<String, List<StaffPhoneListProjection>> phonesByStaffId,
                                 Map<String, List<StaffEmailListProjection>> emailsByStaffId,
-                                Map<String, List<StaffAddressListProjection>> addressesByStaffId){
+                                Map<String, List<StaffAddressListProjection>> addressesByStaffId,
+                                String nextCursor, String prevCursor){
 }

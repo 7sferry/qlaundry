@@ -16,9 +16,11 @@ const mockService: LaundryService = {
 	category: 'wash',
 };
 
+const mockServicePage = {items: [mockService], nextCursor: null, prevCursor: null};
+
 function makeRepo(): { repo: ServiceRepository; fns: Record<string, ReturnType<typeof vi.fn>> } {
 	const fns = {
-		getServices: vi.fn().mockResolvedValue([mockService]),
+		getServices: vi.fn().mockResolvedValue(mockServicePage),
 		createService: vi.fn().mockResolvedValue(mockService),
 		updateService: vi.fn().mockResolvedValue(mockService),
 		deleteService: vi.fn().mockResolvedValue(undefined),
@@ -34,7 +36,7 @@ describe('serviceUseCases', () => {
 		const result = await useCases.listServices();
 
 		expect(fns.getServices).toHaveBeenCalledOnce();
-		expect(result).toEqual([mockService]);
+		expect(result).toEqual(mockServicePage);
 	});
 
 	it('listServices passes filters through to the repository', async () => {

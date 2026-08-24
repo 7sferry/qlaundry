@@ -39,9 +39,11 @@ const mockService: LaundryService = {
 	category: 'wash',
 };
 
+const mockOrderPage = {items: [mockOrder], nextCursor: null, prevCursor: null};
+
 function makeRepo(): { repo: OrderRepository; fns: Record<string, ReturnType<typeof vi.fn>> } {
 	const fns = {
-		getOrders: vi.fn().mockResolvedValue([mockOrder]),
+		getOrders: vi.fn().mockResolvedValue(mockOrderPage),
 		getOrderById: vi.fn().mockResolvedValue(mockOrder),
 		getServices: vi.fn().mockResolvedValue([mockService]),
 		createOrder: vi.fn().mockResolvedValue(mockOrder),
@@ -59,7 +61,7 @@ describe('orderUseCases', () => {
 		const result = await useCases.listOrders();
 
 		expect(fns.getOrders).toHaveBeenCalledOnce();
-		expect(result).toEqual([mockOrder]);
+		expect(result).toEqual(mockOrderPage);
 	});
 
 	it('getOrderById delegates to repository.getOrderById', async () => {

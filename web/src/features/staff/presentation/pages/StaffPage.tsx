@@ -3,10 +3,11 @@
  * on Juli 2026         *
  ************************/
 
-import React, {useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {UserPlus, Users} from 'lucide-react';
 import {Button, Loading, Modal, PageHeader, StatCard, useToast} from '@/core/ui';
 import {useAuth} from '@/features/auth/presentation/useAuth';
+import type {SortBy, SortDirection} from '@/core/pagination/Pagination';
 import {useStaff} from '../useStaff';
 import StaffForm from '../components/StaffForm';
 import {type StaffFormData, emptyStaffForm} from '../components/staffFormData';
@@ -15,7 +16,7 @@ import StaffDetailDrawer from '../components/StaffDetailDrawer';
 import type {CreateStaffInput, Staff} from '../../domain/Staff';
 
 export default function StaffPage() {
-	const {staff, loading, createStaff, deleteStaff} = useStaff();
+	const {staff, loading, hasNext, hasPrev, refresh, goNext, goPrevious, createStaff, deleteStaff} = useStaff();
 	const {user} = useAuth();
 	const toast = useToast();
 
@@ -23,23 +24,31 @@ export default function StaffPage() {
 	const canAdd = user?.staffRole === 'SUPER_STAFF';
 
 	const [search, setSearch] = useState('');
+	const [sortBy, setSortBy] = useState<SortBy>('id');
+	const [sortDir, setSortDir] = useState<SortDirection>('desc');
 	const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [form, setForm] = useState<StaffFormData>(emptyStaffForm);
 	const [saving, setSaving] = useState(false);
 
-	if (loading) return <Loading label="Loading staff…"/>;
+	const didMount = useRef(false);
+	useEffect(() => {
+		if (!didMount.current) {
+			didMount.current = true;
+			return;
+		}
+		const timer = setTimeout(() => {
+			void refresh({search: search || undefined, sortBy, sortDir});
+		}, 300);
+		return () => clearTimeout(timer);
+	}, [search, sortBy, sortDir, refresh]);
 
-	const visible = staff.filter((s) => {
-		const q = search.toLowerCase();
-		return (
-			!q ||
-			s.fullName.toLowerCase().includes(q) ||
-			s.username.toLowerCase().includes(q) ||
-			s.phones.some((p) => p.includes(q)) ||
-			s.emails.some((e) => e.toLowerCase().includes(q))
-		);
-	});
+	const handleSortChange = useCallback((by: SortBy, dir: SortDirection) => {
+		setSortBy(by);
+		setSortDir(dir);
+	}, []);
+
+	if (loading && staff.length === 0) return <Loading label="Loading staff…"/>;
 
 	const now = new Date();
 	const newThisMonth = staff.filter((s) => {
@@ -105,7 +114,7 @@ export default function StaffPage() {
 		<>
 			<PageHeader
 				title="Staff management"
-				description={`${staff.length} staff registered`}
+				description="Manage staff accounts and access"
 				actions={
 					(canAdd && <Button onClick={openAdd}>
 						<UserPlus size={15}/> Add staff
@@ -114,19 +123,27 @@ export default function StaffPage() {
 			/>
 
 			<div className="grid grid--stats">
-				<StatCard icon={<Users size={20}/>} value={staff.length} label="Total staff" hint="Registered"/>
+				<StatCard icon={<Users size={20}/>} value={staff.length} label="Staff" hint="On this page"/>
 				<StatCard icon={<UserPlus size={20}/>} value={newThisMonth} label="New staff"
-				          hint="This month"/>
+				          hint="This page, this month"/>
 			</div>
 
 			<StaffTable
-				staff={visible}
+				staff={staff}
 				search={search}
 				onSearchChange={setSearch}
+				sortBy={sortBy}
+				sortDir={sortDir}
+				onSortChange={handleSortChange}
 				onSelect={setSelectedStaff}
 				onDelete={(s) => void handleDelete(s)}
 				onAdd={openAdd}
 				canDelete={canDelete}
+				hasNext={hasNext}
+				hasPrev={hasPrev}
+				onNext={() => void goNext()}
+				onPrev={() => void goPrevious()}
+				loading={loading}
 			/>
 
 			<Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add new staff">

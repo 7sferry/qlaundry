@@ -36,7 +36,7 @@ public class OrderListWebPresenter implements OrderListPresenter{
 							o.createdAt().toEpochMilli(), items);
 				})
 				.toList();
-		responseEntity = ResponseEntity.ok(new OrderListWebResponse(orders));
+		responseEntity = ResponseEntity.ok(new OrderListWebResponse(orders, response.nextCursor(), response.prevCursor()));
 	}
 
 }

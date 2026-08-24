@@ -3,6 +3,7 @@ package com.ferry.user.gateway.staff.repository;
 import com.ferry.user.domain.staff.StaffFilter;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.gateway.staff.entity.StaffJpaEntity;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -48,9 +49,42 @@ public interface StaffJpaRepository extends JpaRepository<StaffJpaEntity, String
 			"where " +
 			"(:#{#filter?.fullNameStartsWith()} is null or lower(s.fullName) like :#{#filter?.fullNameStartsWith()}) AND " +
 			"(:#{#filter?.tenantId} is null or s.tenant.id = :#{#filter?.tenantId}) AND " +
+			"(:#{#filter?.cursor?.id} is null or s.id > :#{#filter?.cursor?.id}) AND " +
 			"s.deleted IS FALSE " +
-			"order by s.fullName")
-	<T> List<T> findAllWithFilter(@Param("filter") StaffFilter filter, Class<T> clazz);
+			"order by s.id asc")
+	<T> List<T> findAfterById(@Param("filter") StaffFilter filter, Class<T> clazz, Pageable pageable);
+
+	@Query("select s " +
+			"from StaffJpaEntity s " +
+			"where " +
+			"(:#{#filter?.fullNameStartsWith()} is null or lower(s.fullName) like :#{#filter?.fullNameStartsWith()}) AND " +
+			"(:#{#filter?.tenantId} is null or s.tenant.id = :#{#filter?.tenantId}) AND " +
+			"(:#{#filter?.cursor?.id} is null or s.id < :#{#filter?.cursor?.id}) AND " +
+			"s.deleted IS FALSE " +
+			"order by s.id desc")
+	<T> List<T> findBeforeById(@Param("filter") StaffFilter filter, Class<T> clazz, Pageable pageable);
+
+	@Query("select s " +
+			"from StaffJpaEntity s " +
+			"where " +
+			"(:#{#filter?.fullNameStartsWith()} is null or lower(s.fullName) like :#{#filter?.fullNameStartsWith()}) AND " +
+			"(:#{#filter?.tenantId} is null or s.tenant.id = :#{#filter?.tenantId}) AND " +
+			"(:#{#filter?.cursor?.sortValue} is null or s.fullName > :#{#filter?.cursor?.sortValue} or " +
+			"  (s.fullName = :#{#filter?.cursor?.sortValue} and s.id > :#{#filter?.cursor?.id})) AND " +
+			"s.deleted IS FALSE " +
+			"order by s.fullName asc, s.id asc")
+	<T> List<T> findAfterByFullName(@Param("filter") StaffFilter filter, Class<T> clazz, Pageable pageable);
+
+	@Query("select s " +
+			"from StaffJpaEntity s " +
+			"where " +
+			"(:#{#filter?.fullNameStartsWith()} is null or lower(s.fullName) like :#{#filter?.fullNameStartsWith()}) AND " +
+			"(:#{#filter?.tenantId} is null or s.tenant.id = :#{#filter?.tenantId}) AND " +
+			"(:#{#filter?.cursor?.sortValue} is null or s.fullName < :#{#filter?.cursor?.sortValue} or " +
+			"  (s.fullName = :#{#filter?.cursor?.sortValue} and s.id < :#{#filter?.cursor?.id})) AND " +
+			"s.deleted IS FALSE " +
+			"order by s.fullName desc, s.id desc")
+	<T> List<T> findBeforeByFullName(@Param("filter") StaffFilter filter, Class<T> clazz, Pageable pageable);
 
 	@Modifying
 	@Query("update StaffJpaEntity s set s.username = null, s.deleted = true, s.updatedAt = CURRENT_TIMESTAMP " +

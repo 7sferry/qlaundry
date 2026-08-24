@@ -10,13 +10,14 @@ const mockCustomer: Customer = {
 	address: 'Jl. Merdeka 10',
 	totalOrders: 5,
 	totalSpend: 750_000,
-	tier: 'silver',
 	joinedAt: '2024-01-01T00:00:00Z',
 };
 
+const mockCustomerPage = {items: [mockCustomer], nextCursor: null, prevCursor: null};
+
 function makeRepo(): { repo: CustomerRepository; fns: Record<string, ReturnType<typeof vi.fn>> } {
 	const fns = {
-		getCustomers: vi.fn().mockResolvedValue([mockCustomer]),
+		getCustomers: vi.fn().mockResolvedValue(mockCustomerPage),
 		getCustomerById: vi.fn().mockResolvedValue(mockCustomer),
 		searchCustomersByPhone: vi.fn().mockResolvedValue([mockCustomer]),
 		searchCustomersByName: vi.fn().mockResolvedValue([mockCustomer]),
@@ -35,13 +36,13 @@ describe('customerUseCases', () => {
 		const result = await useCases.listCustomers();
 
 		expect(fns.getCustomers).toHaveBeenCalledOnce();
-		expect(result).toEqual([mockCustomer]);
+		expect(result).toEqual(mockCustomerPage);
 	});
 
 	it('listCustomers passes filters through to the repository', async () => {
 		const {repo, fns} = makeRepo();
 		const useCases = customerUseCases(repo);
-		const filters = {search: 'Siti', tier: 'silver'};
+		const filters = {search: 'Siti'};
 
 		await useCases.listCustomers(filters);
 

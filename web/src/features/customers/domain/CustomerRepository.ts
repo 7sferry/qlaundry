@@ -3,17 +3,15 @@
  * on Juli 2026         *
  ************************/
 
+import type {Page, PaginationParams} from '@/core/pagination/Pagination';
 import type {CreateCustomerInput, Customer, UpdateCustomerInput} from './Customer';
 
-export interface CustomerFilters {
+export interface CustomerFilters extends PaginationParams {
 	search?: string;
-	tier?: string;
-	page?: number;
-	limit?: number;
 }
 
 export interface CustomerRepository {
-	getCustomers(filters?: CustomerFilters): Promise<Customer[]>;
+	getCustomers(filters?: CustomerFilters): Promise<Page<Customer>>;
 
 	getCustomerById(id: string): Promise<Customer>;
 

@@ -3,11 +3,9 @@
  * on Juli 2026         *
  ************************/
 
-import React, {useState} from 'react';
-import {Award, Edit2, Mail, MapPin, Phone, Plus, Search, Star, Trash2, UserPlus, Users,} from 'lucide-react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {Edit2, Mail, MapPin, Phone, Plus, Search, Star, Trash2, UserPlus, Users,} from 'lucide-react';
 import {
-	Badge,
-	type BadgeTone,
 	Button,
 	Card,
 	Drawer,
@@ -16,28 +14,23 @@ import {
 	Loading,
 	Modal,
 	PageHeader,
+	Pagination,
 	Select,
 	StatCard,
 	Textarea,
 	useToast
 } from '@/core/ui';
+import type {SortBy, SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency, formatDate} from '@/core/utils/format';
 import {useCustomers} from '../useCustomers';
-import type {Customer, CustomerTier} from '../../domain/Customer';
-import {TIER_LABELS} from '../../domain/Customer';
+import type {Customer} from '../../domain/Customer';
 
-function tierTone(tier: CustomerTier): BadgeTone {
-	if (tier === 'platinum') return 'warning';
-	if (tier === 'gold') return 'warning';
-	if (tier === 'silver') return 'info';
-	return 'neutral';
-}
-
-function tierIcon(tier: CustomerTier) {
-	if (tier === 'platinum' || tier === 'gold') return <Star size={11} fill="currentColor"/>;
-	if (tier === 'silver') return <Award size={11}/>;
-	return null;
-}
+const SORT_OPTIONS: { value: string; sortBy: SortBy; sortDir: SortDirection; label: string }[] = [
+	{value: 'id-desc', sortBy: 'id', sortDir: 'desc', label: 'Newest first'},
+	{value: 'id-asc', sortBy: 'id', sortDir: 'asc', label: 'Oldest first'},
+	{value: 'name-asc', sortBy: 'name', sortDir: 'asc', label: 'Name A→Z'},
+	{value: 'name-desc', sortBy: 'name', sortDir: 'desc', label: 'Name Z→A'},
+];
 
 interface CustomerFormData {
 	fullName: string;
@@ -106,32 +99,40 @@ function CustomerForm({form, update, onSubmit, onCancel, saving, editMode}: Cust
 }
 
 export default function CustomersPage() {
-	const {customers, loading, createCustomer, updateCustomer, deleteCustomer} = useCustomers();
+	const {
+		customers, loading, hasNext, hasPrev, refresh, goNext, goPrevious, createCustomer, updateCustomer, deleteCustomer,
+	} = useCustomers();
 	const toast = useToast();
 
 	const [search, setSearch] = useState('');
-	const [tierFilter, setTierFilter] = useState<'all' | CustomerTier>('all');
+	const [sortBy, setSortBy] = useState<SortBy>('id');
+	const [sortDir, setSortDir] = useState<SortDirection>('desc');
 	const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [editMode, setEditMode] = useState(false);
 	const [form, setForm] = useState<CustomerFormData>(emptyForm);
 	const [saving, setSaving] = useState(false);
 
-	if (loading) return <Loading label="Loading customers…"/>;
+	const didMount = useRef(false);
+	useEffect(() => {
+		if (!didMount.current) {
+			didMount.current = true;
+			return;
+		}
+		const timer = setTimeout(() => {
+			void refresh({search: search || undefined, sortBy, sortDir});
+		}, 300);
+		return () => clearTimeout(timer);
+	}, [search, sortBy, sortDir, refresh]);
 
-	const visible = customers.filter((c) => {
-		const q = search.toLowerCase();
-		const matchSearch =
-				!q ||
-				c.fullName.toLowerCase().includes(q) ||
-				c.phone.includes(q) ||
-				c.email?.toLowerCase().includes(q);
-		const matchTier = tierFilter === 'all' || c.tier === tierFilter;
-		return matchSearch && matchTier;
-	});
+	const handleSortChange = useCallback((by: SortBy, dir: SortDirection) => {
+		setSortBy(by);
+		setSortDir(dir);
+	}, []);
+
+	if (loading && customers.length === 0) return <Loading label="Loading customers…"/>;
 
 	const totalSpend = customers.reduce((s, c) => s + c.totalSpend, 0);
-	const platinumCount = customers.filter((c) => c.tier === 'platinum').length;
 
 	const openAdd = () => {
 		setForm(emptyForm);
@@ -197,7 +198,7 @@ export default function CustomersPage() {
 			<>
 				<PageHeader
 						title="Customer management"
-						description={`${customers.length} customers registered`}
+						description="Manage your customer base"
 						actions={
 							<Button onClick={openAdd}>
 								<UserPlus size={15}/> Add customer
@@ -206,16 +207,14 @@ export default function CustomersPage() {
 				/>
 
 				<div className="grid grid--stats">
-					<StatCard icon={<Users size={20}/>} value={customers.length} label="Total customers" hint="Registered"/>
-					<StatCard icon={<Award size={20}/>} value={platinumCount} label="Platinum customers"
-					          hint="Highest loyalty"/>
+					<StatCard icon={<Users size={20}/>} value={customers.length} label="Customers" hint="On this page"/>
 					<StatCard icon={<Star size={20}/>} value={formatCurrency(totalSpend)} label="Total spend"
-					          hint="All customers"/>
+					          hint="On this page"/>
 					<StatCard
 							icon={<Users size={20}/>}
 							value={customers.length > 0 ? formatCurrency(Math.round(totalSpend / customers.length)) : 'Rp0'}
 							label="Average spend"
-							hint="Per customer"
+							hint="On this page"
 					/>
 				</div>
 
@@ -232,10 +231,15 @@ export default function CustomersPage() {
 							</div>
 						</Field>
 						<Field>
-							<Select value={tierFilter} onChange={(e) => setTierFilter(e.target.value as typeof tierFilter)}>
-								<option value="all">All tiers</option>
-								{(['bronze', 'silver', 'gold', 'platinum'] as CustomerTier[]).map((t) => (
-										<option key={t} value={t}>{TIER_LABELS[t]}</option>
+							<Select
+									value={`${sortBy}-${sortDir}`}
+									onChange={(e) => {
+										const opt = SORT_OPTIONS.find((o) => o.value === e.target.value);
+										if (opt) handleSortChange(opt.sortBy, opt.sortDir);
+									}}
+							>
+								{SORT_OPTIONS.map((o) => (
+										<option key={o.value} value={o.value}>{o.label}</option>
 								))}
 							</Select>
 						</Field>
@@ -247,7 +251,6 @@ export default function CustomersPage() {
 							<tr>
 								<th>Customer</th>
 								<th>Contact</th>
-								<th>Tier</th>
 								<th>Total orders</th>
 								<th>Total spend</th>
 								<th>Last order</th>
@@ -255,7 +258,7 @@ export default function CustomersPage() {
 							</tr>
 							</thead>
 							<tbody>
-							{visible.map((c) => (
+							{customers.map((c) => (
 									<tr
 											key={c.id}
 											className="table-row--clickable"
@@ -273,11 +276,6 @@ export default function CustomersPage() {
 											</div>
 										</td>
 										<td>{c.phone}</td>
-										<td>
-											<Badge tone={tierTone(c.tier)}>
-												{tierIcon(c.tier)} {TIER_LABELS[c.tier]}
-											</Badge>
-										</td>
    							<td>{c.totalOrders} orders</td>
 										<td><strong>{formatCurrency(c.totalSpend)}</strong></td>
 										<td>{c.lastOrderAt ? formatDate(c.lastOrderAt) : '—'}</td>
@@ -297,21 +295,22 @@ export default function CustomersPage() {
 							</tbody>
 						</table>
 
-						{!visible.length && (
+						{!customers.length && (
  							<div className="empty-state">
  								<Users size={28}/>
  								<strong>No customers</strong>
  								<span>
- 								{search || tierFilter !== 'all'
- 								        ? 'Try changing the filters.'
- 								        : 'Add your first customer.'}
+ 								{search ? 'Try changing the filters.' : 'Add your first customer.'}
  								</span>
- 								{!search && tierFilter === 'all' && (
+ 								{!search && (
  										<Button onClick={openAdd}><Plus size={14}/> Add customer</Button>
  								)}
  							</div>
 						)}
 					</div>
+
+					<Pagination hasNext={hasNext} hasPrev={hasPrev} onNext={() => void goNext()} onPrev={() => void goPrevious()}
+					            loading={loading}/>
 				</Card>
 
 				<Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add new customer">
@@ -352,9 +351,6 @@ export default function CustomersPage() {
 									</div>
 									<div>
 										<h3>{selectedCustomer.fullName}</h3>
-										<Badge tone={tierTone(selectedCustomer.tier)}>
-											{tierIcon(selectedCustomer.tier)} {TIER_LABELS[selectedCustomer.tier]}
-										</Badge>
 									</div>
 								</div>
 

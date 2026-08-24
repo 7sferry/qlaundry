@@ -3,11 +3,11 @@
  * on Juli 2026         *
  ************************/
 
-import type {OrderRepository} from '../domain/OrderRepository';
+import type {OrderFilters, OrderRepository} from '../domain/OrderRepository';
 import type {CreateOrderInput, UpdateOrderStatusInput} from '../domain/Order';
 
 export const orderUseCases = (repository: OrderRepository) => ({
-	listOrders: () => repository.getOrders(),
+	listOrders: (filters?: OrderFilters) => repository.getOrders(filters),
 	getOrderById: (id: string) => repository.getOrderById(id),
 	listServices: () => repository.getServices(),
 	placeOrder: (input: CreateOrderInput) => repository.createOrder(input),

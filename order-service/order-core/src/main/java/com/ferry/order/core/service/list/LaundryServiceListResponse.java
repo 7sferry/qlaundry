@@ -9,5 +9,5 @@ import java.util.List;
  * on Agustus 2026      *
  ************************/
 
-public record LaundryServiceListResponse(List<LaundryServiceDomain> services){
+public record LaundryServiceListResponse(List<LaundryServiceDomain> services, String nextCursor, String prevCursor){
 }

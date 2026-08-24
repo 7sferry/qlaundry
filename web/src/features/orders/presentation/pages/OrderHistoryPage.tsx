@@ -3,7 +3,7 @@
  * on Juli 2026         *
  ************************/
 
-import {useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {Filter, MoreHorizontal, Package, PackagePlus, Search, X,} from 'lucide-react';
 import {
@@ -16,13 +16,22 @@ import {
 	Input,
 	Loading,
 	PageHeader,
+	Pagination,
 	Select,
 	useToast
 } from '@/core/ui';
+import type {SortBy, SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency, formatDate, formatRelative} from '@/core/utils/format';
 import {useOrders} from '../useOrders';
 import type {Order, OrderStatus} from '../../domain/Order';
 import {CLOTHING_TYPE_LABELS, ORDER_STATUS_LABELS} from '../../domain/Order';
+
+const SORT_OPTIONS: { value: string; sortBy: SortBy; sortDir: SortDirection; label: string }[] = [
+	{value: 'id-desc', sortBy: 'id', sortDir: 'desc', label: 'Newest first'},
+	{value: 'id-asc', sortBy: 'id', sortDir: 'asc', label: 'Oldest first'},
+	{value: 'name-asc', sortBy: 'name', sortDir: 'asc', label: 'Customer A→Z'},
+	{value: 'name-desc', sortBy: 'name', sortDir: 'desc', label: 'Customer Z→A'},
+];
 
 type FilterStatus = 'all' | OrderStatus;
 
@@ -54,7 +63,7 @@ const NEXT_STATUS_LABEL: Partial<Record<OrderStatus, string>> = {
 
 export default function OrderHistoryPage() {
 	const navigate = useNavigate();
-	const {orders, loading, updateStatus, cancelOrder} = useOrders();
+	const {orders, loading, hasNext, hasPrev, refresh, goNext, goPrevious, updateStatus, cancelOrder} = useOrders();
 	const toast = useToast();
 
 	const [search, setSearch] = useState('');
@@ -62,25 +71,37 @@ export default function OrderHistoryPage() {
 	const [filterPriority, setFilterPriority] = useState<'all' | 'normal' | 'express'>('all');
 	const [dateFrom, setDateFrom] = useState('');
 	const [dateTo, setDateTo] = useState('');
+	const [sortBy, setSortBy] = useState<SortBy>('id');
+	const [sortDir, setSortDir] = useState<SortDirection>('desc');
 	const [showFilters, setShowFilters] = useState(false);
 	const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-	if (loading) return <Loading label="Loading orders…"/>;
+	const didMount = useRef(false);
+	useEffect(() => {
+		if (!didMount.current) {
+			didMount.current = true;
+			return;
+		}
+		const timer = setTimeout(() => {
+			void refresh({
+				search: search || undefined,
+				status: filterStatus === 'all' ? undefined : filterStatus,
+				priority: filterPriority === 'all' ? undefined : filterPriority,
+				from: dateFrom || undefined,
+				to: dateTo || undefined,
+				sortBy,
+				sortDir,
+			});
+		}, 300);
+		return () => clearTimeout(timer);
+	}, [search, filterStatus, filterPriority, dateFrom, dateTo, sortBy, sortDir, refresh]);
 
-	const visible = orders.filter((o) => {
-		const q = search.toLowerCase();
-		const matchSearch =
-				!q ||
-				o.orderNumber.toLowerCase().includes(q) ||
-				o.customerName.toLowerCase().includes(q) ||
-				o.customerPhone.includes(q) ||
-				o.serviceName.toLowerCase().includes(q);
-		const matchStatus = filterStatus === 'all' || o.status === filterStatus;
-		const matchPriority = filterPriority === 'all' || o.priority === filterPriority;
-		const matchFrom = !dateFrom || o.pickupDate >= dateFrom;
-		const matchTo = !dateTo || o.pickupDate <= dateTo;
-		return matchSearch && matchStatus && matchPriority && matchFrom && matchTo;
-	});
+	const handleSortChange = useCallback((by: SortBy, dir: SortDirection) => {
+		setSortBy(by);
+		setSortDir(dir);
+	}, []);
+
+	if (loading && orders.length === 0) return <Loading label="Loading orders…"/>;
 
 	const handleAdvance = async (order: Order) => {
 		const next = NEXT_STATUS[order.status];
@@ -122,7 +143,7 @@ export default function OrderHistoryPage() {
 			<>
 				<PageHeader
 						title="Order history"
-						description={`${orders.length} total orders · ${visible.length} shown`}
+						description={`${orders.length} orders on this page`}
 						actions={
 							<div className="row" style={{gap: 8}}>
  							<Button variant="ghost" onClick={() => setShowFilters((v) => !v)}>
@@ -166,11 +187,24 @@ export default function OrderHistoryPage() {
 										<option value="express">Express</option>
 									</Select>
 								</Field>
-								<Field label="From date">
+								<Field label="Created from" hint="Filters by order creation date">
 									<Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}/>
 								</Field>
-								<Field label="To date">
+								<Field label="Created to" hint="Filters by order creation date">
 									<Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}/>
+								</Field>
+								<Field label="Sort by">
+									<Select
+											value={`${sortBy}-${sortDir}`}
+											onChange={(e) => {
+												const opt = SORT_OPTIONS.find((o) => o.value === e.target.value);
+												if (opt) handleSortChange(opt.sortBy, opt.sortDir);
+											}}
+									>
+										{SORT_OPTIONS.map((o) => (
+												<option key={o.value} value={o.value}>{o.label}</option>
+										))}
+									</Select>
 								</Field>
 								{hasActiveFilters && (
 									<div style={{display: 'flex', alignItems: 'flex-end', paddingBottom: 16}}>
@@ -199,7 +233,7 @@ export default function OrderHistoryPage() {
 							</tr>
 							</thead>
 							<tbody>
-							{visible.map((order) => (
+							{orders.map((order) => (
 									<tr key={order.id} className="table-row--clickable" onClick={() => setSelectedOrder(order)}>
 										<td>
 											<strong>{order.orderNumber}</strong>
@@ -246,7 +280,7 @@ export default function OrderHistoryPage() {
 							</tbody>
 						</table>
 
-						{!visible.length && (
+						{!orders.length && (
 								<div className="empty-state">
 									<Package size={32}/>
 									<strong>No matching orders</strong>
@@ -257,6 +291,9 @@ export default function OrderHistoryPage() {
 								</div>
 						)}
 					</div>
+
+					<Pagination hasNext={hasNext} hasPrev={hasPrev} onNext={() => void goNext()} onPrev={() => void goPrevious()}
+					            loading={loading}/>
 				</Card>
 
 				<Drawer

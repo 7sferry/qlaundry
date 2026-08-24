@@ -1,5 +1,9 @@
 package com.ferry.order.domain.order;
 
+import com.ferry.utils.pagination.PageCursor;
+import com.ferry.utils.pagination.PageDirection;
+import com.ferry.utils.pagination.SortBy;
+import com.ferry.utils.pagination.SortDirection;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -11,7 +15,8 @@ import java.time.Instant;
 
 @Builder(toBuilder = true)
 public record OrderFilter(String tenantId, OrderStatus status, OrderPriority priority, String customerId,
-                          String orderNumber, Instant from, Instant to){
+                          String orderNumber, Instant from, Instant to, SortBy sortBy, SortDirection sortDir,
+                          PageDirection pageDirection, PageCursor cursor){
 
 	public Short statusValue(){
 		return status == null ? null : status.getValue();

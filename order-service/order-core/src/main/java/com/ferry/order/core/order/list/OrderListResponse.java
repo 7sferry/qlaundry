@@ -11,5 +11,6 @@ import java.util.Map;
  * on Agustus 2026      *
  ************************/
 
-public record OrderListResponse(List<OrderDomain> orders, Map<String, List<OrderItemDomain>> itemsByOrderId){
+public record OrderListResponse(List<OrderDomain> orders, Map<String, List<OrderItemDomain>> itemsByOrderId,
+                                String nextCursor, String prevCursor){
 }

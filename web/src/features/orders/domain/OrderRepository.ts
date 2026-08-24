@@ -3,10 +3,11 @@
  * on Juli 2026         *
  ************************/
 
+import type {Page, PaginationParams} from '@/core/pagination/Pagination';
 import type {CreateOrderInput, Order, UpdateOrderStatusInput} from './Order';
 import type {LaundryService} from './Service';
 
-export interface OrderFilters {
+export interface OrderFilters extends PaginationParams {
 	status?: string;
 	priority?: string;
 	search?: string;
@@ -15,7 +16,7 @@ export interface OrderFilters {
 }
 
 export interface OrderRepository {
-	getOrders(filters?: OrderFilters): Promise<Order[]>;
+	getOrders(filters?: OrderFilters): Promise<Page<Order>>;
 
 	getOrderById(id: string): Promise<Order>;
 

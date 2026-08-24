@@ -3,16 +3,15 @@
  * on Juli 2026         *
  ************************/
 
+import type {Page, PaginationParams} from '@/core/pagination/Pagination';
 import type {CreateStaffInput, Staff, UpdateStaffInput} from './Staff';
 
-export interface StaffFilters {
+export interface StaffFilters extends PaginationParams {
 	search?: string;
-	page?: number;
-	limit?: number;
 }
 
 export interface StaffRepository {
-	getStaffList(filters?: StaffFilters): Promise<Staff[]>;
+	getStaffList(filters?: StaffFilters): Promise<Page<Staff>>;
 
 	getStaffById(id: string): Promise<Staff>;
 

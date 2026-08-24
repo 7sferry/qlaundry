@@ -4,21 +4,40 @@
  ************************/
 
 import {Plus, Search, Trash2, Users} from 'lucide-react';
-import {Button, Card, Field, Input} from '@/core/ui';
+import {Button, Card, Field, Input, Pagination, Select} from '@/core/ui';
 import {formatDate} from '@/core/utils/format';
+import type {SortBy, SortDirection} from '@/core/pagination/Pagination';
 import type {Staff} from '../../domain/Staff';
 
 interface StaffTableProps {
 	staff: Staff[];
 	search: string;
 	onSearchChange: (value: string) => void;
+	sortBy: SortBy;
+	sortDir: SortDirection;
+	onSortChange: (sortBy: SortBy, sortDir: SortDirection) => void;
 	onSelect: (staff: Staff) => void;
 	onDelete: (staff: Staff) => void;
 	onAdd: () => void;
 	canDelete: (staff: Staff) => boolean;
+	hasNext: boolean;
+	hasPrev: boolean;
+	onNext: () => void;
+	onPrev: () => void;
+	loading: boolean;
 }
 
-export default function StaffTable({staff, search, onSearchChange, onSelect, onDelete, onAdd, canDelete}: StaffTableProps) {
+const SORT_OPTIONS: { value: string; sortBy: SortBy; sortDir: SortDirection; label: string }[] = [
+	{value: 'id-desc', sortBy: 'id', sortDir: 'desc', label: 'Newest first'},
+	{value: 'id-asc', sortBy: 'id', sortDir: 'asc', label: 'Oldest first'},
+	{value: 'name-asc', sortBy: 'name', sortDir: 'asc', label: 'Name A→Z'},
+	{value: 'name-desc', sortBy: 'name', sortDir: 'desc', label: 'Name Z→A'},
+];
+
+export default function StaffTable({
+	                                    staff, search, onSearchChange, sortBy, sortDir, onSortChange, onSelect, onDelete,
+	                                    onAdd, canDelete, hasNext, hasPrev, onNext, onPrev, loading,
+                                    }: StaffTableProps) {
 	return (
 			<Card style={{marginTop: 24, marginBottom: 20}}>
 				<div className="filters">
@@ -31,6 +50,19 @@ export default function StaffTable({staff, search, onSearchChange, onSelect, onD
   							placeholder="Search name…"
 							/>
 						</div>
+					</Field>
+					<Field>
+						<Select
+								value={`${sortBy}-${sortDir}`}
+								onChange={(e) => {
+									const opt = SORT_OPTIONS.find((o) => o.value === e.target.value);
+									if (opt) onSortChange(opt.sortBy, opt.sortDir);
+								}}
+						>
+							{SORT_OPTIONS.map((o) => (
+									<option key={o.value} value={o.value}>{o.label}</option>
+							))}
+						</Select>
 					</Field>
 				</div>
 
@@ -99,6 +131,8 @@ export default function StaffTable({staff, search, onSearchChange, onSelect, onD
  						</div>
 					)}
 				</div>
+
+				<Pagination hasNext={hasNext} hasPrev={hasPrev} onNext={onNext} onPrev={onPrev} loading={loading}/>
 			</Card>
 	);
 }

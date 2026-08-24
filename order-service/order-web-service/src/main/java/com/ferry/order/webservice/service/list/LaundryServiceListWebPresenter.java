@@ -24,7 +24,7 @@ public class LaundryServiceListWebPresenter implements LaundryServiceListPresent
 						o.unit().name(), o.category().name(), o.estimatedHours(), o.expressMultiplier(), o.popular(),
 						o.active()))
 				.toList();
-		responseEntity = ResponseEntity.ok(new LaundryServiceListWebResponse(services));
+		responseEntity = ResponseEntity.ok(new LaundryServiceListWebResponse(services, response.nextCursor(), response.prevCursor()));
 	}
 
 }

@@ -19,6 +19,9 @@ spring:
   threads:
     virtual:
       enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
 
 server:
   port: 8101

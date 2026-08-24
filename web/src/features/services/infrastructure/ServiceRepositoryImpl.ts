@@ -4,6 +4,7 @@
  ************************/
 
 import {httpClient} from '@/core/http/httpClient';
+import type {Page} from '@/core/pagination/Pagination';
 import type {ServiceFilters, ServiceRepository} from '../domain/ServiceRepository';
 import type {CreateServiceInput, LaundryService, ServiceCategory, ServiceUnit, UpdateServiceInput} from '../domain/Service';
 
@@ -22,6 +23,8 @@ interface ServiceApiItem {
 
 interface ServiceListApiResponse {
 	services: ServiceApiItem[];
+	nextCursor: string | null;
+	prevCursor: string | null;
 }
 
 function toService(item: ServiceApiItem): LaundryService {
@@ -45,13 +48,17 @@ function buildServiceQuery(filters?: ServiceFilters): string {
 	if (filters?.search) params.set('name', filters.search);
 	if (filters?.category) params.set('category', filters.category.toUpperCase());
 	params.set('activeOnly', String(filters?.activeOnly ?? false));
+	if (filters?.cursor) params.set('cursor', filters.cursor);
+	if (filters?.direction) params.set('direction', filters.direction.toUpperCase());
+	if (filters?.sortBy) params.set('sortBy', filters.sortBy.toUpperCase());
+	if (filters?.sortDir) params.set('sortDir', filters.sortDir.toUpperCase());
 	return `?${params.toString()}`;
 }
 
 export class ServiceRepositoryImpl implements ServiceRepository {
-	async getServices(filters?: ServiceFilters): Promise<LaundryService[]> {
+	async getServices(filters?: ServiceFilters): Promise<Page<LaundryService>> {
 		const res = await httpClient.get<ServiceListApiResponse>(`/service/list${buildServiceQuery(filters)}`);
-		return res.services.map(toService);
+		return {items: res.services.map(toService), nextCursor: res.nextCursor, prevCursor: res.prevCursor};
 	}
 
 	async createService(input: CreateServiceInput): Promise<LaundryService> {

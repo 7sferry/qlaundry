@@ -8,7 +8,7 @@ import java.util.List;
  * on Agustus 2026      *
  ************************/
 
-public record OrderListWebResponse(List<Order> orders){
+public record OrderListWebResponse(List<Order> orders, String nextCursor, String prevCursor){
 
 	public record Order(String id, String orderNumber, String customerId, String customerName, String customerPhone,
 	                    String customerEmail, String customerAddress, String serviceId, String serviceName,

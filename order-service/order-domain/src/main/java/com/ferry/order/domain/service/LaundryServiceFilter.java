@@ -1,5 +1,9 @@
 package com.ferry.order.domain.service;
 
+import com.ferry.utils.pagination.PageCursor;
+import com.ferry.utils.pagination.PageDirection;
+import com.ferry.utils.pagination.SortBy;
+import com.ferry.utils.pagination.SortDirection;
 import lombok.Builder;
 
 /************************
@@ -8,7 +12,9 @@ import lombok.Builder;
  ************************/
 
 @Builder(toBuilder = true)
-public record LaundryServiceFilter(String tenantId, String name, ServiceCategory category, boolean activeOnly){
+public record LaundryServiceFilter(String tenantId, String name, ServiceCategory category, boolean activeOnly,
+                                   SortBy sortBy, SortDirection sortDir, PageDirection pageDirection,
+                                   PageCursor cursor){
 
 	public String nameStartsWith(){
 		if(name == null || name.isBlank()){

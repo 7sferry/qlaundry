@@ -1,5 +1,13 @@
 package com.ferry.order.core.service.list;
 
+import com.ferry.utils.pagination.CursorCodec;
+import com.ferry.utils.pagination.CursorFetch;
+import com.ferry.utils.pagination.CursorPage;
+import com.ferry.utils.pagination.CursorPaginator;
+import com.ferry.utils.pagination.PageCursor;
+import com.ferry.utils.pagination.PageDirection;
+import com.ferry.utils.pagination.SortBy;
+import com.ferry.utils.pagination.SortDirection;
 import com.ferry.order.domain.service.LaundryServiceDomain;
 import com.ferry.order.domain.service.LaundryServiceFilter;
 import com.ferry.order.domain.tenant.TenantIdDomain;
@@ -22,14 +30,24 @@ public class DefaultLaundryServiceListUseCase implements LaundryServiceListUseCa
 	                    LaundryServiceListPresenter presenter){
 		request.validate();
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
+		SortBy sortBy = request.sortBy() == null ? SortBy.ID : request.sortBy();
+		SortDirection sortDir = request.sortDir() == null ? SortDirection.DESC : request.sortDir();
+		PageDirection direction = request.direction() == null ? PageDirection.NEXT : request.direction();
+		PageCursor cursor = request.cursor() == null ? null : CursorCodec.decode(request.cursor());
 		LaundryServiceFilter filter = LaundryServiceFilter.builder()
 				.tenantId(tenantId.value())
 				.name(request.name())
 				.category(request.category())
 				.activeOnly(request.activeOnly() == null || request.activeOnly())
+				.sortBy(sortBy)
+				.sortDir(sortDir)
+				.pageDirection(direction)
+				.cursor(cursor)
 				.build();
-		List<LaundryServiceDomain> services = gateway.findByFilter(filter);
-		presenter.present(new LaundryServiceListResponse(services));
+		CursorFetch<LaundryServiceDomain> fetch = gateway.findByFilter(filter);
+		CursorPage<LaundryServiceDomain> page = CursorPaginator.paginate(fetch, direction, cursor != null,
+				row -> List.of(sortBy == SortBy.NAME ? row.name() : row.id(), row.id()));
+		presenter.present(new LaundryServiceListResponse(page.items(), page.nextCursor(), page.prevCursor()));
 	}
 
 }

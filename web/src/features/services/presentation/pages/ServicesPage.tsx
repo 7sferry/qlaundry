@@ -3,7 +3,7 @@
  * on Agustus 2026      *
  ************************/
 
-import React, {useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {Clock, Edit2, ListChecks, Plus, Search, Sparkles, Star, Trash2, WashingMachine,} from 'lucide-react';
 import {
 	Badge,
@@ -15,16 +15,25 @@ import {
 	Loading,
 	Modal,
 	PageHeader,
+	Pagination,
 	Select,
 	StatCard,
 	Textarea,
 	useToast,
 } from '@/core/ui';
+import type {SortBy, SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency} from '@/core/utils/format';
 import {useAuth} from '@/features/auth/presentation/useAuth';
 import {useServices} from '../useServices';
 import type {LaundryService, ServiceCategory, ServiceUnit} from '../../domain/Service';
 import {SERVICE_CATEGORY_LABELS, SERVICE_UNIT_LABELS} from '../../domain/Service';
+
+const SORT_OPTIONS: { value: string; sortBy: SortBy; sortDir: SortDirection; label: string }[] = [
+	{value: 'id-desc', sortBy: 'id', sortDir: 'desc', label: 'Newest first'},
+	{value: 'id-asc', sortBy: 'id', sortDir: 'asc', label: 'Oldest first'},
+	{value: 'name-asc', sortBy: 'name', sortDir: 'asc', label: 'Name A→Z'},
+	{value: 'name-desc', sortBy: 'name', sortDir: 'desc', label: 'Name Z→A'},
+];
 
 interface ServiceFormData {
 	name: string;
@@ -133,27 +142,46 @@ function ServiceForm({form, update, toggle, onSubmit, onCancel, saving, editMode
 }
 
 export default function ServicesPage() {
-	const {services, loading, createService, updateService, deleteService} = useServices();
+	const {
+		services, loading, hasNext, hasPrev, refresh, goNext, goPrevious, createService, updateService, deleteService,
+	} = useServices();
 	const {user} = useAuth();
 	const toast = useToast();
 	const canManage = user?.staffRole === 'SUPER_STAFF';
 
 	const [search, setSearch] = useState('');
 	const [categoryFilter, setCategoryFilter] = useState<'all' | ServiceCategory>('all');
+	const [sortBy, setSortBy] = useState<SortBy>('id');
+	const [sortDir, setSortDir] = useState<SortDirection>('desc');
 	const [selectedService, setSelectedService] = useState<LaundryService | null>(null);
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [editMode, setEditMode] = useState(false);
 	const [form, setForm] = useState<ServiceFormData>(emptyForm);
 	const [saving, setSaving] = useState(false);
 
-	if (loading) return <Loading label="Loading services…"/>;
+	const didMount = useRef(false);
+	useEffect(() => {
+		if (!didMount.current) {
+			didMount.current = true;
+			return;
+		}
+		const timer = setTimeout(() => {
+			void refresh({
+				search: search || undefined,
+				category: categoryFilter === 'all' ? undefined : categoryFilter,
+				sortBy,
+				sortDir,
+			});
+		}, 300);
+		return () => clearTimeout(timer);
+	}, [search, categoryFilter, sortBy, sortDir, refresh]);
 
-	const visible = services.filter((s) => {
-		const q = search.toLowerCase();
-		const matchSearch = !q || s.name.toLowerCase().includes(q);
-		const matchCategory = categoryFilter === 'all' || s.category === categoryFilter;
-		return matchSearch && matchCategory;
-	});
+	const handleSortChange = useCallback((by: SortBy, dir: SortDirection) => {
+		setSortBy(by);
+		setSortDir(dir);
+	}, []);
+
+	if (loading && services.length === 0) return <Loading label="Loading services…"/>;
 
 	const activeCount = services.filter((s) => s.active).length;
 	const popularCount = services.filter((s) => s.popular).length;
@@ -243,7 +271,7 @@ export default function ServicesPage() {
 			<>
 				<PageHeader
 						title="Laundry service menu"
-						description={`${services.length} services in the price list`}
+						description="Manage your price list"
 						actions={
 								canManage && (
 										<Button onClick={openAdd}>
@@ -254,13 +282,13 @@ export default function ServicesPage() {
 				/>
 
 				<div className="grid grid--stats">
-					<StatCard icon={<ListChecks size={20}/>} value={services.length} label="Total services"
-					          hint="In the price list"/>
+					<StatCard icon={<ListChecks size={20}/>} value={services.length} label="Services"
+					          hint="On this page"/>
 					<StatCard icon={<WashingMachine size={20}/>} value={activeCount} label="Active"
-					          hint="Bookable by staff"/>
-					<StatCard icon={<Star size={20}/>} value={popularCount} label="Popular" hint="Highlighted"/>
+					          hint="On this page"/>
+					<StatCard icon={<Star size={20}/>} value={popularCount} label="Popular" hint="On this page"/>
 					<StatCard icon={<Sparkles size={20}/>} value={formatCurrency(avgPrice)} label="Average price"
-					          hint="Per unit"/>
+					          hint="On this page"/>
 				</div>
 
 				<Card style={{marginTop: 24, marginBottom: 20}}>
@@ -281,6 +309,19 @@ export default function ServicesPage() {
 								))}
 							</Select>
 						</Field>
+						<Field>
+							<Select
+									value={`${sortBy}-${sortDir}`}
+									onChange={(e) => {
+										const opt = SORT_OPTIONS.find((o) => o.value === e.target.value);
+										if (opt) handleSortChange(opt.sortBy, opt.sortDir);
+									}}
+							>
+								{SORT_OPTIONS.map((o) => (
+										<option key={o.value} value={o.value}>{o.label}</option>
+								))}
+							</Select>
+						</Field>
 					</div>
 
 					<div className="table-wrap">
@@ -296,7 +337,7 @@ export default function ServicesPage() {
 							</tr>
 							</thead>
 							<tbody>
-							{visible.map((s) => (
+							{services.map((s) => (
 									<tr key={s.id} className="table-row--clickable" onClick={() => setSelectedService(s)}>
 										<td>
 											<div className="row" style={{gap: 6}}>
@@ -338,7 +379,7 @@ export default function ServicesPage() {
 							</tbody>
 						</table>
 
-						{!visible.length && (
+						{!services.length && (
 								<div className="empty-state">
 									<ListChecks size={28}/>
 									<strong>No services</strong>
@@ -353,6 +394,9 @@ export default function ServicesPage() {
 								</div>
 						)}
 					</div>
+
+					<Pagination hasNext={hasNext} hasPrev={hasPrev} onNext={() => void goNext()} onPrev={() => void goPrevious()}
+					            loading={loading}/>
 				</Card>
 
 				<Modal open={showAddModal} onClose={handleCancel} title="Add new service">

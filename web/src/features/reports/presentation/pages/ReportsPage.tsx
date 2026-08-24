@@ -18,7 +18,7 @@ import {
 	XAxis,
 	YAxis,
 } from 'recharts';
-import {Badge, Button, Card, Loading, PageHeader, StatCard} from '@/core/ui';
+import {Button, Card, Loading, PageHeader, StatCard} from '@/core/ui';
 import {formatCurrency} from '@/core/utils/format';
 import {useDashboard} from '@/features/dashboard/presentation/useDashboard';
 import {useCustomers} from '@/features/customers/presentation/useCustomers';
@@ -243,15 +243,6 @@ export default function ReportsPage() {
 										</div>
 										<div style={{textAlign: 'right'}}>
 											<strong style={{display: 'block', fontSize: 14}}>{formatCurrency(c.totalSpend)}</strong>
-											<Badge
-													tone={
-														c.tier === 'platinum' ? 'warning' :
-																c.tier === 'gold' ? 'warning' :
-																		c.tier === 'silver' ? 'info' : 'neutral'
-													}
-											>
-												{c.tier.charAt(0).toUpperCase() + c.tier.slice(1)}
-											</Badge>
 										</div>
 									</div>
 							))}

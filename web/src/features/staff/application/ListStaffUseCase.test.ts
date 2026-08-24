@@ -14,7 +14,9 @@ const mockStaff: Staff = {
 	joinedAt: '2025-02-10',
 };
 
-function makeRepo(getStaffListImpl = vi.fn().mockResolvedValue([mockStaff])): StaffRepository {
+const mockPage = {items: [mockStaff], nextCursor: null, prevCursor: null};
+
+function makeRepo(getStaffListImpl = vi.fn().mockResolvedValue(mockPage)): StaffRepository {
 	return {
 		getStaffList: getStaffListImpl,
 		getStaffById: vi.fn(),
@@ -30,11 +32,11 @@ describe('ListStaffUseCase', () => {
 
 		const result = await useCase.execute();
 
-		expect(result).toEqual([mockStaff]);
+		expect(result).toEqual(mockPage);
 	});
 
 	it('passes filters through to the repository', async () => {
-		const getStaffListFn = vi.fn().mockResolvedValue([mockStaff]);
+		const getStaffListFn = vi.fn().mockResolvedValue(mockPage);
 		const useCase = new ListStaffUseCase(makeRepo(getStaffListFn));
 		const filters = {search: 'Ratna'};
 

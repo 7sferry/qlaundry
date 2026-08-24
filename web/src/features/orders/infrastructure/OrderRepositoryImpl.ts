@@ -4,6 +4,7 @@
  ************************/
 
 import {httpClient} from '@/core/http/httpClient';
+import type {Page} from '@/core/pagination/Pagination';
 import type {OrderFilters, OrderRepository} from '../domain/OrderRepository';
 import type {
 	ClothingType,
@@ -54,6 +55,8 @@ interface OrderApiItem {
 
 interface OrderListApiResponse {
 	orders: OrderApiItem[];
+	nextCursor: string | null;
+	prevCursor: string | null;
 }
 
 interface ServiceListApiResponse {
@@ -69,6 +72,7 @@ interface ServiceListApiResponse {
 		popular: boolean;
 		active: boolean;
 	}[];
+	nextCursor: string | null;
 }
 
 /** Every transition has its own endpoint — the URL is the intent, so there is no generic "set status" call. */
@@ -129,14 +133,33 @@ function buildOrderQuery(filters?: OrderFilters): string {
 	if (filters?.search) params.set('orderNumber', filters.search);
 	if (filters?.from) params.set('from', String(toEpochMillis(filters.from)));
 	if (filters?.to) params.set('to', String(toEpochMillis(filters.to)));
+	if (filters?.cursor) params.set('cursor', filters.cursor);
+	if (filters?.direction) params.set('direction', filters.direction.toUpperCase());
+	if (filters?.sortBy) params.set('sortBy', filters.sortBy.toUpperCase());
+	if (filters?.sortDir) params.set('sortDir', filters.sortDir.toUpperCase());
 	const query = params.toString();
 	return query ? `?${query}` : '';
 }
 
+function toService(s: ServiceListApiResponse['services'][number]): LaundryService {
+	return {
+		id: s.id,
+		name: s.name,
+		description: s.description ?? '',
+		pricePerUnit: s.pricePerUnit,
+		unit: s.unit.toLowerCase() as ServiceUnit,
+		estimatedHours: s.estimatedHours,
+		expressMultiplier: s.expressMultiplier,
+		popular: s.popular,
+		active: s.active,
+		category: s.category.toLowerCase() as ServiceCategory,
+	};
+}
+
 export class OrderRepositoryImpl implements OrderRepository {
-	async getOrders(filters?: OrderFilters): Promise<Order[]> {
+	async getOrders(filters?: OrderFilters): Promise<Page<Order>> {
 		const res = await httpClient.get<OrderListApiResponse>(`/order/list${buildOrderQuery(filters)}`);
-		return res.orders.map(toOrder);
+		return {items: res.orders.map(toOrder), nextCursor: res.nextCursor, prevCursor: res.prevCursor};
 	}
 
 	async getOrderById(id: string): Promise<Order> {
@@ -144,20 +167,20 @@ export class OrderRepositoryImpl implements OrderRepository {
 		return toOrder(res);
 	}
 
+	// The service picker on order creation needs every active service, not one page of it, so this walks
+	// `/service/list` to exhaustion the same way CustomerRepositoryImpl.fetchTotals walks `/order/list`.
 	async getServices(): Promise<LaundryService[]> {
-		const res = await httpClient.get<ServiceListApiResponse>('/service/list?activeOnly=true');
-		return res.services.map((s) => ({
-			id: s.id,
-			name: s.name,
-			description: s.description ?? '',
-			pricePerUnit: s.pricePerUnit,
-			unit: s.unit.toLowerCase() as ServiceUnit,
-			estimatedHours: s.estimatedHours,
-			expressMultiplier: s.expressMultiplier,
-			popular: s.popular,
-			active: s.active,
-			category: s.category.toLowerCase() as ServiceCategory,
-		}));
+		const services: LaundryService[] = [];
+		let cursor: string | undefined;
+		for (;;) {
+			const params = new URLSearchParams({activeOnly: 'true'});
+			if (cursor) params.set('cursor', cursor);
+			const res = await httpClient.get<ServiceListApiResponse>(`/service/list?${params.toString()}`);
+			services.push(...res.services.map(toService));
+			if (!res.nextCursor) break;
+			cursor = res.nextCursor;
+		}
+		return services;
 	}
 
 	async createOrder(input: CreateOrderInput): Promise<Order> {

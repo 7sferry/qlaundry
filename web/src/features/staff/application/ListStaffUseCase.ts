@@ -3,6 +3,7 @@
  * on Juli 2026         *
  ************************/
 
+import type {Page} from '@/core/pagination/Pagination';
 import type {StaffFilters, StaffRepository} from '../domain/StaffRepository';
 import type {Staff} from '../domain/Staff';
 
@@ -13,7 +14,7 @@ export class ListStaffUseCase {
 		this.repository = repository;
 	}
 
-	execute(filters?: StaffFilters): Promise<Staff[]> {
+	execute(filters?: StaffFilters): Promise<Page<Staff>> {
 		return this.repository.getStaffList(filters);
 	}
 }

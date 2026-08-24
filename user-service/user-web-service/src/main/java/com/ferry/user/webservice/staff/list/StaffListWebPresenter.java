@@ -42,7 +42,7 @@ public class StaffListWebPresenter implements StaffListPresenter{
 							emails, phones, addresses);
 				})
 				.toList();
-		responseEntity = ResponseEntity.ok(new StaffListWebResponse(staffs));
+		responseEntity = ResponseEntity.ok(new StaffListWebResponse(staffs, response.nextCursor(), response.prevCursor()));
 	}
 
 }

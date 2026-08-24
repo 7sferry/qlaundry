@@ -1,5 +1,13 @@
 package com.ferry.user.core.staff.list;
 
+import com.ferry.utils.pagination.CursorFetch;
+import com.ferry.utils.pagination.CursorCodec;
+import com.ferry.utils.pagination.CursorPage;
+import com.ferry.utils.pagination.CursorPaginator;
+import com.ferry.utils.pagination.PageCursor;
+import com.ferry.utils.pagination.PageDirection;
+import com.ferry.utils.pagination.SortBy;
+import com.ferry.utils.pagination.SortDirection;
 import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.staff.list.StaffAddressListProjection;
 import com.ferry.user.domain.staff.list.StaffEmailListProjection;
@@ -27,16 +35,28 @@ public class DefaultStaffListUseCase implements StaffListUseCase{
 	public void execute(StaffListRequest request, UserAuthPrincipal principal, StaffListPresenter presenter){
 		request.validate();
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
+		SortBy sortBy = request.sortBy() == null ? SortBy.ID : request.sortBy();
+		SortDirection sortDir = request.sortDir() == null ? SortDirection.DESC : request.sortDir();
+		PageDirection pageDir = request.direction() == null ? PageDirection.NEXT : request.direction();
+		PageCursor cursor = request.cursor() == null ? null : CursorCodec.decode(request.cursor());
 		StaffFilter filter = StaffFilter.builder()
 				.fullName(request.fullName())
 				.tenantId(tenantId.value())
+				.sortBy(sortBy)
+				.sortDir(sortDir)
+				.pageDirection(pageDir)
+				.cursor(cursor)
 				.build();
-		List<StaffListProjection> staffs = gateway.findByFilter(filter);
+		CursorFetch<StaffListProjection> fetch = gateway.findByFilter(filter);
+		CursorPage<StaffListProjection> page = CursorPaginator.paginate(fetch, pageDir, cursor != null,
+				row -> List.of(sortBy == SortBy.NAME ? row.fullName() : row.id(), row.id()));
+		List<StaffListProjection> staffs = page.items();
 		Set<String> staffIds = staffs.stream().map(StaffListProjection::id).collect(Collectors.toSet());
 		Map<String, List<StaffPhoneListProjection>> phonesByStaffId  = getPhonesByStaffId(staffIds);
 		Map<String, List<StaffEmailListProjection>> emailsByStaffId = getEmailsByStaffId(staffIds);
 		Map<String, List<StaffAddressListProjection>> addressByStaffId = getAddressesByStaffId(staffIds);
-		presenter.present(new StaffListResponse(staffs, phonesByStaffId, emailsByStaffId, addressByStaffId));
+		presenter.present(new StaffListResponse(staffs, phonesByStaffId, emailsByStaffId, addressByStaffId,
+				page.nextCursor(), page.prevCursor()));
 	}
 
 	private Map<String, List<StaffAddressListProjection>> getAddressesByStaffId(Set<String> staffIds){

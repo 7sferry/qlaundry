@@ -8,7 +8,7 @@ import java.util.List;
  * on Agustus 2026      *
  ************************/
 
-public record LaundryServiceListWebResponse(List<Service> services){
+public record LaundryServiceListWebResponse(List<Service> services, String nextCursor, String prevCursor){
 
 	public record Service(String id, String name, String description, BigDecimal pricePerUnit, String unit, String category,
 	                      int estimatedHours, double expressMultiplier, boolean popular, boolean active){

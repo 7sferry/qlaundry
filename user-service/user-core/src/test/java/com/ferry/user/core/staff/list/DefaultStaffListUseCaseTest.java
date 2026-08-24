@@ -1,5 +1,11 @@
 package com.ferry.user.core.staff.list;
 
+import com.ferry.utils.pagination.CursorCodec;
+import com.ferry.utils.pagination.CursorFetch;
+import com.ferry.utils.pagination.PageCursor;
+import com.ferry.utils.pagination.PageDirection;
+import com.ferry.utils.pagination.SortBy;
+import com.ferry.utils.pagination.SortDirection;
 import com.ferry.user.domain.staff.StaffAddressFilter;
 import com.ferry.user.domain.staff.StaffEmailFilter;
 import com.ferry.user.domain.staff.StaffFilter;
@@ -56,14 +62,14 @@ class DefaultStaffListUseCaseTest{
 	@Test
 	void givenNoStaffFound_thenPresentsEmptyResponseWithoutQueryingContactInfo(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
-		willReturn(List.of()).given(gateway).findByFilter(any(StaffFilter.class));
+		willReturn(new CursorFetch<>(List.of(), false)).given(gateway).findByFilter(any(StaffFilter.class));
 
-		useCase.execute(new StaffListRequest(null), principal, presenter);
+		useCase.execute(new StaffListRequest(null, null, null, null, null), principal, presenter);
 
 		then(gateway).should(never()).findPhonesByFilter(any());
 		then(gateway).should(never()).findEmailsByFilter(any());
 		then(gateway).should(never()).findAddressesByFilter(any());
-		then(presenter).should().present(new StaffListResponse(List.of(), Map.of(), Map.of(), Map.of()));
+		then(presenter).should().present(new StaffListResponse(List.of(), Map.of(), Map.of(), Map.of(), null, null));
 	}
 
 	@Test
@@ -71,7 +77,7 @@ class DefaultStaffListUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
 		StaffListProjection staff1 = new StaffListProjection(STAFF_ID_1, "desc one", FULL_NAME_1, Instant.now(), USERNAME_1);
 		StaffListProjection staff2 = new StaffListProjection(STAFF_ID_2, "desc two", FULL_NAME_2, Instant.now(), USERNAME_2);
-		willReturn(List.of(staff1, staff2)).given(gateway).findByFilter(any(StaffFilter.class));
+		willReturn(new CursorFetch<>(List.of(staff1, staff2), false)).given(gateway).findByFilter(any(StaffFilter.class));
 		StaffPhoneListProjection phone1 = new StaffPhoneListProjection(STAFF_ID_1, "081111111111");
 		StaffPhoneListProjection phone2 = new StaffPhoneListProjection(STAFF_ID_1, "082222222222");
 		StaffPhoneListProjection phone3 = new StaffPhoneListProjection(STAFF_ID_2, "083333333333");
@@ -81,7 +87,7 @@ class DefaultStaffListUseCaseTest{
 		StaffAddressListProjection address1 = new StaffAddressListProjection(STAFF_ID_2, "Jl. Malioboro No. 5");
 		willReturn(List.of(address1)).given(gateway).findAddressesByFilter(any(StaffAddressFilter.class));
 
-		useCase.execute(new StaffListRequest(null), principal, presenter);
+		useCase.execute(new StaffListRequest(null, null, null, null, null), principal, presenter);
 
 		then(presenter).should().present(responseCaptor.capture());
 
@@ -99,9 +105,9 @@ class DefaultStaffListUseCaseTest{
 	@Test
 	void givenFullNameAndTenantProvided_thenQueriesGatewayWithFilterScopedToTenant(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
-		willReturn(List.of()).given(gateway).findByFilter(filterCaptor.capture());
+		willReturn(new CursorFetch<>(List.of(), false)).given(gateway).findByFilter(filterCaptor.capture());
 
-		useCase.execute(new StaffListRequest("eka"), principal, presenter);
+		useCase.execute(new StaffListRequest("eka", null, null, null, null), principal, presenter);
 
 		StaffFilter filter = filterCaptor.getValue();
 		thenSoftly(softly -> {
@@ -114,12 +120,12 @@ class DefaultStaffListUseCaseTest{
 	void givenStaffWithoutAnyContactInfo_thenContactMapsRemainEmpty(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
 		StaffListProjection staff = new StaffListProjection(STAFF_ID_1, "desc", FULL_NAME_1, Instant.now(), USERNAME_1);
-		willReturn(List.of(staff)).given(gateway).findByFilter(any(StaffFilter.class));
+		willReturn(new CursorFetch<>(List.of(staff), false)).given(gateway).findByFilter(any(StaffFilter.class));
 		willReturn(List.of()).given(gateway).findPhonesByFilter(any(StaffPhoneFilter.class));
 		willReturn(List.of()).given(gateway).findEmailsByFilter(any(StaffEmailFilter.class));
 		willReturn(List.of()).given(gateway).findAddressesByFilter(any(StaffAddressFilter.class));
 
-		useCase.execute(new StaffListRequest(null), principal, presenter);
+		useCase.execute(new StaffListRequest(null, null, null, null, null), principal, presenter);
 
 		then(presenter).should().present(responseCaptor.capture());
 		StaffListResponse response = responseCaptor.getValue();
@@ -127,6 +133,83 @@ class DefaultStaffListUseCaseTest{
 			softly.then(response.phonesByStaffId()).isEmpty();
 			softly.then(response.emailsByStaffId()).isEmpty();
 			softly.then(response.addressesByStaffId()).isEmpty();
+		});
+	}
+
+	@Test
+	void givenNoSortOrCursorProvided_thenDefaultsToIdDescendingFirstPage(){
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
+		willReturn(new CursorFetch<>(List.of(), false)).given(gateway).findByFilter(filterCaptor.capture());
+
+		useCase.execute(new StaffListRequest(null, null, null, null, null), principal, presenter);
+
+		StaffFilter filter = filterCaptor.getValue();
+		thenSoftly(softly -> {
+			softly.then(filter.sortBy()).isEqualTo(SortBy.ID);
+			softly.then(filter.sortDir()).isEqualTo(SortDirection.DESC);
+			softly.then(filter.pageDirection()).isEqualTo(PageDirection.NEXT);
+			softly.then(filter.cursor()).isNull();
+		});
+	}
+
+	@Test
+	void givenMoreRowsThanPageSize_thenPresentsNextCursorButNoPrevCursorOnFirstPage(){
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
+		StaffListProjection staff = new StaffListProjection(STAFF_ID_1, "desc", FULL_NAME_1, Instant.now(), USERNAME_1);
+		willReturn(new CursorFetch<>(List.of(staff), true)).given(gateway).findByFilter(any(StaffFilter.class));
+		willReturn(List.of()).given(gateway).findPhonesByFilter(any(StaffPhoneFilter.class));
+		willReturn(List.of()).given(gateway).findEmailsByFilter(any(StaffEmailFilter.class));
+		willReturn(List.of()).given(gateway).findAddressesByFilter(any(StaffAddressFilter.class));
+
+		useCase.execute(new StaffListRequest(null, null, null, null, null), principal, presenter);
+
+		then(presenter).should().present(responseCaptor.capture());
+		StaffListResponse response = responseCaptor.getValue();
+		thenSoftly(softly -> {
+			softly.then(response.nextCursor()).isNotNull();
+			softly.then(response.prevCursor()).isNull();
+		});
+	}
+
+	@Test
+	void givenCursorProvidedAndNoMoreRows_thenPresentsPrevCursorButNoNextCursor(){
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
+		StaffListProjection staff = new StaffListProjection(STAFF_ID_2, "desc", FULL_NAME_2, Instant.now(), USERNAME_2);
+		willReturn(new CursorFetch<>(List.of(staff), false)).given(gateway).findByFilter(any(StaffFilter.class));
+		willReturn(List.of()).given(gateway).findPhonesByFilter(any(StaffPhoneFilter.class));
+		willReturn(List.of()).given(gateway).findEmailsByFilter(any(StaffEmailFilter.class));
+		willReturn(List.of()).given(gateway).findAddressesByFilter(any(StaffAddressFilter.class));
+		String cursor = CursorCodec.encode(STAFF_ID_1, STAFF_ID_1);
+
+		useCase.execute(new StaffListRequest(null, cursor, PageDirection.NEXT, null, null), principal, presenter);
+
+		then(presenter).should().present(responseCaptor.capture());
+		StaffListResponse response = responseCaptor.getValue();
+		thenSoftly(softly -> {
+			softly.then(response.nextCursor()).isNull();
+			softly.then(response.prevCursor()).isNotNull();
+		});
+	}
+
+	@Test
+	void givenPrevDirectionWithMoreRowsBefore_thenHasNextIsAlwaysTrue(){
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
+		StaffListProjection staff = new StaffListProjection(STAFF_ID_1, "desc", FULL_NAME_1, Instant.now(), USERNAME_1);
+		willReturn(new CursorFetch<>(List.of(staff), false)).given(gateway).findByFilter(filterCaptor.capture());
+		willReturn(List.of()).given(gateway).findPhonesByFilter(any(StaffPhoneFilter.class));
+		willReturn(List.of()).given(gateway).findEmailsByFilter(any(StaffEmailFilter.class));
+		willReturn(List.of()).given(gateway).findAddressesByFilter(any(StaffAddressFilter.class));
+		String cursor = CursorCodec.encode(STAFF_ID_2, STAFF_ID_2);
+
+		useCase.execute(new StaffListRequest(null, cursor, PageDirection.PREV, SortBy.NAME, SortDirection.ASC), principal, presenter);
+
+		then(presenter).should().present(responseCaptor.capture());
+		StaffListResponse response = responseCaptor.getValue();
+		thenSoftly(softly -> {
+			softly.then(response.nextCursor()).isNotNull();
+			softly.then(filterCaptor.getValue().cursor()).isEqualTo(new PageCursor(STAFF_ID_2, STAFF_ID_2));
+			softly.then(filterCaptor.getValue().sortBy()).isEqualTo(SortBy.NAME);
+			softly.then(filterCaptor.getValue().sortDir()).isEqualTo(SortDirection.ASC);
 		});
 	}
 

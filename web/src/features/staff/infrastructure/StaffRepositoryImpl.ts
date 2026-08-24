@@ -4,6 +4,7 @@
  ************************/
 
 import {httpClient} from '@/core/http/httpClient';
+import type {Page} from '@/core/pagination/Pagination';
 import type {StaffFilters, StaffRepository} from '../domain/StaffRepository';
 import type {CreateStaffInput, Staff, UpdateStaffInput} from '../domain/Staff';
 import {fallbackStaff} from './staffFallbackData';
@@ -20,6 +21,19 @@ interface StaffListApiResponse {
 		phones: { phone: string }[];
 		addresses: { address: string }[];
 	}[];
+	nextCursor: string | null;
+	prevCursor: string | null;
+}
+
+function buildStaffListQuery(filters?: StaffFilters): string {
+	const params = new URLSearchParams();
+	if (filters?.search) params.set('fullName', filters.search);
+	if (filters?.cursor) params.set('cursor', filters.cursor);
+	if (filters?.direction) params.set('direction', filters.direction.toUpperCase());
+	if (filters?.sortBy) params.set('sortBy', filters.sortBy.toUpperCase());
+	if (filters?.sortDir) params.set('sortDir', filters.sortDir.toUpperCase());
+	const query = params.toString();
+	return query ? `?${query}` : '';
 }
 
 function toStaff(item: StaffListApiResponse['staffs'][number]): Staff {
@@ -49,10 +63,9 @@ function newStaffFromInput(input: CreateStaffInput): Staff {
 }
 
 export class StaffRepositoryImpl implements StaffRepository {
-	async getStaffList(filters?: StaffFilters): Promise<Staff[]> {
-		const query = filters?.search ? `?fullName=${encodeURIComponent(filters.search)}` : '';
-		const res = await httpClient.get<StaffListApiResponse>(`/staff/list${query}`);
-		return res.staffs.map(toStaff);
+	async getStaffList(filters?: StaffFilters): Promise<Page<Staff>> {
+		const res = await httpClient.get<StaffListApiResponse>(`/staff/list${buildStaffListQuery(filters)}`);
+		return {items: res.staffs.map(toStaff), nextCursor: res.nextCursor, prevCursor: res.prevCursor};
 	}
 
 	async getStaffById(id: string): Promise<Staff> {

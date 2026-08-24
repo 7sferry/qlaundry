@@ -7,7 +7,7 @@ import java.util.List;
  * on Juli 2026         *
  ************************/
 
-public record StaffListWebResponse(List<Staff> staffs){
+public record StaffListWebResponse(List<Staff> staffs, String nextCursor, String prevCursor){
 
 	public record Staff(String description, String fullName, long createdAt, String username,
 	                    List<Email> emails, List<Phone> phones, List<Address> addresses){
