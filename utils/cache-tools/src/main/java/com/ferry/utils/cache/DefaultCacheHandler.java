@@ -150,8 +150,18 @@ public class DefaultCacheHandler implements CacheHandler{
 	}
 
 	@Override
+	public void put(String key, String hashKey, String value){
+		redis.opsForHash().put(key, hashKey, value);
+	}
+
+	@Override
 	public Optional<String> get(String key){
 		return Optional.ofNullable(redis.opsForValue().get(key));
+	}
+
+	@Override
+	public Optional<String> get(String key, String hashKey){
+		return Optional.ofNullable(redis.opsForHash().get(key, hashKey)).map(Object::toString);
 	}
 
 	@Override

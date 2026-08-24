@@ -21,7 +21,7 @@ public class InternalKeyResolver{
 
 	Optional<String> digestOf(String clientId, String version){
 		try{
-			return cacheHandler.get(InternalKeyConstant.KEY_PREFIX + clientId + ":" + version)
+			return cacheHandler.get(InternalKeyConstant.KEY_PREFIX + clientId, version)
 					.map(digest -> digest.trim().toLowerCase());
 		}catch(RuntimeException e){
 			// break-glass: only an unreachable cache falls back to the configured keys — a cache that answers
