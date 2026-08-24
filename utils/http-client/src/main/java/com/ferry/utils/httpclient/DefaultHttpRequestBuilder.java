@@ -1,6 +1,7 @@
 package com.ferry.utils.httpclient;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -9,6 +10,8 @@ import java.lang.reflect.RecordComponent;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublisher;
+import java.net.http.HttpRequest.BodyPublishers;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
@@ -25,6 +28,7 @@ class DefaultHttpRequestBuilder implements HttpRequestBuilder{
 
 	static final ObjectMapper OBJECT_MAPPER = JsonMapper.shared();
 	private static final String TRACE_ID_HEADER = "X-Trace-Id";
+	private static final String TRACE_ID_MDC_KEY = "traceId";
 	private static final String CONTENT_TYPE_HEADER = "Content-Type";
 	private static final String CONTENT_TYPE_JSON = "application/json";
 	private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
@@ -71,14 +75,17 @@ class DefaultHttpRequestBuilder implements HttpRequestBuilder{
 	@Override
 	public HttpRequestExecutor build(){
 		Map<String, String> allHeaders = new LinkedHashMap<>(headers);
-		String traceId = allHeaders.computeIfAbsent(TRACE_ID_HEADER, _ -> UUID.randomUUID().toString());
+		String traceId = allHeaders.computeIfAbsent(TRACE_ID_HEADER,
+				_ -> {
+					String currentTraceId = MDC.get(TRACE_ID_MDC_KEY);
+					return currentTraceId != null ? currentTraceId : UUID.randomUUID().toString();
+				});
 		String uri = requestParam == null ? baseUri : baseUri + queryStringOf(requestParam);
-		HttpRequest.BodyPublisher publisher;
-		if(requestBody == null){
-			publisher = HttpRequest.BodyPublishers.noBody();
-		} else {
+		BodyPublisher publisher = requestBody == null ?
+				BodyPublishers.noBody() :
+				BodyPublishers.ofString(OBJECT_MAPPER.writeValueAsString(requestBody));
+		if(requestBody != null){
 			allHeaders.putIfAbsent(CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON);
-			publisher = HttpRequest.BodyPublishers.ofString(OBJECT_MAPPER.writeValueAsString(requestBody));
 		}
 		HttpRequest.Builder builder = HttpRequest.newBuilder()
 				.uri(URI.create(uri))
