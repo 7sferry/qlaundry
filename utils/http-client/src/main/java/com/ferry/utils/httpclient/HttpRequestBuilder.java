@@ -21,6 +21,14 @@ public interface HttpRequestBuilder{
 		return new DefaultHttpRequestBuilder("PUT", uri);
 	}
 
+	static HttpRequestBuilder query(String uri){
+		return new DefaultHttpRequestBuilder("QUERY", uri);
+	}
+
+	static HttpRequestBuilder patch(String uri){
+		return new DefaultHttpRequestBuilder("PATCH", uri);
+	}
+
 	static HttpRequestBuilder delete(String uri){
 		return new DefaultHttpRequestBuilder("DELETE", uri);
 	}

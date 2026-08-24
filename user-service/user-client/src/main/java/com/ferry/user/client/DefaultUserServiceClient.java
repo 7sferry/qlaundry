@@ -24,7 +24,6 @@ public class DefaultUserServiceClient implements UserServiceClient{
 				.requestParam(params)
 				.header(API_KEY_HEADER, config.apiKey())
 				.timeout(config.timeout())
-				.header("cc", "23")
 				.build()
 				.send(CustomerVerificationClientResponse.class);
 		return response != null && response.valid();
