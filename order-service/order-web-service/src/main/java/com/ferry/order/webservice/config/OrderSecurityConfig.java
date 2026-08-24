@@ -5,6 +5,7 @@ import com.ferry.utils.token.TokenParser;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -31,6 +32,15 @@ public class OrderSecurityConfig{
 	@Bean
 	OrderJwtAuthenticationFilter jwtAuthenticationFilter(TokenParser tokenParser){
 		return new OrderJwtAuthenticationFilter(tokenParser);
+	}
+
+	@Bean
+	FilterRegistrationBean<OrderJwtAuthenticationFilter> jwtAuthenticationFilterRegistration(
+			OrderJwtAuthenticationFilter jwtAuthenticationFilter){
+		FilterRegistrationBean<OrderJwtAuthenticationFilter> registration =
+				new FilterRegistrationBean<>(jwtAuthenticationFilter);
+		registration.setEnabled(false);
+		return registration;
 	}
 
 	@Bean
