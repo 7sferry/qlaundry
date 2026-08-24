@@ -8,5 +8,5 @@ import jakarta.validation.constraints.NotBlank;
  * on Juli 2026         *
  ************************/
 
-public record StaffRefreshTokenRequest(@NotBlank String refreshToken) implements UserValidation{
+public record StaffRefreshTokenRequest(String refreshToken) implements UserValidation{
 }

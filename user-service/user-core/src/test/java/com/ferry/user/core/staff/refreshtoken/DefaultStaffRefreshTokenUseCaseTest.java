@@ -84,7 +84,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
-		then(presenter).should().present(cached);
+		then(presenter).should().presentRotatedToken(cached);
 		then(gateway).shouldHaveNoInteractions();
 	}
 
@@ -143,7 +143,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
 		then(cacheManager).should().set(eq(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN), eq(fetchedSession), durationCaptor.capture());
-		then(presenter).should().present(new StaffRefreshTokenResponse("cached-access-token", null));
+		then(presenter).should().presentRotatedToken(new StaffRefreshTokenResponse("cached-access-token", null));
 
 		thenSoftly(softly -> softly.then(durationCaptor.getValue()).isEqualTo(Duration.ofSeconds(TokenConstant.REFRESH_CACHE_MAX_SECONDS)));
 	}
@@ -158,7 +158,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
-		then(presenter).should().present(new StaffRefreshTokenResponse("cached-access-token", null));
+		then(presenter).should().presentRotatedToken(new StaffRefreshTokenResponse("cached-access-token", null));
 		then(gateway).shouldHaveNoInteractions();
 		then(cacheManager).should(never()).set(eq(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN), any(), any());
 	}
@@ -179,7 +179,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
-		then(presenter).should().present(new StaffRefreshTokenResponse(NEW_ACCESS_TOKEN, null));
+		then(presenter).should().presentRotatedToken(new StaffRefreshTokenResponse(NEW_ACCESS_TOKEN, null));
 		then(cacheManager).should().set(eq(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN), eq(NEW_ACCESS_TOKEN), eq(Duration.ofSeconds(840)));
 		then(cacheManager).should(never()).set(eq(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN), any(), any());
 		then(gateway).should(never()).save(any());
@@ -201,7 +201,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
-		then(presenter).should().present(new StaffRefreshTokenResponse(NEW_ACCESS_TOKEN, null));
+		then(presenter).should().presentRotatedToken(new StaffRefreshTokenResponse(NEW_ACCESS_TOKEN, null));
 		then(cacheManager).should(never()).set(eq(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN), any(), any());
 	}
 
@@ -286,7 +286,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 				eq(Duration.ofSeconds(840)));
 		then(cacheManager).should().set(eq(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN), responseCaptor.capture(),
 				eq(Duration.ofSeconds(TokenConstant.ROTATION_GRACE_SECONDS)));
-		then(presenter).should().present(responseCaptor.getValue());
+		then(presenter).should().presentRotatedToken(responseCaptor.getValue());
 
 		StaffRefreshTokenResponse response = responseCaptor.getValue();
 		thenSoftly(softly -> {

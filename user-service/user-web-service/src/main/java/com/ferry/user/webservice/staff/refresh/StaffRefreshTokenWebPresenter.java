@@ -7,9 +7,7 @@ import com.ferry.user.core.tools.TokenProcessor;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -26,11 +24,20 @@ public class StaffRefreshTokenWebPresenter implements StaffRefreshTokenPresenter
 	private ResponseEntity<StaffRefreshTokenWebResponse> responseEntity;
 
 	@Override
-	public void present(StaffRefreshTokenResponse response){
+	public void presentRotatedToken(StaffRefreshTokenResponse response){
 		responseEntity = ResponseEntity.ok(new StaffRefreshTokenWebResponse(response.accessToken(), response.refreshToken()));
-		if(response.refreshToken() != null){
-			servletResponse.addHeader(HttpHeaders.SET_COOKIE, getResponseCookie(response.refreshToken()).toString());
-		}
+		servletResponse.addHeader(HttpHeaders.SET_COOKIE, getResponseCookie(response.refreshToken()).toString());
+	}
+
+	@Override
+	public void presentCachedToken(StaffRefreshTokenResponse response){
+		responseEntity = ResponseEntity.ok(new StaffRefreshTokenWebResponse(response.accessToken(), response.refreshToken()));
+	}
+
+	@Override
+	public void presentUnauthorized(){
+		responseEntity = ResponseEntity.of(ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED)).build();
+		servletResponse.addHeader(HttpHeaders.SET_COOKIE, getResponseCookie("").toString());
 	}
 
 	private ResponseCookie getResponseCookie(String refreshToken){

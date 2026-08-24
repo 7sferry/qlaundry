@@ -6,5 +6,9 @@ package com.ferry.user.core.staff.refreshtoken;
  ************************/
 
 public interface StaffRefreshTokenPresenter{
-	void present(StaffRefreshTokenResponse response);
+	void presentRotatedToken(StaffRefreshTokenResponse response);
+
+	void presentCachedToken(StaffRefreshTokenResponse response);
+
+	void presentUnauthorized();
 }

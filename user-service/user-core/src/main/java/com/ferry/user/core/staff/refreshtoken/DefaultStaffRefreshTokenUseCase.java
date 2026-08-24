@@ -30,28 +30,33 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 
 	@Override
 	public void execute(StaffRefreshTokenRequest request, StaffRefreshTokenPresenter presenter){
-		request.validate();
+		if(request.refreshToken() == null){
+			presenter.presentUnauthorized();
+			return;
+		}
 		String oldRefreshToken = request.refreshToken();
 		String oldHashedRefreshToken = tokenProcessor.hashToken(oldRefreshToken);
 		StaffRefreshTokenResponse rotatedResponse = cacheManager.get(TokenConstant.ROTATED_KEY + oldHashedRefreshToken,
 						StaffRefreshTokenResponse.class)
 				.orElse(null);
 		if(rotatedResponse != null){
-			presenter.present(rotatedResponse);
+			presenter.presentRotatedToken(rotatedResponse);
 			return;
 		}
 		UserSessionDomain currentSession = getCurrentSession(oldHashedRefreshToken);
 		if(currentSession.sessionType() != SessionType.STAFF){
-			throw new ExpiredSessionException("session expired");
+			presenter.presentUnauthorized();
+			return;
 		}
 		Instant now = Instant.now();
 		if(now.isAfter(currentSession.expirationTime())){
-			throw new ExpiredSessionException("session expired");
+			presenter.presentUnauthorized();
+			return;
 		}
 		String oldAccessToken = cacheManager.get(TokenConstant.ACCESS_KEY + oldHashedRefreshToken)
 				.orElse(null);
 		if(oldAccessToken != null){
-			presenter.present(new StaffRefreshTokenResponse(oldAccessToken, null));
+			presenter.presentCachedToken(new StaffRefreshTokenResponse(oldAccessToken, null));
 			return;
 		}
 		String newAccessToken = generateAccessToken(currentSession);
@@ -63,11 +68,11 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 			StaffRefreshTokenResponse response = new StaffRefreshTokenResponse(newAccessToken, newRefreshToken);
 			cacheManager.set(TokenConstant.ROTATED_KEY + oldHashedRefreshToken, response,
 					Duration.ofSeconds(TokenConstant.ROTATION_GRACE_SECONDS));
-			presenter.present(response);
+			presenter.presentRotatedToken(response);
 			return;
 		}
 		updateAccessTokenCache(oldHashedRefreshToken, newAccessToken);
-		presenter.present(new StaffRefreshTokenResponse(newAccessToken, null));
+		presenter.presentCachedToken(new StaffRefreshTokenResponse(newAccessToken, null));
 	}
 
 	private UserSessionDomain getCurrentSession(String hashedRefreshToken){
