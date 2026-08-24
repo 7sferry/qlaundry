@@ -1,6 +1,7 @@
 package com.ferry.user.webservice.config;
 
 import com.ferry.user.core.tools.TokenProcessor;
+import com.ferry.utils.cache.CacheHandler;
 import com.ferry.user.webservice.tools.DefaultTokenProcessor;
 import com.ferry.utils.token.DefaultTokenGenerator;
 import com.ferry.utils.token.DefaultTokenParser;
@@ -46,8 +47,18 @@ public class UserSecurityConfig{
 	};
 
 	@Bean
-	JwtAuthenticationFilter jwtAuthenticationFilter(TokenParser tokenParser){
-		return new JwtAuthenticationFilter(tokenParser);
+	UserJwtAuthenticationFilter jwtAuthenticationFilter(TokenParser tokenParser){
+		return new UserJwtAuthenticationFilter(tokenParser);
+	}
+
+	@Bean
+	InternalKeyResolver internalKeyResolver(InternalKeysProperties internalKeysProperties, CacheHandler cacheHandler){
+		return new InternalKeyResolver(internalKeysProperties, cacheHandler);
+	}
+
+	@Bean
+	InternalApiKeyAuthenticationFilter internalApiKeyAuthenticationFilter(InternalKeyResolver internalKeyResolver){
+		return new InternalApiKeyAuthenticationFilter(internalKeyResolver);
 	}
 
 	@Bean
@@ -71,7 +82,8 @@ public class UserSecurityConfig{
 				rotationDurationBeforeExpireInSeconds);
 	}
 	@Bean
-	SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter){
+	SecurityFilterChain filterChain(HttpSecurity http, UserJwtAuthenticationFilter jwtAuthenticationFilter,
+	                                InternalApiKeyAuthenticationFilter internalApiKeyAuthenticationFilter){
 		return http.csrf(AbstractHttpConfigurer::disable)
 				.cors(corsConfigurer -> corsConfigurer.configurationSource(_ -> {
 					CorsConfiguration config = new CorsConfiguration();
@@ -92,6 +104,7 @@ public class UserSecurityConfig{
 						.anyRequest()
 						.authenticated())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+				.addFilterBefore(internalApiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.build();
 	}
 

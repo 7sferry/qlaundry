@@ -1,7 +1,7 @@
 package com.ferry.user.webservice.tools;
 
 import com.ferry.user.core.tools.TokenProcessor;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import com.ferry.utils.token.TokenGenerator;
 import lombok.RequiredArgsConstructor;
 
@@ -31,7 +31,7 @@ public class DefaultTokenProcessor implements TokenProcessor{
 	}
 
 	@Override
-	public String generateAccessToken(UserPrincipal userToken){
+	public String generateAccessToken(UserAuthPrincipal userToken){
 		Map<String, Object> claims = new HashMap<>();
 		claims.put("fullName", userToken.fullName());
 		claims.put("type", userToken.sessionType());

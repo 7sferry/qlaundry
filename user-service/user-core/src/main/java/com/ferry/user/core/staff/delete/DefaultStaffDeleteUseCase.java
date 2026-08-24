@@ -6,7 +6,7 @@ import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.tenant.TenantIdDomain;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
 /************************
@@ -19,7 +19,7 @@ public class DefaultStaffDeleteUseCase implements StaffDeleteUseCase{
 	private final StaffDeleteGateway gateway;
 
 	@Override
-	public void execute(StaffDeleteRequest request, UserPrincipal principal, StaffDeletePresenter presenter){
+	public void execute(StaffDeleteRequest request, UserAuthPrincipal principal, StaffDeletePresenter presenter){
 		if(principal.role() != StaffRole.SUPER_STAFF){
 			throw new ForbiddenActionException("Only super staff can delete staff");
 		}

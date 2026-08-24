@@ -355,7 +355,7 @@ export default function OrderHistoryPage() {
    							<div><small>Subtotal</small><strong>{formatCurrency(selectedOrder.subtotal)}</strong></div>
 										{selectedOrder.discount > 0 && (
 												<div>
-    									<small>Discount {selectedOrder.promoCode && `(${selectedOrder.promoCode})`}</small>
+    									<small>Discount</small>
     									<strong style={{color: 'var(--success)'}}>−{formatCurrency(selectedOrder.discount)}</strong>
 												</div>
 										)}

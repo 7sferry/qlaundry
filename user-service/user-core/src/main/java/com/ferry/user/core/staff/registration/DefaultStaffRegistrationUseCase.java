@@ -5,7 +5,7 @@ import com.ferry.user.domain.common.*;
 import com.ferry.user.domain.common.exception.ForbiddenActionException;
 import com.ferry.user.domain.common.exception.InvalidUsernameException;
 import com.ferry.user.domain.staff.*;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -21,7 +21,7 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 	private final PasswordTool passwordTool;
 
 	@Override
-	public void execute(StaffRegistrationRequest request, UserPrincipal principal, StaffRegistrationPresenter presenter){
+	public void execute(StaffRegistrationRequest request, UserAuthPrincipal principal, StaffRegistrationPresenter presenter){
 		request.validate();
 		if(principal.role() != StaffRole.SUPER_STAFF){
 			throw new ForbiddenActionException("Only super staff can register staff");
@@ -33,7 +33,7 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 		presenter.present(new StaffRegistrationResponse(registeredUser));
 	}
 
-	private StaffDomain registerStaff(StaffRegistrationRequest request, UserPrincipal principal){
+	private StaffDomain registerStaff(StaffRegistrationRequest request, UserAuthPrincipal principal){
 		UsernameDomain username = new UsernameDomain(request.username());
 		if(gateway.existsByUsername(username)){
 			throw new InvalidUsernameException("Username already exists");
@@ -48,14 +48,14 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 		return saved;
 	}
 
-	private void savePhone(StaffRegistrationRequest request, StaffDomain registeredUser, UserPrincipal principal){
+	private void savePhone(StaffRegistrationRequest request, StaffDomain registeredUser, UserAuthPrincipal principal){
 		List<String> phones = request.phones() == null ? List.of() : request.phones();
 		for(String phone : phones){
 			gateway.save(StaffPhoneDomain.register(registeredUser.id(), new PhoneDomain(phone), principal.userId()));
 		}
 	}
 
-	private void saveAddress(StaffRegistrationRequest request, StaffDomain registeredUser, UserPrincipal principal){
+	private void saveAddress(StaffRegistrationRequest request, StaffDomain registeredUser, UserAuthPrincipal principal){
 		List<String> addresses = request.addresses() == null ? List.of() : request.addresses();
 		for(String address : addresses){
 			gateway.save(StaffAddressDomain.register(registeredUser.id(), new AddressLineDomain(address),
@@ -63,7 +63,7 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 		}
 	}
 
-	private void saveEmail(StaffRegistrationRequest request, StaffDomain registeredUser, UserPrincipal principal){
+	private void saveEmail(StaffRegistrationRequest request, StaffDomain registeredUser, UserAuthPrincipal principal){
 		List<String> emails = request.emails() == null ? List.of() : request.emails();
 		if(emails.isEmpty()){
 			throw new IllegalArgumentException("Emails cannot be empty");

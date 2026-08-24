@@ -61,7 +61,6 @@ public class NotificationWebConfig{
 				cryptoKeysProperties.allowPlaintextRead()));
 	}
 
-	// one-off encryption backfill: run once with --spring.profiles.active=backfill while
 	// app.crypto.allow-plaintext-read is true, then flip it to false
 //	@Bean
 	ApplicationRunner cryptoBackfillRunner(EmailNotificationJpaRepository emailNotificationJpaRepository,

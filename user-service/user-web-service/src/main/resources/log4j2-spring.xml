@@ -11,7 +11,7 @@
 		</Console>
 		<RollingFile name="File"
 					 fileName="${sys:LOG_FILE}"
-					 filePattern="logs/archive/user-web-service-%d{yyyy-MM-dd}-%i.log.gz">
+					 filePattern="logs/archive/%d{yyyy}/%d{yyyy-MM}/user-web-service-%d{yyyy-MM-dd}-%i.log.gz">
 			<PatternLayout pattern="${FILE_LOG_PATTERN}"/>
 			<Policies>
 				<TimeBasedTriggeringPolicy interval="1"/>

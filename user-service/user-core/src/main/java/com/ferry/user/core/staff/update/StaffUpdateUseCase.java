@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.update;
 
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -8,5 +8,5 @@ import com.ferry.user.domain.token.UserPrincipal;
  ************************/
 
 public interface StaffUpdateUseCase{
-	void execute(StaffUpdateRequest request, UserPrincipal principal, StaffUpdatePresenter presenter);
+	void execute(StaffUpdateRequest request, UserAuthPrincipal principal, StaffUpdatePresenter presenter);
 }

@@ -8,7 +8,7 @@ import com.ferry.user.domain.staff.detail.StaffDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffEmailDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffPhoneDetailProjection;
 import com.ferry.user.domain.tenant.TenantIdDomain;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public class DefaultStaffDetailUseCase implements StaffDetailUseCase{
 	private final StaffDetailGateway gateway;
 
 	@Override
-	public void execute(StaffDetailRequest request, UserPrincipal principal, StaffDetailPresenter presenter){
+	public void execute(StaffDetailRequest request, UserAuthPrincipal principal, StaffDetailPresenter presenter){
 		request.validate();
 		UsernameDomain username = new UsernameDomain(request.username());
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());

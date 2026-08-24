@@ -11,7 +11,7 @@ import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
@@ -131,7 +131,7 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 				.orElseThrow(() -> new NotFoundException("tenant not found"));
 		StaffRole role = StaffRole.findByValue(staff.roleId())
 				.orElseThrow(() -> new NotFoundException("role not found"));
-		UserPrincipal userToken = new UserPrincipal(staff.id(), staff.username(),
+		UserAuthPrincipal userToken = new UserAuthPrincipal(staff.id(), staff.username(),
 				staff.fullName(), tenant.fullName(), staff.tenantId(), SessionType.STAFF, role);
 		return tokenProcessor.generateAccessToken(userToken);
 	}

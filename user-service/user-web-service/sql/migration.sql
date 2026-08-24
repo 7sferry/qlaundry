@@ -82,3 +82,55 @@ CREATE INDEX idx_staff_phones_phone_hash ON staff_phones (phone_hash);
 -- (keeps app.crypto.allow-plaintext-read=true so plaintext rows read through), verify with
 --   SELECT count(*) FROM staff_emails WHERE email NOT LIKE 'v1:%';
 -- and flip app.crypto.allow-plaintext-read to false once it returns 0.
+
+-- customers (August 2026): the customer master lives in user-service; order-service only keeps a
+-- `customer_id` plus its own snapshot of the name/phone/email/address the invoice was raised with.
+-- ddl-auto: update creates the tables on boot, so nothing here needs running for a fresh install.
+--
+-- Contacts are child tables, not columns, because a customer will be allowed several of each later:
+-- customer_emails / customer_phones / customer_addresses, same shape as the staff_* contact tables.
+-- Their values are AES-GCM ciphertext with AAD <table>:<column>:<customer_id>, and the *_hash columns
+-- are the HMAC blind indexes that make lookup-by-phone possible (a GCM ciphertext can never be matched
+-- by a JPQL predicate). Duplicates are allowed on purpose — two customers may share one phone.
+-- customers.tenant_id is NULLABLE: a customer who signs up for themselves is not owned by one tenant.
+--
+-- CREATE TABLE customers
+-- (
+--     id         VARCHAR(50) PRIMARY KEY,
+--     tenant_id  VARCHAR(50) REFERENCES tenants (id),
+--     full_name  VARCHAR(100) NOT NULL,
+--     notes      VARCHAR,
+--     version    INTEGER,
+--     deleted    BOOLEAN      NOT NULL DEFAULT FALSE,
+--     created_by VARCHAR(50)  NOT NULL,
+--     created_at TIMESTAMPTZ  NOT NULL,
+--     updated_by VARCHAR(50)  NOT NULL,
+--     updated_at TIMESTAMPTZ  NOT NULL
+-- );
+-- CREATE INDEX idx_customers_tenant_id ON customers (tenant_id);
+--
+-- CREATE TABLE customer_phones
+-- (
+--     id          VARCHAR(50) PRIMARY KEY,
+--     customer_id VARCHAR(50)  NOT NULL REFERENCES customers (id),
+--     phone       VARCHAR(128) NOT NULL,
+--     phone_hash  VARCHAR(64),
+--     version     INTEGER,
+--     deleted     BOOLEAN      NOT NULL DEFAULT FALSE,
+--     created_by  VARCHAR(50)  NOT NULL,
+--     created_at  TIMESTAMPTZ  NOT NULL,
+--     updated_by  VARCHAR(50)  NOT NULL,
+--     updated_at  TIMESTAMPTZ  NOT NULL
+-- );
+-- CREATE INDEX idx_customer_phones_phone_hash ON customer_phones (phone_hash);
+-- (customer_emails is the same shape with email VARCHAR(512) + email_hash,
+--  customer_addresses with address_line VARCHAR(1024) and no hash — nothing looks an address up by value)
+--
+-- The customer tables have never existed in another shape, so there is nothing to migrate and no encryption
+-- backfill for them — they are written encrypted from the first row. (Were that ever not true, note that
+-- ciphertext cannot be copied between tables: the AAD names the table, so it would have to be re-encrypted.)
+
+-- crypto key rotation (August 2026): the active key id now comes from Redis, key `user:encrypt:version`
+-- (see CryptoConstant). `SET user:encrypt:version v2` after adding v2 to app.crypto.keys and new rows
+-- encrypt under v2; existing rows keep decrypting under the key id stored in their own ciphertext prefix.
+-- Unset/unknown falls back to app.crypto.active-key-id, which stays `v1`.

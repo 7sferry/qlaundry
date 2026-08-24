@@ -2,7 +2,7 @@ package com.ferry.user.webservice.staff.list;
 
 import com.ferry.user.core.staff.list.StaffListRequest;
 import com.ferry.user.core.staff.list.StaffListUseCase;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,7 +22,7 @@ public class StaffListWebController{
 
 	@Transactional(readOnly = true)
 	@GetMapping("/staff/list")
-	public ResponseEntity<?> getList(StaffListRequest request, @AuthenticationPrincipal UserPrincipal principal){
+	public ResponseEntity<?> getList(StaffListRequest request, @AuthenticationPrincipal UserAuthPrincipal principal){
 		StaffListWebPresenter presenter = new StaffListWebPresenter();
 		staffListUseCase.execute(request, principal, presenter);
 		return presenter.getResponseEntity();

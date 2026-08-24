@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.delete;
 
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -8,5 +8,5 @@ import com.ferry.user.domain.token.UserPrincipal;
  ************************/
 
 public interface StaffDeleteUseCase{
-	void execute(StaffDeleteRequest request, UserPrincipal principal, StaffDeletePresenter presenter);
+	void execute(StaffDeleteRequest request, UserAuthPrincipal principal, StaffDeletePresenter presenter);
 }

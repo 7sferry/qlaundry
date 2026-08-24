@@ -12,6 +12,10 @@
 		<module>user-service/user-domain</module>
 		<module>user-service/user-web-service</module>
 		<module>user-service/user-gateway</module>
+		<module>order-service/order-core</module>
+		<module>order-service/order-domain</module>
+		<module>order-service/order-web-service</module>
+		<module>order-service/order-gateway</module>
 		<module>notification-service/notification-core</module>
 		<module>notification-service/notification-domain</module>
 		<module>notification-service/notification-web-service</module>

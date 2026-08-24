@@ -2,7 +2,7 @@ package com.ferry.user.webservice.staff.update;
 
 import com.ferry.user.core.staff.update.StaffUpdateRequest;
 import com.ferry.user.core.staff.update.StaffUpdateUseCase;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,7 +24,7 @@ public class StaffUpdateWebController{
 	@Transactional
 	@PutMapping("/staff/profile")
 	public ResponseEntity<?> updateProfile(@RequestBody StaffUpdateRequest request,
-	                                       @AuthenticationPrincipal UserPrincipal principal){
+	                                       @AuthenticationPrincipal UserAuthPrincipal principal){
 		StaffUpdateWebPresenter presenter = new StaffUpdateWebPresenter();
 		staffUpdateUseCase.execute(request, principal, presenter);
 		return presenter.getResponseEntity();

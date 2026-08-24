@@ -9,7 +9,7 @@ import com.ferry.user.domain.session.SessionType;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.tenant.TenantDomain;
 import com.ferry.user.domain.tenant.TenantStatus;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
 import com.ferry.user.gateway.tenant.entity.TenantStatusJpaEntity;
@@ -47,7 +47,7 @@ public class TenantRegistrationJpaGateway implements TenantRegistrationGateway{
 	@Override
 	public StaffRegistrationResponse registerAdmin(StaffRegistrationRequest request, TenantDomain tenant){
 		StaffRegistrationResponse[] result = new StaffRegistrationResponse[1];
-		UserPrincipal principal = new UserPrincipal(tenant.id(), request.username(), request.fullName(),
+		UserAuthPrincipal principal = new UserAuthPrincipal(tenant.id(), request.username(), request.fullName(),
 				tenant.fullNameValue(), tenant.id(), SessionType.STAFF, StaffRole.SUPER_STAFF);
 		staffRegistrationUseCase.execute(request, principal, response -> result[0] = response);
 		return result[0];

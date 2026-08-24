@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.list;
 
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -8,5 +8,5 @@ import com.ferry.user.domain.token.UserPrincipal;
  ************************/
 
 public interface StaffListUseCase{
-	void execute(StaffListRequest request, UserPrincipal principal, StaffListPresenter presenter);
+	void execute(StaffListRequest request, UserAuthPrincipal principal, StaffListPresenter presenter);
 }

@@ -14,7 +14,6 @@ import {
 	Plus,
 	Search,
 	Sparkles,
-	Tag,
 	Truck,
 	User2,
 	WashingMachine,
@@ -24,19 +23,14 @@ import {Badge, Button, Card, Field, Input, PageHeader, Select, Textarea} from '@
 import {formatCurrency} from '@/core/utils/format';
 import {useOrders, useServices} from '../useOrders';
 import {useCustomers} from '@/features/customers/presentation/useCustomers';
-import type {ClothingItem, ClothingType} from '../../domain/Order';
+import type {ClothingItem, ClothingType, PaymentMethod} from '../../domain/Order';
 import {CLOTHING_TYPE_LABELS} from '../../domain/Order';
 
 const CLOTHING_TYPES: ClothingType[] = [
 	'shirt', 'pants', 'dress', 'jacket', 'bed_linen', 'towel', 'uniform', 'other',
 ];
 
-const PROMO_CODES: Record<string, number> = {
-	NEWUSER: 10,
-	LOYAL10: 10,
-	HEMAT15: 15,
-	MEMBER20: 20,
-};
+const PAYMENT_METHODS: PaymentMethod[] = ['cash'];
 
 export default function CreateOrderPage() {
 	const navigate = useNavigate();
@@ -44,12 +38,9 @@ export default function CreateOrderPage() {
 	const {services, loading: servicesLoading} = useServices();
 	const {findByPhone} = useCustomers();
 
-	const [selectedServiceId, setSelectedServiceId] = useState('wash-fold');
+	const [selectedServiceId, setSelectedServiceId] = useState('');
 	const [priority, setPriority] = useState<'normal' | 'express'>('normal');
 	const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer' | 'qris'>('cash');
-	const [promoCode, setPromoCode] = useState('');
-	const [promoApplied, setPromoApplied] = useState<{ code: string; pct: number } | null>(null);
-	const [promoError, setPromoError] = useState('');
 	const [items, setItems] = useState<ClothingItem[]>([
 		{type: 'shirt', label: 'Shirt / Blouse', quantity: 3},
 	]);
@@ -87,12 +78,7 @@ export default function CreateOrderPage() {
 		return Math.round(service.pricePerUnit * multiplier * qty);
 	}, [service, weightKg, totalQty, priority]);
 
-	const discount = useMemo(
-			() => (promoApplied ? Math.round(subtotal * (promoApplied.pct / 100)) : 0),
-			[subtotal, promoApplied],
-	);
-
-	const total = subtotal - discount;
+	const total = subtotal;
 
 	const autoDelivery = useCallback(
 			(pickup: string) => {
@@ -134,7 +120,7 @@ export default function CreateOrderPage() {
 
 	const lookupPhone = async () => {
 		if (!phoneSearch) return;
-		const customer = await findByPhone(phoneSearch);
+		const customer = await findByPhone(phoneSearch).catch(() => null);
 		if (customer) {
 			setForm((prev) => ({
 				...prev,
@@ -143,16 +129,6 @@ export default function CreateOrderPage() {
 				customerAddress: customer.address,
 			}));
 		}
-	};
-
-	const applyPromo = () => {
-		setPromoError('');
-		const pct = PROMO_CODES[promoCode.toUpperCase()];
-  if (!pct) {
-      setPromoError('Promo code is invalid or has expired.');
-      return;
-    }
-		setPromoApplied({code: promoCode.toUpperCase(), pct});
 	};
 
 	const submit = async (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -170,7 +146,6 @@ export default function CreateOrderPage() {
 				weightKg: weightKg === '' ? undefined : Number(weightKg),
 				priority,
 				paymentMethod,
-				promoCode: promoApplied?.code,
 				pickupDate: form.pickupDate,
 				estimatedDelivery: form.estimatedDelivery || autoDelivery(form.pickupDate),
 				notes: form.notes,
@@ -217,7 +192,7 @@ export default function CreateOrderPage() {
 											<button
 													key={s.id}
 													type="button"
-													className={`service-card ${selectedServiceId === s.id ? 'service-card--selected' : ''}`}
+													className={`service-card ${service?.id === s.id ? 'service-card--selected' : ''}`}
 													onClick={() => {
 														setSelectedServiceId(s.id);
 														setForm((prev) => ({
@@ -427,7 +402,7 @@ export default function CreateOrderPage() {
 
         <Field label="Payment method">
 									<div className="payment-grid">
-										{(['cash', 'transfer', 'qris'] as const).map((method) => (
+										{PAYMENT_METHODS.map((method) => (
 												<button
 														key={method}
 														type="button"
@@ -480,45 +455,6 @@ export default function CreateOrderPage() {
                   <span>Pickup & delivery</span>
                   <span className="summary-free">Free</span>
                 </div>
-
-								<div className="promo-row">
-         <Field>
-                    <div className="input-with-icon">
-                      <Tag size={14}/>
-                      <Input
-													value={promoCode}
-													onChange={(e) => {
-														setPromoCode(e.target.value);
-														setPromoApplied(null);
-														setPromoError('');
-													}}
-             placeholder="Promo code"
-             disabled={!!promoApplied}
-           />
-         </div>
-       </Field>
-       <Button
-         type="button"
-         variant="ghost"
-         onClick={applyPromo}
-         disabled={!promoCode || !!promoApplied}
-       >
-         Apply
-       </Button>
-     </div>
-     {promoApplied && (
-         <div className="promo-success">
-           <Check size={13}/> Discount {promoApplied.pct}% applied
-         </div>
-     )}
-								{promoError && <p style={{color: 'var(--danger)', fontSize: 12, marginTop: 4}}>{promoError}</p>}
-
-        {discount > 0 && (
-                    <div className="summary-line" style={{color: 'var(--success)'}}>
-                      <span>Discount ({promoApplied?.pct}%)</span>
-                      <span>−{formatCurrency(discount)}</span>
-                    </div>
-                )}
 
         <div className="summary-total">
                   <span>Total</span>

@@ -1,5 +1,23 @@
 package com.ferry.user.webservice.config;
 
+import com.ferry.user.core.customer.delete.CustomerDeleteGateway;
+import com.ferry.user.core.customer.delete.CustomerDeleteUseCase;
+import com.ferry.user.core.customer.delete.DefaultCustomerDeleteUseCase;
+import com.ferry.user.core.customer.detail.CustomerDetailGateway;
+import com.ferry.user.core.customer.detail.CustomerDetailUseCase;
+import com.ferry.user.core.customer.detail.DefaultCustomerDetailUseCase;
+import com.ferry.user.core.customer.verification.CustomerVerificationGateway;
+import com.ferry.user.core.customer.verification.CustomerVerificationUseCase;
+import com.ferry.user.core.customer.verification.DefaultCustomerVerificationUseCase;
+import com.ferry.user.core.customer.list.CustomerListGateway;
+import com.ferry.user.core.customer.list.CustomerListUseCase;
+import com.ferry.user.core.customer.list.DefaultCustomerListUseCase;
+import com.ferry.user.core.customer.registration.CustomerRegistrationGateway;
+import com.ferry.user.core.customer.registration.CustomerRegistrationUseCase;
+import com.ferry.user.core.customer.registration.DefaultCustomerRegistrationUseCase;
+import com.ferry.user.core.customer.update.CustomerUpdateGateway;
+import com.ferry.user.core.customer.update.CustomerUpdateUseCase;
+import com.ferry.user.core.customer.update.DefaultCustomerUpdateUseCase;
 import com.ferry.user.core.staff.delete.DefaultStaffDeleteUseCase;
 import com.ferry.user.core.staff.delete.StaffDeleteGateway;
 import com.ferry.user.core.staff.delete.StaffDeleteUseCase;
@@ -46,9 +64,20 @@ import com.ferry.user.core.tenant.registration.UserEmailPublisher;
 import com.ferry.user.core.tenant.registration.TenantRegistrationGateway;
 import com.ferry.user.core.tenant.registration.TenantRegistrationUseCase;
 import com.ferry.user.core.tenant.registration.TurnstileVerificationGateway;
+import com.ferry.user.core.tools.CryptoConstant;
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
+import com.ferry.user.gateway.customer.CustomerDeleteJpaGateway;
+import com.ferry.user.gateway.customer.CustomerDetailJpaGateway;
+import com.ferry.user.gateway.customer.CustomerVerificationJpaGateway;
+import com.ferry.user.gateway.customer.CustomerListJpaGateway;
+import com.ferry.user.gateway.customer.CustomerRegistrationJpaGateway;
+import com.ferry.user.gateway.customer.CustomerUpdateJpaGateway;
+import com.ferry.user.gateway.customer.repository.CustomerAddressJpaRepository;
+import com.ferry.user.gateway.customer.repository.CustomerEmailJpaRepository;
+import com.ferry.user.gateway.customer.repository.CustomerJpaRepository;
+import com.ferry.user.gateway.customer.repository.CustomerPhoneJpaRepository;
 import com.ferry.user.gateway.notification.UserEmailRedisPublisher;
 import com.ferry.user.gateway.notification.repository.EmailTriggerJpaRepository;
 import com.ferry.user.gateway.notification.repository.EmailTriggerStatusJpaRepository;
@@ -105,18 +134,25 @@ import java.util.List;
 @Slf4j
 @Configuration
 @Lazy
-@EnableConfigurationProperties(CryptoKeysProperties.class)
+@EnableConfigurationProperties({CryptoKeysProperties.class, InternalKeysProperties.class})
 public class UserWebConfig{
 
 	@Bean
-	CryptoTool cryptoTool(CryptoKeysProperties cryptoKeysProperties){
-		return new AesGcmCryptoTool(CryptoKeyConfig.of(cryptoKeysProperties.activeKeyId(),
+	CryptoTool cryptoTool(CryptoKeysProperties cryptoKeysProperties, CacheHandler cacheHandler){
+		CryptoKeyConfig keyConfig = CryptoKeyConfig.of(cryptoKeysProperties.activeKeyId(),
 				cryptoKeysProperties.keys(), cryptoKeysProperties.blindIndexKey(),
-				cryptoKeysProperties.allowPlaintextRead()));
+				cryptoKeysProperties.allowPlaintextRead());
+		return new AesGcmCryptoTool(keyConfig, () -> {
+			try{
+				return cacheHandler.get(CryptoConstant.ACTIVE_KEY_ID_KEY).orElse(null);
+			}catch(RuntimeException e){
+				log.warn("Failed to read {} from cache, falling back to the configured active key id",
+						CryptoConstant.ACTIVE_KEY_ID_KEY, e);
+				return null;
+			}
+		});
 	}
 
-	// one-off encryption backfill: run once with --spring.profiles.active=backfill while
-	// app.crypto.allow-plaintext-read is true, then flip it to false
 //	@Bean
 	ApplicationRunner cryptoBackfillRunner(StaffEmailJpaRepository staffEmailJpaRepository,
 	                                       StaffPhoneJpaRepository staffPhoneJpaRepository,
@@ -139,6 +175,97 @@ public class UserWebConfig{
 			log.info("Crypto backfill done: {} staff emails, {} staff phones, {} staff addresses, {} email triggers",
 					emails.size(), phones.size(), addresses.size(), triggers.size());
 		};
+	}
+
+	@Bean
+	CustomerRegistrationGateway customerRegistrationGateway(CustomerJpaRepository customerJpaRepository,
+	                                                        CustomerEmailJpaRepository customerEmailJpaRepository,
+	                                                        CustomerPhoneJpaRepository customerPhoneJpaRepository,
+	                                                        CustomerAddressJpaRepository customerAddressJpaRepository,
+	                                                        TenantJpaRepository tenantJpaRepository,
+	                                                        IdGenerator idGenerator,
+	                                                        CryptoTool cryptoTool){
+		return new CustomerRegistrationJpaGateway(customerJpaRepository, customerEmailJpaRepository,
+				customerPhoneJpaRepository, customerAddressJpaRepository, tenantJpaRepository, idGenerator,
+				cryptoTool);
+	}
+
+	@Bean
+	CustomerRegistrationUseCase customerRegistrationUseCase(CustomerRegistrationGateway customerRegistrationGateway){
+		return new DefaultCustomerRegistrationUseCase(customerRegistrationGateway);
+	}
+
+	@Bean
+	CustomerListGateway customerListGateway(CustomerJpaRepository customerJpaRepository,
+	                                        CustomerEmailJpaRepository customerEmailJpaRepository,
+	                                        CustomerPhoneJpaRepository customerPhoneJpaRepository,
+	                                        CustomerAddressJpaRepository customerAddressJpaRepository,
+	                                        CryptoTool cryptoTool){
+		return new CustomerListJpaGateway(customerJpaRepository, customerEmailJpaRepository,
+				customerPhoneJpaRepository, customerAddressJpaRepository, cryptoTool);
+	}
+
+	@Bean
+	CustomerListUseCase customerListUseCase(CustomerListGateway customerListGateway){
+		return new DefaultCustomerListUseCase(customerListGateway);
+	}
+
+	@Bean
+	CustomerDetailGateway customerDetailGateway(CustomerJpaRepository customerJpaRepository,
+	                                            CustomerEmailJpaRepository customerEmailJpaRepository,
+	                                            CustomerPhoneJpaRepository customerPhoneJpaRepository,
+	                                            CustomerAddressJpaRepository customerAddressJpaRepository,
+	                                            CryptoTool cryptoTool){
+		return new CustomerDetailJpaGateway(customerJpaRepository, customerEmailJpaRepository,
+				customerPhoneJpaRepository, customerAddressJpaRepository, cryptoTool);
+	}
+
+	@Bean
+	CustomerDetailUseCase customerDetailUseCase(CustomerDetailGateway customerDetailGateway){
+		return new DefaultCustomerDetailUseCase(customerDetailGateway);
+	}
+
+	@Bean
+	CustomerUpdateGateway customerUpdateGateway(CustomerJpaRepository customerJpaRepository,
+	                                            CustomerEmailJpaRepository customerEmailJpaRepository,
+	                                            CustomerPhoneJpaRepository customerPhoneJpaRepository,
+	                                            CustomerAddressJpaRepository customerAddressJpaRepository,
+	                                            TenantJpaRepository tenantJpaRepository,
+	                                            IdGenerator idGenerator,
+	                                            CryptoTool cryptoTool){
+		return new CustomerUpdateJpaGateway(customerJpaRepository, customerEmailJpaRepository,
+				customerPhoneJpaRepository, customerAddressJpaRepository, tenantJpaRepository, idGenerator,
+				cryptoTool);
+	}
+
+	@Bean
+	CustomerUpdateUseCase customerUpdateUseCase(CustomerUpdateGateway customerUpdateGateway){
+		return new DefaultCustomerUpdateUseCase(customerUpdateGateway);
+	}
+
+	@Bean
+	CustomerDeleteGateway customerDeleteGateway(CustomerJpaRepository customerJpaRepository,
+	                                            CustomerEmailJpaRepository customerEmailJpaRepository,
+	                                            CustomerPhoneJpaRepository customerPhoneJpaRepository,
+	                                            CustomerAddressJpaRepository customerAddressJpaRepository,
+	                                            TenantJpaRepository tenantJpaRepository){
+		return new CustomerDeleteJpaGateway(customerJpaRepository, customerEmailJpaRepository,
+				customerPhoneJpaRepository, customerAddressJpaRepository, tenantJpaRepository);
+	}
+
+	@Bean
+	CustomerDeleteUseCase customerDeleteUseCase(CustomerDeleteGateway customerDeleteGateway){
+		return new DefaultCustomerDeleteUseCase(customerDeleteGateway);
+	}
+
+	@Bean
+	CustomerVerificationGateway customerVerificationGateway(CustomerJpaRepository customerJpaRepository){
+		return new CustomerVerificationJpaGateway(customerJpaRepository);
+	}
+
+	@Bean
+	CustomerVerificationUseCase customerVerificationUseCase(CustomerVerificationGateway customerVerificationGateway){
+		return new DefaultCustomerVerificationUseCase(customerVerificationGateway);
 	}
 
 	@Bean

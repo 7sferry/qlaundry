@@ -33,7 +33,8 @@ public class UserWebExceptionHandler{
 	}
 
 	@ExceptionHandler({InvalidUsernameException.class, TurnstileVerificationException.class,
-			InvalidPasswordException.class, IllegalArgumentException.class})
+			InvalidPasswordException.class, IllegalArgumentException.class,
+			ConstraintViolationException.class})
 	ProblemDetail handleBadRequest(RuntimeException e){
 		log.warn(e.getMessage(), e);
 		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
@@ -43,12 +44,6 @@ public class UserWebExceptionHandler{
 	ProblemDetail handleNotFoundRequest(RuntimeException e){
 		log.warn(e.getMessage(), e);
 		return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
-	}
-
-	@ExceptionHandler(ConstraintViolationException.class)
-	ProblemDetail handleInvalidRequest(ConstraintViolationException e){
-		log.warn(e.getMessage(), e);
-		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
 	}
 
 	@ExceptionHandler(FailedToLoginException.class)

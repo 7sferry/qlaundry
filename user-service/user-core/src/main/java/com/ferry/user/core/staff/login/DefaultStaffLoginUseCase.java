@@ -15,7 +15,7 @@ import com.ferry.user.domain.common.exception.InvalidPasswordException;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
@@ -62,7 +62,7 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 	private String generateAccessToken(StaffLoginProjection staff, TenantLoginProjection tenant, String hashedRefreshToken){
 		StaffRole role = StaffRole.findByValue(staff.roleId())
 				.orElseThrow(() -> new NotFoundException("role not found"));
-		UserPrincipal userToken = new UserPrincipal(staff.id(), staff.username(),
+		UserAuthPrincipal userToken = new UserAuthPrincipal(staff.id(), staff.username(),
 				staff.fullName(), tenant.fullName(), staff.tenantId(), SessionType.STAFF, role);
 		String accessToken = tokenProcessor.generateAccessToken(userToken);
 		long cacheDurationInSeconds = tokenProcessor.getAccessDurationInSeconds()

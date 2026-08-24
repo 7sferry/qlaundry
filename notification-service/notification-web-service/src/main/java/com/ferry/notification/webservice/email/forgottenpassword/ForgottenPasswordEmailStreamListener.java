@@ -43,7 +43,6 @@ public class ForgottenPasswordEmailStreamListener implements StreamListener<Stri
 			log.info("Forgotten password email sent for trigger {} and record {}",
 					value.get(TRIGGER_ID_FIELD), record.getId());
 		}catch(RuntimeException e){
-			// not acknowledged; the record stays pending on the consumer group for reprocessing
 			log.error("Failed to process forgotten password email for record {}", record.getId(), e);
 		}
 	}

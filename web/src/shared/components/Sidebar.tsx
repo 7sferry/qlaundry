@@ -9,6 +9,7 @@ import {
 	BarChart3,
 	ClipboardList,
 	LayoutDashboard,
+	ListChecks,
 	LogOut,
 	Moon,
 	PackagePlus,
@@ -26,6 +27,7 @@ const NAV_ITEMS: { path: string; label: string; icon: FC<{ size?: number }> }[] 
 	{path: '/orders/new', label: 'New order', icon: PackagePlus},
 	{path: '/orders/history', label: 'Order history', icon: ClipboardList},
 	{path: '/customers', label: 'Customers', icon: Users},
+	{path: '/services', label: 'Services', icon: ListChecks},
 	{path: '/staff', label: 'Staff', icon: UserCog},
 	{path: '/reports', label: 'Reports', icon: BarChart3},
 ];

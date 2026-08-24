@@ -12,7 +12,7 @@ import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffEmailDomain;
 import com.ferry.user.domain.staff.StaffPhoneDomain;
 import com.ferry.user.domain.staff.StaffRole;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,7 +64,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenBlankUsername_thenThrowsConstraintViolationException(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(" ", PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
@@ -78,7 +78,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenBlankPassword_thenThrowsConstraintViolationException(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, " ", FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
@@ -92,7 +92,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenBlankFullName_thenThrowsConstraintViolationException(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, " ",
 				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
@@ -106,7 +106,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenNullRole_thenThrowsConstraintViolationException(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", null, List.of(EMAIL), null, null);
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
@@ -120,7 +120,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenNonSuperStaffRolePrincipal_thenThrowsConstraintViolationException(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.STAFF).build();
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
@@ -134,7 +134,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenUsernameShorterThanMinimumLength_thenThrowsInvalidUsernameException(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest("budi", PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
@@ -148,7 +148,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenUsernameAlreadyExists_thenThrowsInvalidUsernameExceptionAndNeverSaves(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(true).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
 
@@ -164,7 +164,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenPasswordShorterThanMinimumLength_thenThrowsInvalidPasswordException(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, "short12", FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
 
@@ -179,7 +179,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenEmptyEmailsList_thenThrowsIllegalArgumentExceptionAfterStaffIsSaved(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(), null, null);
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
 		willReturn(new HashedPasswordDomain(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPasswordDomain.class));
@@ -201,7 +201,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenNullEmailsList_thenThrowsIllegalArgumentException(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, null, null, null);
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
 		willReturn(new HashedPasswordDomain(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPasswordDomain.class));
@@ -221,7 +221,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenInvalidEmailFormat_thenThrowsIllegalArgumentException(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of("not-an-email"), null, null);
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
 		willReturn(new HashedPasswordDomain(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPasswordDomain.class));
@@ -242,7 +242,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenInvalidPhoneFormat_thenThrowsIllegalArgumentExceptionAfterEmailsSaved(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL), List.of("not-a-phone"), null);
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
 		willReturn(new HashedPasswordDomain(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPasswordDomain.class));
@@ -264,7 +264,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenBlankAddressLine_thenThrowsIllegalArgumentException(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL), null, List.of(" "));
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
 		willReturn(new HashedPasswordDomain(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPasswordDomain.class));
@@ -286,7 +286,7 @@ class DefaultStaffRegistrationUseCaseTest{
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL, "budi.santoso@gmail.com"),
 				List.of("+6281234567890"), List.of("Jl. Sudirman No. 10"));
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
 		willReturn(new HashedPasswordDomain(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPasswordDomain.class));
@@ -318,7 +318,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	void givenValidRequestWithOnlyMandatoryEmails_thenRegistersSuccessfullyWithoutPhoneOrAddress(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
-		UserPrincipal principal = UserPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
 		willReturn(new HashedPasswordDomain(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPasswordDomain.class));

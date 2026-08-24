@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: order-web-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/qlaundry?currentSchema=orders
+    username: postgres
+    password: 12345
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: 8103
+
+logging:
+  file:
+    name: logs/order-web-service.log
+
+app:
+  internal:
+    # credential for the /internal/** call into user-service, as <clientId>:<version>:<secret>. user-service stores
+    # only the SHA-256 of the secret part. Rotating means pointing this at a new version that user-service already
+    # accepts, then restarting — dev-only here, use APP_INTERNAL_API_KEY elsewhere
+    api-key: 'order:v1:dev-internal-2f8c41b9a7d3e56c0b1f9a4d8e7c6b52'
+    user-service:
+      base-url: 'http://localhost:8101'
+  crypto:
+    # dev-only keys, independent from user-service's — the services never read each other's rows
+    # (APP_CRYPTO_ACTIVE_KEY_ID, APP_CRYPTO_KEYS_V1, APP_CRYPTO_BLIND_INDEX_KEY, ...); generate with `openssl rand -base64 32`
+    active-key-id: v1
+    # order-service has never stored a plaintext row — there is no migration window to read through
+    allow-plaintext-read: false
+    blind-index-key: 'Uo9OFf9tX0mfZ0K3hM4EQvVKlbUYnDXfJf6bMLTHBSM='
+    keys:
+      v1: 'p6UBqZ5cTflVJyYQZgpQoxKF8L3vJhhkPFbBBIm2Wt0='
+  token:
+    # the public half of user-service's RS256 key pair — this service only verifies access tokens
+    public-key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzYDVIz9eZH4Y/dmx0QZctvRTjfGHip/CFsqPoUjGIzAaFBDDtXllL4MD4zUXUK1fqghIyWqdUgacgEAHJDFUTaP5oLPuVkuUdC+g8o7pGF7N8S44XfKTz89LNekYZ76Kj57mBZQgp3UZyPzFQpt/+N/y3ns3+DJecMEsWNit+NlS/gVFEypabVAqwl5OsmrfYOnocLL3aZFbKGM6OJ7skRCxw3zLm77eppYtag/qNX8akdjiYW4nSXV6d10YALGn7b5f/fKUyDws0RVsboMDmlWbAfqHdrFouhV2rIfUD1MfVZLtRsZkrwwhZUyvXd6WVTrzk+A7KLVyK/libJM3wQIDAQAB"

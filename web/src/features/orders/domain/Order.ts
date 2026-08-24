@@ -51,7 +51,6 @@ export interface Order {
 	priority: OrderPriority;
 	paymentMethod: PaymentMethod;
 	paymentStatus: PaymentStatus;
-	promoCode?: string;
 	status: OrderStatus;
 	notes?: string;
 	staffNotes?: string;
@@ -72,7 +71,6 @@ export interface CreateOrderInput {
 	weightKg?: number;
 	priority: OrderPriority;
 	paymentMethod: PaymentMethod;
-	promoCode?: string;
 	pickupDate: string;
 	estimatedDelivery: string;
 	notes?: string;

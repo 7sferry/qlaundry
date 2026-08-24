@@ -16,6 +16,7 @@ import CreateOrderPage from '@/features/orders/presentation/pages/CreateOrderPag
 import OrderHistoryPage from '@/features/orders/presentation/pages/OrderHistoryPage';
 import ReportsPage from '@/features/reports/presentation/pages/ReportsPage';
 import CustomersPage from '@/features/customers/presentation/pages/CustomersPage';
+import ServicesPage from '@/features/services/presentation/pages/ServicesPage';
 import StaffPage from '@/features/staff/presentation/pages/StaffPage';
 import StaffSettingsPage from '@/features/staff/presentation/pages/StaffSettingsPage';
 import Sidebar from '@/shared/components/Sidebar';
@@ -85,6 +86,7 @@ export default function App() {
                   <Route path="/orders/new" element={<CreateOrderPage/>}/>
                   <Route path="/orders/history" element={<OrderHistoryPage/>}/>
                   <Route path="/customers" element={<CustomersPage/>}/>
+                  <Route path="/services" element={<ServicesPage/>}/>
                   <Route path="/staff" element={<StaffPage/>}/>
                   <Route path="/settings" element={<StaffSettingsPage/>}/>
                   <Route path="/reports" element={<ReportsPage/>}/>

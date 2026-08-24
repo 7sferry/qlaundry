@@ -6,7 +6,7 @@ import com.ferry.user.domain.staff.list.StaffEmailListProjection;
 import com.ferry.user.domain.staff.list.StaffListProjection;
 import com.ferry.user.domain.staff.list.StaffPhoneListProjection;
 import com.ferry.user.domain.tenant.TenantIdDomain;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -24,7 +24,7 @@ public class DefaultStaffListUseCase implements StaffListUseCase{
 	private final StaffListGateway gateway;
 
 	@Override
-	public void execute(StaffListRequest request, UserPrincipal principal, StaffListPresenter presenter){
+	public void execute(StaffListRequest request, UserAuthPrincipal principal, StaffListPresenter presenter){
 		request.validate();
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
 		StaffFilter filter = StaffFilter.builder()

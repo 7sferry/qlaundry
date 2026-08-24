@@ -37,6 +37,14 @@ app:
     blind-index-key: 'wvDlYLRAI5G7K3D1HkDZTEO9cqJ6Q7vmHCiBO50YhVA='
     keys:
       v1: 'QmfUJe4HNHNpsPfT9RRR0QvceqSPAYdhE5shmrWD2vI='
+  internal:
+    # SHA-256 (hex) of each caller's secret — never the secret itself, so a dump of this file yields nothing usable.
+    # Break-glass only: this set is consulted just when Redis is unreachable. Live rotation and revocation happen
+    # against `user:internal:key:<clientId>:<version>` in Redis (see "Rotating an internal key" in CLAUDE.md).
+    # digest of the dev secret: printf '%s' "$SECRET" | sha256sum
+    clients:
+      order:
+        v1: 'e24b5b12e47219f45c43ce3c999d69cd3c5478b6d2fed822cd0cf4e3ea345b5e'
   notification:
     stream:
       email:

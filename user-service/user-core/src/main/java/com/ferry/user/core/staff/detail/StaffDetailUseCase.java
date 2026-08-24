@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.detail;
 
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -8,5 +8,5 @@ import com.ferry.user.domain.token.UserPrincipal;
  ************************/
 
 public interface StaffDetailUseCase{
-	void execute(StaffDetailRequest request, UserPrincipal principal, StaffDetailPresenter presenter);
+	void execute(StaffDetailRequest request, UserAuthPrincipal principal, StaffDetailPresenter presenter);
 }

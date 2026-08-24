@@ -1,6 +1,6 @@
 package com.ferry.user.core.tools;
 
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -10,7 +10,7 @@ import com.ferry.user.domain.token.UserPrincipal;
 public interface TokenProcessor{
 	String generateRefreshToken();
 	String hashToken(String token);
-	String generateAccessToken(UserPrincipal userToken);
+	String generateAccessToken(UserAuthPrincipal userToken);
 	long getRefreshDurationInSeconds();
 
 	long getAccessDurationInSeconds();

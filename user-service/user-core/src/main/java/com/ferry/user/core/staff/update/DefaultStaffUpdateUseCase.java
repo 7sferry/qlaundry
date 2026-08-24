@@ -6,7 +6,7 @@ import com.ferry.user.domain.common.*;
 import com.ferry.user.domain.common.exception.InvalidPasswordException;
 import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.staff.*;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
@@ -23,7 +23,7 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 	private final PasswordTool passwordTool;
 
 	@Override
-	public void execute(StaffUpdateRequest request, UserPrincipal principal, StaffUpdatePresenter presenter){
+	public void execute(StaffUpdateRequest request, UserAuthPrincipal principal, StaffUpdatePresenter presenter){
 		request.validate();
 		StaffDomain staff = gateway.findById(principal.userId())
 				.orElseThrow(() -> new NotFoundException("Staff Not Found"));
@@ -41,7 +41,7 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 		presenter.present(new StaffUpdateResponse(saved, emails, phones, addresses));
 	}
 
-	private StaffDomain updateProfile(StaffDomain staff, StaffUpdateRequest request, UserPrincipal principal){
+	private StaffDomain updateProfile(StaffDomain staff, StaffUpdateRequest request, UserAuthPrincipal principal){
 		FullNameDomain fullName = new FullNameDomain(request.fullName());
 		DescriptionDomain description = new DescriptionDomain(request.description());
 		return gateway.save(staff.update(fullName, description, principal.userId()));
@@ -85,7 +85,7 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 		}
 	}
 
-	private void replaceEmails(StaffUpdateRequest request, StaffDomain staff, UserPrincipal principal){
+	private void replaceEmails(StaffUpdateRequest request, StaffDomain staff, UserAuthPrincipal principal){
 		List<String> emails = request.emails() == null ? List.of() : request.emails();
 		if(emails.isEmpty()){
 			throw new IllegalArgumentException("Emails cannot be empty");
@@ -96,7 +96,7 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 		}
 	}
 
-	private void replacePhones(StaffUpdateRequest request, StaffDomain staff, UserPrincipal principal){
+	private void replacePhones(StaffUpdateRequest request, StaffDomain staff, UserAuthPrincipal principal){
 		List<String> phones = request.phones() == null ? List.of() : request.phones();
 		gateway.deletePhones(staff.id(), principal.userId());
 		for(String phone : phones){
@@ -104,7 +104,7 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 		}
 	}
 
-	private void replaceAddresses(StaffUpdateRequest request, StaffDomain staff, UserPrincipal principal){
+	private void replaceAddresses(StaffUpdateRequest request, StaffDomain staff, UserAuthPrincipal principal){
 		List<String> addresses = request.addresses() == null ? List.of() : request.addresses();
 		gateway.deleteAddresses(staff.id(), principal.userId());
 		for(String address : addresses){

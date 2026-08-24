@@ -9,6 +9,7 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.function.Supplier;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -24,10 +25,24 @@ public class AesGcmCryptoTool implements CryptoTool{
 	private static final char KEY_ID_SEPARATOR = ':';
 
 	private final CryptoKeyConfig config;
+	private final Supplier<String> activeKeyIdSupplier;
 	private static final SecureRandom secureRandom = new SecureRandom();
 
 	public AesGcmCryptoTool(CryptoKeyConfig config){
+		this(config, config::activeKeyId);
+	}
+
+	public AesGcmCryptoTool(CryptoKeyConfig config, Supplier<String> activeKeyIdSupplier){
 		this.config = config;
+		this.activeKeyIdSupplier = activeKeyIdSupplier;
+	}
+
+	private String activeKeyId(){
+		String keyId = activeKeyIdSupplier.get();
+		if(keyId == null || keyId.isBlank() || !config.keys().containsKey(keyId)){
+			return config.activeKeyId();
+		}
+		return keyId;
 	}
 
 	@Override
@@ -37,19 +52,20 @@ public class AesGcmCryptoTool implements CryptoTool{
 		}
 		byte[] nonce = new byte[NONCE_LENGTH];
 		secureRandom.nextBytes(nonce);
+		String activeKeyId = activeKeyId();
 		try{
 			Cipher cipher = Cipher.getInstance(TRANSFORMATION);
-			SecretKeySpec key = new SecretKeySpec(config.keys().get(config.activeKeyId()), KEY_ALGORITHM);
+			SecretKeySpec key = new SecretKeySpec(config.keys().get(activeKeyId), KEY_ALGORITHM);
 			cipher.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(TAG_LENGTH_BITS, nonce));
 			cipher.updateAAD(aad.bytes());
 			byte[] encrypted = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
 			byte[] wire = new byte[nonce.length + encrypted.length];
 			System.arraycopy(nonce, 0, wire, 0, nonce.length);
 			System.arraycopy(encrypted, 0, wire, nonce.length, encrypted.length);
-			return config.activeKeyId() + KEY_ID_SEPARATOR
+			return activeKeyId + KEY_ID_SEPARATOR
 					+ Base64.getUrlEncoder().withoutPadding().encodeToString(wire);
 		}catch(GeneralSecurityException e){
-			throw new InternalCryptoException("Failed to encrypt value with key " + config.activeKeyId()
+			throw new InternalCryptoException("Failed to encrypt value with key " + activeKeyId
 					+ " and AAD " + aad, e);
 		}
 	}
@@ -63,7 +79,6 @@ public class AesGcmCryptoTool implements CryptoTool{
 		String keyId = separator < 0 ? null : ciphertext.substring(0, separator);
 		byte[] key = keyId == null ? null : config.keys().get(keyId);
 		if(key == null){
-			// no known key id prefix: a plaintext row from before the encryption cutover
 			if(config.allowPlaintextRead()){
 				return ciphertext;
 			}
@@ -78,7 +93,6 @@ public class AesGcmCryptoTool implements CryptoTool{
 			byte[] decrypted = cipher.doFinal(wire, NONCE_LENGTH, wire.length - NONCE_LENGTH);
 			return new String(decrypted, StandardCharsets.UTF_8);
 		}catch(GeneralSecurityException | IllegalArgumentException e){
-			// the AAD is not secret and a wrong AAD is close to undebuggable without it, so name it
 			throw new InternalCryptoException("Failed to decrypt value with key " + keyId + " and AAD " + aad, e);
 		}
 	}

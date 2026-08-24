@@ -9,7 +9,7 @@ import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.staff.StaffDomain;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.tenant.TenantIdDomain;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,8 +53,8 @@ class DefaultStaffDeleteUseCaseTest{
 	@Captor
 	ArgumentCaptor<StaffDomain> staffCaptor;
 
-	private UserPrincipal superStaffPrincipal(String tenantId){
-		return UserPrincipal.builder()
+	private UserAuthPrincipal superStaffPrincipal(String tenantId){
+		return UserAuthPrincipal.builder()
 				.userId(PRINCIPAL_ID)
 				.tenantId(tenantId)
 				.role(StaffRole.SUPER_STAFF)
@@ -80,7 +80,7 @@ class DefaultStaffDeleteUseCaseTest{
 
 	@Test
 	void givenNonSuperStaffRole_thenThrowsForbiddenActionException(){
-		UserPrincipal principal = UserPrincipal.builder()
+		UserAuthPrincipal principal = UserAuthPrincipal.builder()
 				.role(StaffRole.STAFF)
 				.build();
 
@@ -96,7 +96,7 @@ class DefaultStaffDeleteUseCaseTest{
 
 	@Test
 	void givenBlankUsername_thenThrowsConstraintViolationException(){
-		UserPrincipal principal = superStaffPrincipal(TENANT_ID);
+		UserAuthPrincipal principal = superStaffPrincipal(TENANT_ID);
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new StaffDeleteRequest(" "), principal, presenter))
@@ -109,7 +109,7 @@ class DefaultStaffDeleteUseCaseTest{
 
 	@Test
 	void givenUsernameShorterThanMinimumLength_thenThrowsInvalidUsernameException(){
-		UserPrincipal principal = superStaffPrincipal(TENANT_ID);
+		UserAuthPrincipal principal = superStaffPrincipal(TENANT_ID);
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new StaffDeleteRequest("ab"), principal, presenter))
@@ -122,7 +122,7 @@ class DefaultStaffDeleteUseCaseTest{
 
 	@Test
 	void givenPrincipalWithoutTenantId_thenThrowsIllegalArgumentException(){
-		UserPrincipal principal = superStaffPrincipal(null);
+		UserAuthPrincipal principal = superStaffPrincipal(null);
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new StaffDeleteRequest(USERNAME), principal, presenter))
@@ -135,7 +135,7 @@ class DefaultStaffDeleteUseCaseTest{
 
 	@Test
 	void givenStaffNotFound_thenThrowsNotFoundException(){
-		UserPrincipal principal = superStaffPrincipal(TENANT_ID);
+		UserAuthPrincipal principal = superStaffPrincipal(TENANT_ID);
 		willReturn(Optional.empty()).given(gateway)
 				.findByUsername(any(UsernameDomain.class), any(TenantIdDomain.class));
 
@@ -152,7 +152,7 @@ class DefaultStaffDeleteUseCaseTest{
 
 	@Test
 	void givenTargetIsSameAsPrincipal_thenThrowsForbiddenActionException(){
-		UserPrincipal principal = superStaffPrincipal(TENANT_ID);
+		UserAuthPrincipal principal = superStaffPrincipal(TENANT_ID);
 		StaffDomain self = staff(PRINCIPAL_ID);
 		willReturn(Optional.of(self)).given(gateway)
 				.findByUsername(any(UsernameDomain.class), any(TenantIdDomain.class));
@@ -170,7 +170,7 @@ class DefaultStaffDeleteUseCaseTest{
 
 	@Test
 	void givenValidSuperStaffDeletingAnotherStaff_thenDeletesSuccessfully(){
-		UserPrincipal principal = superStaffPrincipal(TENANT_ID);
+		UserAuthPrincipal principal = superStaffPrincipal(TENANT_ID);
 		StaffDomain target = staff(TARGET_ID);
 		willReturn(Optional.of(target)).given(gateway)
 				.findByUsername(any(UsernameDomain.class), any(TenantIdDomain.class));
@@ -197,7 +197,7 @@ class DefaultStaffDeleteUseCaseTest{
 
 	@Test
 	void givenUsernameWithMixedCaseAndWhitespace_thenGatewayIsQueriedWithNormalizedUsername(){
-		UserPrincipal principal = superStaffPrincipal(TENANT_ID);
+		UserAuthPrincipal principal = superStaffPrincipal(TENANT_ID);
 		StaffDomain target = staff(TARGET_ID);
 		willReturn(Optional.of(target)).given(gateway)
 				.findByUsername(any(UsernameDomain.class), any(TenantIdDomain.class));

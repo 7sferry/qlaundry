@@ -17,7 +17,7 @@ import com.ferry.user.domain.staff.StaffPasswordDomain;
 import com.ferry.user.domain.staff.StaffPasswordProjection;
 import com.ferry.user.domain.staff.StaffPhoneDomain;
 import com.ferry.user.domain.staff.StaffRole;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -72,7 +72,7 @@ class DefaultStaffUpdateUseCaseTest{
 
 	@Test
 	void givenBlankFullName_thenThrowsConstraintViolationException(){
-		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(" ", "desc", null, null, List.of(EMAIL), null, null);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
@@ -84,7 +84,7 @@ class DefaultStaffUpdateUseCaseTest{
 
 	@Test
 	void givenStaffNotFound_thenThrowsNotFoundException(){
-		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				List.of(EMAIL), null, null);
 		willReturn(Optional.empty()).given(gateway).findById(USER_ID);
@@ -99,7 +99,7 @@ class DefaultStaffUpdateUseCaseTest{
 
 	@Test
 	void givenEmptyEmailsList_thenThrowsIllegalArgumentExceptionAfterProfileSaved(){
-		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				List.of(), null, null);
 		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
@@ -120,7 +120,7 @@ class DefaultStaffUpdateUseCaseTest{
 
 	@Test
 	void givenNullEmailsList_thenThrowsIllegalArgumentException(){
-		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				null, null, null);
 		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
@@ -138,7 +138,7 @@ class DefaultStaffUpdateUseCaseTest{
 
 	@Test
 	void givenNewPasswordProvidedButCurrentPasswordMissing_thenThrowsInvalidPasswordException(){
-		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, "NewSecret2026",
 				List.of(EMAIL), null, null);
 		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
@@ -157,7 +157,7 @@ class DefaultStaffUpdateUseCaseTest{
 
 	@Test
 	void givenNewPasswordProvidedButCurrentPasswordIncorrect_thenThrowsInvalidPasswordException(){
-		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "wrong-current-password",
 				"NewSecret2026", List.of(EMAIL), null, null);
 		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
@@ -178,7 +178,7 @@ class DefaultStaffUpdateUseCaseTest{
 
 	@Test
 	void givenNewPasswordSameAsCurrentPassword_thenThrowsInvalidPasswordException(){
-		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
 				"current-password", List.of(EMAIL), null, null);
 		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
@@ -201,7 +201,7 @@ class DefaultStaffUpdateUseCaseTest{
 
 	@Test
 	void givenNewPasswordUsedWithinLastThreeMonths_thenThrowsInvalidPasswordException(){
-		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
 				"OldSecret2025", List.of(EMAIL), null, null);
 		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
@@ -225,7 +225,7 @@ class DefaultStaffUpdateUseCaseTest{
 
 	@Test
 	void givenNoNewPassword_thenNeverTouchesPasswordHistory(){
-		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				List.of(EMAIL), null, null);
 		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
@@ -247,7 +247,7 @@ class DefaultStaffUpdateUseCaseTest{
 
 	@Test
 	void givenValidNewPassword_thenHashesAndSavesPasswordHistory(){
-		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
 				"NewSecret2026", List.of(EMAIL), null, null);
 		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
@@ -275,7 +275,7 @@ class DefaultStaffUpdateUseCaseTest{
 
 	@Test
 	void givenValidRequest_thenReplacesEmailsPhonesAddressesAndPresentsResponse(){
-		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				List.of(EMAIL), List.of(PHONE), List.of(ADDRESS_LINE));
 		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
@@ -304,7 +304,7 @@ class DefaultStaffUpdateUseCaseTest{
 
 	@Test
 	void givenEmptyPhonesAndAddresses_thenOnlyDeletesWithoutSavingNewOnes(){
-		UserPrincipal principal = UserPrincipal.builder().userId(USER_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				List.of(EMAIL), List.of(), List.of());
 		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),

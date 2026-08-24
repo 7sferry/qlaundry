@@ -8,7 +8,7 @@ import com.ferry.user.domain.staff.list.StaffAddressListProjection;
 import com.ferry.user.domain.staff.list.StaffEmailListProjection;
 import com.ferry.user.domain.staff.list.StaffListProjection;
 import com.ferry.user.domain.staff.list.StaffPhoneListProjection;
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -55,7 +55,7 @@ class DefaultStaffListUseCaseTest{
 
 	@Test
 	void givenNoStaffFound_thenPresentsEmptyResponseWithoutQueryingContactInfo(){
-		UserPrincipal principal = UserPrincipal.builder().tenantId(TENANT_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
 		willReturn(List.of()).given(gateway).findByFilter(any(StaffFilter.class));
 
 		useCase.execute(new StaffListRequest(null), principal, presenter);
@@ -68,7 +68,7 @@ class DefaultStaffListUseCaseTest{
 
 	@Test
 	void givenStaffFound_thenAggregatesContactInfoGroupedByStaffId(){
-		UserPrincipal principal = UserPrincipal.builder().tenantId(TENANT_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
 		StaffListProjection staff1 = new StaffListProjection(STAFF_ID_1, "desc one", FULL_NAME_1, Instant.now(), USERNAME_1);
 		StaffListProjection staff2 = new StaffListProjection(STAFF_ID_2, "desc two", FULL_NAME_2, Instant.now(), USERNAME_2);
 		willReturn(List.of(staff1, staff2)).given(gateway).findByFilter(any(StaffFilter.class));
@@ -98,7 +98,7 @@ class DefaultStaffListUseCaseTest{
 
 	@Test
 	void givenFullNameAndTenantProvided_thenQueriesGatewayWithFilterScopedToTenant(){
-		UserPrincipal principal = UserPrincipal.builder().tenantId(TENANT_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
 		willReturn(List.of()).given(gateway).findByFilter(filterCaptor.capture());
 
 		useCase.execute(new StaffListRequest("eka"), principal, presenter);
@@ -112,7 +112,7 @@ class DefaultStaffListUseCaseTest{
 
 	@Test
 	void givenStaffWithoutAnyContactInfo_thenContactMapsRemainEmpty(){
-		UserPrincipal principal = UserPrincipal.builder().tenantId(TENANT_ID).build();
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
 		StaffListProjection staff = new StaffListProjection(STAFF_ID_1, "desc", FULL_NAME_1, Instant.now(), USERNAME_1);
 		willReturn(List.of(staff)).given(gateway).findByFilter(any(StaffFilter.class));
 		willReturn(List.of()).given(gateway).findPhonesByFilter(any(StaffPhoneFilter.class));

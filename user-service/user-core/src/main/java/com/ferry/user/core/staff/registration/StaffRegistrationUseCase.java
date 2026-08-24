@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.registration;
 
-import com.ferry.user.domain.token.UserPrincipal;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -8,5 +8,5 @@ import com.ferry.user.domain.token.UserPrincipal;
  ************************/
 
 public interface StaffRegistrationUseCase{
-	void execute(StaffRegistrationRequest request, UserPrincipal principal, StaffRegistrationPresenter presenter);
+	void execute(StaffRegistrationRequest request, UserAuthPrincipal principal, StaffRegistrationPresenter presenter);
 }
