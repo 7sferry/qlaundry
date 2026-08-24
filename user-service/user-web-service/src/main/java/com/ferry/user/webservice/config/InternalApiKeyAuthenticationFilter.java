@@ -58,7 +58,6 @@ public class InternalApiKeyAuthenticationFilter implements Filter{
 			chain.doFilter(request, response);
 			return;
 		}
-		log.info("internal call to {} authenticated as {} using key {}", req.getRequestURI(), clientId, version);
 		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(clientId, null,
 				List.of(new SimpleGrantedAuthority(AUTHORITY_PREFIX + clientId.toUpperCase(Locale.ROOT))));
 		SecurityContextHolder.getContext().setAuthentication(auth);

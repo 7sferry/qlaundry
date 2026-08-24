@@ -9,6 +9,7 @@ import com.ferry.utils.token.TokenParser;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -52,6 +53,15 @@ public class UserSecurityConfig{
 	}
 
 	@Bean
+	FilterRegistrationBean<UserJwtAuthenticationFilter> jwtAuthenticationFilterRegistration(
+			UserJwtAuthenticationFilter jwtAuthenticationFilter){
+		FilterRegistrationBean<UserJwtAuthenticationFilter> registration =
+				new FilterRegistrationBean<>(jwtAuthenticationFilter);
+		registration.setEnabled(false);
+		return registration;
+	}
+
+	@Bean
 	InternalKeyResolver internalKeyResolver(InternalKeysProperties internalKeysProperties, CacheHandler cacheHandler){
 		return new InternalKeyResolver(internalKeysProperties, cacheHandler);
 	}
@@ -59,6 +69,15 @@ public class UserSecurityConfig{
 	@Bean
 	InternalApiKeyAuthenticationFilter internalApiKeyAuthenticationFilter(InternalKeyResolver internalKeyResolver){
 		return new InternalApiKeyAuthenticationFilter(internalKeyResolver);
+	}
+
+	@Bean
+	FilterRegistrationBean<InternalApiKeyAuthenticationFilter> internalApiKeyAuthenticationFilterRegistration(
+			InternalApiKeyAuthenticationFilter internalApiKeyAuthenticationFilter){
+		FilterRegistrationBean<InternalApiKeyAuthenticationFilter> registration =
+				new FilterRegistrationBean<>(internalApiKeyAuthenticationFilter);
+		registration.setEnabled(false);
+		return registration;
 	}
 
 	@Bean
