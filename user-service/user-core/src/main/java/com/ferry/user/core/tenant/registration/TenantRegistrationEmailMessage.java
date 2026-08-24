@@ -7,7 +7,7 @@ import java.time.Instant;
  * on Juli 2026         *
  ************************/
 
-public record TenantRegistrationEmailMessage(String recipient, String staffFullName, String staffUsername,
+public record TenantRegistrationEmailMessage(String staffFullName, String staffUsername,
                                              String tenantId, String tenantName, String tenantDescription,
                                              Instant registeredAt, String confirmationToken){
 }

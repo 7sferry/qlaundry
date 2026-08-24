@@ -85,11 +85,11 @@ public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCa
 		String confirmationToken = generateConfirmationToken();
 		cacheManager.set(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + tenant.id(), confirmationToken,
 				TenantConfirmationConstant.CONFIRM_TOKEN_DURATION);
-		TenantRegistrationEmailMessage message = new TenantRegistrationEmailMessage(request.emails().getFirst(),
-				admin.fullNameValue(), admin.usernameValue(), tenant.id(), tenant.fullNameValue(),
+		TenantRegistrationEmailMessage message = new TenantRegistrationEmailMessage(admin.fullNameValue(),
+				admin.usernameValue(), tenant.id(), tenant.fullNameValue(),
 				tenant.descriptionValue(), tenant.createdAt(), confirmationToken);
 		EmailTriggerConfig config = new EmailTriggerConfig(message, tenant.createdBy(),
-				EmailTriggerType.TENANT_REGISTRATION, new EmailDomain(message.recipient()));
+				EmailTriggerType.TENANT_REGISTRATION, new EmailDomain(request.emails().getFirst()));
 		EmailTriggerDomain trigger = emailPublisher.save(config);
 		emailPublisher.publish(trigger);
 	}
