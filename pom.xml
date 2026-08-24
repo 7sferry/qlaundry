@@ -12,6 +12,7 @@
 		<module>user-service/user-domain</module>
 		<module>user-service/user-web-service</module>
 		<module>user-service/user-gateway</module>
+		<module>user-service/user-client</module>
 		<module>order-service/order-core</module>
 		<module>order-service/order-domain</module>
 		<module>order-service/order-web-service</module>
@@ -27,6 +28,7 @@
 		<module>utils/crypto-tools</module>
 		<module>utils/json-tools</module>
 		<module>utils/pagination-tools</module>
+		<module>utils/http-client</module>
 	</modules>
 	<packaging>pom</packaging>
 	<description>qlaundry</description>

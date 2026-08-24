@@ -1,10 +1,7 @@
 package com.ferry.order.webservice.config;
 
-import com.ferry.order.domain.common.exception.CustomerVerificationException;
-import com.ferry.order.domain.common.exception.OrderForbiddenActionException;
-import com.ferry.order.domain.common.exception.InvalidOrderStatusException;
-import com.ferry.order.domain.common.exception.NotFoundException;
-import com.ferry.order.domain.common.exception.UnsupportedPaymentMethodException;
+import com.ferry.order.domain.common.exception.*;
+import com.ferry.utils.httpclient.HttpClientException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -50,8 +47,8 @@ public class OrderWebExceptionHandler{
 		return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
 	}
 
-	@ExceptionHandler(CustomerVerificationException.class)
-	ProblemDetail handleCustomerVerificationError(CustomerVerificationException e){
+	@ExceptionHandler(HttpClientException.class)
+	ProblemDetail handleCustomerVerificationError(HttpClientException e){
 		log.error(e.getMessage(), e);
 		return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE,
 				"Customer verification is unavailable. Please try again.");

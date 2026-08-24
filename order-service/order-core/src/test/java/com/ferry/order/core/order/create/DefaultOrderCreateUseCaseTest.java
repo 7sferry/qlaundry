@@ -55,7 +55,7 @@ class DefaultOrderCreateUseCaseTest{
 	@Mock
 	OrderCreateGateway gateway;
 	@Mock
-	CustomerVerificationGateway customerVerificationGateway;
+	CustomerGateway customerGateway;
 	@InjectMocks
 	DefaultOrderCreateUseCase useCase;
 	@Mock
@@ -233,14 +233,14 @@ class DefaultOrderCreateUseCaseTest{
 				.build();
 		OrderCreateRequest request = new OrderCreateRequest("01CUSTOMEROUTSIDER00000000", CUSTOMER_NAME,
 				CUSTOMER_PHONE, null, null, SERVICE_ID, List.of(), 2, null, null, null, null, null, null, null);
-		willReturn(false).given(customerVerificationGateway)
+		willReturn(false).given(customerGateway)
 				.belongsToTenant(any(CustomerVerificationHttpRequest.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(NotFoundException.class)
 				.hasMessage("Customer Not Found"));
 
-		then(customerVerificationGateway).should()
+		then(customerGateway).should()
 				.belongsToTenant(eq(new CustomerVerificationHttpRequest("01CUSTOMEROUTSIDER00000000", TENANT_ID)));
 		then(gateway).shouldHaveNoInteractions();
 		then(presenter).should(never())
@@ -283,7 +283,7 @@ class DefaultOrderCreateUseCaseTest{
 
 		useCase.execute(request, principal, presenter);
 
-		then(customerVerificationGateway).shouldHaveNoInteractions();
+		then(customerGateway).shouldHaveNoInteractions();
 		then(gateway).should()
 				.save(orderCaptor.capture());
 
@@ -427,7 +427,7 @@ class DefaultOrderCreateUseCaseTest{
 				List.of(new OrderCreateRequest.Item(ClothingType.JACKET, "Jas Hitam", 2),
 						new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja Putih", 3)),
 				5, null, null, null, null, null, null, null);
-		willReturn(true).given(customerVerificationGateway)
+		willReturn(true).given(customerGateway)
 				.belongsToTenant(any(CustomerVerificationHttpRequest.class));
 		willReturn(Optional.of(service)).given(gateway)
 				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));

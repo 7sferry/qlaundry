@@ -31,7 +31,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 	private final OrderCreateGateway gateway;
-	private final CustomerVerificationGateway customerVerificationGateway;
+	private final CustomerGateway customerGateway;
 
 	@Override
 	public void execute(OrderCreateRequest request, OrderAuthPrincipal principal, OrderCreatePresenter presenter){
@@ -69,7 +69,7 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		CustomerIdDomain customer = new CustomerIdDomain(customerId);
 		CustomerVerificationHttpRequest verification = new CustomerVerificationHttpRequest(customer.value(),
 				tenantId.value());
-		if(!customerVerificationGateway.belongsToTenant(verification)){
+		if(!customerGateway.belongsToTenant(verification)){
 			throw new NotFoundException("Customer Not Found");
 		}
 		return customer.value();

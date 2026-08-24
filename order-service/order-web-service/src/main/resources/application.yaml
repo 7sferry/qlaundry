@@ -33,6 +33,7 @@ app:
     api-key: 'order:v1:dev-internal-2f8c41b9a7d3e56c0b1f9a4d8e7c6b52'
     user-service:
       base-url: 'http://localhost:8101'
+      timeout: 5s
   crypto:
     # dev-only keys, independent from user-service's — the services never read each other's rows
     # (APP_CRYPTO_ACTIVE_KEY_ID, APP_CRYPTO_KEYS_V1, APP_CRYPTO_BLIND_INDEX_KEY, ...); generate with `openssl rand -base64 32`

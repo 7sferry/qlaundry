@@ -9,7 +9,7 @@ import com.ferry.order.core.order.complete.OrderCompleteUseCase;
 import com.ferry.order.core.order.confirm.DefaultOrderConfirmUseCase;
 import com.ferry.order.core.order.confirm.OrderConfirmGateway;
 import com.ferry.order.core.order.confirm.OrderConfirmUseCase;
-import com.ferry.order.core.order.create.CustomerVerificationGateway;
+import com.ferry.order.core.order.create.CustomerGateway;
 import com.ferry.order.core.order.create.DefaultOrderCreateUseCase;
 import com.ferry.order.core.order.create.OrderCreateGateway;
 import com.ferry.order.core.order.create.OrderCreateUseCase;
@@ -46,7 +46,7 @@ import com.ferry.order.core.service.list.LaundryServiceListUseCase;
 import com.ferry.order.core.service.update.DefaultLaundryServiceUpdateUseCase;
 import com.ferry.order.core.service.update.LaundryServiceUpdateGateway;
 import com.ferry.order.core.service.update.LaundryServiceUpdateUseCase;
-import com.ferry.order.gateway.customer.CustomerVerificationHttpGateway;
+import com.ferry.order.gateway.customer.CustomerHttpGateway;
 import com.ferry.order.gateway.order.OrderCancelJpaGateway;
 import com.ferry.order.gateway.order.OrderCompleteJpaGateway;
 import com.ferry.order.gateway.order.OrderConfirmJpaGateway;
@@ -72,20 +72,22 @@ import com.ferry.order.gateway.service.LaundryServiceUpdateJpaGateway;
 import com.ferry.order.gateway.service.repository.LaundryServiceJpaRepository;
 import com.ferry.order.gateway.service.repository.ServiceCategoryJpaRepository;
 import com.ferry.order.gateway.service.repository.ServiceUnitJpaRepository;
+import com.ferry.user.client.DefaultUserServiceClient;
+import com.ferry.user.client.UserServiceClient;
+import com.ferry.user.client.UserServiceClientConfig;
 import com.ferry.utils.crypto.AesGcmCryptoTool;
 import com.ferry.utils.crypto.CryptoKeyConfig;
 import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import com.ferry.utils.generator.UlidGenerator;
-import com.ferry.utils.json.DefaultJsonManager;
-import com.ferry.utils.json.JsonManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import tools.jackson.databind.ObjectMapper;
+
+import java.time.Duration;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -101,11 +103,6 @@ public class OrderWebConfig{
 	@Bean
 	IdGenerator idGenerator(){
 		return new UlidGenerator();
-	}
-
-	@Bean
-	JsonManager jsonManager(ObjectMapper objectMapper){
-		return new DefaultJsonManager(objectMapper);
 	}
 
 	@Bean
@@ -167,10 +164,15 @@ public class OrderWebConfig{
 	}
 
 	@Bean
-	CustomerVerificationGateway customerVerificationGateway(JsonManager jsonManager, IdGenerator idGenerator,
-	                                                        @Value("${app.internal.user-service.base-url}") String baseUrl,
-	                                                        @Value("${app.internal.api-key}") String apiKey){
-		return new CustomerVerificationHttpGateway(jsonManager, idGenerator, baseUrl, apiKey);
+	UserServiceClient userServiceClient(@Value("${app.internal.user-service.base-url}") String baseUrl,
+	                                    @Value("${app.internal.api-key}") String apiKey,
+	                                    @Value("${app.internal.user-service.timeout:5s}") Duration timeout){
+		return new DefaultUserServiceClient(new UserServiceClientConfig(baseUrl, apiKey, timeout));
+	}
+
+	@Bean
+	CustomerGateway customerVerificationGateway(UserServiceClient userServiceClient){
+		return new CustomerHttpGateway(userServiceClient);
 	}
 
 	@Bean
@@ -193,8 +195,8 @@ public class OrderWebConfig{
 
 	@Bean
 	OrderCreateUseCase orderCreateUseCase(OrderCreateGateway orderCreateGateway,
-	                                      CustomerVerificationGateway customerVerificationGateway){
-		return new DefaultOrderCreateUseCase(orderCreateGateway, customerVerificationGateway);
+	                                      CustomerGateway customerGateway){
+		return new DefaultOrderCreateUseCase(orderCreateGateway, customerGateway);
 	}
 
 	@Bean

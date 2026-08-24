@@ -5,6 +5,6 @@ package com.ferry.order.core.order.create;
  * on Agustus 2026      *
  ************************/
 
-public interface CustomerVerificationGateway{
+public interface CustomerGateway{
 	boolean belongsToTenant(CustomerVerificationHttpRequest request);
 }

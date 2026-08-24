@@ -59,7 +59,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.ferry</groupId>
-			<artifactId>json-tools</artifactId>
+			<artifactId>user-client</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 		<dependency>
