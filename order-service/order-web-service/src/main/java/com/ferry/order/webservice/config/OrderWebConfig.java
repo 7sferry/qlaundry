@@ -52,7 +52,6 @@ import com.ferry.order.core.service.list.LaundryServiceListUseCase;
 import com.ferry.order.core.service.update.DefaultLaundryServiceUpdateUseCase;
 import com.ferry.order.core.service.update.LaundryServiceUpdateGateway;
 import com.ferry.order.core.service.update.LaundryServiceUpdateUseCase;
-import com.ferry.order.core.tools.InvoiceLinkSigner;
 import com.ferry.order.gateway.customer.OrderCustomerHttpGateway;
 import com.ferry.order.gateway.invoice.InvoicePdfHtmlComposer;
 import com.ferry.order.gateway.order.OrderCancelJpaGateway;
@@ -89,6 +88,8 @@ import com.ferry.utils.crypto.CryptoKeyConfig;
 import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import com.ferry.utils.generator.UlidGenerator;
+import com.ferry.utils.linksigner.HmacLinkSigner;
+import com.ferry.utils.linksigner.LinkSigner;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -100,6 +101,8 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
@@ -265,19 +268,21 @@ public class OrderWebConfig{
 
 	@Bean
 	InvoicePdfUseCase orderInvoiceUseCase(InvoicePdfGateway invoicePdfGateway,
-	                                      InvoiceHtmlComposer invoiceHtmlComposer){
-		return new DefaultInvoicePdfUseCase(invoicePdfGateway, invoiceHtmlComposer);
+	                                      InvoiceHtmlComposer invoiceHtmlComposer,
+	                                      LinkSigner linkSigner){
+		return new DefaultInvoicePdfUseCase(invoicePdfGateway, invoiceHtmlComposer, linkSigner);
 	}
 
 	@Bean
-	InvoiceLinkSigner invoiceLinkSigner(@Value("${app.invoice.link.secret}") String base64Secret){
-		return new InvoiceLinkSigner(Base64.getDecoder().decode(base64Secret));
+	LinkSigner linkSigner(@Value("${app.invoice.link.secret}") String base64Secret){
+		SecretKey secretKey = new SecretKeySpec(Base64.getDecoder().decode(base64Secret), "HmacSHA256");
+		return new HmacLinkSigner(secretKey);
 	}
 
 	@Bean
 	InvoiceLinkUseCase orderInvoiceLinkUseCase(InvoicePdfGateway invoicePdfGateway,
-	                                           InvoiceLinkSigner invoiceLinkSigner){
-		return new DefaultInvoiceLinkUseCase(invoicePdfGateway, invoiceLinkSigner);
+	                                           LinkSigner linkSigner){
+		return new DefaultInvoiceLinkUseCase(invoicePdfGateway, linkSigner);
 	}
 
 	@Bean

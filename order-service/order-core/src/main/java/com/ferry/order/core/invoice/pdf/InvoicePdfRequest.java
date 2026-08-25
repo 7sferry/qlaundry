@@ -8,5 +8,5 @@ import jakarta.validation.constraints.NotBlank;
  * on Agustus 2026      *
  ************************/
 
-public record InvoicePdfRequest(@NotBlank String orderId, @NotBlank String tenantId, long expiresAt) implements OrderValidation{
+public record InvoicePdfRequest(@NotBlank String token) implements OrderValidation{
 }

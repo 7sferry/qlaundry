@@ -29,6 +29,7 @@
 		<module>utils/json-tools</module>
 		<module>utils/pagination-tools</module>
 		<module>utils/http-client</module>
+		<module>utils/link-signer</module>
 	</modules>
 	<packaging>pom</packaging>
 	<description>qlaundry</description>

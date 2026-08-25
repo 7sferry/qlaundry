@@ -8,5 +8,7 @@ import java.time.Duration;
  ************************/
 
 public class InvoiceLinkConstant{
-	public static final Duration LINK_TTL = Duration.ofHours(1);
+	public static final Duration LINK_TTL = Duration.ofMinutes(30);
+	public static final String ORDER_ID_FIELD = "orderId";
+	public static final String TENANT_ID_FIELD = "tenantId";
 }
