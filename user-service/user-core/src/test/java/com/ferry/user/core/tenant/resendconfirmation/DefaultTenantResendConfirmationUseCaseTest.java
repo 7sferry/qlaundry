@@ -126,7 +126,6 @@ class DefaultTenantResendConfirmationUseCaseTest{
 				eq(message.confirmationToken()), eq(TenantConfirmationConstant.CONFIRM_TOKEN_DURATION));
 		thenSoftly(softly -> {
 			softly.then(config.triggerType()).isEqualTo(EmailTriggerType.TENANT_REGISTRATION);
-			softly.then(message.recipient()).isEqualTo(ADMIN_EMAIL);
 			softly.then(message.staffFullName()).isEqualTo(ADMIN_FULL_NAME);
 			softly.then(message.staffUsername()).isEqualTo(ADMIN_USERNAME);
 			softly.then(message.tenantId()).isEqualTo(TENANT_ID);

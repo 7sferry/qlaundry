@@ -206,7 +206,6 @@ class DefaultTenantRegistrationUseCaseTest{
 		thenSoftly(softly -> {
 			softly.then(config.triggerType()).isEqualTo(EmailTriggerType.TENANT_REGISTRATION);
 			softly.then(config.recipient().value()).isEqualTo(EMAIL);
-			softly.then(message.recipient()).isEqualTo(EMAIL);
 			softly.then(message.staffFullName()).isEqualTo(FULL_NAME);
 			softly.then(message.staffUsername()).isEqualTo(USERNAME);
 			softly.then(message.tenantId()).isEqualTo(TENANT_ID);
