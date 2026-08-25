@@ -43,6 +43,12 @@ app:
     blind-index-key: 'Uo9OFf9tX0mfZ0K3hM4EQvVKlbUYnDXfJf6bMLTHBSM='
     keys:
       v1: 'p6UBqZ5cTflVJyYQZgpQoxKF8L3vJhhkPFbBBIm2Wt0='
+  invoice:
+    link:
+      # HMAC secret behind the short-lived presigned invoice link (GET /invoice/pdf?token=…). The link is
+      # the only unauthenticated route in this service, so rotating this secret instantly invalidates every
+      # outstanding link. dev-only here — use APP_INVOICE_LINK_SECRET elsewhere; `openssl rand -base64 32`
+      secret: 'kK1n8xQ2vR7pLzT4mYwB9sHdF0gJc6XeA3uNqOiZrV8='
   token:
     # the public half of user-service's RS256 key pair — this service only verifies access tokens
     public-key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzYDVIz9eZH4Y/dmx0QZctvRTjfGHip/CFsqPoUjGIzAaFBDDtXllL4MD4zUXUK1fqghIyWqdUgacgEAHJDFUTaP5oLPuVkuUdC+g8o7pGF7N8S44XfKTz89LNekYZ76Kj57mBZQgp3UZyPzFQpt/+N/y3ns3+DJecMEsWNit+NlS/gVFEypabVAqwl5OsmrfYOnocLL3aZFbKGM6OJ7skRCxw3zLm77eppYtag/qNX8akdjiYW4nSXV6d10YALGn7b5f/fKUyDws0RVsboMDmlWbAfqHdrFouhV2rIfUD1MfVZLtRsZkrwwhZUyvXd6WVTrzk+A7KLVyK/libJM3wQIDAQAB"

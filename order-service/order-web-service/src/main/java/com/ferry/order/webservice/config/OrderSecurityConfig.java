@@ -56,7 +56,7 @@ public class OrderSecurityConfig{
 		return http.csrf(AbstractHttpConfigurer::disable)
 				.cors(corsConfigurer -> corsConfigurer.configurationSource(_ -> {
 					CorsConfiguration config = new CorsConfiguration();
-					config.setAllowedOrigins(List.of("http://localhost:8100"));
+					config.setAllowedOrigins(List.of("http://localhost:8100","https://localhost:8443"));
 					config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE"));
 					config.setAllowedHeaders(List.of("*"));
 					config.setAllowCredentials(true);
@@ -68,6 +68,8 @@ public class OrderSecurityConfig{
 				.sessionManagement(sessionManagementConfigurer ->
 						sessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(matcherRegistry -> matcherRegistry
+						.requestMatchers("/public/**")
+						.permitAll()
 						.anyRequest()
 						.authenticated())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

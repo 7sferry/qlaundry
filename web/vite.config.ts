@@ -7,6 +7,8 @@ import {defineConfig} from 'vite'
 import react from '@vitejs/plugin-react'
 import {fileURLToPath, URL} from 'node:url'
 
+const hmrClientPort = Number(process.env.VITE_HMR_CLIENT_PORT ?? 8100)
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
@@ -15,7 +17,7 @@ export default defineConfig({
     strictPort: true,
     hmr: {
       host: 'localhost',
-      clientPort: 8100,
+      clientPort: hmrClientPort,
     },
   },
   resolve: {

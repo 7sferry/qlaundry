@@ -10,5 +10,5 @@ import java.util.Map;
  ************************/
 
 @ConfigurationProperties("app.internal")
-public record InternalKeysProperties(Map<String, Map<String, String>> clients){
+public record UserInternalKeysProperties(Map<String, Map<String, String>> clients){
 }

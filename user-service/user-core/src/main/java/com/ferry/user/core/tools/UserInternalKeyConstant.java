@@ -5,11 +5,11 @@ package com.ferry.user.core.tools;
  * on Agustus 2026      *
  ************************/
 
-public class InternalKeyConstant{
+public class UserInternalKeyConstant{
 
 	public static final String KEY_PREFIX = "user:internal:key:";
 
-	private InternalKeyConstant(){
+	private UserInternalKeyConstant(){
 	}
 
 }

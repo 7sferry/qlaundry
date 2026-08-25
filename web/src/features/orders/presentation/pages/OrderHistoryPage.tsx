@@ -5,7 +5,7 @@
 
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {Filter, MoreHorizontal, Package, PackagePlus, Search, X,} from 'lucide-react';
+import {FileText, Filter, MoreHorizontal, Package, PackagePlus, Search, X,} from 'lucide-react';
 import {
 	Badge,
 	type BadgeTone,
@@ -22,6 +22,7 @@ import {
 } from '@/core/ui';
 import type {SortBy, SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency, formatDate, formatRelative} from '@/core/utils/format';
+import {PopupBlockedError} from '@/core/utils/openUrlInNewTab';
 import {useOrders} from '../useOrders';
 import type {Order, OrderStatus} from '../../domain/Order';
 import {CLOTHING_TYPE_LABELS, ORDER_STATUS_LABELS} from '../../domain/Order';
@@ -63,10 +64,13 @@ const NEXT_STATUS_LABEL: Partial<Record<OrderStatus, string>> = {
 
 export default function OrderHistoryPage() {
 	const navigate = useNavigate();
-	const {orders, loading, hasNext, hasPrev, refresh, goNext, goPrevious, updateStatus, cancelOrder} = useOrders();
+	const {
+		orders, loading, hasNext, hasPrev, refresh, goNext, goPrevious, updateStatus, cancelOrder, viewInvoice,
+	} = useOrders();
 	const toast = useToast();
 
 	const [search, setSearch] = useState('');
+	const [openingInvoice, setOpeningInvoice] = useState(false);
 	const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
 	const [filterPriority, setFilterPriority] = useState<'all' | 'normal' | 'express'>('all');
 	const [dateFrom, setDateFrom] = useState('');
@@ -114,6 +118,17 @@ export default function OrderHistoryPage() {
 			}
 		} catch {
 			toast.error('Failed to update status.');
+		}
+	};
+
+	const handleViewInvoice = async (order: Order) => {
+		setOpeningInvoice(true);
+		try {
+			await viewInvoice(order);
+		} catch (error) {
+			toast.error(error instanceof PopupBlockedError ? error.message : 'Failed to generate invoice PDF.');
+		} finally {
+			setOpeningInvoice(false);
 		}
 	};
 
@@ -305,6 +320,13 @@ export default function OrderHistoryPage() {
 						footer={
 								selectedOrder && (
 										<div className="row" style={{gap: 10, justifyContent: 'flex-end'}}>
+											<Button
+													variant="ghost"
+													disabled={openingInvoice}
+													onClick={() => void handleViewInvoice(selectedOrder)}
+											>
+												<FileText size={15}/> {openingInvoice ? 'Generating…' : 'View invoice'}
+											</Button>
 											{!['completed', 'cancelled'].includes(selectedOrder.status) && (
 													<>
 														{NEXT_STATUS[selectedOrder.status] && (

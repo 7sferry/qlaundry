@@ -62,12 +62,12 @@ public class UserSecurityConfig{
 	}
 
 	@Bean
-	InternalKeyResolver internalKeyResolver(InternalKeysProperties internalKeysProperties, CacheHandler cacheHandler){
-		return new InternalKeyResolver(internalKeysProperties, cacheHandler);
+	UserInternalKeyResolver internalKeyResolver(UserInternalKeysProperties internalKeysProperties, CacheHandler cacheHandler){
+		return new UserInternalKeyResolver(internalKeysProperties, cacheHandler);
 	}
 
 	@Bean
-	InternalApiKeyAuthenticationFilter internalApiKeyAuthenticationFilter(InternalKeyResolver internalKeyResolver){
+	InternalApiKeyAuthenticationFilter internalApiKeyAuthenticationFilter(UserInternalKeyResolver internalKeyResolver){
 		return new InternalApiKeyAuthenticationFilter(internalKeyResolver);
 	}
 
@@ -106,7 +106,7 @@ public class UserSecurityConfig{
 		return http.csrf(AbstractHttpConfigurer::disable)
 				.cors(corsConfigurer -> corsConfigurer.configurationSource(_ -> {
 					CorsConfiguration config = new CorsConfiguration();
-					config.setAllowedOrigins(List.of("http://localhost:8100"));
+					config.setAllowedOrigins(List.of("http://localhost:8100","https://localhost:8443"));
 					config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE"));
 					config.setAllowedHeaders(List.of("*"));
 					config.setAllowCredentials(true);

@@ -15,10 +15,17 @@ export interface OrderFilters extends PaginationParams {
 	to?: string;
 }
 
+export interface InvoiceLink {
+	url: string;
+	expiresAt: number;
+}
+
 export interface OrderRepository {
 	getOrders(filters?: OrderFilters): Promise<Page<Order>>;
 
 	getOrderById(id: string): Promise<Order>;
+
+	getInvoiceLink(id: string): Promise<InvoiceLink>;
 
 	getServices(): Promise<LaundryService[]>;
 

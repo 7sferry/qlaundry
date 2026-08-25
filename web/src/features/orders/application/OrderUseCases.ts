@@ -9,6 +9,7 @@ import type {CreateOrderInput, UpdateOrderStatusInput} from '../domain/Order';
 export const orderUseCases = (repository: OrderRepository) => ({
 	listOrders: (filters?: OrderFilters) => repository.getOrders(filters),
 	getOrderById: (id: string) => repository.getOrderById(id),
+	getInvoiceLink: (id: string) => repository.getInvoiceLink(id),
 	listServices: () => repository.getServices(),
 	placeOrder: (input: CreateOrderInput) => repository.createOrder(input),
 	updateStatus: (input: UpdateOrderStatusInput) => repository.updateOrderStatus(input),

@@ -1,6 +1,6 @@
 package com.ferry.user.webservice.config;
 
-import com.ferry.user.core.tools.InternalKeyConstant;
+import com.ferry.user.core.tools.UserInternalKeyConstant;
 import com.ferry.utils.cache.CacheHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,13 +15,13 @@ import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
-public class InternalKeyResolver{
-	private final InternalKeysProperties internalKeysProperties;
+public class UserInternalKeyResolver{
+	private final UserInternalKeysProperties internalKeysProperties;
 	private final CacheHandler cacheHandler;
 
 	Optional<String> digestOf(String clientId, String version){
 		try{
-			return cacheHandler.get(InternalKeyConstant.KEY_PREFIX + clientId, version)
+			return cacheHandler.get(UserInternalKeyConstant.KEY_PREFIX + clientId, version)
 					.map(digest -> digest.trim().toLowerCase());
 		}catch(RuntimeException e){
 			// break-glass: only an unreachable cache falls back to the configured keys — a cache that answers

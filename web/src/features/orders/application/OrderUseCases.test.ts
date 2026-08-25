@@ -41,10 +41,13 @@ const mockService: LaundryService = {
 
 const mockOrderPage = {items: [mockOrder], nextCursor: null, prevCursor: null};
 
+const mockInvoiceLink = {url: 'http://localhost:8100/api/public/invoice/pdf?token=abc.def', expiresAt: 1_720_000_000_000};
+
 function makeRepo(): { repo: OrderRepository; fns: Record<string, ReturnType<typeof vi.fn>> } {
 	const fns = {
 		getOrders: vi.fn().mockResolvedValue(mockOrderPage),
 		getOrderById: vi.fn().mockResolvedValue(mockOrder),
+		getInvoiceLink: vi.fn().mockResolvedValue(mockInvoiceLink),
 		getServices: vi.fn().mockResolvedValue([mockService]),
 		createOrder: vi.fn().mockResolvedValue(mockOrder),
 		updateOrderStatus: vi.fn().mockResolvedValue(mockOrder),
@@ -72,6 +75,16 @@ describe('orderUseCases', () => {
 
 		expect(fns.getOrderById).toHaveBeenCalledWith('ord_1');
 		expect(result).toBe(mockOrder);
+	});
+
+	it('getInvoiceLink delegates to repository.getInvoiceLink', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = orderUseCases(repo);
+
+		const result = await useCases.getInvoiceLink('ord_1');
+
+		expect(fns.getInvoiceLink).toHaveBeenCalledWith('ord_1');
+		expect(result).toBe(mockInvoiceLink);
 	});
 
 	it('listServices delegates to repository.getServices', async () => {

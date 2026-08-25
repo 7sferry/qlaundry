@@ -33,7 +33,7 @@ public class InternalApiKeyAuthenticationFilter implements Filter{
 	private static final String AUTHORITY_PREFIX = "SERVICE_";
 	private static final int CREDENTIAL_PARTS = 3;
 
-	private final InternalKeyResolver internalKeyResolver;
+	private final UserInternalKeyResolver internalKeyResolver;
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException{
@@ -84,15 +84,11 @@ public class InternalApiKeyAuthenticationFilter implements Filter{
 		chain.doFilter(request, response);
 	}
 
-	// constant-time compare so a wrong key cannot be recovered byte by byte from response timing
 	private boolean matches(String secret, String expectedDigest){
 		return MessageDigest.isEqual(digest(secret).getBytes(StandardCharsets.UTF_8),
 				expectedDigest.getBytes(StandardCharsets.UTF_8));
 	}
 
-	// the secret itself is never stored on this side — only its digest is configured or cached, so a dump of
-	// the yaml or of Redis yields nothing usable. A plain SHA-256 is enough because the secret is high-entropy
-	// random, not a password
 	@SneakyThrows
 	private String digest(String secret){
 		return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")

@@ -55,7 +55,7 @@ class DefaultOrderCreateUseCaseTest{
 	@Mock
 	OrderCreateGateway gateway;
 	@Mock
-	CustomerGateway customerGateway;
+	OrderCustomerGateway customerGateway;
 	@InjectMocks
 	DefaultOrderCreateUseCase useCase;
 	@Mock

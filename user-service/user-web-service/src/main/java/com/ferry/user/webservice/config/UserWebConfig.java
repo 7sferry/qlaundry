@@ -118,7 +118,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Profile;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password4j.Argon2Password4jPasswordEncoder;
@@ -134,7 +133,7 @@ import java.util.List;
 @Slf4j
 @Configuration
 @Lazy
-@EnableConfigurationProperties({CryptoKeysProperties.class, InternalKeysProperties.class})
+@EnableConfigurationProperties({CryptoKeysProperties.class, UserInternalKeysProperties.class})
 public class UserWebConfig{
 
 	@Bean

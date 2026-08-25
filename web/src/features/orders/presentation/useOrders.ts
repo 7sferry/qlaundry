@@ -6,6 +6,7 @@
 import {useCallback, useState} from 'react';
 import {useOnceEffect} from '@/core/hooks/useOnceEffect';
 import {usePaginatedList} from '@/core/hooks/usePaginatedList';
+import {openUrlInNewTab} from '@/core/utils/openUrlInNewTab';
 import type {ClothingItem, CreateOrderInput, Order, UpdateOrderStatusInput} from '../domain/Order';
 import type {OrderFilters} from '../domain/OrderRepository';
 import type {LaundryService} from '../domain/Service';
@@ -36,7 +37,14 @@ export function useOrders() {
 		setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
 	}, [setOrders]);
 
-	return {orders, loading, error, hasNext, hasPrev, refresh, goNext, goPrevious, placeOrder, updateStatus, cancelOrder};
+	const viewInvoice = useCallback(async (order: Order): Promise<void> => {
+		await openUrlInNewTab(async () => (await useCases.getInvoiceLink(order.id)).url);
+	}, []);
+
+	return {
+		orders, loading, error, hasNext, hasPrev, refresh, goNext, goPrevious, placeOrder, updateStatus, cancelOrder,
+		viewInvoice,
+	};
 }
 
 export function useServices() {

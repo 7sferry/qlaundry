@@ -31,7 +31,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 	private final OrderCreateGateway gateway;
-	private final CustomerGateway customerGateway;
+	private final OrderCustomerGateway customerGateway;
 
 	@Override
 	public void execute(OrderCreateRequest request, OrderAuthPrincipal principal, OrderCreatePresenter presenter){

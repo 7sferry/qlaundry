@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+	<meta charset="UTF-8"/>
+	<title th:text="'Invoice ' + ${orderNumber}">Invoice</title>
+	<style>
+		@page {
+			size: A4;
+			margin: 28px 32px;
+		}
+
+		body {
+			margin: 0;
+			padding: 0;
+			font-family: Helvetica, Arial, sans-serif;
+			color: #111827;
+			font-size: 12px;
+		}
+
+		table {
+			border-collapse: collapse;
+			width: 100%;
+		}
+
+		.header-table td {
+			vertical-align: top;
+			padding-bottom: 18px;
+			border-bottom: 2px solid #1d4ed8;
+		}
+
+		.brand {
+			color: #1d4ed8;
+			font-size: 22px;
+			font-weight: bold;
+		}
+
+		.brand-sub {
+			color: #6b7280;
+			font-size: 11px;
+			margin-top: 2px;
+		}
+
+		.invoice-title {
+			text-align: right;
+			font-size: 20px;
+			font-weight: bold;
+			color: #111827;
+		}
+
+		.invoice-meta {
+			text-align: right;
+			color: #6b7280;
+			font-size: 11px;
+			margin-top: 4px;
+		}
+
+		.status-badge {
+			display: inline-block;
+			margin-top: 6px;
+			padding: 3px 10px;
+			border-radius: 3px;
+			background-color: #eff6ff;
+			color: #1d4ed8;
+			font-size: 11px;
+			font-weight: bold;
+		}
+
+		.section {
+			margin-top: 20px;
+		}
+
+		.section-title {
+			font-size: 11px;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			color: #6b7280;
+			margin-bottom: 6px;
+		}
+
+		.info-table td {
+			padding: 2px 0;
+			font-size: 12px;
+			vertical-align: top;
+		}
+
+		.info-label {
+			color: #6b7280;
+			width: 110px;
+		}
+
+		.parties-table td {
+			width: 50%;
+			vertical-align: top;
+		}
+
+		.items-table {
+			margin-top: 8px;
+		}
+
+		.items-table th {
+			text-align: left;
+			background-color: #f9fafb;
+			border-bottom: 1px solid #e5e7eb;
+			padding: 8px;
+			font-size: 11px;
+			color: #6b7280;
+			text-transform: uppercase;
+		}
+
+		.items-table td {
+			padding: 8px;
+			border-bottom: 1px solid #f0f1f3;
+			font-size: 12px;
+		}
+
+		.text-right {
+			text-align: right;
+		}
+
+		.totals-table {
+			margin-top: 12px;
+			width: 260px;
+			margin-left: auto;
+		}
+
+		.totals-table td {
+			padding: 4px 0;
+			font-size: 12px;
+		}
+
+		.totals-table .grand-total td {
+			border-top: 1px solid #111827;
+			padding-top: 8px;
+			font-size: 15px;
+			font-weight: bold;
+		}
+
+		.notes-box {
+			margin-top: 6px;
+			padding: 10px 12px;
+			background-color: #f9fafb;
+			border: 1px solid #e5e7eb;
+			border-radius: 4px;
+			font-size: 11px;
+			color: #374151;
+		}
+
+		.footer {
+			margin-top: 32px;
+			padding-top: 12px;
+			border-top: 1px solid #e5e7eb;
+			text-align: center;
+			color: #9ca3af;
+			font-size: 10px;
+		}
+	</style>
+</head>
+<body>
+
+<table class="header-table">
+	<tr>
+		<td>
+			<div class="brand">QLaundry</div>
+			<div class="brand-sub">Laundry service invoice</div>
+		</td>
+		<td>
+			<div class="invoice-title">INVOICE</div>
+			<div class="invoice-meta">
+				<div th:text="${orderNumber}">INV-20260101-ABCDEF</div>
+				<div th:text="${createdAt}">1 January 2026, 00:00 WIB</div>
+			</div>
+			<div style="text-align: right;">
+				<span class="status-badge" th:text="${status}">Pending</span>
+			</div>
+		</td>
+	</tr>
+</table>
+
+<table class="parties-table section">
+	<tr>
+		<td>
+			<div class="section-title">Bill to</div>
+			<table class="info-table">
+				<tr>
+					<td class="info-label">Name</td>
+					<td th:text="${customerName}">Customer Name</td>
+				</tr>
+				<tr>
+					<td class="info-label">Phone</td>
+					<td th:text="${customerPhone}">+6281234567890</td>
+				</tr>
+				<tr th:if="${customerEmail != null}">
+					<td class="info-label">Email</td>
+					<td th:text="${customerEmail}">customer@example.com</td>
+				</tr>
+				<tr th:if="${customerAddress != null}">
+					<td class="info-label">Address</td>
+					<td th:text="${customerAddress}">Customer Address</td>
+				</tr>
+			</table>
+		</td>
+		<td>
+			<div class="section-title">Order details</div>
+			<table class="info-table">
+				<tr>
+					<td class="info-label">Service</td>
+					<td th:text="${serviceName}">Wash &amp; Fold</td>
+				</tr>
+				<tr>
+					<td class="info-label">Priority</td>
+					<td th:text="${priority}">Normal</td>
+				</tr>
+				<tr>
+					<td class="info-label">Pickup</td>
+					<td th:text="${pickupAt}">1 January 2026, 00:00 WIB</td>
+				</tr>
+				<tr>
+					<td class="info-label">Est. delivery</td>
+					<td th:text="${estimatedDeliveryAt}">2 January 2026, 00:00 WIB</td>
+				</tr>
+				<tr th:if="${completedAt != null}">
+					<td class="info-label">Completed</td>
+					<td th:text="${completedAt}">3 January 2026, 00:00 WIB</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+</table>
+
+<div class="section">
+	<div class="section-title">Garments</div>
+	<table class="items-table">
+		<thead>
+		<tr>
+			<th>Item</th>
+			<th class="text-right">Qty</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr th:each="item : ${items}">
+			<td th:text="${item.label}">Shirt</td>
+			<td class="text-right" th:text="${item.quantity}">1</td>
+		</tr>
+		</tbody>
+	</table>
+	<p th:if="${weightKg != null}" style="margin: 8px 0 0; color: #374151;">
+		Weight: <strong th:text="${weightKg} + ' kg'">2.5 kg</strong>
+	</p>
+</div>
+
+<table class="totals-table">
+	<tr>
+		<td>Unit price (<span th:text="${unit}">Kg</span>)</td>
+		<td class="text-right" th:text="${unitPrice}">Rp 10.000,00</td>
+	</tr>
+	<tr>
+		<td>Quantity</td>
+		<td class="text-right" th:text="${quantity}">3</td>
+	</tr>
+	<tr>
+		<td>Subtotal</td>
+		<td class="text-right" th:text="${subtotal}">Rp 30.000,00</td>
+	</tr>
+	<tr th:if="${discount != null}">
+		<td>Discount</td>
+		<td class="text-right" th:text="'- ' + ${discount}">- Rp 0,00</td>
+	</tr>
+	<tr class="grand-total">
+		<td>Total</td>
+		<td class="text-right" th:text="${totalPrice}">Rp 30.000,00</td>
+	</tr>
+</table>
+
+<table class="section" style="width: 260px;">
+	<tr>
+		<td class="info-label" style="padding: 2px 0;">Payment method</td>
+		<td th:text="${paymentMethod}" style="padding: 2px 0;">Cash</td>
+	</tr>
+	<tr>
+		<td class="info-label" style="padding: 2px 0;">Payment status</td>
+		<td th:text="${paymentStatus}" style="padding: 2px 0;">Unpaid</td>
+	</tr>
+</table>
+
+<div class="section" th:if="${notes != null}">
+	<div class="section-title">Customer notes</div>
+	<div class="notes-box" th:text="${notes}">Customer notes</div>
+</div>
+
+<div class="section" th:if="${staffNotes != null}">
+	<div class="section-title">Staff notes</div>
+	<div class="notes-box" th:text="${staffNotes}">Staff notes</div>
+</div>
+
+<div class="footer">
+	This invoice was generated automatically by the QLaundry system.
+</div>
+
+</body>
+</html>

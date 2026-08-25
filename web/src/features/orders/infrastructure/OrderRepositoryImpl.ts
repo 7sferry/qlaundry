@@ -3,9 +3,10 @@
  * on Juli 2026         *
  ************************/
 
+import {env} from '@/core/config/env';
 import {httpClient} from '@/core/http/httpClient';
 import type {Page} from '@/core/pagination/Pagination';
-import type {OrderFilters, OrderRepository} from '../domain/OrderRepository';
+import type {InvoiceLink, OrderFilters, OrderRepository} from '../domain/OrderRepository';
 import type {
 	ClothingType,
 	CreateOrderInput,
@@ -57,6 +58,11 @@ interface OrderListApiResponse {
 	orders: OrderApiItem[];
 	nextCursor: string | null;
 	prevCursor: string | null;
+}
+
+interface InvoiceLinkApiResponse {
+	token: string;
+	expiresAt: number;
 }
 
 interface ServiceListApiResponse {
@@ -165,6 +171,15 @@ export class OrderRepositoryImpl implements OrderRepository {
 	async getOrderById(id: string): Promise<Order> {
 		const res = await httpClient.get<OrderApiItem>(`/order/detail?orderId=${encodeURIComponent(id)}`);
 		return toOrder(res);
+	}
+
+	async getInvoiceLink(id: string): Promise<InvoiceLink> {
+		const res = await httpClient.get<InvoiceLinkApiResponse>(
+				`/invoice/link?orderId=${encodeURIComponent(id)}`);
+		return {
+			url: `${env.apiBaseUrl}/public/invoice/pdf?token=${encodeURIComponent(res.token)}`,
+			expiresAt: res.expiresAt,
+		};
 	}
 
 	// The service picker on order creation needs every active service, not one page of it, so this walks

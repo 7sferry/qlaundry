@@ -9,7 +9,7 @@ import com.ferry.order.core.order.complete.OrderCompleteUseCase;
 import com.ferry.order.core.order.confirm.DefaultOrderConfirmUseCase;
 import com.ferry.order.core.order.confirm.OrderConfirmGateway;
 import com.ferry.order.core.order.confirm.OrderConfirmUseCase;
-import com.ferry.order.core.order.create.CustomerGateway;
+import com.ferry.order.core.order.create.OrderCustomerGateway;
 import com.ferry.order.core.order.create.DefaultOrderCreateUseCase;
 import com.ferry.order.core.order.create.OrderCreateGateway;
 import com.ferry.order.core.order.create.OrderCreateUseCase;
@@ -19,6 +19,12 @@ import com.ferry.order.core.order.deliver.OrderDeliverUseCase;
 import com.ferry.order.core.order.detail.DefaultOrderDetailUseCase;
 import com.ferry.order.core.order.detail.OrderDetailGateway;
 import com.ferry.order.core.order.detail.OrderDetailUseCase;
+import com.ferry.order.core.invoice.link.DefaultInvoiceLinkUseCase;
+import com.ferry.order.core.invoice.pdf.DefaultInvoicePdfUseCase;
+import com.ferry.order.core.invoice.pdf.InvoiceHtmlComposer;
+import com.ferry.order.core.invoice.pdf.InvoicePdfGateway;
+import com.ferry.order.core.invoice.link.InvoiceLinkUseCase;
+import com.ferry.order.core.invoice.pdf.InvoicePdfUseCase;
 import com.ferry.order.core.order.list.DefaultOrderListUseCase;
 import com.ferry.order.core.order.list.OrderListGateway;
 import com.ferry.order.core.order.list.OrderListUseCase;
@@ -46,13 +52,16 @@ import com.ferry.order.core.service.list.LaundryServiceListUseCase;
 import com.ferry.order.core.service.update.DefaultLaundryServiceUpdateUseCase;
 import com.ferry.order.core.service.update.LaundryServiceUpdateGateway;
 import com.ferry.order.core.service.update.LaundryServiceUpdateUseCase;
-import com.ferry.order.gateway.customer.CustomerHttpGateway;
+import com.ferry.order.core.tools.InvoiceLinkSigner;
+import com.ferry.order.gateway.customer.OrderCustomerHttpGateway;
+import com.ferry.order.gateway.invoice.InvoicePdfHtmlComposer;
 import com.ferry.order.gateway.order.OrderCancelJpaGateway;
 import com.ferry.order.gateway.order.OrderCompleteJpaGateway;
 import com.ferry.order.gateway.order.OrderConfirmJpaGateway;
 import com.ferry.order.gateway.order.OrderCreateJpaGateway;
 import com.ferry.order.gateway.order.OrderDeliverJpaGateway;
 import com.ferry.order.gateway.order.OrderDetailJpaGateway;
+import com.ferry.order.gateway.order.InvoiceJpaPdfGateway;
 import com.ferry.order.gateway.order.OrderListJpaGateway;
 import com.ferry.order.gateway.order.OrderPaymentJpaGateway;
 import com.ferry.order.gateway.order.OrderPickupJpaGateway;
@@ -86,8 +95,14 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.thymeleaf.ITemplateEngine;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.templatemode.TemplateMode;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Base64;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -171,8 +186,8 @@ public class OrderWebConfig{
 	}
 
 	@Bean
-	CustomerGateway customerVerificationGateway(UserServiceClient userServiceClient){
-		return new CustomerHttpGateway(userServiceClient);
+	OrderCustomerGateway customerVerificationGateway(UserServiceClient userServiceClient){
+		return new OrderCustomerHttpGateway(userServiceClient);
 	}
 
 	@Bean
@@ -195,7 +210,7 @@ public class OrderWebConfig{
 
 	@Bean
 	OrderCreateUseCase orderCreateUseCase(OrderCreateGateway orderCreateGateway,
-	                                      CustomerGateway customerGateway){
+	                                      OrderCustomerGateway customerGateway){
 		return new DefaultOrderCreateUseCase(orderCreateGateway, customerGateway);
 	}
 
@@ -221,6 +236,48 @@ public class OrderWebConfig{
 	@Bean
 	OrderDetailUseCase orderDetailUseCase(OrderDetailGateway orderDetailGateway){
 		return new DefaultOrderDetailUseCase(orderDetailGateway);
+	}
+
+	@Bean
+	ITemplateEngine invoiceTemplateEngine(){
+		ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
+		templateResolver.setPrefix("templates/invoice/");
+		templateResolver.setSuffix(".html");
+		templateResolver.setTemplateMode(TemplateMode.HTML);
+		templateResolver.setCharacterEncoding(StandardCharsets.UTF_8.name());
+		templateResolver.setCacheable(true);
+		TemplateEngine templateEngine = new TemplateEngine();
+		templateEngine.setTemplateResolver(templateResolver);
+		return templateEngine;
+	}
+
+	@Bean
+	InvoicePdfGateway orderInvoiceGateway(OrderJpaRepository orderJpaRepository,
+	                                      OrderItemJpaRepository orderItemJpaRepository,
+	                                      CryptoTool cryptoTool){
+		return new InvoiceJpaPdfGateway(orderJpaRepository, orderItemJpaRepository, cryptoTool);
+	}
+
+	@Bean
+	InvoiceHtmlComposer orderInvoiceComposer(ITemplateEngine invoiceTemplateEngine){
+		return new InvoicePdfHtmlComposer(invoiceTemplateEngine);
+	}
+
+	@Bean
+	InvoicePdfUseCase orderInvoiceUseCase(InvoicePdfGateway invoicePdfGateway,
+	                                      InvoiceHtmlComposer invoiceHtmlComposer){
+		return new DefaultInvoicePdfUseCase(invoicePdfGateway, invoiceHtmlComposer);
+	}
+
+	@Bean
+	InvoiceLinkSigner invoiceLinkSigner(@Value("${app.invoice.link.secret}") String base64Secret){
+		return new InvoiceLinkSigner(Base64.getDecoder().decode(base64Secret));
+	}
+
+	@Bean
+	InvoiceLinkUseCase orderInvoiceLinkUseCase(InvoicePdfGateway invoicePdfGateway,
+	                                           InvoiceLinkSigner invoiceLinkSigner){
+		return new DefaultInvoiceLinkUseCase(invoicePdfGateway, invoiceLinkSigner);
 	}
 
 	@Bean
