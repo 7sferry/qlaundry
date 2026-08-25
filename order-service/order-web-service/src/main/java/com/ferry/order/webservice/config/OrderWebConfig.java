@@ -53,14 +53,14 @@ import com.ferry.order.core.service.update.DefaultLaundryServiceUpdateUseCase;
 import com.ferry.order.core.service.update.LaundryServiceUpdateGateway;
 import com.ferry.order.core.service.update.LaundryServiceUpdateUseCase;
 import com.ferry.order.gateway.customer.OrderCustomerHttpGateway;
-import com.ferry.order.gateway.invoice.InvoicePdfHtmlComposer;
+import com.ferry.order.gateway.invoice.DefaultInvoiceHtmlComposer;
 import com.ferry.order.gateway.order.OrderCancelJpaGateway;
 import com.ferry.order.gateway.order.OrderCompleteJpaGateway;
 import com.ferry.order.gateway.order.OrderConfirmJpaGateway;
 import com.ferry.order.gateway.order.OrderCreateJpaGateway;
 import com.ferry.order.gateway.order.OrderDeliverJpaGateway;
 import com.ferry.order.gateway.order.OrderDetailJpaGateway;
-import com.ferry.order.gateway.order.InvoiceJpaPdfGateway;
+import com.ferry.order.gateway.invoice.InvoiceJpaPdfGateway;
 import com.ferry.order.gateway.order.OrderListJpaGateway;
 import com.ferry.order.gateway.order.OrderPaymentJpaGateway;
 import com.ferry.order.gateway.order.OrderPickupJpaGateway;
@@ -263,7 +263,7 @@ public class OrderWebConfig{
 
 	@Bean
 	InvoiceHtmlComposer orderInvoiceComposer(ITemplateEngine invoiceTemplateEngine){
-		return new InvoicePdfHtmlComposer(invoiceTemplateEngine);
+		return new DefaultInvoiceHtmlComposer(invoiceTemplateEngine);
 	}
 
 	@Bean

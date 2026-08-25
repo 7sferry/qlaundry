@@ -1,4 +1,4 @@
-package com.ferry.order.gateway.order;
+package com.ferry.order.gateway.invoice;
 
 import com.ferry.order.core.invoice.pdf.InvoicePdfGateway;
 import com.ferry.order.domain.order.OrderDomain;

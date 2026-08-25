@@ -26,7 +26,7 @@ import java.util.Locale;
  ************************/
 
 @RequiredArgsConstructor
-public class InvoicePdfHtmlComposer implements InvoiceHtmlComposer{
+public class DefaultInvoiceHtmlComposer implements InvoiceHtmlComposer{
 	private static final String TEMPLATE_NAME = "order-invoice";
 	private static final Locale LOCALE = Locale.of("id", "ID");
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter
