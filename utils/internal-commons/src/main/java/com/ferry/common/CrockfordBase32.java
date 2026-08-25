@@ -40,6 +40,17 @@ public class CrockfordBase32{
 		return new String(out);
 	}
 
+	public static String encode(long number, int length) {
+		char[] out = new char[length];
+
+		long value = number;
+		for (int i = length - 1; i >= 0; i--) {
+			out[i] = ALPHABET.charAt((int) (value & 0x1F));
+			value >>= 5;
+		}
+		return new String(out);
+	}
+
 	public static String encode(byte[] data) {
 		if (data == null || data.length == 0) {
 			return "";

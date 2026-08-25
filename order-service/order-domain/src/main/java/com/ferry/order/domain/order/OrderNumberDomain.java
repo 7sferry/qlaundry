@@ -1,7 +1,10 @@
 package com.ferry.order.domain.order;
 
+import com.ferry.common.CrockfordBase32;
+
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
@@ -13,8 +16,6 @@ import java.time.format.DateTimeFormatter;
 public record OrderNumberDomain(String value){
 	private static final ZoneId BUSINESS_ZONE = ZoneId.of("Asia/Jakarta");
 	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd").withZone(BUSINESS_ZONE);
-	private static final String SUFFIX_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-	private static final int SUFFIX_LENGTH = 6;
 	private static final SecureRandom RANDOM = new SecureRandom();
 
 	public OrderNumberDomain{
@@ -24,11 +25,12 @@ public record OrderNumberDomain(String value){
 	}
 
 	public static OrderNumberDomain generate(Instant createdAt){
-		StringBuilder suffix = new StringBuilder(SUFFIX_LENGTH);
-		for(int i = 0; i < SUFFIX_LENGTH; i++){
-			suffix.append(SUFFIX_ALPHABET.charAt(RANDOM.nextInt(SUFFIX_ALPHABET.length())));
-		}
-		return new OrderNumberDomain("INV-" + DATE_FORMAT.format(createdAt) + '-' + suffix);
+		byte[] bytes = new byte[6];
+		RANDOM.nextBytes(bytes);
+		long number = LocalTime.now().toNanoOfDay() / 1000000L;
+		return new OrderNumberDomain("INV-" + DATE_FORMAT.format(createdAt) + '-' +
+				CrockfordBase32.encode(number, 6) +
+				CrockfordBase32.encode(bytes));
 	}
 
 }
