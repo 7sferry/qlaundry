@@ -67,14 +67,14 @@ public class UserSecurityConfig{
 	}
 
 	@Bean
-	InternalApiKeyAuthenticationFilter internalApiKeyAuthenticationFilter(UserInternalKeyResolver internalKeyResolver){
-		return new InternalApiKeyAuthenticationFilter(internalKeyResolver);
+	UserInternalApiKeyAuthenticationFilter internalApiKeyAuthenticationFilter(UserInternalKeyResolver internalKeyResolver){
+		return new UserInternalApiKeyAuthenticationFilter(internalKeyResolver);
 	}
 
 	@Bean
-	FilterRegistrationBean<InternalApiKeyAuthenticationFilter> internalApiKeyAuthenticationFilterRegistration(
-			InternalApiKeyAuthenticationFilter internalApiKeyAuthenticationFilter){
-		FilterRegistrationBean<InternalApiKeyAuthenticationFilter> registration =
+	FilterRegistrationBean<UserInternalApiKeyAuthenticationFilter> internalApiKeyAuthenticationFilterRegistration(
+			UserInternalApiKeyAuthenticationFilter internalApiKeyAuthenticationFilter){
+		FilterRegistrationBean<UserInternalApiKeyAuthenticationFilter> registration =
 				new FilterRegistrationBean<>(internalApiKeyAuthenticationFilter);
 		registration.setEnabled(false);
 		return registration;
@@ -102,7 +102,7 @@ public class UserSecurityConfig{
 	}
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http, UserJwtAuthenticationFilter jwtAuthenticationFilter,
-	                                InternalApiKeyAuthenticationFilter internalApiKeyAuthenticationFilter){
+	                                UserInternalApiKeyAuthenticationFilter internalApiKeyAuthenticationFilter){
 		return http.csrf(AbstractHttpConfigurer::disable)
 				.cors(corsConfigurer -> corsConfigurer.configurationSource(_ -> {
 					CorsConfiguration config = new CorsConfiguration();

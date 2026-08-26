@@ -181,8 +181,10 @@ class DefaultInvoicePdfUseCaseTest{
 				.findById(any(OrderIdDomain.class), any(TenantIdDomain.class));
 		willReturn(items).given(gateway)
 				.findItemsByOrderId(any(OrderIdDomain.class));
+		willReturn(List.of()).given(gateway)
+				.findPromotionsByOrderId(any(OrderIdDomain.class));
 		willReturn(pdfBytes).given(composer)
-				.compose(any(OrderDomain.class), any(List.class));
+				.compose(any(OrderDomain.class), any(List.class), any(List.class));
 
 		useCase.execute(new InvoicePdfRequest(TOKEN), presenter);
 
@@ -193,7 +195,7 @@ class DefaultInvoicePdfUseCaseTest{
 		then(gateway).should()
 				.findItemsByOrderId(eq(new OrderIdDomain(ORDER_ID)));
 		then(composer).should()
-				.compose(eq(order), eq(items));
+				.compose(eq(order), eq(items), eq(List.of()));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 

@@ -1,8 +1,8 @@
 package com.ferry.user.core.customer.list;
 
 import com.ferry.user.core.tools.UserValidation;
+import com.ferry.user.domain.customer.CustomerListSortBy;
 import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.SortBy;
 import com.ferry.utils.pagination.SortDirection;
 
 /************************
@@ -11,5 +11,5 @@ import com.ferry.utils.pagination.SortDirection;
  ************************/
 
 public record CustomerListRequest(String fullName, String phone, String cursor, PageDirection direction,
-                                  SortBy sortBy, SortDirection sortDir) implements UserValidation{
+                                  CustomerListSortBy sortBy, SortDirection sortDir) implements UserValidation{
 }

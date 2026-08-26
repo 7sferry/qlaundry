@@ -128,17 +128,17 @@ class DefaultHttpRequestBuilder implements HttpRequestBuilder{
 			}
 			if(value instanceof Collection<?> collection){
 				return collection.stream()
-						.filter(Objects::nonNull).filter(this::isWrapperType).map(Object::toString)
+						.filter(obj -> Objects.nonNull(obj) && isWrapperType(obj)).map(Object::toString)
 						.collect(Collectors.joining(COMMA_MARK));
 			}
 			if(value instanceof Object[] arrays){
 				return Arrays.stream(arrays)
-						.filter(Objects::nonNull).filter(this::isWrapperType).map(Object::toString)
+						.filter(obj -> Objects.nonNull(obj) && isWrapperType(obj)).map(Object::toString)
 						.collect(Collectors.joining(COMMA_MARK));
 			}
 			if(value.getClass().isArray()){
 				return IntStream.range(0, Array.getLength(value)).mapToObj(i -> Array.get(value, i))
-						.filter(Objects::nonNull).filter(this::isWrapperType).map(Object::toString)
+						.filter(obj -> Objects.nonNull(obj) && isWrapperType(obj)).map(Object::toString)
 						.collect(Collectors.joining(COMMA_MARK));
 			}
 			return null;

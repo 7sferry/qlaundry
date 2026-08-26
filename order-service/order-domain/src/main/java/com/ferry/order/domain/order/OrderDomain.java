@@ -65,6 +65,18 @@ public record OrderDomain(String id, OrderNumberDomain orderNumber, String tenan
 				notes, null, pickupAt, deliveryAt, null, null, false, now, createdBy, now, createdBy);
 	}
 
+	public MoneyDomain discountRoom(){
+		return subtotal.minus(discount);
+	}
+
+	public OrderDomain applyPromotionDiscount(MoneyDomain granted){
+		MoneyDomain combined = discount.plus(granted);
+		return toBuilder()
+				.discount(combined)
+				.totalPrice(subtotal.minus(combined))
+				.build();
+	}
+
 	public OrderDomain changeStatus(OrderStatus next, NoteDomain staffNotes, String updatedBy){
 		if(!status.canTransitionTo(next)){
 			throw new InvalidOrderStatusException("Cannot change order status from " + status + " to " + next);

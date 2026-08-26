@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class StaffSubmitOtpWebController{
 	private final StaffSubmitOtpUseCase staffSubmitOtpUseCase;
 
-	@Transactional
 	@PostMapping("/auth/staff/submitOtp")
 	public ResponseEntity<?> submitOtp(@RequestBody StaffSubmitOtpRequest request){
 		StaffSubmitOtpWebPresenter presenter = new StaffSubmitOtpWebPresenter();

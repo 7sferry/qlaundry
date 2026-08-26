@@ -1,19 +1,7 @@
 package com.ferry.user.gateway.customer;
 
 import com.ferry.user.core.customer.list.CustomerListGateway;
-import com.ferry.utils.pagination.CursorFetch;
-import com.ferry.utils.pagination.PaginationConstant;
-import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.SortBy;
-import com.ferry.utils.pagination.SortDirection;
-import com.ferry.user.domain.customer.CustomerAddressDomain;
-import com.ferry.user.domain.customer.CustomerAddressFilter;
-import com.ferry.user.domain.customer.CustomerDomain;
-import com.ferry.user.domain.customer.CustomerEmailDomain;
-import com.ferry.user.domain.customer.CustomerEmailFilter;
-import com.ferry.user.domain.customer.CustomerFilter;
-import com.ferry.user.domain.customer.CustomerPhoneDomain;
-import com.ferry.user.domain.customer.CustomerPhoneFilter;
+import com.ferry.user.domain.customer.*;
 import com.ferry.user.gateway.customer.entity.CustomerAddressJpaEntity;
 import com.ferry.user.gateway.customer.entity.CustomerEmailJpaEntity;
 import com.ferry.user.gateway.customer.entity.CustomerJpaEntity;
@@ -23,6 +11,10 @@ import com.ferry.user.gateway.customer.repository.CustomerEmailJpaRepository;
 import com.ferry.user.gateway.customer.repository.CustomerJpaRepository;
 import com.ferry.user.gateway.customer.repository.CustomerPhoneJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
+import com.ferry.utils.pagination.CursorFetch;
+import com.ferry.utils.pagination.PageDirection;
+import com.ferry.utils.pagination.PaginationConstant;
+import com.ferry.utils.pagination.SortDirection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -55,7 +47,7 @@ public class CustomerListJpaGateway implements CustomerListGateway{
 		boolean forward = filter.pageDirection() == PageDirection.NEXT;
 		boolean ascending = filter.sortDir() == SortDirection.ASC;
 		boolean useAfterQuery = forward == ascending;
-		if(filter.sortBy() == SortBy.NAME){
+		if(filter.sortBy() == CustomerListSortBy.NAME){
 			return useAfterQuery
 					? customerJpaRepository.findAfterByFullName(filter, phoneHash, pageable)
 					: customerJpaRepository.findBeforeByFullName(filter, phoneHash, pageable);

@@ -47,11 +47,11 @@ public class OrderWebExceptionHandler{
 		return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
 	}
 
-	@ExceptionHandler(HttpClientException.class)
-	ProblemDetail handleCustomerVerificationError(HttpClientException e){
+	@ExceptionHandler({HttpClientException.class, PromotionUnavailableException.class})
+	ProblemDetail handleCustomerVerificationError(RuntimeException e){
 		log.error(e.getMessage(), e);
 		return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE,
-				"Customer verification is unavailable. Please try again.");
+				e.getMessage());
 	}
 
 	@ExceptionHandler(OrderForbiddenActionException.class)

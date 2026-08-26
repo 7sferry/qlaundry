@@ -4,6 +4,7 @@ import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.order.OrderDomain;
 import com.ferry.order.domain.order.OrderIdDomain;
 import com.ferry.order.domain.order.OrderItemDomain;
+import com.ferry.order.domain.order.OrderPromotionDomain;
 import com.ferry.order.domain.tenant.TenantIdDomain;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,8 @@ public class DefaultOrderDetailUseCase implements OrderDetailUseCase{
 		OrderDomain order = gateway.findById(orderId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Order Not Found"));
 		List<OrderItemDomain> items = gateway.findItemsByOrderId(orderId);
-		presenter.present(new OrderDetailResponse(order, items));
+		List<OrderPromotionDomain> promotions = gateway.findPromotionsByOrderId(orderId);
+		presenter.present(new OrderDetailResponse(order, items, promotions));
 	}
 
 }

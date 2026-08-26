@@ -13,6 +13,7 @@ import com.ferry.order.core.order.create.OrderCustomerGateway;
 import com.ferry.order.core.order.create.DefaultOrderCreateUseCase;
 import com.ferry.order.core.order.create.OrderCreateGateway;
 import com.ferry.order.core.order.create.OrderCreateUseCase;
+import com.ferry.order.core.order.create.OrderPromotionGateway;
 import com.ferry.order.core.order.deliver.DefaultOrderDeliverUseCase;
 import com.ferry.order.core.order.deliver.OrderDeliverGateway;
 import com.ferry.order.core.order.deliver.OrderDeliverUseCase;
@@ -53,6 +54,7 @@ import com.ferry.order.core.service.update.DefaultLaundryServiceUpdateUseCase;
 import com.ferry.order.core.service.update.LaundryServiceUpdateGateway;
 import com.ferry.order.core.service.update.LaundryServiceUpdateUseCase;
 import com.ferry.order.gateway.customer.OrderCustomerHttpGateway;
+import com.ferry.order.gateway.promotion.OrderPromotionHttpGateway;
 import com.ferry.order.gateway.invoice.DefaultInvoiceHtmlComposer;
 import com.ferry.order.gateway.order.OrderCancelJpaGateway;
 import com.ferry.order.gateway.order.OrderCompleteJpaGateway;
@@ -70,6 +72,7 @@ import com.ferry.order.gateway.order.repository.ClothingTypeJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderItemJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderPriorityJpaRepository;
+import com.ferry.order.gateway.order.repository.OrderPromotionJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderStatusJpaRepository;
 import com.ferry.order.gateway.order.repository.PaymentMethodJpaRepository;
 import com.ferry.order.gateway.order.repository.PaymentStatusJpaRepository;
@@ -80,6 +83,9 @@ import com.ferry.order.gateway.service.LaundryServiceUpdateJpaGateway;
 import com.ferry.order.gateway.service.repository.LaundryServiceJpaRepository;
 import com.ferry.order.gateway.service.repository.ServiceCategoryJpaRepository;
 import com.ferry.order.gateway.service.repository.ServiceUnitJpaRepository;
+import com.ferry.promotion.client.DefaultPromotionServiceClient;
+import com.ferry.promotion.client.PromotionServiceClient;
+import com.ferry.promotion.client.PromotionServiceClientConfig;
 import com.ferry.user.client.DefaultUserServiceClient;
 import com.ferry.user.client.UserServiceClient;
 import com.ferry.user.client.UserServiceClientConfig;
@@ -194,8 +200,21 @@ public class OrderWebConfig{
 	}
 
 	@Bean
+	PromotionServiceClient promotionServiceClient(@Value("${app.internal.promotion-service.base-url}") String baseUrl,
+	                                              @Value("${app.internal.promotion-api-key}") String apiKey,
+	                                              @Value("${app.internal.promotion-service.timeout:5s}") Duration timeout){
+		return new DefaultPromotionServiceClient(new PromotionServiceClientConfig(baseUrl, apiKey, timeout));
+	}
+
+	@Bean
+	OrderPromotionGateway orderPromotionGateway(PromotionServiceClient promotionServiceClient){
+		return new OrderPromotionHttpGateway(promotionServiceClient);
+	}
+
+	@Bean
 	OrderCreateGateway orderCreateGateway(OrderJpaRepository orderJpaRepository,
 	                                      OrderItemJpaRepository orderItemJpaRepository,
+	                                      OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                      LaundryServiceJpaRepository laundryServiceJpaRepository,
 	                                      ServiceUnitJpaRepository serviceUnitJpaRepository,
 	                                      OrderPriorityJpaRepository orderPriorityJpaRepository,
@@ -205,23 +224,26 @@ public class OrderWebConfig{
 	                                      ClothingTypeJpaRepository clothingTypeJpaRepository,
 	                                      IdGenerator idGenerator,
 	                                      CryptoTool cryptoTool){
-		return new OrderCreateJpaGateway(orderJpaRepository, orderItemJpaRepository, laundryServiceJpaRepository,
-				serviceUnitJpaRepository, orderPriorityJpaRepository, paymentMethodJpaRepository,
-				paymentStatusJpaRepository, orderStatusJpaRepository, clothingTypeJpaRepository, idGenerator,
-				cryptoTool);
+		return new OrderCreateJpaGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+				laundryServiceJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
+				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
+				clothingTypeJpaRepository, idGenerator, cryptoTool);
 	}
 
 	@Bean
 	OrderCreateUseCase orderCreateUseCase(OrderCreateGateway orderCreateGateway,
-	                                      OrderCustomerGateway customerGateway){
-		return new DefaultOrderCreateUseCase(orderCreateGateway, customerGateway);
+	                                      OrderCustomerGateway customerGateway,
+	                                      OrderPromotionGateway promotionGateway){
+		return new DefaultOrderCreateUseCase(orderCreateGateway, customerGateway, promotionGateway);
 	}
 
 	@Bean
 	OrderListGateway orderListGateway(OrderJpaRepository orderJpaRepository,
 	                                  OrderItemJpaRepository orderItemJpaRepository,
+	                                  OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                  CryptoTool cryptoTool){
-		return new OrderListJpaGateway(orderJpaRepository, orderItemJpaRepository, cryptoTool);
+		return new OrderListJpaGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+				cryptoTool);
 	}
 
 	@Bean
@@ -232,8 +254,10 @@ public class OrderWebConfig{
 	@Bean
 	OrderDetailGateway orderDetailGateway(OrderJpaRepository orderJpaRepository,
 	                                      OrderItemJpaRepository orderItemJpaRepository,
+	                                      OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                      CryptoTool cryptoTool){
-		return new OrderDetailJpaGateway(orderJpaRepository, orderItemJpaRepository, cryptoTool);
+		return new OrderDetailJpaGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+				cryptoTool);
 	}
 
 	@Bean
@@ -257,8 +281,10 @@ public class OrderWebConfig{
 	@Bean
 	InvoicePdfGateway orderInvoiceGateway(OrderJpaRepository orderJpaRepository,
 	                                      OrderItemJpaRepository orderItemJpaRepository,
+	                                      OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                      CryptoTool cryptoTool){
-		return new InvoiceJpaPdfGateway(orderJpaRepository, orderItemJpaRepository, cryptoTool);
+		return new InvoiceJpaPdfGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+				cryptoTool);
 	}
 
 	@Bean

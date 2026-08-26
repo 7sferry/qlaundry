@@ -3,6 +3,7 @@ package com.ferry.order.gateway.order;
 import com.ferry.order.core.order.create.OrderCreateGateway;
 import com.ferry.order.domain.order.OrderDomain;
 import com.ferry.order.domain.order.OrderItemDomain;
+import com.ferry.order.domain.order.OrderPromotionDomain;
 import com.ferry.order.domain.service.LaundryServiceDomain;
 import com.ferry.order.domain.service.LaundryServiceIdDomain;
 import com.ferry.order.domain.tenant.TenantIdDomain;
@@ -10,6 +11,7 @@ import com.ferry.order.gateway.order.entity.ClothingTypeJpaEntity;
 import com.ferry.order.gateway.order.entity.OrderItemJpaEntity;
 import com.ferry.order.gateway.order.entity.OrderJpaEntity;
 import com.ferry.order.gateway.order.entity.OrderPriorityJpaEntity;
+import com.ferry.order.gateway.order.entity.OrderPromotionJpaEntity;
 import com.ferry.order.gateway.order.entity.OrderStatusJpaEntity;
 import com.ferry.order.gateway.order.entity.PaymentMethodJpaEntity;
 import com.ferry.order.gateway.order.entity.PaymentStatusJpaEntity;
@@ -17,6 +19,7 @@ import com.ferry.order.gateway.order.repository.ClothingTypeJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderItemJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderPriorityJpaRepository;
+import com.ferry.order.gateway.order.repository.OrderPromotionJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderStatusJpaRepository;
 import com.ferry.order.gateway.order.repository.PaymentMethodJpaRepository;
 import com.ferry.order.gateway.order.repository.PaymentStatusJpaRepository;
@@ -39,6 +42,7 @@ import java.util.Optional;
 public class OrderCreateJpaGateway implements OrderCreateGateway{
 	private final OrderJpaRepository orderJpaRepository;
 	private final OrderItemJpaRepository orderItemJpaRepository;
+	private final OrderPromotionJpaRepository orderPromotionJpaRepository;
 	private final LaundryServiceJpaRepository laundryServiceJpaRepository;
 	private final ServiceUnitJpaRepository serviceUnitJpaRepository;
 	private final OrderPriorityJpaRepository orderPriorityJpaRepository;
@@ -77,6 +81,15 @@ public class OrderCreateJpaGateway implements OrderCreateGateway{
 		ClothingTypeJpaEntity type = clothingTypeJpaRepository.getReferenceById(item.type().getValue());
 		OrderItemJpaEntity saved = orderItemJpaRepository.save(OrderItemJpaEntity.construct(id, item, order, type));
 		return OrderItemJpaEntity.construct(saved);
+	}
+
+	@Override
+	public OrderPromotionDomain save(OrderPromotionDomain promotion){
+		String id = idGenerator.generateId();
+		OrderJpaEntity order = orderJpaRepository.getReferenceById(promotion.orderId());
+		OrderPromotionJpaEntity saved = orderPromotionJpaRepository.save(
+				OrderPromotionJpaEntity.construct(id, promotion, order));
+		return OrderPromotionJpaEntity.construct(saved);
 	}
 
 }

@@ -1,13 +1,5 @@
 package com.ferry.user.core.staff.list;
 
-import com.ferry.utils.pagination.CursorFetch;
-import com.ferry.utils.pagination.CursorCodec;
-import com.ferry.utils.pagination.CursorPage;
-import com.ferry.utils.pagination.CursorPaginator;
-import com.ferry.utils.pagination.PageCursor;
-import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.SortBy;
-import com.ferry.utils.pagination.SortDirection;
 import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.staff.list.StaffAddressListProjection;
 import com.ferry.user.domain.staff.list.StaffEmailListProjection;
@@ -15,6 +7,7 @@ import com.ferry.user.domain.staff.list.StaffListProjection;
 import com.ferry.user.domain.staff.list.StaffPhoneListProjection;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.domain.token.UserAuthPrincipal;
+import com.ferry.utils.pagination.*;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -35,7 +28,7 @@ public class DefaultStaffListUseCase implements StaffListUseCase{
 	public void execute(StaffListRequest request, UserAuthPrincipal principal, StaffListPresenter presenter){
 		request.validate();
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		SortBy sortBy = request.sortBy() == null ? SortBy.ID : request.sortBy();
+		StaffListSortBy sortBy = request.sortBy() == null ? StaffListSortBy.ID : request.sortBy();
 		SortDirection sortDir = request.sortDir() == null ? SortDirection.DESC : request.sortDir();
 		PageDirection pageDir = request.direction() == null ? PageDirection.NEXT : request.direction();
 		PageCursor cursor = request.cursor() == null ? null : CursorCodec.decode(request.cursor());
@@ -49,7 +42,7 @@ public class DefaultStaffListUseCase implements StaffListUseCase{
 				.build();
 		CursorFetch<StaffListProjection> fetch = gateway.findByFilter(filter);
 		CursorPage<StaffListProjection> page = CursorPaginator.paginate(fetch, pageDir, cursor != null,
-				row -> List.of(sortBy == SortBy.NAME ? row.fullName() : row.id(), row.id()));
+				row -> List.of(sortBy == StaffListSortBy.NAME ? row.fullName() : row.id(), row.id()));
 		List<StaffListProjection> staffs = page.items();
 		Set<String> staffIds = staffs.stream().map(StaffListProjection::id).collect(Collectors.toSet());
 		Map<String, List<StaffPhoneListProjection>> phonesByStaffId  = getPhonesByStaffId(staffIds);

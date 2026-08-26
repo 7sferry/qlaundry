@@ -30,6 +30,14 @@ public record MoneyDomain(BigDecimal value){
 		return new MoneyDomain(value.multiply(factor));
 	}
 
+	public MoneyDomain plus(MoneyDomain other){
+		return new MoneyDomain(value.add(other.value));
+	}
+
+	public MoneyDomain min(MoneyDomain other){
+		return value.compareTo(other.value) <= 0 ? this : other;
+	}
+
 	public MoneyDomain minus(MoneyDomain other){
 		if(other.value.compareTo(value) > 0){
 			throw new IllegalArgumentException("Discount must not exceed the subtotal");

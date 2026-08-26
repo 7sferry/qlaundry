@@ -4,6 +4,7 @@ import com.ferry.order.core.invoice.pdf.InvoiceHtmlComposer;
 import com.ferry.order.domain.common.MoneyDomain;
 import com.ferry.order.domain.order.OrderDomain;
 import com.ferry.order.domain.order.OrderItemDomain;
+import com.ferry.order.domain.order.OrderPromotionDomain;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import lombok.RequiredArgsConstructor;
 import org.thymeleaf.ITemplateEngine;
@@ -38,7 +39,7 @@ public class DefaultInvoiceHtmlComposer implements InvoiceHtmlComposer{
 	private final ITemplateEngine templateEngine;
 
 	@Override
-	public byte[] compose(OrderDomain order, List<OrderItemDomain> items){
+	public byte[] compose(OrderDomain order, List<OrderItemDomain> items, List<OrderPromotionDomain> promotions){
 		Context context = new Context(LOCALE);
 		context.setVariable("orderNumber", order.orderNumberValue());
 		context.setVariable("status", displayName(order.status().name()));
@@ -66,6 +67,9 @@ public class DefaultInvoiceHtmlComposer implements InvoiceHtmlComposer{
 		context.setVariable("items", items.stream()
 				.map(item -> new InvoiceItem(item.label() != null ? item.label() : displayName(item.type().name()),
 						item.quantity()))
+				.toList());
+		context.setVariable("promotions", promotions.stream()
+				.map(promotion -> new InvoicePromotion(promotion.code(), formatMoney(promotion.discountAmount())))
 				.toList());
 		String html = templateEngine.process(TEMPLATE_NAME, context);
 		return renderPdf(html);
@@ -104,6 +108,9 @@ public class DefaultInvoiceHtmlComposer implements InvoiceHtmlComposer{
 	}
 
 	public record InvoiceItem(String label, int quantity){
+	}
+
+	public record InvoicePromotion(String code, String discountAmount){
 	}
 
 }

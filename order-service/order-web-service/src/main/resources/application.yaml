@@ -34,6 +34,12 @@ app:
     user-service:
       base-url: 'http://localhost:8101'
       timeout: 5s
+    # promotion-service keeps its own digest set, so this is a second, independent credential — rotating one
+    # never touches the other
+    promotion-api-key: 'order:v1:dev-internal-9c4a71e0f5b2d836a1e74c9b02f6d5a3'
+    promotion-service:
+      base-url: 'http://localhost:8104'
+      timeout: 5s
   crypto:
     # dev-only keys, independent from user-service's — the services never read each other's rows
     # (APP_CRYPTO_ACTIVE_KEY_ID, APP_CRYPTO_KEYS_V1, APP_CRYPTO_BLIND_INDEX_KEY, ...); generate with `openssl rand -base64 32`

@@ -265,6 +265,10 @@
 		<td>Discount</td>
 		<td class="text-right" th:text="'- ' + ${discount}">- Rp 0,00</td>
 	</tr>
+	<tr th:each="promotion : ${promotions}">
+		<td th:text="'Promo ' + ${promotion.code}">Promo HEMAT10</td>
+		<td class="text-right" th:text="'- ' + ${promotion.discountAmount}">- Rp 0,00</td>
+	</tr>
 	<tr class="grand-total">
 		<td>Total</td>
 		<td class="text-right" th:text="${totalPrice}">Rp 30.000,00</td>

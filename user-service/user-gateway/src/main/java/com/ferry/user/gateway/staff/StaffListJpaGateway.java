@@ -1,11 +1,6 @@
 package com.ferry.user.gateway.staff;
 
 import com.ferry.user.core.staff.list.StaffListGateway;
-import com.ferry.utils.pagination.CursorFetch;
-import com.ferry.utils.pagination.PaginationConstant;
-import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.SortBy;
-import com.ferry.utils.pagination.SortDirection;
 import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.staff.list.StaffAddressListProjection;
 import com.ferry.user.domain.staff.list.StaffEmailListProjection;
@@ -19,10 +14,13 @@ import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffPhoneJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
+import com.ferry.utils.pagination.CursorFetch;
+import com.ferry.utils.pagination.PageDirection;
+import com.ferry.utils.pagination.PaginationConstant;
+import com.ferry.utils.pagination.SortDirection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
@@ -50,7 +48,7 @@ public class StaffListJpaGateway implements StaffListGateway{
 		boolean forward = filter.pageDirection() == PageDirection.NEXT;
 		boolean ascending = filter.sortDir() == SortDirection.ASC;
 		boolean useAfterQuery = forward == ascending;
-		if(filter.sortBy() == SortBy.NAME){
+		if(filter.sortBy() == StaffListSortBy.NAME){
 			return useAfterQuery
 					? staffJpaRepository.findAfterByFullName(filter, StaffListProjection.class, pageable)
 					: staffJpaRepository.findBeforeByFullName(filter, StaffListProjection.class, pageable);

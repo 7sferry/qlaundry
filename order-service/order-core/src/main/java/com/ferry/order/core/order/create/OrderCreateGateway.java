@@ -2,6 +2,7 @@ package com.ferry.order.core.order.create;
 
 import com.ferry.order.domain.order.OrderDomain;
 import com.ferry.order.domain.order.OrderItemDomain;
+import com.ferry.order.domain.order.OrderPromotionDomain;
 import com.ferry.order.domain.service.LaundryServiceDomain;
 import com.ferry.order.domain.service.LaundryServiceIdDomain;
 import com.ferry.order.domain.tenant.TenantIdDomain;
@@ -19,4 +20,6 @@ public interface OrderCreateGateway{
 	OrderDomain save(OrderDomain order);
 
 	OrderItemDomain save(OrderItemDomain item);
+
+	OrderPromotionDomain save(OrderPromotionDomain promotion);
 }

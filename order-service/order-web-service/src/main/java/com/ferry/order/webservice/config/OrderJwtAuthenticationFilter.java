@@ -5,7 +5,7 @@ package com.ferry.order.webservice.config;
  * on Agustus 2026      *
  ************************/
 
-import com.ferry.order.core.tools.EnumParser;
+import com.ferry.common.EnumParser;
 import com.ferry.order.domain.session.SessionType;
 import com.ferry.order.domain.staff.StaffRole;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
@@ -43,10 +43,11 @@ public class OrderJwtAuthenticationFilter implements Filter{
 			chain.doFilter(request, response);
 			return;
 		}
-		Optional<SessionType> sessionType = EnumParser.parse(SessionType.class,
-				String.valueOf(payload.get("type")));
-		Optional<StaffRole> role = EnumParser.parse(StaffRole.class, String.valueOf(payload.get("role")));
-		if(sessionType.isEmpty() || role.isEmpty()){
+		SessionType sessionType = EnumParser.parse(SessionType.class, String.valueOf(payload.get("type")))
+				.orElse(null);
+		StaffRole role = EnumParser.parse(StaffRole.class, String.valueOf(payload.get("role")))
+				.orElse(null);
+		if(sessionType == null || role == null){
 			chain.doFilter(request, response);
 			return;
 		}
@@ -56,8 +57,8 @@ public class OrderJwtAuthenticationFilter implements Filter{
 				String.valueOf(payload.get("fullName")),
 				String.valueOf(payload.get("tenantName")),
 				String.valueOf(payload.get("tenantId")),
-				sessionType.get(),
-				role.get()
+				sessionType,
+				role
 		);
 		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
 		SecurityContextHolder.getContext().setAuthentication(auth);

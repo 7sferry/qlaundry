@@ -12,6 +12,7 @@ import com.ferry.order.domain.customer.CustomerIdDomain;
 import com.ferry.order.domain.order.OrderDomain;
 import com.ferry.order.domain.order.OrderItemDomain;
 import com.ferry.order.domain.order.OrderPriority;
+import com.ferry.order.domain.order.OrderPromotionDomain;
 import com.ferry.order.domain.order.PaymentMethod;
 import com.ferry.order.domain.service.LaundryServiceDomain;
 import com.ferry.order.domain.service.LaundryServiceIdDomain;
@@ -21,7 +22,9 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -32,6 +35,7 @@ import java.util.List;
 public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 	private final OrderCreateGateway gateway;
 	private final OrderCustomerGateway customerGateway;
+	private final OrderPromotionGateway promotionGateway;
 
 	@Override
 	public void execute(OrderCreateRequest request, OrderAuthPrincipal principal, OrderCreatePresenter presenter){
@@ -54,12 +58,51 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		AddressLineDomain customerAddress = request.customerAddress() == null || request.customerAddress().isBlank()
 				? null : new AddressLineDomain(request.customerAddress());
 		MoneyDomain discount = request.discount() == null ? MoneyDomain.ZERO : new MoneyDomain(request.discount());
-		OrderDomain saved = gateway.save(OrderDomain.create(tenantId.value(), customerId,
+		OrderDomain order = OrderDomain.create(tenantId.value(), customerId,
 				new FullNameDomain(request.customerName()), new PhoneDomain(request.customerPhone()), customerEmail,
 				customerAddress, service, request.quantity(), request.weightKg(), discount, priority, paymentMethod,
-				pickupAt, estimatedDeliveryAt, new NoteDomain(request.notes()), principal.userId()));
+				pickupAt, estimatedDeliveryAt, new NoteDomain(request.notes()), principal.userId());
+		Set<String> codes = request.promoCodes() == null ? Set.of() : request.promoCodes();
+		List<PromotionRedemptionHttpResponse> redemptions = redeemPromotions(order, codes, tenantId, principal);
+		OrderDomain running = order;
+		for(PromotionRedemptionHttpResponse response : redemptions){
+			MoneyDomain granted = new MoneyDomain(response.discountAmount()).min(running.discountRoom());
+			running = running.applyPromotionDiscount(granted);
+		}
+		OrderDomain saved = gateway.save(running);
+		List<OrderPromotionDomain> promotions = savePromotions(saved, redemptions, principal);
 		List<OrderItemDomain> items = saveItems(request, saved, principal);
-		presenter.present(new OrderCreateResponse(saved, items));
+		presenter.present(new OrderCreateResponse(saved, items, promotions));
+	}
+
+	private List<PromotionRedemptionHttpResponse> redeemPromotions(OrderDomain order, Set<String> codes,
+	                                                                TenantIdDomain tenantId,
+	                                                                OrderAuthPrincipal principal){
+		if(codes.isEmpty()){
+			return List.of();
+		}
+		PromotionRedemptionHttpRequest request = new PromotionRedemptionHttpRequest(tenantId.value(),
+				codes, order.subtotal().value(), order.orderNumberValue(), order.customerId(),
+				principal.userId());
+		List<PromotionRedemptionHttpResponse> responses = promotionGateway.redeem(request);
+		for(PromotionRedemptionHttpResponse response : responses){
+			if(response == null || !response.applied()){
+				throw new IllegalArgumentException(response == null
+						? "Promotion code is not recognised" : response.message());
+			}
+		}
+		return responses;
+	}
+
+	private List<OrderPromotionDomain> savePromotions(OrderDomain order,
+	                                                  List<PromotionRedemptionHttpResponse> redemptions,
+	                                                  OrderAuthPrincipal principal){
+		List<OrderPromotionDomain> saved = new ArrayList<>(redemptions.size());
+		for(PromotionRedemptionHttpResponse redeemed : redemptions){
+			saved.add(gateway.save(OrderPromotionDomain.register(order.id(), redeemed.promotionId(),
+					redeemed.code(), new MoneyDomain(redeemed.discountAmount()), principal.userId())));
+		}
+		return saved;
 	}
 
 	private String verifiedCustomerId(String customerId, TenantIdDomain tenantId){

@@ -1,24 +1,10 @@
 package com.ferry.user.core.customer.list;
 
-import com.ferry.utils.pagination.CursorCodec;
-import com.ferry.utils.pagination.CursorFetch;
-import com.ferry.utils.pagination.CursorPage;
-import com.ferry.utils.pagination.CursorPaginator;
 import com.ferry.user.domain.common.PhoneDomain;
-import com.ferry.utils.pagination.PageCursor;
-import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.SortBy;
-import com.ferry.utils.pagination.SortDirection;
-import com.ferry.user.domain.customer.CustomerAddressDomain;
-import com.ferry.user.domain.customer.CustomerAddressFilter;
-import com.ferry.user.domain.customer.CustomerDomain;
-import com.ferry.user.domain.customer.CustomerEmailDomain;
-import com.ferry.user.domain.customer.CustomerEmailFilter;
-import com.ferry.user.domain.customer.CustomerFilter;
-import com.ferry.user.domain.customer.CustomerPhoneDomain;
-import com.ferry.user.domain.customer.CustomerPhoneFilter;
+import com.ferry.user.domain.customer.*;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 import com.ferry.user.domain.token.UserAuthPrincipal;
+import com.ferry.utils.pagination.*;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -41,7 +27,7 @@ public class DefaultCustomerListUseCase implements CustomerListUseCase{
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
 		String phone = request.phone() == null || request.phone().isBlank()
 				? null : new PhoneDomain(request.phone()).value();
-		SortBy sortBy = request.sortBy() == null ? SortBy.ID : request.sortBy();
+		CustomerListSortBy sortBy = request.sortBy() == null ? CustomerListSortBy.ID : request.sortBy();
 		SortDirection sortDir = request.sortDir() == null ? SortDirection.DESC : request.sortDir();
 		PageDirection direction = request.direction() == null ? PageDirection.NEXT : request.direction();
 		PageCursor cursor = request.cursor() == null ? null : CursorCodec.decode(request.cursor());
@@ -56,7 +42,7 @@ public class DefaultCustomerListUseCase implements CustomerListUseCase{
 				.build();
 		CursorFetch<CustomerDomain> fetch = gateway.findByFilter(filter);
 		CursorPage<CustomerDomain> page = CursorPaginator.paginate(fetch, direction, cursor != null,
-				row -> List.of(sortBy == SortBy.NAME ? row.fullNameValue() : row.id(), row.id()));
+				row -> List.of(sortBy == CustomerListSortBy.NAME ? row.fullNameValue() : row.id(), row.id()));
 		List<CustomerDomain> customers = page.items();
 		Set<String> customerIds = customers.stream().map(CustomerDomain::id).collect(Collectors.toSet());
 		Map<String, List<CustomerEmailDomain>> emailsByCustomerId = getEmailsByCustomerId(customerIds);

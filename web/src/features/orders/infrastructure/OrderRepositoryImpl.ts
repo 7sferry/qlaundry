@@ -40,6 +40,7 @@ interface OrderApiItem {
 	weightKg: number | null;
 	subtotal: number;
 	discount: number;
+	promotions: { promotionId: string; code: string; discountAmount: number }[];
 	totalPrice: number;
 	priority: string;
 	paymentMethod: string;
@@ -118,6 +119,7 @@ function toOrder(item: OrderApiItem): Order {
 		weightKg: item.weightKg ?? undefined,
 		subtotal: item.subtotal,
 		discount: item.discount,
+		promotions: item.promotions,
 		totalPrice: item.totalPrice,
 		priority: item.priority.toLowerCase() as OrderPriority,
 		paymentMethod: item.paymentMethod.toLowerCase() as PaymentMethod,
@@ -219,6 +221,7 @@ export class OrderRepositoryImpl implements OrderRepository {
 			pickupAt: toEpochMillis(input.pickupDate),
 			estimatedDeliveryAt: toEpochMillis(input.estimatedDelivery),
 			notes: input.notes,
+			promoCodes: input.promoCodes,
 		});
 		return toOrder(res);
 	}

@@ -1,25 +1,12 @@
 package com.ferry.user.core.customer.list;
 
 import com.ferry.user.domain.common.AddressLineDomain;
-import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.EmailDomain;
 import com.ferry.user.domain.common.FullNameDomain;
 import com.ferry.user.domain.common.PhoneDomain;
-import com.ferry.user.domain.customer.CustomerAddressDomain;
-import com.ferry.user.domain.customer.CustomerAddressFilter;
-import com.ferry.user.domain.customer.CustomerDomain;
-import com.ferry.user.domain.customer.CustomerEmailDomain;
-import com.ferry.user.domain.customer.CustomerEmailFilter;
-import com.ferry.user.domain.customer.CustomerFilter;
-import com.ferry.user.domain.customer.CustomerPhoneDomain;
-import com.ferry.user.domain.customer.CustomerPhoneFilter;
+import com.ferry.user.domain.customer.*;
 import com.ferry.user.domain.token.UserAuthPrincipal;
-import com.ferry.utils.pagination.CursorCodec;
-import com.ferry.utils.pagination.CursorFetch;
-import com.ferry.utils.pagination.PageCursor;
-import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.SortBy;
-import com.ferry.utils.pagination.SortDirection;
+import com.ferry.utils.pagination.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -163,7 +150,7 @@ class DefaultCustomerListUseCaseTest{
 
 		CustomerFilter filter = filterCaptor.getValue();
 		thenSoftly(softly -> {
-			softly.then(filter.sortBy()).isEqualTo(SortBy.ID);
+			softly.then(filter.sortBy()).isEqualTo(CustomerListSortBy.ID);
 			softly.then(filter.sortDir()).isEqualTo(SortDirection.DESC);
 			softly.then(filter.pageDirection()).isEqualTo(PageDirection.NEXT);
 			softly.then(filter.cursor()).isNull();
@@ -227,12 +214,12 @@ class DefaultCustomerListUseCaseTest{
 		willReturn(List.of()).given(gateway).findAddressesByFilter(any(CustomerAddressFilter.class));
 		String cursor = CursorCodec.encode(CUSTOMER_ID_2, CUSTOMER_ID_2);
 
-		useCase.execute(new CustomerListRequest(null, null, cursor, PageDirection.PREV, SortBy.NAME,
+		useCase.execute(new CustomerListRequest(null, null, cursor, PageDirection.PREV, CustomerListSortBy.NAME,
 				SortDirection.ASC), principal, presenter);
 
 		CustomerFilter filter = filterCaptor.getValue();
 		thenSoftly(softly -> {
-			softly.then(filter.sortBy()).isEqualTo(SortBy.NAME);
+			softly.then(filter.sortBy()).isEqualTo(CustomerListSortBy.NAME);
 			softly.then(filter.sortDir()).isEqualTo(SortDirection.ASC);
 			softly.then(filter.pageDirection()).isEqualTo(PageDirection.PREV);
 		});

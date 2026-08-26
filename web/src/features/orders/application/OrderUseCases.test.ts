@@ -16,6 +16,7 @@ const mockOrder: Order = {
 	quantity: 3,
 	subtotal: 30_000,
 	discount: 0,
+	promotions: [],
 	totalPrice: 30_000,
 	priority: 'normal',
 	paymentMethod: 'cash',

@@ -1,19 +1,18 @@
 package com.ferry.order.gateway.order;
 
 import com.ferry.order.core.order.list.OrderListGateway;
-import com.ferry.utils.pagination.CursorFetch;
-import com.ferry.utils.pagination.PaginationConstant;
-import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.SortBy;
-import com.ferry.utils.pagination.SortDirection;
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderFilter;
-import com.ferry.order.domain.order.OrderItemDomain;
+import com.ferry.order.domain.order.*;
 import com.ferry.order.gateway.order.entity.OrderItemJpaEntity;
 import com.ferry.order.gateway.order.entity.OrderJpaEntity;
+import com.ferry.order.gateway.order.entity.OrderPromotionJpaEntity;
 import com.ferry.order.gateway.order.repository.OrderItemJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderJpaRepository;
+import com.ferry.order.gateway.order.repository.OrderPromotionJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
+import com.ferry.utils.pagination.CursorFetch;
+import com.ferry.utils.pagination.PageDirection;
+import com.ferry.utils.pagination.PaginationConstant;
+import com.ferry.utils.pagination.SortDirection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +29,7 @@ import java.util.Set;
 public class OrderListJpaGateway implements OrderListGateway{
 	private final OrderJpaRepository orderJpaRepository;
 	private final OrderItemJpaRepository orderItemJpaRepository;
+	private final OrderPromotionJpaRepository orderPromotionJpaRepository;
 	private final CryptoTool cryptoTool;
 
 	@Override
@@ -44,7 +44,7 @@ public class OrderListJpaGateway implements OrderListGateway{
 		boolean forward = filter.pageDirection() == PageDirection.NEXT;
 		boolean ascending = filter.sortDir() == SortDirection.ASC;
 		boolean useAfterQuery = forward == ascending;
-		if(filter.sortBy() == SortBy.NAME){
+		if(filter.sortBy() == OrderListSortBy.CUSTOMER_NAME){
 			return useAfterQuery
 					? orderJpaRepository.findAfterByCustomerName(filter, pageable)
 					: orderJpaRepository.findBeforeByCustomerName(filter, pageable);
@@ -58,6 +58,13 @@ public class OrderListJpaGateway implements OrderListGateway{
 	public List<OrderItemDomain> findItemsByOrderIds(Set<String> orderIds){
 		return orderItemJpaRepository.findByOrderIdInAndDeletedIsFalseOrderById(orderIds).stream()
 				.map(OrderItemJpaEntity::construct)
+				.toList();
+	}
+
+	@Override
+	public List<OrderPromotionDomain> findPromotionsByOrderIds(Set<String> orderIds){
+		return orderPromotionJpaRepository.findByOrderIdInAndDeletedIsFalseOrderById(orderIds).stream()
+				.map(OrderPromotionJpaEntity::construct)
 				.toList();
 	}
 

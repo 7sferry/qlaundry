@@ -1,10 +1,10 @@
 package com.ferry.order.gateway.service;
 
 import com.ferry.order.core.service.list.LaundryServiceListGateway;
+import com.ferry.order.domain.service.ServiceListSortBy;
 import com.ferry.utils.pagination.CursorFetch;
 import com.ferry.utils.pagination.PaginationConstant;
 import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.SortBy;
 import com.ferry.utils.pagination.SortDirection;
 import com.ferry.order.domain.service.LaundryServiceDomain;
 import com.ferry.order.domain.service.LaundryServiceFilter;
@@ -13,7 +13,6 @@ import com.ferry.order.gateway.service.repository.LaundryServiceJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
@@ -38,7 +37,7 @@ public class LaundryServiceListJpaGateway implements LaundryServiceListGateway{
 		boolean forward = filter.pageDirection() == PageDirection.NEXT;
 		boolean ascending = filter.sortDir() == SortDirection.ASC;
 		boolean useAfterQuery = forward == ascending;
-		if(filter.sortBy() == SortBy.NAME){
+		if(filter.sortBy() == ServiceListSortBy.NAME){
 			return useAfterQuery
 					? laundryServiceJpaRepository.findAfterByName(filter, pageable)
 					: laundryServiceJpaRepository.findBeforeByName(filter, pageable);

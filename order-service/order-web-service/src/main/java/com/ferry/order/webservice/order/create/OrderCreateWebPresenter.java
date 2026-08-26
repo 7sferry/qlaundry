@@ -4,6 +4,7 @@ import com.ferry.order.core.order.create.OrderCreatePresenter;
 import com.ferry.order.core.order.create.OrderCreateResponse;
 import com.ferry.order.domain.order.OrderDomain;
 import com.ferry.order.webservice.order.create.OrderCreateWebResponse.Item;
+import com.ferry.order.webservice.order.create.OrderCreateWebResponse.Promotion;
 import lombok.Getter;
 import org.springframework.http.ResponseEntity;
 
@@ -21,6 +22,9 @@ public class OrderCreateWebPresenter implements OrderCreatePresenter{
 	@Override
 	public void present(OrderCreateResponse response){
 		OrderDomain order = response.order();
+		List<Promotion> promotions = response.promotions().stream()
+				.map(o -> new Promotion(o.promotionId(), o.code(), o.discountAmount().value()))
+				.toList();
 		List<Item> items = response.items().stream()
 				.map(o -> new Item(o.type().name(), o.label(), o.quantity()))
 				.toList();
@@ -28,7 +32,7 @@ public class OrderCreateWebPresenter implements OrderCreatePresenter{
 				order.customerId(), order.customerNameValue(), order.customerPhoneValue(),
 				order.customerEmailValue(), order.customerAddressValue(), order.serviceId(), order.serviceName(),
 				order.unit().name(), order.unitPrice().value(), order.quantity(), order.weightKg(),
-				order.subtotal().value(), order.discount().value(), order.totalPrice().value(),
+				order.subtotal().value(), order.discount().value(), promotions, order.totalPrice().value(),
 				order.priority().name(), order.paymentMethod().name(), order.paymentStatus().name(),
 				order.status().name(), order.notesValue(), order.pickupAt().toEpochMilli(),
 				order.estimatedDeliveryAt().toEpochMilli(), order.createdAt().toEpochMilli(), items));

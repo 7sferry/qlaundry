@@ -7,6 +7,7 @@ import com.ferry.order.domain.order.ClothingType;
 import com.ferry.order.domain.order.OrderDomain;
 import com.ferry.order.domain.order.OrderItemDomain;
 import com.ferry.order.domain.order.OrderPriority;
+import com.ferry.order.domain.order.OrderPromotionDomain;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.order.PaymentMethod;
 import com.ferry.order.domain.order.PaymentStatus;
@@ -27,6 +28,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.ArgumentMatchers.eq;
@@ -49,6 +51,7 @@ class DefaultOrderCreateUseCaseTest{
 	private static final String STAFF_ID = "01STAFFSARIWIJAYA000000000";
 	private static final String SERVICE_ID = "01SERVICEKILOAN00000000000";
 	private static final String ORDER_ID = "01ORDERKILOAN0000000000000";
+	private static final String PROMOTION_ID = "01PROMOHEMATLEBARAN0000000";
 	private static final String CUSTOMER_NAME = "intan permata";
 	private static final String CUSTOMER_PHONE = "+6281355501234";
 
@@ -56,6 +59,8 @@ class DefaultOrderCreateUseCaseTest{
 	OrderCreateGateway gateway;
 	@Mock
 	OrderCustomerGateway customerGateway;
+	@Mock
+	OrderPromotionGateway promotionGateway;
 	@InjectMocks
 	DefaultOrderCreateUseCase useCase;
 	@Mock
@@ -66,6 +71,10 @@ class DefaultOrderCreateUseCaseTest{
 	ArgumentCaptor<OrderItemDomain> itemCaptor;
 	@Captor
 	ArgumentCaptor<OrderCreateResponse> responseCaptor;
+	@Captor
+	ArgumentCaptor<PromotionRedemptionHttpRequest> redemptionCaptor;
+	@Captor
+	ArgumentCaptor<OrderPromotionDomain> orderPromotionCaptor;
 
 	@Test
 	void givenBlankCustomerName_thenThrowsConstraintViolationException(){
@@ -75,7 +84,7 @@ class DefaultOrderCreateUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		OrderCreateRequest request = new OrderCreateRequest(null, "  ", CUSTOMER_PHONE, null, null, SERVICE_ID,
-				List.of(), 1, null, null, null, null, null, null, null);
+				List.of(), 1, null, null, null, null, null, null, null, null);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(ConstraintViolationException.class));
@@ -93,7 +102,7 @@ class DefaultOrderCreateUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
-				SERVICE_ID, List.of(), 2, null, null, null, null, null, null, null);
+				SERVICE_ID, List.of(), 2, null, null, null, null, null, null, null, null);
 		willReturn(Optional.empty()).given(gateway)
 				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
 
@@ -134,7 +143,7 @@ class DefaultOrderCreateUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
-				SERVICE_ID, List.of(), 4, null, null, null, null, null, null, null);
+				SERVICE_ID, List.of(), 4, null, null, null, null, null, null, null, null);
 		willReturn(Optional.of(service)).given(gateway)
 				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
 
@@ -173,7 +182,7 @@ class DefaultOrderCreateUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
-				SERVICE_ID, List.of(), 1, null, null, null, null, null, null, null);
+				SERVICE_ID, List.of(), 1, null, null, null, null, null, null, null, null);
 		willReturn(Optional.of(service)).given(gateway)
 				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
 
@@ -212,7 +221,7 @@ class DefaultOrderCreateUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
-				SERVICE_ID, List.of(), 1, 2.0d, new BigDecimal("99000"), null, null, null, null, null);
+				SERVICE_ID, List.of(), 1, 2.0d, new BigDecimal("99000"), null, null, null, null, null, null);
 		willReturn(Optional.of(service)).given(gateway)
 				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
 
@@ -232,7 +241,7 @@ class DefaultOrderCreateUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		OrderCreateRequest request = new OrderCreateRequest("01CUSTOMEROUTSIDER00000000", CUSTOMER_NAME,
-				CUSTOMER_PHONE, null, null, SERVICE_ID, List.of(), 2, null, null, null, null, null, null, null);
+				CUSTOMER_PHONE, null, null, SERVICE_ID, List.of(), 2, null, null, null, null, null, null, null, null);
 		willReturn(false).given(customerGateway)
 				.belongsToTenant(any(CustomerVerificationHttpRequest.class));
 
@@ -274,7 +283,7 @@ class DefaultOrderCreateUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		OrderCreateRequest request = new OrderCreateRequest("   ", CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
-				SERVICE_ID, List.of(), 2, null, null, null, null, null, null, null);
+				SERVICE_ID, List.of(), 2, null, null, null, null, null, null, null, null);
 		willReturn(Optional.of(service)).given(gateway)
 				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
 		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
@@ -318,7 +327,7 @@ class DefaultOrderCreateUseCaseTest{
 				.build();
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE,
 				"intan@laundry.test", "Jl. Melati No. 9", SERVICE_ID, List.of(), 1, 3.5d, new BigDecimal("750"),
-				OrderPriority.EXPRESS, PaymentMethod.CASH, null, null, "please separate the whites");
+				OrderPriority.EXPRESS, PaymentMethod.CASH, null, null, "please separate the whites", null);
 		willReturn(Optional.of(service)).given(gateway)
 				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
 		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
@@ -355,6 +364,178 @@ class DefaultOrderCreateUseCaseTest{
 	}
 
 	@Test
+	void givenExhaustedPromoCode_thenThrowsIllegalArgumentException(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		LaundryServiceDomain service = LaundryServiceDomain.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Cuci Kiloan Reguler")
+				.description(new NoteDomain("regular wash"))
+				.pricePerUnit(MoneyDomain.of(7000L))
+				.unit(ServiceUnit.KG)
+				.category(ServiceCategory.WASH)
+				.estimatedHours(48)
+				.expressMultiplier(1.5d)
+				.popular(true)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
+				SERVICE_ID, List.of(), 1, 2.0d, null, null, null, null, null, null, Set.of("HEMAT10"));
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+		willReturn(List.of(new PromotionRedemptionHttpResponse(false, "Promotion has reached its usage limit", null,
+				null, null))).given(promotionGateway)
+				.redeem(any(PromotionRedemptionHttpRequest.class));
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessage("Promotion has reached its usage limit"));
+
+		then(gateway).should(never())
+				.save(any(OrderDomain.class));
+	}
+
+	@Test
+	void givenPromoCode_thenAddsTheGrantedDiscountOnTopOfTheManualOne(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		LaundryServiceDomain service = LaundryServiceDomain.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Cuci Kiloan Reguler")
+				.description(new NoteDomain("regular wash"))
+				.pricePerUnit(MoneyDomain.of(7000L))
+				.unit(ServiceUnit.KG)
+				.category(ServiceCategory.WASH)
+				.estimatedHours(48)
+				.expressMultiplier(1.5d)
+				.popular(true)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
+				SERVICE_ID, List.of(), 1, 2.0d, new BigDecimal("1000"), null, null, null, null, null,
+				Set.of(" hemat10 "));
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID, "HEMAT10",
+				new BigDecimal("2000")))).given(promotionGateway)
+				.redeem(any(PromotionRedemptionHttpRequest.class));
+		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+				.given(gateway)
+				.save(any(OrderDomain.class));
+		willAnswer(invocation -> invocation.<OrderPromotionDomain>getArgument(0)).given(gateway)
+				.save(any(OrderPromotionDomain.class));
+
+		useCase.execute(request, principal, presenter);
+
+		then(promotionGateway).should()
+				.redeem(redemptionCaptor.capture());
+		then(gateway).should()
+				.save(orderCaptor.capture());
+		then(gateway).should()
+				.save(orderPromotionCaptor.capture());
+		then(presenter).should()
+				.present(responseCaptor.capture());
+
+		OrderDomain saved = orderCaptor.getValue();
+		PromotionRedemptionHttpRequest redemption = redemptionCaptor.getValue();
+		OrderPromotionDomain orderPromotion = orderPromotionCaptor.getValue();
+
+		thenSoftly(softly -> {
+			softly.then(redemption.codes()).containsExactly("hemat10");
+			softly.then(redemption.tenantId()).isEqualTo(TENANT_ID);
+			softly.then(redemption.redeemedBy()).isEqualTo(STAFF_ID);
+			softly.then(redemption.referenceId()).isEqualTo(saved.orderNumberValue());
+			softly.then(redemption.subtotal()).isEqualByComparingTo(new BigDecimal("14000.00"));
+			softly.then(orderPromotion.orderId()).isEqualTo(ORDER_ID);
+			softly.then(orderPromotion.promotionId()).isEqualTo(PROMOTION_ID);
+			softly.then(orderPromotion.code()).isEqualTo("HEMAT10");
+			softly.then(orderPromotion.discountAmount().value()).isEqualByComparingTo(new BigDecimal("2000.00"));
+			softly.then(orderPromotion.createdBy()).isEqualTo(STAFF_ID);
+			softly.then(saved.discount().value()).isEqualByComparingTo(new BigDecimal("3000.00"));
+			softly.then(saved.totalPrice().value()).isEqualByComparingTo(new BigDecimal("11000.00"));
+			softly.then(responseCaptor.getValue().promotions()).hasSize(1);
+		});
+	}
+
+	@Test
+	void givenAPromoDiscountLargerThanWhatIsLeftToDiscount_thenGrantsOnlyTheRemainder(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		LaundryServiceDomain service = LaundryServiceDomain.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Setrika Satuan")
+				.description(new NoteDomain("iron only"))
+				.pricePerUnit(MoneyDomain.of(5000L))
+				.unit(ServiceUnit.ITEM)
+				.category(ServiceCategory.IRON)
+				.estimatedHours(24)
+				.expressMultiplier(1.0d)
+				.popular(false)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
+				SERVICE_ID, List.of(), 2, null, new BigDecimal("8000"), null, null, null, null, null,
+				Set.of("HEMAT10"));
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID, "HEMAT10",
+				new BigDecimal("5000")))).given(promotionGateway)
+				.redeem(any(PromotionRedemptionHttpRequest.class));
+		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+				.given(gateway)
+				.save(any(OrderDomain.class));
+		willAnswer(invocation -> invocation.<OrderPromotionDomain>getArgument(0)).given(gateway)
+				.save(any(OrderPromotionDomain.class));
+
+		useCase.execute(request, principal, presenter);
+
+		then(gateway).should()
+				.save(orderCaptor.capture());
+		then(gateway).should()
+				.save(orderPromotionCaptor.capture());
+
+		OrderDomain saved = orderCaptor.getValue();
+
+		thenSoftly(softly -> {
+			softly.then(saved.subtotal().value()).isEqualByComparingTo(new BigDecimal("10000.00"));
+			softly.then(orderPromotionCaptor.getValue().discountAmount().value())
+					.isEqualByComparingTo(new BigDecimal("2000.00"));
+			softly.then(saved.discount().value()).isEqualByComparingTo(new BigDecimal("10000.00"));
+			softly.then(saved.totalPrice().value()).isEqualByComparingTo(BigDecimal.ZERO);
+		});
+	}
+
+	@Test
 	void givenLocalFormatCustomerPhone_thenTheSnapshotIsStoredInE164(){
 		Instant now = Instant.now();
 		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
@@ -381,7 +562,7 @@ class DefaultOrderCreateUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, "0813 5550 1234", null, null,
-				SERVICE_ID, List.of(), 3, null, null, null, null, null, null, null);
+				SERVICE_ID, List.of(), 3, null, null, null, null, null, null, null, null);
 		willReturn(Optional.of(service)).given(gateway)
 				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
 		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
@@ -426,7 +607,7 @@ class DefaultOrderCreateUseCaseTest{
 				CUSTOMER_PHONE, null, null, SERVICE_ID,
 				List.of(new OrderCreateRequest.Item(ClothingType.JACKET, "Jas Hitam", 2),
 						new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja Putih", 3)),
-				5, null, null, null, null, null, null, null);
+				5, null, null, null, null, null, null, null, null);
 		willReturn(true).given(customerGateway)
 				.belongsToTenant(any(CustomerVerificationHttpRequest.class));
 		willReturn(Optional.of(service)).given(gateway)
@@ -456,6 +637,116 @@ class DefaultOrderCreateUseCaseTest{
 			softly.then(response.order().subtotal().value()).isEqualByComparingTo(new BigDecimal("175000.00"));
 			softly.then(response.order().customerId()).isEqualTo("01CUSTOMERINTAN00000000000");
 		});
+	}
+
+	@Test
+	void givenTwoStackedPromoCodes_thenBothAreRedeemedInASingleBatchCall(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		LaundryServiceDomain service = LaundryServiceDomain.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Cuci Sepatu")
+				.description(new NoteDomain("shoe wash"))
+				.pricePerUnit(MoneyDomain.of(50000L))
+				.unit(ServiceUnit.ITEM)
+				.category(ServiceCategory.WASH)
+				.estimatedHours(36)
+				.expressMultiplier(1.75d)
+				.popular(false)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
+				SERVICE_ID, List.of(), 2, null, null, null, null, null, null, null, Set.of("AAA", "BBB"));
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+		willReturn(List.of(
+				new PromotionRedemptionHttpResponse(true, "Promotion applied", "01PROMOAAA0000000000000000", "AAA",
+						new BigDecimal("10000")),
+				new PromotionRedemptionHttpResponse(true, "Promotion applied", "01PROMOBBB0000000000000000", "BBB",
+						new BigDecimal("8000"))))
+				.given(promotionGateway)
+				.redeem(any(PromotionRedemptionHttpRequest.class));
+		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+				.given(gateway)
+				.save(any(OrderDomain.class));
+		willAnswer(invocation -> invocation.<OrderPromotionDomain>getArgument(0)).given(gateway)
+				.save(any(OrderPromotionDomain.class));
+
+		useCase.execute(request, principal, presenter);
+
+		then(promotionGateway).should()
+				.redeem(redemptionCaptor.capture());
+		then(presenter).should()
+				.present(responseCaptor.capture());
+
+		PromotionRedemptionHttpRequest redemption = redemptionCaptor.getValue();
+
+		thenSoftly(softly -> {
+			softly.then(redemption.codes()).containsExactlyInAnyOrder("AAA", "BBB");
+			softly.then(responseCaptor.getValue().promotions()).hasSize(2);
+			softly.then(responseCaptor.getValue().order().discount().value())
+					.isEqualByComparingTo(new BigDecimal("18000.00"));
+			softly.then(responseCaptor.getValue().order().totalPrice().value())
+					.isEqualByComparingTo(new BigDecimal("82000.00"));
+		});
+	}
+
+	@Test
+	void givenDuplicatePromoCodesAfterTrimming_thenDedupesToASingleRedemption(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		LaundryServiceDomain service = LaundryServiceDomain.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Cuci Sepatu")
+				.description(new NoteDomain("shoe wash"))
+				.pricePerUnit(MoneyDomain.of(50000L))
+				.unit(ServiceUnit.ITEM)
+				.category(ServiceCategory.WASH)
+				.estimatedHours(36)
+				.expressMultiplier(1.75d)
+				.popular(false)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
+				SERVICE_ID, List.of(), 1, null, null, null, null, null, null, null,
+				Set.of("HEMAT10", " HEMAT10 "));
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID, "HEMAT10",
+				new BigDecimal("5000")))).given(promotionGateway)
+				.redeem(any(PromotionRedemptionHttpRequest.class));
+		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+				.given(gateway)
+				.save(any(OrderDomain.class));
+		willAnswer(invocation -> invocation.<OrderPromotionDomain>getArgument(0)).given(gateway)
+				.save(any(OrderPromotionDomain.class));
+
+		useCase.execute(request, principal, presenter);
+
+		then(promotionGateway).should()
+				.redeem(redemptionCaptor.capture());
+
+		thenSoftly(softly -> softly.then(redemptionCaptor.getValue().codes()).containsExactly("HEMAT10"));
 	}
 
 }

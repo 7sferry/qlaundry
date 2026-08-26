@@ -4,13 +4,12 @@ import com.ferry.order.core.tools.OrderValidation;
 import com.ferry.order.domain.order.ClothingType;
 import com.ferry.order.domain.order.OrderPriority;
 import com.ferry.order.domain.order.PaymentMethod;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -19,10 +18,10 @@ import java.util.List;
 
 public record OrderCreateRequest(String customerId, @NotBlank String customerName, @NotBlank String customerPhone,
                                  String customerEmail, String customerAddress, @NotBlank String serviceId,
-                                 List<Item> items, @Positive int quantity, @Positive Double weightKg,
+                                 @NotEmpty List<@Valid Item> items, @Positive int quantity, @Positive Double weightKg,
                                  @PositiveOrZero BigDecimal discount, OrderPriority priority,
                                  PaymentMethod paymentMethod, Long pickupAt, Long estimatedDeliveryAt,
-                                 String notes) implements OrderValidation{
+                                 String notes, Set<String> promoCodes) implements OrderValidation{
 
 	public record Item(@NotNull ClothingType type, String label, @Positive int quantity){
 	}

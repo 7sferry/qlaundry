@@ -24,7 +24,7 @@ import java.util.Locale;
 
 @Slf4j
 @RequiredArgsConstructor
-public class InternalApiKeyAuthenticationFilter implements Filter{
+public class UserInternalApiKeyAuthenticationFilter implements Filter{
 
 	private static final String INTERNAL_PATH_PREFIX = "/internal/";
 	private static final String API_KEY_HEADER = "X-Internal-Api-Key";

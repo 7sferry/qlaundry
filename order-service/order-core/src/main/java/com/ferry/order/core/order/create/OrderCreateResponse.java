@@ -2,6 +2,7 @@ package com.ferry.order.core.order.create;
 
 import com.ferry.order.domain.order.OrderDomain;
 import com.ferry.order.domain.order.OrderItemDomain;
+import com.ferry.order.domain.order.OrderPromotionDomain;
 
 import java.util.List;
 
@@ -10,5 +11,6 @@ import java.util.List;
  * on Agustus 2026      *
  ************************/
 
-public record OrderCreateResponse(OrderDomain order, List<OrderItemDomain> items){
+public record OrderCreateResponse(OrderDomain order, List<OrderItemDomain> items,
+                                  List<OrderPromotionDomain> promotions){
 }

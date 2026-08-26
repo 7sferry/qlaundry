@@ -3,24 +3,11 @@ package com.ferry.order.core.order.list;
 import com.ferry.order.domain.common.FullNameDomain;
 import com.ferry.order.domain.common.MoneyDomain;
 import com.ferry.order.domain.common.PhoneDomain;
-import com.ferry.order.domain.order.ClothingType;
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderFilter;
-import com.ferry.order.domain.order.OrderItemDomain;
-import com.ferry.order.domain.order.OrderNumberDomain;
-import com.ferry.order.domain.order.OrderPriority;
-import com.ferry.order.domain.order.OrderStatus;
-import com.ferry.order.domain.order.PaymentMethod;
-import com.ferry.order.domain.order.PaymentStatus;
+import com.ferry.order.domain.order.*;
 import com.ferry.order.domain.service.ServiceUnit;
 import com.ferry.order.domain.staff.StaffRole;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
-import com.ferry.utils.pagination.CursorCodec;
-import com.ferry.utils.pagination.CursorFetch;
-import com.ferry.utils.pagination.PageCursor;
-import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.SortBy;
-import com.ferry.utils.pagination.SortDirection;
+import com.ferry.utils.pagination.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -92,7 +79,7 @@ class DefaultOrderListUseCaseTest{
 			softly.then(filter.orderNumber()).isNull();
 			softly.then(filter.from()).isNull();
 			softly.then(filter.to()).isNull();
-			softly.then(filter.sortBy()).isEqualTo(SortBy.ID);
+			softly.then(filter.sortBy()).isEqualTo(OrderListSortBy.ID);
 			softly.then(filter.sortDir()).isEqualTo(SortDirection.DESC);
 			softly.then(filter.pageDirection()).isEqualTo(PageDirection.NEXT);
 			softly.then(filter.cursor()).isNull();
@@ -139,7 +126,7 @@ class DefaultOrderListUseCaseTest{
 				.build();
 		String cursorToken = CursorCodec.encode("budi santoso", ORDER_ID_1);
 		OrderListRequest request = new OrderListRequest(null, null, null, null, null, null, cursorToken,
-				PageDirection.PREV, SortBy.NAME, SortDirection.ASC);
+				PageDirection.PREV, OrderListSortBy.CUSTOMER_NAME, SortDirection.ASC);
 		willReturn(new CursorFetch<OrderDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(OrderFilter.class));
 
@@ -152,7 +139,7 @@ class DefaultOrderListUseCaseTest{
 
 		thenSoftly(softly -> {
 			softly.then(filter.cursor()).isEqualTo(new PageCursor("budi santoso", ORDER_ID_1));
-			softly.then(filter.sortBy()).isEqualTo(SortBy.NAME);
+			softly.then(filter.sortBy()).isEqualTo(OrderListSortBy.CUSTOMER_NAME);
 			softly.then(filter.sortDir()).isEqualTo(SortDirection.ASC);
 			softly.then(filter.pageDirection()).isEqualTo(PageDirection.PREV);
 		});
@@ -242,11 +229,25 @@ class DefaultOrderListUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
+		OrderPromotionDomain promotion2a = OrderPromotionDomain.builder()
+				.id("01ORDERPROMOKEDUA000000000")
+				.orderId(ORDER_ID_2)
+				.promotionId("01PROMOAKHIRPEKAN00000000")
+				.code("AKHIRPEKAN")
+				.discountAmount(MoneyDomain.of(4000L))
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
 		OrderListRequest request = new OrderListRequest(null, null, null, null, null, null, null, null, null, null);
 		willReturn(new CursorFetch<>(List.of(order1, order2), false)).given(gateway)
 				.findByFilter(any(OrderFilter.class));
 		willReturn(List.of(item1a, item2a)).given(gateway)
 				.findItemsByOrderIds(eq(Set.of(ORDER_ID_1, ORDER_ID_2)));
+		willReturn(List.of(promotion2a)).given(gateway)
+				.findPromotionsByOrderIds(eq(Set.of(ORDER_ID_1, ORDER_ID_2)));
 
 		useCase.execute(request, principal, presenter);
 
@@ -259,6 +260,8 @@ class DefaultOrderListUseCaseTest{
 			softly.then(response.orders()).containsExactly(order1, order2);
 			softly.then(response.itemsByOrderId().get(ORDER_ID_1)).containsExactly(item1a);
 			softly.then(response.itemsByOrderId().get(ORDER_ID_2)).containsExactly(item2a);
+			softly.then(response.promotionsByOrderId().get(ORDER_ID_1)).isNull();
+			softly.then(response.promotionsByOrderId().get(ORDER_ID_2)).containsExactly(promotion2a);
 			softly.then(response.nextCursor()).isNull();
 			softly.then(response.prevCursor()).isNull();
 		});
@@ -279,6 +282,8 @@ class DefaultOrderListUseCaseTest{
 
 		then(gateway).should(never())
 				.findItemsByOrderIds(any(Set.class));
+		then(gateway).should(never())
+				.findPromotionsByOrderIds(any(Set.class));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
@@ -287,6 +292,7 @@ class DefaultOrderListUseCaseTest{
 		thenSoftly(softly -> {
 			softly.then(response.orders()).isEmpty();
 			softly.then(response.itemsByOrderId()).isEmpty();
+			softly.then(response.promotionsByOrderId()).isEmpty();
 			softly.then(response.nextCursor()).isNull();
 			softly.then(response.prevCursor()).isNull();
 		});

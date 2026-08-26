@@ -5,6 +5,7 @@ package com.ferry.user.webservice.config;
  * on November 2025     *
  ************************/
 
+import com.ferry.common.EnumParser;
 import com.ferry.user.domain.session.SessionType;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.token.UserAuthPrincipal;
@@ -19,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 public class UserJwtAuthenticationFilter implements Filter{
@@ -41,14 +43,22 @@ public class UserJwtAuthenticationFilter implements Filter{
 			chain.doFilter(request, response);
 			return;
 		}
+		SessionType sessionType = EnumParser.parse(SessionType.class, String.valueOf(payload.get("type")))
+				.orElse(null);
+		StaffRole role = EnumParser.parse(StaffRole.class, String.valueOf(payload.get("role")))
+				.orElse(null);
+		if(sessionType == null || role == null){
+			chain.doFilter(request, response);
+			return;
+		}
 		UserAuthPrincipal principal = new UserAuthPrincipal(
 				String.valueOf(payload.get("userId")),
 				String.valueOf(payload.get("sub")),
 				String.valueOf(payload.get("fullName")),
 				String.valueOf(payload.get("tenantName")),
 				String.valueOf(payload.get("tenantId")),
-				SessionType.valueOf(String.valueOf(payload.get("type"))),
-				StaffRole.valueOf(String.valueOf(payload.get("role")))
+				sessionType,
+				role
 		);
 		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
 		SecurityContextHolder.getContext().setAuthentication(auth);

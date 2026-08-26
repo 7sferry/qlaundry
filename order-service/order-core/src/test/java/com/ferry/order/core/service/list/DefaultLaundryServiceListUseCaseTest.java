@@ -2,18 +2,10 @@ package com.ferry.order.core.service.list;
 
 import com.ferry.order.domain.common.MoneyDomain;
 import com.ferry.order.domain.common.NoteDomain;
-import com.ferry.order.domain.service.LaundryServiceDomain;
-import com.ferry.order.domain.service.LaundryServiceFilter;
-import com.ferry.order.domain.service.ServiceCategory;
-import com.ferry.order.domain.service.ServiceUnit;
+import com.ferry.order.domain.service.*;
 import com.ferry.order.domain.staff.StaffRole;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
-import com.ferry.utils.pagination.CursorCodec;
-import com.ferry.utils.pagination.CursorFetch;
-import com.ferry.utils.pagination.PageCursor;
-import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.SortBy;
-import com.ferry.utils.pagination.SortDirection;
+import com.ferry.utils.pagination.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -77,7 +69,7 @@ class DefaultLaundryServiceListUseCaseTest{
 			softly.then(filter.name()).isNull();
 			softly.then(filter.category()).isNull();
 			softly.then(filter.activeOnly()).isTrue();
-			softly.then(filter.sortBy()).isEqualTo(SortBy.ID);
+			softly.then(filter.sortBy()).isEqualTo(ServiceListSortBy.ID);
 			softly.then(filter.sortDir()).isEqualTo(SortDirection.DESC);
 			softly.then(filter.pageDirection()).isEqualTo(PageDirection.NEXT);
 			softly.then(filter.cursor()).isNull();
@@ -119,7 +111,7 @@ class DefaultLaundryServiceListUseCaseTest{
 				.build();
 		String cursorToken = CursorCodec.encode("cuci kiloan", SERVICE_ID_1);
 		LaundryServiceListRequest request = new LaundryServiceListRequest(null, null, null, cursorToken,
-				PageDirection.PREV, SortBy.NAME, SortDirection.ASC);
+				PageDirection.PREV, ServiceListSortBy.NAME, SortDirection.ASC);
 		willReturn(new CursorFetch<LaundryServiceDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(LaundryServiceFilter.class));
 
@@ -132,7 +124,7 @@ class DefaultLaundryServiceListUseCaseTest{
 
 		thenSoftly(softly -> {
 			softly.then(filter.cursor()).isEqualTo(new PageCursor("cuci kiloan", SERVICE_ID_1));
-			softly.then(filter.sortBy()).isEqualTo(SortBy.NAME);
+			softly.then(filter.sortBy()).isEqualTo(ServiceListSortBy.NAME);
 			softly.then(filter.sortDir()).isEqualTo(SortDirection.ASC);
 			softly.then(filter.pageDirection()).isEqualTo(PageDirection.PREV);
 		});
@@ -184,7 +176,7 @@ class DefaultLaundryServiceListUseCaseTest{
 				.build();
 		String cursorToken = CursorCodec.encode(SERVICE_ID_1, SERVICE_ID_1);
 		LaundryServiceListRequest request = new LaundryServiceListRequest(null, null, null, cursorToken,
-				PageDirection.NEXT, SortBy.ID, SortDirection.DESC);
+				PageDirection.NEXT, ServiceListSortBy.ID, SortDirection.DESC);
 		willReturn(new CursorFetch<>(List.of(service1, service2), true)).given(gateway)
 				.findByFilter(any(LaundryServiceFilter.class));
 

@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: promotion-web-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/qlaundry?currentSchema=promotions
+    username: postgres
+    password: 12345
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: '12345'
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: 8104
+
+logging:
+  file:
+    name: logs/promotion-web-service.log
+
+app:
+  internal:
+    # SHA-256 (hex) of each caller's secret — never the secret itself, so a dump of this file yields nothing usable.
+    # Break-glass only: this set is consulted just when Redis is unreachable. Live rotation and revocation happen
+    # against `promotion:internal:key:<clientId>:<version>` in Redis (see "Rotating an internal key" in CLAUDE.md).
+    # digest of the dev secret: printf '%s' "$SECRET" | sha256sum
+    clients:
+      order:
+        v1: '0ad6b70012fc50e0f74531ea48191e1c911623cc73f614f99c273265e403c5a4'
+  token:
+    # the public half of user-service's RS256 key pair — this service only verifies access tokens
+    public-key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzYDVIz9eZH4Y/dmx0QZctvRTjfGHip/CFsqPoUjGIzAaFBDDtXllL4MD4zUXUK1fqghIyWqdUgacgEAHJDFUTaP5oLPuVkuUdC+g8o7pGF7N8S44XfKTz89LNekYZ76Kj57mBZQgp3UZyPzFQpt/+N/y3ns3+DJecMEsWNit+NlS/gVFEypabVAqwl5OsmrfYOnocLL3aZFbKGM6OJ7skRCxw3zLm77eppYtag/qNX8akdjiYW4nSXV6d10YALGn7b5f/fKUyDws0RVsboMDmlWbAfqHdrFouhV2rIfUD1MfVZLtRsZkrwwhZUyvXd6WVTrzk+A7KLVyK/libJM3wQIDAQAB"

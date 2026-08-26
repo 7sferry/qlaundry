@@ -33,6 +33,12 @@ export interface ClothingItem {
 	quantity: number;
 }
 
+export interface AppliedPromotion {
+	promotionId: string;
+	code: string;
+	discountAmount: number;
+}
+
 export interface Order {
 	id: string;
 	orderNumber: string;
@@ -47,6 +53,7 @@ export interface Order {
 	weightKg?: number;
 	subtotal: number;
 	discount: number;
+	promotions: AppliedPromotion[];
 	totalPrice: number;
 	priority: OrderPriority;
 	paymentMethod: PaymentMethod;
@@ -74,6 +81,7 @@ export interface CreateOrderInput {
 	pickupDate: string;
 	estimatedDelivery: string;
 	notes?: string;
+	promoCodes?: string[];
 }
 
 export interface UpdateOrderStatusInput {

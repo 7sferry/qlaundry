@@ -4,11 +4,14 @@ import com.ferry.order.core.invoice.pdf.InvoicePdfGateway;
 import com.ferry.order.domain.order.OrderDomain;
 import com.ferry.order.domain.order.OrderIdDomain;
 import com.ferry.order.domain.order.OrderItemDomain;
+import com.ferry.order.domain.order.OrderPromotionDomain;
 import com.ferry.order.domain.tenant.TenantIdDomain;
 import com.ferry.order.gateway.order.entity.OrderItemJpaEntity;
 import com.ferry.order.gateway.order.entity.OrderJpaEntity;
+import com.ferry.order.gateway.order.entity.OrderPromotionJpaEntity;
 import com.ferry.order.gateway.order.repository.OrderItemJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderJpaRepository;
+import com.ferry.order.gateway.order.repository.OrderPromotionJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +27,7 @@ import java.util.Optional;
 public class InvoiceJpaPdfGateway implements InvoicePdfGateway{
 	private final OrderJpaRepository orderJpaRepository;
 	private final OrderItemJpaRepository orderItemJpaRepository;
+	private final OrderPromotionJpaRepository orderPromotionJpaRepository;
 	private final CryptoTool cryptoTool;
 
 	@Override
@@ -36,6 +40,13 @@ public class InvoiceJpaPdfGateway implements InvoicePdfGateway{
 	public List<OrderItemDomain> findItemsByOrderId(OrderIdDomain orderId){
 		return orderItemJpaRepository.findByOrderIdAndDeletedIsFalseOrderById(orderId.value()).stream()
 				.map(OrderItemJpaEntity::construct)
+				.toList();
+	}
+
+	@Override
+	public List<OrderPromotionDomain> findPromotionsByOrderId(OrderIdDomain orderId){
+		return orderPromotionJpaRepository.findByOrderIdAndDeletedIsFalseOrderById(orderId.value()).stream()
+				.map(OrderPromotionJpaEntity::construct)
 				.toList();
 	}
 

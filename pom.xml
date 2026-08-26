@@ -17,6 +17,11 @@
 		<module>order-service/order-domain</module>
 		<module>order-service/order-web-service</module>
 		<module>order-service/order-gateway</module>
+		<module>promotion-service/promotion-core</module>
+		<module>promotion-service/promotion-domain</module>
+		<module>promotion-service/promotion-web-service</module>
+		<module>promotion-service/promotion-gateway</module>
+		<module>promotion-service/promotion-client</module>
 		<module>notification-service/notification-core</module>
 		<module>notification-service/notification-domain</module>
 		<module>notification-service/notification-web-service</module>

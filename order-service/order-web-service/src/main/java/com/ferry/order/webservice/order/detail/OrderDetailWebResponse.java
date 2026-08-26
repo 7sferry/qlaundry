@@ -12,12 +12,16 @@ public record OrderDetailWebResponse(String id, String orderNumber, String custo
                                      String customerPhone, String customerEmail, String customerAddress,
                                      String serviceId, String serviceName, String unit, BigDecimal unitPrice,
                                      int quantity, Double weightKg, BigDecimal subtotal, BigDecimal discount,
-                                     BigDecimal totalPrice,
+                                     List<Promotion> promotions, BigDecimal totalPrice,
                                      String priority, String paymentMethod, String paymentStatus, String status,
                                      String notes, String staffNotes, long pickupAt, long estimatedDeliveryAt,
                                      Long completedAt, long createdAt, List<Item> items){
 
 	public record Item(String type, String label, int quantity){
+
+	}
+
+	public record Promotion(String promotionId, String code, BigDecimal discountAmount){
 
 	}
 

@@ -28,3 +28,33 @@ CREATE SCHEMA IF NOT EXISTS orders;
 --
 -- There is no encryption backfill and no migration window here: order-service is encrypted from its first
 -- boot, so it runs with app.crypto.allow-plaintext-read = false and every row has a key-id prefix.
+
+-- Promotions applied to an order live in their own child table, `order_promotions` — NOT as columns on
+-- `orders`. The API accepts a `promoCodes` list per order now (stacking), and the storage was many-to-one
+-- from the start, so the presenters just started returning the child list instead of flattening it to one
+-- row. Same parent+child shape as `order_items`, and the same reasoning as `customer_emails` /
+-- `customer_phones` in user-service.
+--
+-- ddl-auto: update creates `order_promotions` on the next boot. It does NOT drop columns, so a database
+-- created during the brief window when the promo fields lived on `orders` needs them backfilled and dropped
+-- by hand:
+--
+-- INSERT INTO orders.order_promotions
+--     (id, order_id, promotion_id, code, discount_amount, version, deleted, created_by, created_at, updated_by, updated_at)
+-- SELECT gen_random_uuid()::text, o.id, o.promotion_id, o.promotion_code, o.promotion_discount,
+--        0, false, o.created_by, o.created_at, o.updated_by, o.updated_at
+--   FROM orders.orders o
+--  WHERE o.promotion_id IS NOT NULL;
+--
+-- ALTER TABLE orders.orders DROP COLUMN IF EXISTS promotion_id;
+-- ALTER TABLE orders.orders DROP COLUMN IF EXISTS promotion_code;
+-- ALTER TABLE orders.orders DROP COLUMN IF EXISTS promotion_discount;
+--
+-- (the backfilled ids are placeholders — every id this service writes at runtime is a ULID from IdGenerator.)
+--
+-- `orders.discount` stays the TOTAL discount granted (manual + every promotion) so `total_price = subtotal -
+-- discount` holds unchanged; `order_promotions.discount_amount` records what each code granted, and the sum
+-- of those rows is the promo share of `orders.discount`. `order_promotions.promotion_id` points at a row in
+-- promotion-service's own schema and is a plain varchar, never a foreign key — same policy as `tenant_id`
+-- and `customer_id`. `code` is a snapshot: promotion-service may rename or soft-delete the promotion later,
+-- and the invoice must keep what it was raised with.

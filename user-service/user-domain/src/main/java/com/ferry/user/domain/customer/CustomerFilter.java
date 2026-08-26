@@ -2,7 +2,6 @@ package com.ferry.user.domain.customer;
 
 import com.ferry.utils.pagination.PageCursor;
 import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.SortBy;
 import com.ferry.utils.pagination.SortDirection;
 import lombok.Builder;
 
@@ -12,7 +11,7 @@ import lombok.Builder;
  ************************/
 
 @Builder(toBuilder = true)
-public record CustomerFilter(String fullName, String phone, String tenantId, SortBy sortBy, SortDirection sortDir,
+public record CustomerFilter(String fullName, String phone, String tenantId, CustomerListSortBy sortBy, SortDirection sortDir,
                              PageDirection pageDirection, PageCursor cursor){
 
 	public String fullNameStartsWith(){

@@ -13,7 +13,7 @@ public record OrderListWebResponse(List<Order> orders, String nextCursor, String
 	public record Order(String id, String orderNumber, String customerId, String customerName, String customerPhone,
 	                    String customerEmail, String customerAddress, String serviceId, String serviceName,
 	                    String unit, BigDecimal unitPrice, int quantity, Double weightKg, BigDecimal subtotal,
-	                    BigDecimal discount, BigDecimal totalPrice,
+	                    BigDecimal discount, List<Promotion> promotions, BigDecimal totalPrice,
 	                    String priority, String paymentMethod, String paymentStatus, String status,
 	                    String notes, String staffNotes, long pickupAt, long estimatedDeliveryAt, Long completedAt,
 	                    long createdAt, List<Item> items){
@@ -21,6 +21,10 @@ public record OrderListWebResponse(List<Order> orders, String nextCursor, String
 	}
 
 	public record Item(String type, String label, int quantity){
+
+	}
+
+	public record Promotion(String promotionId, String code, BigDecimal discountAmount){
 
 	}
 

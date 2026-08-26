@@ -1,4 +1,4 @@
-package com.ferry.order.core.tools;
+package com.ferry.common;
 
 import java.util.Optional;
 
@@ -7,15 +7,7 @@ import java.util.Optional;
  * on Agustus 2026      *
  ************************/
 
-/**
- * Name-to-enum lookup for values that arrive as raw strings — JWT claims, and anything else outside the
- * request records (those declare the enum type and let Jackson/Spring bind it). Matching is exact: the API
- * consumes and produces the enum name as written, so "IN_PROGRESS" is the only spelling of IN_PROGRESS.
- * <p>
- * {@code parse} hands back an empty Optional rather than throwing, so the caller decides whether a bad value
- * is a 400, a 401, or simply the default.
- */
-public class EnumParser{
+public final class EnumParser{
 
 	private EnumParser(){
 	}

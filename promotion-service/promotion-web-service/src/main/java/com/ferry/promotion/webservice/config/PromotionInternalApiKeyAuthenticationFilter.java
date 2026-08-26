@@ -1,0 +1,99 @@
+package com.ferry.promotion.webservice.config;
+
+/************************
+ * Made by [MR Ferry™]  *
+ * on Agustus 2026      *
+ ************************/
+
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HexFormat;
+import java.util.List;
+import java.util.Locale;
+
+@Slf4j
+@RequiredArgsConstructor
+public class PromotionInternalApiKeyAuthenticationFilter implements Filter{
+
+	private static final String INTERNAL_PATH_PREFIX = "/internal/";
+	private static final String API_KEY_HEADER = "X-Internal-Api-Key";
+	private static final String TRACE_ID_HEADER = "X-Trace-Id";
+	private static final String TRACE_ID_MDC_KEY = "traceId";
+	private static final String AUTHORITY_PREFIX = "SERVICE_";
+	private static final int CREDENTIAL_PARTS = 3;
+	private static final String UNKNOWN_CLIENT_DIGEST = "0".repeat(64);
+
+	private final PromotionInternalKeyResolver internalKeyResolver;
+
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException{
+		HttpServletRequest req = (HttpServletRequest) request;
+		if(!req.getRequestURI().startsWith(INTERNAL_PATH_PREFIX)){
+			chain.doFilter(request, response);
+			return;
+		}
+		// the caller sets this, so downstream logs on both sides of the call can be grepped by the same id
+		String traceId = req.getHeader(TRACE_ID_HEADER);
+		if(traceId != null){
+			MDC.put(TRACE_ID_MDC_KEY, traceId);
+		}
+		try{
+			doFilterInternal(req, request, response, chain);
+		}finally{
+			if(traceId != null){
+				MDC.remove(TRACE_ID_MDC_KEY);
+			}
+		}
+	}
+
+	private void doFilterInternal(HttpServletRequest req, ServletRequest request, ServletResponse response,
+	                               FilterChain chain) throws IOException, ServletException{
+		String presented = req.getHeader(API_KEY_HEADER);
+		if(presented == null){
+			chain.doFilter(request, response);
+			return;
+		}
+		String[] parts = presented.split(":", CREDENTIAL_PARTS);
+		if(parts.length != CREDENTIAL_PARTS){
+			chain.doFilter(request, response);
+			return;
+		}
+		String clientId = parts[0];
+		String version = parts[1];
+		String expected = internalKeyResolver.digestOf(clientId, version)
+				.orElse(UNKNOWN_CLIENT_DIGEST);
+		if(!matches(parts[2], expected)){
+			log.warn("rejected internal call to {} presenting {}:{}", req.getRequestURI(), clientId, version);
+			chain.doFilter(request, response);
+			return;
+		}
+		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(clientId, null,
+				List.of(new SimpleGrantedAuthority(AUTHORITY_PREFIX + clientId.toUpperCase(Locale.ROOT))));
+		SecurityContextHolder.getContext().setAuthentication(auth);
+		log.info("authenticated as {} using key {}", clientId, version);
+		chain.doFilter(request, response);
+	}
+
+	private boolean matches(String secret, String expectedDigest){
+		return MessageDigest.isEqual(digest(secret).getBytes(StandardCharsets.UTF_8),
+				expectedDigest.getBytes(StandardCharsets.UTF_8));
+	}
+
+	@SneakyThrows
+	private String digest(String secret){
+		return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+				.digest(secret.getBytes(StandardCharsets.UTF_8)));
+	}
+
+}

@@ -1,10 +1,10 @@
 package com.ferry.order.core.service.list;
 
 import com.ferry.order.core.tools.OrderValidation;
-import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.SortBy;
-import com.ferry.utils.pagination.SortDirection;
 import com.ferry.order.domain.service.ServiceCategory;
+import com.ferry.order.domain.service.ServiceListSortBy;
+import com.ferry.utils.pagination.PageDirection;
+import com.ferry.utils.pagination.SortDirection;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -12,6 +12,6 @@ import com.ferry.order.domain.service.ServiceCategory;
  ************************/
 
 public record LaundryServiceListRequest(String name, ServiceCategory category, Boolean activeOnly, String cursor,
-                                        PageDirection direction, SortBy sortBy,
+                                        PageDirection direction, ServiceListSortBy sortBy,
                                         SortDirection sortDir) implements OrderValidation{
 }

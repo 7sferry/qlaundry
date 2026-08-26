@@ -10,6 +10,7 @@ import com.ferry.order.domain.order.OrderIdDomain;
 import com.ferry.order.domain.order.OrderItemDomain;
 import com.ferry.order.domain.order.OrderNumberDomain;
 import com.ferry.order.domain.order.OrderPriority;
+import com.ferry.order.domain.order.OrderPromotionDomain;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.order.PaymentMethod;
 import com.ferry.order.domain.order.PaymentStatus;
@@ -146,10 +147,24 @@ class DefaultOrderDetailUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build());
+		List<OrderPromotionDomain> promotions = List.of(OrderPromotionDomain.builder()
+				.id("01ORDERPROMOSEPRAI00000000")
+				.orderId(ORDER_ID)
+				.promotionId("01PROMODISKONSEPRAI0000000")
+				.code("SEPRAI20")
+				.discountAmount(MoneyDomain.of(9000L))
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build());
 		willReturn(Optional.of(order)).given(gateway)
 				.findById(any(OrderIdDomain.class), any(TenantIdDomain.class));
 		willReturn(items).given(gateway)
 				.findItemsByOrderId(any(OrderIdDomain.class));
+		willReturn(promotions).given(gateway)
+				.findPromotionsByOrderId(any(OrderIdDomain.class));
 
 		useCase.execute(new OrderDetailRequest(ORDER_ID), principal, presenter);
 
@@ -157,6 +172,8 @@ class DefaultOrderDetailUseCaseTest{
 				.findById(eq(new OrderIdDomain(ORDER_ID)), eq(new TenantIdDomain(TENANT_ID)));
 		then(gateway).should()
 				.findItemsByOrderId(eq(new OrderIdDomain(ORDER_ID)));
+		then(gateway).should()
+				.findPromotionsByOrderId(eq(new OrderIdDomain(ORDER_ID)));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
@@ -165,6 +182,8 @@ class DefaultOrderDetailUseCaseTest{
 		thenSoftly(softly -> {
 			softly.then(response.order()).isEqualTo(order);
 			softly.then(response.items()).isEqualTo(items);
+			softly.then(response.promotions()).isEqualTo(promotions);
+			softly.then(response.promotions().getFirst().code()).isEqualTo("SEPRAI20");
 		});
 	}
 

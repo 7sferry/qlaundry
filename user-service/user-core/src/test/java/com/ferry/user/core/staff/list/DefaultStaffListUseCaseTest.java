@@ -1,20 +1,12 @@
 package com.ferry.user.core.staff.list;
 
-import com.ferry.utils.pagination.CursorCodec;
-import com.ferry.utils.pagination.CursorFetch;
-import com.ferry.utils.pagination.PageCursor;
-import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.SortBy;
-import com.ferry.utils.pagination.SortDirection;
-import com.ferry.user.domain.staff.StaffAddressFilter;
-import com.ferry.user.domain.staff.StaffEmailFilter;
-import com.ferry.user.domain.staff.StaffFilter;
-import com.ferry.user.domain.staff.StaffPhoneFilter;
+import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.staff.list.StaffAddressListProjection;
 import com.ferry.user.domain.staff.list.StaffEmailListProjection;
 import com.ferry.user.domain.staff.list.StaffListProjection;
 import com.ferry.user.domain.staff.list.StaffPhoneListProjection;
 import com.ferry.user.domain.token.UserAuthPrincipal;
+import com.ferry.utils.pagination.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -30,7 +22,8 @@ import java.util.Map;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willReturn;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.never;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -145,7 +138,7 @@ class DefaultStaffListUseCaseTest{
 
 		StaffFilter filter = filterCaptor.getValue();
 		thenSoftly(softly -> {
-			softly.then(filter.sortBy()).isEqualTo(SortBy.ID);
+			softly.then(filter.sortBy()).isEqualTo(StaffListSortBy.ID);
 			softly.then(filter.sortDir()).isEqualTo(SortDirection.DESC);
 			softly.then(filter.pageDirection()).isEqualTo(PageDirection.NEXT);
 			softly.then(filter.cursor()).isNull();
@@ -201,14 +194,14 @@ class DefaultStaffListUseCaseTest{
 		willReturn(List.of()).given(gateway).findAddressesByFilter(any(StaffAddressFilter.class));
 		String cursor = CursorCodec.encode(STAFF_ID_2, STAFF_ID_2);
 
-		useCase.execute(new StaffListRequest(null, cursor, PageDirection.PREV, SortBy.NAME, SortDirection.ASC), principal, presenter);
+		useCase.execute(new StaffListRequest(null, cursor, PageDirection.PREV, StaffListSortBy.NAME, SortDirection.ASC), principal, presenter);
 
 		then(presenter).should().present(responseCaptor.capture());
 		StaffListResponse response = responseCaptor.getValue();
 		thenSoftly(softly -> {
 			softly.then(response.nextCursor()).isNotNull();
 			softly.then(filterCaptor.getValue().cursor()).isEqualTo(new PageCursor(STAFF_ID_2, STAFF_ID_2));
-			softly.then(filterCaptor.getValue().sortBy()).isEqualTo(SortBy.NAME);
+			softly.then(filterCaptor.getValue().sortBy()).isEqualTo(StaffListSortBy.NAME);
 			softly.then(filterCaptor.getValue().sortDir()).isEqualTo(SortDirection.ASC);
 		});
 	}

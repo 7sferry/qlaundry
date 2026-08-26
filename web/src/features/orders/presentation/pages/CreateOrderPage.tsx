@@ -14,6 +14,7 @@ import {
 	Plus,
 	Search,
 	Sparkles,
+	Tag,
 	Truck,
 	User2,
 	WashingMachine,
@@ -25,6 +26,7 @@ import {formatCurrency} from '@/core/utils/format';
 import {useOrders, useServices} from '../useOrders';
 import {useCustomerSearch} from '@/features/customers/presentation/useCustomers';
 import type {Customer} from '@/features/customers/domain/Customer';
+import {usePromotions} from '@/features/promotions/presentation/usePromotions';
 import type {ClothingItem, ClothingType, PaymentMethod} from '../../domain/Order';
 import {CLOTHING_TYPE_LABELS} from '../../domain/Order';
 
@@ -44,6 +46,7 @@ export default function CreateOrderPage() {
 	const {services, loading: servicesLoading} = useServices();
 	const {matches: customerMatches, searching: searchingCustomers, hasNext, hasPrev, search, goNext, goPrevious} =
 			useCustomerSearch();
+	const {promotions, loading: promotionsLoading} = usePromotions();
 
 	const [selectedServiceId, setSelectedServiceId] = useState('');
 	const [priority, setPriority] = useState<'normal' | 'express'>('normal');
@@ -58,6 +61,8 @@ export default function CreateOrderPage() {
 	const [nameSearch, setNameSearch] = useState('');
 	const [searchModalOpen, setSearchModalOpen] = useState(false);
 	const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>(undefined);
+	const [selectedPromoCodes, setSelectedPromoCodes] = useState<string[]>([]);
+	const [promoModalOpen, setPromoModalOpen] = useState(false);
 	const [form, setForm] = useState({
 		customerName: '',
 		customerPhone: '',
@@ -97,7 +102,36 @@ export default function CreateOrderPage() {
 		return Math.round(service.pricePerUnit * multiplier * qty);
 	}, [service, weightKg, totalQty, priority]);
 
-	const total = subtotal;
+	const selectedPromotions = useMemo(
+			() => promotions.filter((p) => selectedPromoCodes.includes(p.code)),
+			[promotions, selectedPromoCodes],
+	);
+
+	const anyNonCombinableSelected = useMemo(
+			() => selectedPromotions.some((p) => !p.combinable),
+			[selectedPromotions],
+	);
+
+	const isPromoDisabled = useCallback((promo: { code: string; combinable: boolean }) => {
+		if (selectedPromoCodes.includes(promo.code)) return false;
+		if (anyNonCombinableSelected) return true;
+		return !promo.combinable && selectedPromoCodes.length > 0;
+	}, [selectedPromoCodes, anyNonCombinableSelected]);
+
+	const togglePromo = (code: string) =>
+			setSelectedPromoCodes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
+
+	// A rough, non-chained preview — the real amount (min-spend, per-code caps, stacking order) is only known
+	// once the backend prices the order; this is a "preview", same caveat as the subtotal above it.
+	const estimatedDiscount = useMemo(
+			() => selectedPromotions.reduce((sum, promo) => {
+				const raw = promo.percentage ? subtotal * (promo.percentage / 100) : (promo.amount ?? 0);
+				return sum + (promo.maxDiscountAmount ? Math.min(raw, promo.maxDiscountAmount) : raw);
+			}, 0),
+			[selectedPromotions, subtotal],
+	);
+
+	const total = Math.max(0, subtotal - estimatedDiscount);
 
 	const autoDelivery = useCallback(
 			(pickup: string) => {
@@ -181,6 +215,7 @@ export default function CreateOrderPage() {
 				pickupDate: form.pickupDate,
 				estimatedDelivery: form.estimatedDelivery || autoDelivery(form.pickupDate),
 				notes: form.notes,
+				promoCodes: selectedPromoCodes.length > 0 ? selectedPromoCodes : undefined,
 			});
 			setSuccess(true);
 			setTimeout(() => navigate('/orders/history'), 1200);
@@ -473,6 +508,26 @@ export default function CreateOrderPage() {
 									</div>
 								</Field>
 							</Card>
+
+      <Card title="5. Promotions" subtitle="Optionally apply one or more promo codes.">
+								<Button type="button" variant="ghost" disabled={promotionsLoading}
+										onClick={() => setPromoModalOpen(true)}>
+									<Tag size={15}/> Select promotions
+								</Button>
+
+								{selectedPromotions.length > 0 && (
+										<div className="promo-chip-list">
+											{selectedPromotions.map((promo) => (
+													<span key={promo.code} className="promo-chip">
+                        {promo.code}
+														<button type="button" onClick={() => togglePromo(promo.code)}>
+															<X size={12}/>
+														</button>
+                      </span>
+											))}
+										</div>
+								)}
+							</Card>
 						</div>
 
 						<aside className="stack" style={{position: 'sticky', top: 80, alignSelf: 'start'}}>
@@ -506,6 +561,12 @@ export default function CreateOrderPage() {
                   <span>Subtotal</span>
 									<span>{formatCurrency(subtotal)}</span>
 								</div>
+        {estimatedDiscount > 0 && (
+            <div className="summary-line">
+                  <span>Promo discount (estimated)</span>
+                    <span className="promo-success">−{formatCurrency(estimatedDiscount)}</span>
+                  </div>
+        )}
         <div className="summary-line">
                   <span>Pickup & delivery</span>
                   <span className="summary-free">Free</span>
@@ -576,6 +637,48 @@ export default function CreateOrderPage() {
 								No matching customer found — you can still fill in the details manually for a walk-in order.
 							</p>
 					)}
+				</Modal>
+
+				<Modal open={promoModalOpen} onClose={() => setPromoModalOpen(false)} title="Select promotions" size="sm">
+					{promotionsLoading ? (
+							<div className="center-box" style={{padding: '24px 0', minHeight: 0}}>
+								<WashingMachine size={22} className="spin"/>
+								<span>Loading promotions…</span>
+							</div>
+					) : promotions.length > 0 ? (
+							<div className="promo-option-list">
+								{promotions.map((promo) => {
+									const disabled = isPromoDisabled(promo);
+									const checked = selectedPromoCodes.includes(promo.code);
+									return (
+											<label
+													key={promo.code}
+													className={`promo-option ${disabled ? 'promo-option--disabled' : ''}`}
+											>
+												<input
+														type="checkbox"
+														checked={checked}
+														disabled={disabled}
+														onChange={() => togglePromo(promo.code)}
+												/>
+												<div className="promo-option__info">
+													<strong>{promo.code} — {promo.name}</strong>
+													<span>
+                        {promo.percentage ? `${promo.percentage}% off` : formatCurrency(promo.amount ?? 0) + ' off'}
+														{promo.minSubtotal ? ` · min. ${formatCurrency(promo.minSubtotal)}` : ''}
+														{!promo.combinable ? ' · cannot be combined with other codes' : ''}
+                      </span>
+												</div>
+											</label>
+									);
+								})}
+							</div>
+					) : (
+							<p className="muted" style={{fontSize: 13}}>No active promotions right now.</p>
+					)}
+					<Button block type="button" style={{marginTop: 16}} onClick={() => setPromoModalOpen(false)}>
+						Done
+					</Button>
 				</Modal>
 			</>
 	);
