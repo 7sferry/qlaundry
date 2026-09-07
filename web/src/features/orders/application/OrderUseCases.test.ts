@@ -42,7 +42,7 @@ const mockService: LaundryService = {
 
 const mockOrderPage = {items: [mockOrder], nextCursor: null, prevCursor: null};
 
-const mockInvoiceLink = {url: 'http://localhost:8100/api/public/invoice/pdf?token=abc.def', expiresAt: 1_720_000_000_000};
+const mockInvoiceLink = {url: 'https://localhost:8100/api/public/invoice/pdf?token=abc.def', expiresAt: 1_720_000_000_000};
 
 function makeRepo(): { repo: OrderRepository; fns: Record<string, ReturnType<typeof vi.fn>> } {
 	const fns = {

@@ -13,7 +13,7 @@ conventions, code style), see the root [`CLAUDE.md`](CLAUDE.md) and
 flowchart LR
     Browser["Browser"]
 
-    subgraph Gateway["gateway/ — nginx :8100 / :8443"]
+    subgraph Gateway["gateway/ — nginx :8100 (https)"]
         NG["reverse proxy\n/api/* → the owning service\n/* → Vite dev server"]
     end
 
@@ -58,8 +58,11 @@ flowchart LR
     NSC --> SMTP
 ```
 
-- **One entry point.** The browser only ever talks to nginx on `:8100` (or
-  `:8443` for the same config over TLS). It proxies `/api/*` **per resource**
+- **One entry point.** The browser only ever talks to nginx on `:8100`. Only
+  HTTPS is actually served there; a `stream`-level check redirects plain
+  HTTP on the same port to `https://` before it reaches the app (see the
+  invoice PDF section below), so `http://` and `https://` both land in the
+  same place. It proxies `/api/*` **per resource**
   to the owning service — stripping the prefix, so Spring controllers keep
   mapping `/auth/...`, `/order/...`, `/promotion/...` — and everything else,
   including HMR websockets, to the Vite dev server. Frontend and backend are
@@ -485,10 +488,14 @@ sequenceDiagram
 
 > **Dev-only gotcha, measured not guessed:** a download manager (IDM) with
 > socket-level browser integration hijacks the PDF over plain HTTP because it
-> reads `Content-Type` off the cleartext socket. It cannot see inside TLS, so
-> the same URL renders normally on `https://localhost:8443`. Nothing is wrong
-> with the response headers, and production terminates TLS. Don't "fix" this
-> by mislabelling the media type or dropping `Content-Disposition`.
+> reads `Content-Type` off the cleartext socket. It cannot see inside TLS.
+> The gateway used to publish a plain-HTTP `:8100` alongside a TLS `:8443` as
+> an opt-in escape hatch for this. Now only `8100:443` is published, and a
+> `stream`-level `ssl_preread` check 301-redirects any plain HTTP request on
+> that port to `https://` before it reaches the app — so the hijack never
+> happens by default, whichever scheme someone types. Nothing is wrong with
+> the response headers, and production terminates TLS. Don't "fix" this by
+> mislabelling the media type or dropping `Content-Disposition`.
 
 ## Email flow (tenant-registration example)
 

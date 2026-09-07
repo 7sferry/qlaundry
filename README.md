@@ -6,7 +6,7 @@ Laundry management system — monorepo with a React frontend and a Java/Spring B
 
 - **Frontend** (`web/`) — React 19, TypeScript 6, Vite. Screaming + clean architecture, feature-vertical slices. See `web/CLAUDE.md` for commands, testing, and conventions.
 - **Backend** — Java 25, Spring Boot 4.1, Maven. Clean Architecture, one Maven module per layer (`domain` → `core` → `gateway` → `web-service`) per service.
-- **Gateway** (`gateway/`) — nginx (Docker). Single entry point on `:8100`: proxies `/api/*` (prefix stripped) to the backend services and everything else to the Vite dev server, so the frontend and backend API are served from the same origin/port.
+- **Gateway** (`gateway/`) — nginx (Docker). Single entry point on `:8100`, **HTTPS only**: proxies `/api/*` (prefix stripped) to the backend services and everything else to the Vite dev server, so the frontend and backend API are served from the same origin/port.
 
 ## Services
 
@@ -65,29 +65,24 @@ cd promotion-service/promotion-web-service && ./mvnw spring-boot:run # :8104
 # 3. Frontend (Vite dev server — internal, not exposed directly)
 cd qlaundry-web && bun install && bun dev                            # :5173
 
-# 4. Gateway (nginx via Docker) — single entry point for the browser
-cd gateway && docker compose up -d                                   # :8100
+# 4. Gateway (nginx via Docker) — single entry point for the browser, HTTPS only.
+#    Needs a self-signed dev cert first — nginx will not start without one:
+cd gateway && mkdir -p certs
+MSYS_NO_PATHCONV=1 openssl req -x509 -newkey rsa:2048 -sha256 -days 825 -nodes \
+  -keyout certs/dev.key -out certs/dev.crt -subj "/CN=localhost" \
+  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"     # drop MSYS_NO_PATHCONV=1 outside Git Bash
+
+docker compose up -d                                                  # :8100 (https)
 
 # reload conf after editing nginx.conf
 docker exec qlaundry-gateway nginx -s reload
 ```
 
-Open the app at `http://localhost:8100` — nginx serves the frontend (proxying to Vite on `:5173`, including HMR websockets) and forwards `/api/*` to the backend via `host.docker.internal` (`/api/auth/`, `/api/staff/`, `/api/customer/` → user-service on `:8101`; `/api/order/`, `/api/service/`, `/api/invoice/`, `/api/public/invoice/` → order-service on `:8103`; `/api/promotion/` → promotion-service on `:8104`), stripping the `/api` prefix so Spring controllers keep their existing paths (`/api/auth/staff/login` → `/auth/staff/login`). The frontend calls the backend with a relative base URL (`VITE_API_BASE_URL=/api`, see `web/.env`), so both are same-origin — no CORS involved at runtime.
+`gateway/certs/` is gitignored — never commit the key. Chrome will show a warning on first visit; click Advanced → Proceed.
 
-### Optional: the same gateway over TLS (`https://localhost:8443`)
+Open the app at `https://localhost:8100` — nginx serves the frontend (proxying to Vite on `:5173`, including HMR websockets — `vite.config.ts`'s `hmrClientPort` already defaults to `8100`) and forwards `/api/*` to the backend via `host.docker.internal` (`/api/auth/`, `/api/staff/`, `/api/customer/` → user-service on `:8101`; `/api/order/`, `/api/service/`, `/api/invoice/`, `/api/public/invoice/` → order-service on `:8103`; `/api/promotion/` → promotion-service on `:8104`), stripping the `/api` prefix so Spring controllers keep their existing paths (`/api/auth/staff/login` → `/auth/staff/login`). The frontend calls the backend with a relative base URL (`VITE_API_BASE_URL=/api`, see `web/.env`), so both are same-origin — no CORS involved at runtime.
 
-The gateway also listens on `443` (published as `8443`) from the **same** nginx server block, so both schemes serve identical config. It needs a self-signed dev cert first — nginx will not start without one:
-
-```bash
-cd gateway && mkdir -p certs
-MSYS_NO_PATHCONV=1 openssl req -x509 -newkey rsa:2048 -sha256 -days 825 -nodes \
-  -keyout certs/dev.key -out certs/dev.crt -subj "/CN=localhost" \
-  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"     # drop MSYS_NO_PATHCONV=1 outside Git Bash
-```
-
-`gateway/certs/` is gitignored — never commit the key. Chrome will show a warning; click Advanced → Proceed. Start Vite with `VITE_HMR_CLIENT_PORT=8443` so the HMR socket targets the right port (it defaults to `8100`).
-
-This exists because **download managers hijack binary responses over plain HTTP in dev.** IDM's "advanced browser integration" reads response headers straight off the socket, so on `:8100` it sees `Content-Type: application/pdf` and grabs the invoice before Chrome can render it; it cannot see inside TLS, so on `:8443` the same URL opens in the browser's PDF viewer. Nothing is wrong with the response headers, and production terminates TLS so it never sees this. The alternative is to add `localhost` to IDM's site exceptions or drop PDF from its file-types list.
+The gateway used to also publish a plain-HTTP `:8100` alongside a TLS `:8443`, kept only so a download manager (IDM) grabbing `application/pdf` invoice responses off the plain-HTTP socket had a TLS escape hatch (IDM cannot see inside TLS). That's gone now — `gateway/docker-compose.yml` publishes only `8100:443` — but typing `http://localhost:8100` still works and just redirects to `https://localhost:8100`: `gateway/nginx.conf` has a `stream` block in front that peeks at each connection's first bytes (`ssl_preread`, no cert needed for this) to tell a TLS handshake from a plain HTTP request line, then hands it to one of two internal, unpublished `http` servers — the real app on `127.0.0.1:8443`, or a `return 301 https://$http_host$request_uri;`-only server on `127.0.0.1:8080` for anything that isn't TLS. Both HTTP and HTTPS therefore work on the same external port, and the invoice-hijacking problem from above is avoided by default rather than being an opt-in workaround.
 
 JPA runs with `ddl-auto: update`, so tables are created automatically on first run — no migrations to apply. Each service uses its own Postgres schema (`users`, `orders`, `promotions`, `notif`); create the schema and seed each service's lookup tables once from `*-gateway/src/main/resources/init.sql` (promotion-service's lives at `promotion-gateway/sql/init.sql`). One exception: `ddl-auto` never *alters* an existing column, so on a database created before PII encryption landed, run the widening `ALTER`s documented in each web-service's `sql/migration.sql`, then run each service once with `--spring.profiles.active=backfill` to encrypt existing rows (see `CLAUDE.md`, "PII encryption at rest").
 
