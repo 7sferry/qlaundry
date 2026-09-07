@@ -97,7 +97,7 @@ class DefaultPromotionDetailUseCaseTest{
 				.code(new PromotionCodeDomain("PELANGGANBARU"))
 				.name("Diskon Pelanggan Baru")
 				.description(new NoteDomain("first order only"))
-				.type(PromotionType.PERCENTAGE)
+				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("40"))
 				.maxDiscountAmount(MoneyDomain.of(25000L))
 				.combinable(true)

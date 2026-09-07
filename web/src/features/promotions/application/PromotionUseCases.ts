@@ -4,12 +4,12 @@
  ************************/
 
 import type {PromotionFilters, PromotionRepository} from '../domain/PromotionRepository';
-import type {CreatePromotionInput, Promotion, UpdatePromotionInput} from '../domain/Promotion';
+import type {CreatePromotionInput, Promotion, PromotionPreviewResult, UpdatePromotionInput} from '../domain/Promotion';
 
 function validate(input: CreatePromotionInput): void {
 	if (!input.code.trim()) throw new Error('Promotion code is required.');
 	if (!input.name.trim()) throw new Error('Promotion name is required.');
-	if (input.type === 'percentage' || input.type === 'non_cumulative_percentage') {
+	if (input.type === 'cumulative_percentage' || input.type === 'non_cumulative_percentage') {
 		if (!(input.percentage !== undefined && input.percentage > 0 && input.percentage <= 100)) {
 			throw new Error('Percentage must be greater than zero and at most 100.');
 		}
@@ -43,4 +43,6 @@ export const promotionUseCases = (repository: PromotionRepository) => ({
 		return repository.updatePromotion(input);
 	},
 	togglePromotion: (id: string, active: boolean) => repository.togglePromotion(id, active),
+	previewPromotions: (promotions: Promotion[], subtotal: number): Promise<PromotionPreviewResult[]> =>
+		repository.previewPromotions(promotions, subtotal),
 });

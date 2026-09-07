@@ -1580,6 +1580,24 @@ button.user-chip--trigger:hover {
     background: var(--accent-soft);
     border-radius: var(--radius-sm);
     padding: 5px 10px;
+    cursor: grab;
+}
+
+.promo-chip:active {
+    cursor: grabbing;
+}
+
+.promo-chip--rejected {
+    color: var(--danger);
+    background: var(--danger-bg);
+}
+
+.promo-chip__handle {
+    opacity: .5;
+}
+
+.promo-chip__amount {
+    font-weight: 600;
 }
 
 .promo-chip button {
@@ -1587,7 +1605,7 @@ button.user-chip--trigger:hover {
     align-items: center;
     border: none;
     background: none;
-    color: var(--brand);
+    color: inherit;
     cursor: pointer;
     padding: 0;
 }

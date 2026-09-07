@@ -8,6 +8,7 @@ import {useNavigate} from 'react-router-dom';
 import {
 	ArrowRight,
 	Check,
+	GripVertical,
 	MapPin,
 	Minus,
 	Phone,
@@ -23,10 +24,11 @@ import {
 } from 'lucide-react';
 import {Badge, Button, Card, Field, Input, Modal, PageHeader, Pagination, Select, Textarea} from '@/core/ui';
 import {formatCurrency} from '@/core/utils/format';
-import {useOrders, useServices} from '../useOrders';
+import {usePlaceOrder, useServices} from '../useOrders';
 import {useCustomerSearch} from '@/features/customers/presentation/useCustomers';
 import type {Customer} from '@/features/customers/domain/Customer';
 import {usePromotions} from '@/features/promotions/presentation/usePromotions';
+import {usePromotionPreview} from '@/features/promotions/presentation/usePromotionPreview';
 import {hasPromotionEnded, hasPromotionStarted, type Promotion} from '@/features/promotions/domain/Promotion';
 import type {ClothingItem, ClothingType, PaymentMethod} from '../../domain/Order';
 import {CLOTHING_TYPE_LABELS} from '../../domain/Order';
@@ -37,13 +39,20 @@ const CLOTHING_TYPES: ClothingType[] = [
 
 const PAYMENT_METHODS: PaymentMethod[] = ['cash'];
 
+/** `toISOString()` reports UTC, which is a different calendar day from local time near midnight — this reads the wall-clock date instead. */
+function todayLocalDate(): string {
+	const d = new Date();
+	const pad = (n: number) => String(n).padStart(2, '0');
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 function initials(fullName: string): string {
 	return fullName.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase();
 }
 
 export default function CreateOrderPage() {
 	const navigate = useNavigate();
-	const {placeOrder} = useOrders();
+	const {placeOrder} = usePlaceOrder();
 	const {services, loading: servicesLoading} = useServices();
 	const {matches: customerMatches, searching: searchingCustomers, hasNext, hasPrev, search, goNext, goPrevious} =
 		useCustomerSearch();
@@ -65,16 +74,22 @@ export default function CreateOrderPage() {
 	const [nameSearch, setNameSearch] = useState('');
 	const [searchModalOpen, setSearchModalOpen] = useState(false);
 	const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>(undefined);
-	// A map, not just `string[]` codes, because the picker is now paginated (see usePromotions()) — a code
-	// selected on one page would otherwise vanish from `selectedPromotions`/the discount preview/the removable
-	// chip list the moment the user pages away from wherever it happened to be shown.
-	const [selectedPromoMap, setSelectedPromoMap] = useState<Record<string, Promotion>>({});
+	// An ordered array, not a map keyed by code, for two reasons: the picker is paginated (see usePromotions())
+	// so a code selected on one page must not vanish from this list/the preview/the removable chip list the
+	// moment the user pages away from wherever it happened to be shown — and the order itself is meaningful,
+	// since it is what the backend chains the discount basis on for stacked codes (drag the chips to reorder).
+	const [selectedPromotions, setSelectedPromotions] = useState<Promotion[]>([]);
+	// A separate in-progress copy for the picker modal — checking boxes only edits this draft, so
+	// `/promotion/preview` (keyed on the committed list) doesn't re-fire on every single click while the
+	// user is still deciding; it only sees the result once they click Done and the draft is committed.
+	const [draftPromotions, setDraftPromotions] = useState<Promotion[]>([]);
+	const [draggedPromoIndex, setDraggedPromoIndex] = useState<number | null>(null);
 	const [promoModalOpen, setPromoModalOpen] = useState(false);
 	const [form, setForm] = useState({
 		customerName: '',
 		customerPhone: '',
 		customerAddress: '',
-		pickupDate: new Date().toISOString().split('T')[0],
+		pickupDate: todayLocalDate(),
 		estimatedDelivery: '',
 		notes: '',
 	});
@@ -109,12 +124,12 @@ export default function CreateOrderPage() {
 		return Math.round(service.pricePerUnit * multiplier * qty);
 	}, [service, weightKg, totalQty, priority]);
 
-	const selectedPromotions = useMemo(() => Object.values(selectedPromoMap), [selectedPromoMap]);
-	const selectedPromoCodes = useMemo(() => Object.keys(selectedPromoMap), [selectedPromoMap]);
+	const selectedPromoCodes = useMemo(() => selectedPromotions.map((p) => p.code), [selectedPromotions]);
+	const draftPromoSet = useMemo(() => new Set(draftPromotions.map((p) => p.code)), [draftPromotions]);
 
-	const anyNonCombinableSelected = useMemo(
-		() => selectedPromotions.some((p) => !p.combinable),
-		[selectedPromotions],
+	const anyNonCombinableDrafted = useMemo(
+		() => draftPromotions.some((p) => !p.combinable),
+		[draftPromotions],
 	);
 
 	// Mirrors the backend's own eligibility checks (`PromotionDomain.rejectionAt`/`rejectionFor`) for the ones
@@ -134,46 +149,71 @@ export default function CreateOrderPage() {
 	}, [subtotal]);
 
 	const promoDisabledReason = useCallback((promo: Promotion): string | null => {
-		if (selectedPromoMap[promo.code]) return null;
+		if (draftPromoSet.has(promo.code)) return null;
 		const eligibilityIssue = promoEligibilityIssue(promo);
 		if (eligibilityIssue) return eligibilityIssue;
-		if (anyNonCombinableSelected) return 'cannot combine with the selected code';
-		if (!promo.combinable && selectedPromotions.length > 0) return 'cannot be combined with other codes';
+		if (anyNonCombinableDrafted) return 'cannot combine with the selected code';
+		if (!promo.combinable && draftPromotions.length > 0) return 'cannot be combined with other codes';
 		return null;
-	}, [selectedPromoMap, selectedPromotions.length, anyNonCombinableSelected, promoEligibilityIssue]);
+	}, [draftPromoSet, draftPromotions.length, anyNonCombinableDrafted, promoEligibilityIssue]);
 
-	const togglePromo = (promo: Promotion) =>
-		setSelectedPromoMap((prev) => {
-			if (prev[promo.code]) {
-				const {[promo.code]: _removed, ...rest} = prev;
-				return rest;
-			}
-			return {...prev, [promo.code]: promo};
+	// Checkboxes in the picker only ever edit the draft — see `draftPromotions` above.
+	const toggleDraftPromo = (promo: Promotion) =>
+		setDraftPromotions((prev) => (
+			prev.some((p) => p.code === promo.code)
+				? prev.filter((p) => p.code !== promo.code)
+				: [...prev, promo]
+		));
+
+	const openPromoModal = () => {
+		setDraftPromotions(selectedPromotions);
+		setPromoModalOpen(true);
+	};
+
+	// Closing via the X/backdrop discards the draft — only "Done" commits it. Without this, checking a box
+	// and then dismissing the modal any other way would silently keep the pick.
+	const cancelPromoModal = () => setPromoModalOpen(false);
+
+	const confirmPromoModal = () => {
+		setSelectedPromotions(draftPromotions);
+		setPromoModalOpen(false);
+	};
+
+	// The chip's own remove button acts immediately on the committed list — there is no "Done" step once
+	// a code is already applied outside the picker.
+	const removeSelectedPromo = (promo: Promotion) =>
+		setSelectedPromotions((prev) => prev.filter((p) => p.code !== promo.code));
+
+	const reorderPromo = (fromIndex: number, toIndex: number) =>
+		setSelectedPromotions((prev) => {
+			if (fromIndex === toIndex) return prev;
+			const next = [...prev];
+			const [moved] = next.splice(fromIndex, 1);
+			next.splice(toIndex, 0, moved);
+			return next;
 		});
 
 	// A selected code can go stale without the user touching it — e.g. lowering the quantity drops the
 	// subtotal below its minSubtotal, or it simply expires while the form is open. Drop it automatically
 	// rather than letting a doomed promoCodes entry ride along to submit. Re-checked against the promotion
 	// snapshot captured at selection time, not the current page's `promotions` — the selected one may no
-	// longer even be on the visible page.
+	// longer even be on the visible page. Filtering (not rebuilding) preserves the user's chosen order.
 	useEffect(() => {
-		setSelectedPromoMap((prev) => {
-			const next: Record<string, Promotion> = {};
-			for (const [code, promo] of Object.entries(prev)) {
-				if (!promoEligibilityIssue(promo)) next[code] = promo;
-			}
-			return next;
-		});
+		setSelectedPromotions((prev) => prev.filter((promo) => !promoEligibilityIssue(promo)));
 	}, [subtotal, promoEligibilityIssue]);
 
-	// A rough, non-chained preview — the real amount (min-spend, per-code caps, stacking order) is only known
-	// once the backend prices the order; this is a "preview", same caveat as the subtotal above it.
-	const estimatedDiscount = useMemo(
-		() => selectedPromotions.reduce((sum, promo) => {
-			const raw = promo.percentage ? subtotal * (promo.percentage / 100) : (promo.amount ?? 0);
-			return sum + (promo.maxDiscountAmount ? Math.min(raw, promo.maxDiscountAmount) : raw);
-		}, 0),
-		[selectedPromotions, subtotal],
+	useEffect(() => {
+		setDraftPromotions((prev) => prev.filter((promo) => !promoEligibilityIssue(promo)));
+	}, [subtotal, promoEligibilityIssue]);
+
+	// Real, server-computed discount — chained in the exact order the chips are arranged in, via
+	// `/promotion/preview`, which runs the same rules `/internal/promotion/redemption` does at order time.
+	const {results: promoPreviews, totalDiscount: estimatedDiscount, loading: previewLoading} =
+		usePromotionPreview(selectedPromotions, subtotal);
+
+	const promoPreviewByCode = useMemo(
+		() => new Map(promoPreviews.map((p) => [p.code, p])),
+		[promoPreviews],
 	);
 
 	const total = Math.max(0, subtotal - estimatedDiscount);
@@ -521,7 +561,7 @@ export default function CreateOrderPage() {
 										required
 										value={form.pickupDate}
 										onChange={handlePickupChange}
-										min={new Date().toISOString().split('T')[0]}
+										min={todayLocalDate()}
 									/>
 								</Field>
 								<Field label="Estimated completion" htmlFor="delivery">
@@ -557,21 +597,46 @@ export default function CreateOrderPage() {
 
 						<Card title="5. Promotions" subtitle="Optionally apply one or more promo codes.">
 							<Button type="button" variant="ghost" disabled={promotionsLoading}
-							        onClick={() => setPromoModalOpen(true)}>
+							        onClick={openPromoModal}>
 								<Tag size={15}/> Select promotions
 							</Button>
 
 							{selectedPromotions.length > 0 && (
 								<div className="promo-chip-list">
-									{selectedPromotions.map((promo) => (
-										<span key={promo.code} className="promo-chip">
-                        {promo.code}
-											<button type="button" onClick={() => togglePromo(promo)}>
-															<X size={12}/>
-														</button>
-                      </span>
-									))}
+									{selectedPromotions.map((promo, index) => {
+										const preview = promoPreviewByCode.get(promo.code);
+										const rejected = !!preview && !preview.applied;
+										return (
+											<span
+												key={promo.code}
+												className={`promo-chip ${rejected ? 'promo-chip--rejected' : ''}`}
+												draggable
+												onDragStart={() => setDraggedPromoIndex(index)}
+												onDragEnd={() => setDraggedPromoIndex(null)}
+												onDragOver={(e) => e.preventDefault()}
+												onDrop={(e) => {
+													e.preventDefault();
+													if (draggedPromoIndex !== null) reorderPromo(draggedPromoIndex, index);
+												}}
+												title={rejected ? preview.message : undefined}
+											>
+												<GripVertical size={11} className="promo-chip__handle"/>
+												{promo.code}
+												{preview?.applied && (
+													<span className="promo-chip__amount">
+                              −{formatCurrency(preview.discountAmount)}
+                            </span>
+												)}
+												<button type="button" onClick={() => removeSelectedPromo(promo)}>
+													<X size={12}/>
+												</button>
+											</span>
+										);
+									})}
 								</div>
+							)}
+							{previewLoading && (
+								<p className="muted" style={{fontSize: 12, marginTop: 8}}>Calculating discount…</p>
 							)}
 						</Card>
 					</div>
@@ -609,7 +674,7 @@ export default function CreateOrderPage() {
 							</div>
 							{estimatedDiscount > 0 && (
 								<div className="summary-line">
-									<span>Promo discount (estimated)</span>
+									<span>Promo discount</span>
 									<span className="promo-success">−{formatCurrency(estimatedDiscount)}</span>
 								</div>
 							)}
@@ -694,7 +759,7 @@ export default function CreateOrderPage() {
 				)}
 			</Modal>
 
-			<Modal open={promoModalOpen} onClose={() => setPromoModalOpen(false)} title="Select promotions" size="sm">
+			<Modal open={promoModalOpen} onClose={cancelPromoModal} title="Select promotions" size="sm">
 				{promotionsLoading && promotions.length === 0 ? (
 					<div className="center-box" style={{padding: '24px 0', minHeight: 0}}>
 						<WashingMachine size={22} className="spin"/>
@@ -705,7 +770,7 @@ export default function CreateOrderPage() {
 						<div className="promo-option-list">
 							{promotions.map((promo) => {
 								const disabledReason = promoDisabledReason(promo);
-								const checked = selectedPromoCodes.includes(promo.code);
+								const checked = draftPromoSet.has(promo.code);
 								return (
 									<label
 										key={promo.code}
@@ -715,7 +780,7 @@ export default function CreateOrderPage() {
 											type="checkbox"
 											checked={checked}
 											disabled={disabledReason !== null}
-											onChange={() => togglePromo(promo)}
+											onChange={() => toggleDraftPromo(promo)}
 										/>
 										<div className="promo-option__info">
 											<strong>{promo.code} — {promo.name}</strong>
@@ -740,7 +805,7 @@ export default function CreateOrderPage() {
 				) : (
 					<p className="muted" style={{fontSize: 13}}>No active promotions right now.</p>
 				)}
-				<Button block type="button" style={{marginTop: 16}} onClick={() => setPromoModalOpen(false)}>
+				<Button block type="button" style={{marginTop: 16}} onClick={confirmPromoModal}>
 					Done
 				</Button>
 			</Modal>

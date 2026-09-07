@@ -12,10 +12,13 @@ CREATE SCHEMA IF NOT EXISTS promotions;
 -- 1. boot promotion-web-service once so Hibernate creates the tables
 --      promotions, promotion_redemptions, promotion_types
 -- 2. then seed the lookup table from promotion-gateway/sql/init.sql:
---      promotion_types → PERCENTAGE (1), FIXED_AMOUNT (2), NON_CUMULATIVE_PERCENTAGE (3)
+--      promotion_types → CUMULATIVE_PERCENTAGE (1), FIXED_AMOUNT (2), NON_CUMULATIVE_PERCENTAGE (3)
 --      (id 3 used to be PERCENTAGE_WITH_MAX_AMOUNT, retired in favor of an optional maxDiscountAmount on
 --       every type, and reassigned to NON_CUMULATIVE_PERCENTAGE — on a pre-existing database also run:
 --       UPDATE promotion_types SET name = 'NON_CUMULATIVE_PERCENTAGE' WHERE id = 3;)
+--      (id 1 was renamed from PERCENTAGE to CUMULATIVE_PERCENTAGE — same id, same behaviour, clearer name
+--       now that a NON_CUMULATIVE_PERCENTAGE sibling exists; on a pre-existing database also run:
+--       UPDATE promotion_types SET name = 'CUMULATIVE_PERCENTAGE' WHERE id = 1;)
 -- 3. seed the baseline internal key order-service presents on /internal/promotion/redemption:
 --      redis-cli -a 12345 SET promotion:internal:key:order:v1 \
 --          0ad6b70012fc50e0f74531ea48191e1c911623cc73f614f99c273265e403c5a4

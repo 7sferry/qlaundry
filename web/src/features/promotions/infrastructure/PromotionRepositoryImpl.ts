@@ -6,7 +6,13 @@
 import {httpClient} from '@/core/http/httpClient';
 import type {Page} from '@/core/pagination/Pagination';
 import type {PromotionFilters, PromotionRepository} from '../domain/PromotionRepository';
-import type {CreatePromotionInput, Promotion, PromotionType, UpdatePromotionInput} from '../domain/Promotion';
+import type {
+	CreatePromotionInput,
+	Promotion,
+	PromotionPreviewResult,
+	PromotionType,
+	UpdatePromotionInput,
+} from '../domain/Promotion';
 
 interface PromotionApiItem {
 	id: string;
@@ -38,6 +44,20 @@ interface PromotionToggleApiResponse {
 	code: string;
 	name: string;
 	active: boolean;
+}
+
+interface PromotionPreviewApiItem {
+	applied: boolean;
+	message: string;
+	promotionId: string | null;
+	code: string;
+	type: string | null;
+	discountAmount: number;
+	remainingUsage: number | null;
+}
+
+interface PromotionPreviewApiResponse {
+	previews: PromotionPreviewApiItem[];
 }
 
 function toPromotion(item: PromotionApiItem): Promotion {
@@ -82,6 +102,26 @@ function buildPromotionQuery(filters?: PromotionFilters): string {
 	return `?${params.toString()}`;
 }
 
+/** The promotion's own fields, exactly as `/promotion/preview` needs them — it never re-reads the database. */
+function toPromotionSnapshot(p: Promotion) {
+	return {
+		id: p.id,
+		code: p.code,
+		name: p.name,
+		type: p.type.toUpperCase(),
+		percentage: p.percentage,
+		amount: p.amount,
+		maxDiscountAmount: p.maxDiscountAmount,
+		minSubtotal: p.minSubtotal,
+		combinable: p.combinable,
+		usageLimit: p.usageLimit,
+		usedCount: p.usedCount,
+		active: p.active,
+		startAt: toEpochMillis(p.startAt),
+		endAt: toEpochMillis(p.endAt),
+	};
+}
+
 function toPromotionBody(input: CreatePromotionInput) {
 	return {
 		code: input.code,
@@ -122,6 +162,22 @@ export class PromotionRepositoryImpl implements PromotionRepository {
 	async togglePromotion(id: string, active: boolean): Promise<{ id: string; active: boolean }> {
 		const res = await httpClient.put<PromotionToggleApiResponse>('/promotion/toggle', {promotionId: id, active});
 		return {id: res.id, active: res.active};
+	}
+
+	async previewPromotions(promotions: Promotion[], subtotal: number): Promise<PromotionPreviewResult[]> {
+		const res = await httpClient.post<PromotionPreviewApiResponse>('/promotion/preview', {
+			promotions: promotions.map(toPromotionSnapshot),
+			subtotal,
+		});
+		return res.previews.map((p) => ({
+			code: p.code,
+			applied: p.applied,
+			message: p.message,
+			promotionId: p.promotionId ?? undefined,
+			type: p.type ? (p.type.toLowerCase() as PromotionType) : undefined,
+			discountAmount: p.discountAmount,
+			remainingUsage: p.remainingUsage ?? undefined,
+		}));
 	}
 }
 

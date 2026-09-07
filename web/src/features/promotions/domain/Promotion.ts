@@ -3,7 +3,7 @@
  * on Agustus 2026      *
  ************************/
 
-export type PromotionType = 'percentage' | 'fixed_amount' | 'non_cumulative_percentage';
+export type PromotionType = 'cumulative_percentage' | 'fixed_amount' | 'non_cumulative_percentage';
 
 export interface Promotion {
 	id: string;
@@ -45,10 +45,20 @@ export interface UpdatePromotionInput extends CreatePromotionInput {
 	active: boolean;
 }
 
+export interface PromotionPreviewResult {
+	code: string;
+	applied: boolean;
+	message: string;
+	promotionId?: string;
+	type?: PromotionType;
+	discountAmount: number;
+	remainingUsage?: number;
+}
+
 export const PROMOTION_TYPE_LABELS: Record<PromotionType, string> = {
-	percentage: 'Percentage off',
+	cumulative_percentage: 'Cumulative percentage off',
 	fixed_amount: 'Fixed amount off',
-	non_cumulative_percentage: 'Percentage off (original subtotal)',
+	non_cumulative_percentage: 'Non-cumulative percentage off (original subtotal)',
 };
 
 /** Mirrors the `NOT_STARTED` half of the backend's `PromotionDomain.rejectionAt` — a promotion with no `startAt` has always started. */

@@ -2,7 +2,6 @@ package com.ferry.promotion.domain.promotion;
 
 import com.ferry.promotion.domain.common.MoneyDomain;
 import com.ferry.promotion.domain.common.NoteDomain;
-import com.ferry.promotion.domain.common.exception.PromotionNotRedeemableException;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -159,7 +158,7 @@ public record PromotionDomain(String id, String tenantId, PromotionCodeDomain co
 				? initialSubtotal
 				: new MoneyDomain(initialSubtotal.value().subtract(discountSoFar.value()).max(BigDecimal.ZERO));
 		MoneyDomain raw = switch(type){
-			case PERCENTAGE, NON_CUMULATIVE_PERCENTAGE -> percentageOf(basis);
+			case CUMULATIVE_PERCENTAGE, NON_CUMULATIVE_PERCENTAGE -> percentageOf(basis);
 			case FIXED_AMOUNT -> amount;
 		};
 		if(maxDiscountAmount != null){

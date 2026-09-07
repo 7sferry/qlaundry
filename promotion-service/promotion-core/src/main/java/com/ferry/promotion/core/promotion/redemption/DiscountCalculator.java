@@ -30,7 +30,7 @@ public class DiscountCalculator{
 		return granted;
 	}
 
-	public MoneyDomain visit(PercentageDiscount discountEntity){
+	public MoneyDomain visit(CumulativePercentageDiscount discountEntity){
 		MoneyDomain basis = new MoneyDomain(initialPrice.value().subtract(this.totalDiscountValue.value()).max(BigDecimal.ZERO));
 		MoneyDomain discountValue = basis
 				.multiply(discountEntity.percentage()

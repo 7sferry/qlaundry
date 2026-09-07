@@ -60,7 +60,7 @@ const emptyForm: PromotionFormData = {
 	code: '',
 	name: '',
 	description: '',
-	type: 'percentage',
+	type: 'cumulative_percentage',
 	percentage: '',
 	amount: '',
 	maxDiscountAmount: '',

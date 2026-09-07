@@ -65,7 +65,7 @@ public class DefaultPromotionRedemptionUseCase implements PromotionRedemptionUse
 		if(!gateway.claimUsage(redeemed)){
 			return new PromotionRedemptionResponse(code, promotion, null, PromotionRejection.EXHAUSTED);
 		}
-		DiscountStrategy discountStrategy = getDiscountStrategy(promotion);
+		DiscountStrategy discountStrategy = DiscountStrategyFactory.from(promotion);
 		MoneyDomain discount = discountStrategy.calculate(calculator);
 		if(!discount.isPositive()){
 			return new PromotionRedemptionResponse(code, promotion, null, PromotionRejection.NO_DISCOUNT);
@@ -73,14 +73,6 @@ public class DefaultPromotionRedemptionUseCase implements PromotionRedemptionUse
 		PromotionRedemptionDomain redemption = gateway.save(PromotionRedemptionDomain.register(redeemed,
 				request.referenceId(), request.customerId(), subtotal, discount, request.redeemedBy()));
 		return new PromotionRedemptionResponse(code, redeemed, redemption, null);
-	}
-
-	public DiscountStrategy getDiscountStrategy(PromotionDomain promotion){
-		return switch(promotion.type()){
-			case PERCENTAGE -> new PercentageDiscount(promotion.percentage(), promotion.maxDiscountAmount());
-			case NON_CUMULATIVE_PERCENTAGE -> new NonCumulativePercentageDiscount(promotion.percentage(), promotion.maxDiscountAmount());
-			case FIXED_AMOUNT -> new AmountDiscount(promotion.amountValue(), promotion.maxDiscountAmount());
-		};
 	}
 
 }

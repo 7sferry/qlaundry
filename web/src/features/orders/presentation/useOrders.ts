@@ -21,12 +21,6 @@ export function useOrders() {
 		items: orders, setItems: setOrders, loading, error, hasNext, hasPrev, refresh, goNext, goPrevious,
 	} = usePaginatedList<Order, OrderFilters>(fetchOrderPage);
 
-	const placeOrder = useCallback(async (input: CreateOrderInput): Promise<Order> => {
-		const order = await useCases.placeOrder(input);
-		setOrders((prev) => [order, ...prev]);
-		return order;
-	}, [setOrders]);
-
 	const updateStatus = useCallback(async (input: UpdateOrderStatusInput): Promise<void> => {
 		const updated = await useCases.updateStatus(input);
 		setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
@@ -42,9 +36,18 @@ export function useOrders() {
 	}, []);
 
 	return {
-		orders, loading, error, hasNext, hasPrev, refresh, goNext, goPrevious, placeOrder, updateStatus, cancelOrder,
-		viewInvoice,
+		orders, loading, error, hasNext, hasPrev, refresh, goNext, goPrevious, updateStatus, cancelOrder, viewInvoice,
 	};
+}
+
+/**
+ * Just the create-order action, with none of `useOrders()`'s list-fetching machinery — the create-order page
+ * never displays the order list, so calling `useOrders()` there would fire an unused `GET /order/list` on
+ * every visit purely to reach `placeOrder`.
+ */
+export function usePlaceOrder() {
+	const placeOrder = useCallback((input: CreateOrderInput): Promise<Order> => useCases.placeOrder(input), []);
+	return {placeOrder};
 }
 
 export function useServices() {

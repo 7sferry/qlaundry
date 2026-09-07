@@ -8,7 +8,7 @@ const mockPromotion: Promotion = {
 	code: 'LEBARAN25',
 	name: 'Diskon Lebaran',
 	description: 'seasonal',
-	type: 'percentage',
+	type: 'cumulative_percentage',
 	percentage: 25,
 	combinable: true,
 	usageLimit: 100,
@@ -25,6 +25,9 @@ function makeRepo(): { repo: PromotionRepository; fns: Record<string, ReturnType
 		createPromotion: vi.fn().mockResolvedValue(mockPromotion),
 		updatePromotion: vi.fn().mockResolvedValue(mockPromotion),
 		togglePromotion: vi.fn().mockResolvedValue({id: mockPromotion.id, active: false}),
+		previewPromotions: vi.fn().mockResolvedValue([
+			{code: mockPromotion.code, applied: true, message: 'Promotion applied', discountAmount: 25000},
+		]),
 	};
 	return {repo: fns as unknown as PromotionRepository, fns};
 }
@@ -33,7 +36,7 @@ describe('promotionUseCases', () => {
 	it('listPromotions passes filters through to the repository', async () => {
 		const {repo, fns} = makeRepo();
 		const useCases = promotionUseCases(repo);
-		const filters: PromotionFilters = {search: 'Lebaran', type: 'percentage'};
+		const filters: PromotionFilters = {search: 'Lebaran', type: 'cumulative_percentage'};
 
 		const result = await useCases.listPromotions(filters);
 
@@ -47,7 +50,7 @@ describe('promotionUseCases', () => {
 		const input: CreatePromotionInput = {
 			code: 'GAJIAN30',
 			name: 'Diskon Gajian',
-			type: 'percentage',
+			type: 'cumulative_percentage',
 			percentage: 30,
 			combinable: true,
 			startAt: '2026-09-01',
@@ -64,7 +67,7 @@ describe('promotionUseCases', () => {
 		const {repo, fns} = makeRepo();
 		const useCases = promotionUseCases(repo);
 		const input: CreatePromotionInput = {
-			code: 'BAD1', name: 'Bad Promo', type: 'percentage', startAt: '2026-09-01', endAt: '2026-09-30',
+			code: 'BAD1', name: 'Bad Promo', type: 'cumulative_percentage', startAt: '2026-09-01', endAt: '2026-09-30',
 		};
 
 		await expect(useCases.createPromotion(input))
@@ -76,7 +79,7 @@ describe('promotionUseCases', () => {
 		const {repo, fns} = makeRepo();
 		const useCases = promotionUseCases(repo);
 		const input: CreatePromotionInput = {
-			code: 'BAD2', name: 'Bad Promo', type: 'percentage', percentage: 120,
+			code: 'BAD2', name: 'Bad Promo', type: 'cumulative_percentage', percentage: 120,
 			startAt: '2026-09-01', endAt: '2026-09-30',
 		};
 
@@ -102,7 +105,7 @@ describe('promotionUseCases', () => {
 		const input: CreatePromotionInput = {
 			code: 'BAD4',
 			name: 'Bad Promo',
-			type: 'percentage',
+			type: 'cumulative_percentage',
 			percentage: 10,
 			startAt: '2026-09-30',
 			endAt: '2026-09-01',
@@ -119,7 +122,7 @@ describe('promotionUseCases', () => {
 			id: 'promo-lebaran25',
 			code: 'LEBARAN25',
 			name: 'Diskon Lebaran',
-			type: 'percentage',
+			type: 'cumulative_percentage',
 			percentage: 25,
 			combinable: true,
 			active: false,
@@ -140,5 +143,17 @@ describe('promotionUseCases', () => {
 
 		expect(fns.togglePromotion).toHaveBeenCalledWith('promo-lebaran25', false);
 		expect(result).toEqual({id: 'promo-lebaran25', active: false});
+	});
+
+	it('previewPromotions delegates to repository.previewPromotions with the picked promotions and subtotal', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = promotionUseCases(repo);
+
+		const result = await useCases.previewPromotions([mockPromotion], 100000);
+
+		expect(fns.previewPromotions).toHaveBeenCalledWith([mockPromotion], 100000);
+		expect(result).toEqual([
+			{code: mockPromotion.code, applied: true, message: 'Promotion applied', discountAmount: 25000},
+		]);
 	});
 });

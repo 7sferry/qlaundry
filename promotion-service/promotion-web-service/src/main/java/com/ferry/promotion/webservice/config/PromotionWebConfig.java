@@ -12,6 +12,8 @@ import com.ferry.promotion.core.promotion.detail.PromotionDetailUseCase;
 import com.ferry.promotion.core.promotion.list.DefaultPromotionListUseCase;
 import com.ferry.promotion.core.promotion.list.PromotionListGateway;
 import com.ferry.promotion.core.promotion.list.PromotionListUseCase;
+import com.ferry.promotion.core.promotion.preview.DefaultPromotionPreviewUseCase;
+import com.ferry.promotion.core.promotion.preview.PromotionPreviewUseCase;
 import com.ferry.promotion.core.promotion.redemption.DefaultPromotionRedemptionUseCase;
 import com.ferry.promotion.core.promotion.redemption.PromotionRedemptionGateway;
 import com.ferry.promotion.core.promotion.redemption.PromotionRedemptionUseCase;
@@ -122,6 +124,11 @@ public class PromotionWebConfig{
 	@Bean
 	PromotionRedemptionUseCase promotionRedemptionUseCase(PromotionRedemptionGateway promotionRedemptionGateway){
 		return new DefaultPromotionRedemptionUseCase(promotionRedemptionGateway);
+	}
+
+	@Bean
+	PromotionPreviewUseCase promotionPreviewUseCase(){
+		return new DefaultPromotionPreviewUseCase();
 	}
 
 }

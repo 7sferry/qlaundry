@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 @Getter
 @RequiredArgsConstructor
 public enum PromotionType{
-	PERCENTAGE((short) 1),
+	CUMULATIVE_PERCENTAGE((short) 1),
 	FIXED_AMOUNT((short) 2),
 	NON_CUMULATIVE_PERCENTAGE((short) 3),
 	;
@@ -33,7 +33,7 @@ public enum PromotionType{
 	}
 
 	public boolean isPercentageBased(){
-		return this == PERCENTAGE || this == NON_CUMULATIVE_PERCENTAGE;
+		return this == CUMULATIVE_PERCENTAGE || this == NON_CUMULATIVE_PERCENTAGE;
 	}
 
 }
