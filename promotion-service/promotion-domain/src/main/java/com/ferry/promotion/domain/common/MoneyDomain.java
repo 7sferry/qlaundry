@@ -35,6 +35,9 @@ public record MoneyDomain(BigDecimal value){
 	}
 
 	public MoneyDomain min(MoneyDomain other){
+		if(other == null){
+			return this;
+		}
 		return value.compareTo(other.value) <= 0 ? this : other;
 	}
 

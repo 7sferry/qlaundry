@@ -21,10 +21,7 @@ import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -62,7 +59,7 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 				new FullNameDomain(request.customerName()), new PhoneDomain(request.customerPhone()), customerEmail,
 				customerAddress, service, request.quantity(), request.weightKg(), discount, priority, paymentMethod,
 				pickupAt, estimatedDeliveryAt, new NoteDomain(request.notes()), principal.userId());
-		Set<String> codes = request.promoCodes() == null ? Set.of() : request.promoCodes();
+		Set<String> codes = distinctCodes(request.promoCodes());
 		List<PromotionRedemptionHttpResponse> redemptions = redeemPromotions(order, codes, tenantId, principal);
 		OrderDomain running = order;
 		for(PromotionRedemptionHttpResponse response : redemptions){
@@ -75,7 +72,24 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		presenter.present(new OrderCreateResponse(saved, items, promotions));
 	}
 
-	private List<PromotionRedemptionHttpResponse> redeemPromotions(OrderDomain order, Set<String> codes,
+	private Set<String> distinctCodes(List<String> promoCodes){
+		if(promoCodes == null){
+			return Set.of();
+		}
+		Set<String> codes = new LinkedHashSet<>();
+		for(String code : promoCodes){
+			if(code == null || code.isBlank()){
+				continue;
+			}
+			String trimmed = code.trim();
+			if(!codes.add(trimmed)){
+				throw new IllegalArgumentException("Duplicate promo code: " + trimmed);
+			}
+		}
+		return codes;
+	}
+
+	private List<PromotionRedemptionHttpResponse> redeemPromotions(OrderDomain order, Collection<String> codes,
 	                                                                TenantIdDomain tenantId,
 	                                                                OrderAuthPrincipal principal){
 		if(codes.isEmpty()){

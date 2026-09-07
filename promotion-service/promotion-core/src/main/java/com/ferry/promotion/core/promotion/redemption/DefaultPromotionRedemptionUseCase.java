@@ -9,10 +9,10 @@ import com.ferry.promotion.domain.promotion.PromotionRejection;
 import com.ferry.promotion.domain.tenant.TenantIdDomain;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -30,14 +30,11 @@ public class DefaultPromotionRedemptionUseCase implements PromotionRedemptionUse
 		MoneyDomain subtotal = new MoneyDomain(request.subtotal());
 		boolean multipleCodes = request.codes().size() > 1;
 		List<PromotionRedemptionResponse> responses = new ArrayList<>(request.codes().size());
-		MoneyDomain discountSoFar = MoneyDomain.ZERO;
+		DiscountCalculator calculator = new DiscountCalculator(subtotal);
 		for(String code : request.codes()){
-			PromotionRedemptionResponse response = redeem(code, tenantId, subtotal, discountSoFar, multipleCodes,
-					request);
+			PromotionRedemptionResponse response = redeem(code, tenantId, subtotal, multipleCodes,
+					request, calculator);
 			responses.add(response);
-			if(response.isApplied()){
-				discountSoFar = discountSoFar.plus(response.redemption().discountAmount());
-			}
 		}
 		boolean anyFailed = responses.stream().anyMatch(o -> !o.isApplied());
 		if(anyFailed){
@@ -47,8 +44,8 @@ public class DefaultPromotionRedemptionUseCase implements PromotionRedemptionUse
 	}
 
 	private PromotionRedemptionResponse redeem(String code, TenantIdDomain tenantId, MoneyDomain subtotal,
-	                                           MoneyDomain discountSoFar, boolean multipleCodes,
-	                                           PromotionRedemptionRequest request){
+	                                           boolean multipleCodes,
+	                                           PromotionRedemptionRequest request, DiscountCalculator calculator){
 		PromotionRedemptionDomain replayed = gateway.findByReferenceId(request.referenceId(), code, tenantId)
 				.orElse(null);
 		if(replayed != null){
@@ -65,17 +62,26 @@ public class DefaultPromotionRedemptionUseCase implements PromotionRedemptionUse
 		if(rejection != null){
 			return new PromotionRedemptionResponse(code, promotion, null, rejection);
 		}
-		MoneyDomain discount = promotion.discountFor(subtotal, discountSoFar);
-		if(!discount.isPositive()){
-			return new PromotionRedemptionResponse(code, promotion, null, PromotionRejection.NO_DISCOUNT);
-		}
 		PromotionDomain redeemed = promotion.redeem(request.redeemedBy());
 		if(!gateway.claimUsage(redeemed)){
 			return new PromotionRedemptionResponse(code, promotion, null, PromotionRejection.EXHAUSTED);
 		}
+		DiscountStrategy discountStrategy = getDiscountStrategy(promotion);
+		MoneyDomain discount = discountStrategy.calculate(calculator);
+		if(!discount.isPositive()){
+			return new PromotionRedemptionResponse(code, promotion, null, PromotionRejection.NO_DISCOUNT);
+		}
 		PromotionRedemptionDomain redemption = gateway.save(PromotionRedemptionDomain.register(redeemed,
 				request.referenceId(), request.customerId(), subtotal, discount, request.redeemedBy()));
 		return new PromotionRedemptionResponse(code, redeemed, redemption, null);
+	}
+
+	public DiscountStrategy getDiscountStrategy(PromotionDomain promotion){
+		return switch(promotion.type()){
+			case PERCENTAGE -> new PercentageDiscount(BigDecimal.valueOf(promotion.percentage()), promotion.maxDiscountAmount());
+			case NON_CUMULATIVE_PERCENTAGE -> new NonCumulativePercentageDiscount(BigDecimal.valueOf(promotion.percentage()), promotion.maxDiscountAmount());
+			case FIXED_AMOUNT -> new AmountDiscount(promotion.amountValue(), promotion.maxDiscountAmount());
+		};
 	}
 
 }

@@ -21,7 +21,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -60,7 +59,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 
 	@Test
 	void givenUnknownCode_thenRejectsWithNotFound(){
-		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, Set.of(PROMO_CODE),
+		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
 				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
@@ -73,6 +72,8 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.present(responseCaptor.capture());
 		then(gateway).should(never())
 				.claimUsage(any(PromotionDomain.class));
+		then(gateway).should()
+				.rollback();
 
 		PromotionRedemptionResponse response = responseCaptor.getValue().getFirst();
 		thenSoftly(softly -> {
@@ -104,7 +105,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, Set.of(PROMO_CODE),
+		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
 				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
@@ -117,6 +118,8 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.present(responseCaptor.capture());
 		then(gateway).should(never())
 				.claimUsage(any(PromotionDomain.class));
+		then(gateway).should()
+				.rollback();
 
 		thenSoftly(softly -> softly.then(responseCaptor.getValue().getFirst().rejection())
 				.isEqualTo(PromotionRejection.EXPIRED));
@@ -143,7 +146,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, Set.of(PROMO_CODE),
+		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
 				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
@@ -156,6 +159,8 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.present(responseCaptor.capture());
 		then(gateway).should(never())
 				.claimUsage(any(PromotionDomain.class));
+		then(gateway).should()
+				.rollback();
 
 		PromotionRedemptionResponse response = responseCaptor.getValue().getFirst();
 		thenSoftly(softly -> {
@@ -185,7 +190,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, Set.of(PROMO_CODE),
+		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
 				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
@@ -200,6 +205,8 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.present(responseCaptor.capture());
 		then(gateway).should(never())
 				.save(any(PromotionRedemptionDomain.class));
+		then(gateway).should()
+				.rollback();
 
 		thenSoftly(softly -> softly.then(responseCaptor.getValue().getFirst().rejection())
 				.isEqualTo(PromotionRejection.EXHAUSTED));
@@ -226,7 +233,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, Set.of(PROMO_CODE, "LAINNYA"),
+		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE, "LAINNYA"),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
 				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
@@ -241,6 +248,8 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.present(responseCaptor.capture());
 		then(gateway).should(never())
 				.claimUsage(any(PromotionDomain.class));
+		then(gateway).should()
+				.rollback();
 
 		thenSoftly(softly -> softly.then(responseCaptor.getValue().getFirst().rejection())
 				.isEqualTo(PromotionRejection.NOT_COMBINABLE));
@@ -268,7 +277,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, Set.of(PROMO_CODE),
+		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
 				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
@@ -281,6 +290,8 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.present(responseCaptor.capture());
 		then(gateway).should(never())
 				.claimUsage(any(PromotionDomain.class));
+		then(gateway).should()
+				.rollback();
 
 		thenSoftly(softly -> softly.then(responseCaptor.getValue().getFirst().rejection())
 				.isEqualTo(PromotionRejection.BELOW_MIN_SUBTOTAL));
@@ -321,7 +332,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, Set.of(PROMO_CODE),
+		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.of(existing)).given(gateway)
 				.findByReferenceId(ORDER_NUMBER, PROMO_CODE, new TenantIdDomain(TENANT_ID));
@@ -336,6 +347,8 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.claimUsage(any(PromotionDomain.class));
 		then(gateway).should(never())
 				.save(any(PromotionRedemptionDomain.class));
+		then(gateway).should(never())
+				.rollback();
 
 		PromotionRedemptionResponse response = responseCaptor.getValue().getFirst();
 		thenSoftly(softly -> {
@@ -367,7 +380,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, Set.of("GAJIAN30"),
+		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of("GAJIAN30"),
 				new BigDecimal("120000"), ORDER_NUMBER, "01CUSTOMERRENI0000000000", STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
 				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
@@ -384,6 +397,8 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.save(redemptionCaptor.capture());
 		then(presenter).should()
 				.present(responseCaptor.capture());
+		then(gateway).should(never())
+				.rollback();
 
 		PromotionRedemptionDomain redemption = redemptionCaptor.getValue();
 		PromotionRedemptionResponse response = responseCaptor.getValue().getFirst();
@@ -439,7 +454,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, Set.of("PERTAMA", "KEDUA"),
+		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of("PERTAMA", "KEDUA"),
 				new BigDecimal("100000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
 				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
@@ -456,6 +471,8 @@ class DefaultPromotionRedemptionUseCaseTest{
 
 		then(gateway).should(times(2))
 				.save(redemptionCaptor.capture());
+		then(gateway).should(never())
+				.rollback();
 
 		List<PromotionRedemptionDomain> redemptions = redemptionCaptor.getAllValues();
 
@@ -504,7 +521,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, Set.of("PERTAMA", "KHUSUS"),
+		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of("PERTAMA", "KHUSUS"),
 				new BigDecimal("100000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
 				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
@@ -521,11 +538,166 @@ class DefaultPromotionRedemptionUseCaseTest{
 
 		then(gateway).should(times(2))
 				.save(redemptionCaptor.capture());
+		then(gateway).should(never())
+				.rollback();
 
 		List<PromotionRedemptionDomain> redemptions = redemptionCaptor.getAllValues();
 
 		thenSoftly(softly -> softly.then(redemptions.getLast().discountAmount().value())
 				.isEqualByComparingTo(new BigDecimal("10000.00")));
+	}
+
+	@Test
+	void givenAFixedAmountPromotion_thenGrantsTheExactAmount(){
+		Instant now = Instant.now();
+		PromotionDomain promotion = PromotionDomain.builder()
+				.id(PROMOTION_ID)
+				.tenantId(TENANT_ID)
+				.code(new PromotionCodeDomain("POTONGAN"))
+				.name("Diskon Potongan")
+				.description(new NoteDomain("flat cut"))
+				.type(PromotionType.FIXED_AMOUNT)
+				.amount(MoneyDomain.of(8000L))
+				.combinable(true)
+				.usageLimit(50)
+				.usedCount(2)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of("POTONGAN"),
+				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
+		willReturn(Optional.empty()).given(gateway)
+				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+		willReturn(Optional.of(promotion)).given(gateway)
+				.findByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
+		willReturn(true).given(gateway)
+				.claimUsage(any(PromotionDomain.class));
+		willAnswer(invocation -> invocation.<PromotionRedemptionDomain>getArgument(0)).given(gateway)
+				.save(any(PromotionRedemptionDomain.class));
+
+		useCase.execute(request, presenter);
+
+		then(gateway).should()
+				.save(redemptionCaptor.capture());
+		then(gateway).should(never())
+				.rollback();
+
+		thenSoftly(softly -> softly.then(redemptionCaptor.getValue().discountAmount().value())
+				.isEqualByComparingTo(new BigDecimal("8000.00")));
+	}
+
+	@Test
+	void givenAFixedAmountPromotionAboveItsCap_thenGrantsAtMostTheCap(){
+		Instant now = Instant.now();
+		PromotionDomain promotion = PromotionDomain.builder()
+				.id(PROMOTION_ID)
+				.tenantId(TENANT_ID)
+				.code(new PromotionCodeDomain("POTONGANBESAR"))
+				.name("Diskon Potongan Besar")
+				.description(new NoteDomain("flat cut, capped"))
+				.type(PromotionType.FIXED_AMOUNT)
+				.amount(MoneyDomain.of(20000L))
+				.maxDiscountAmount(MoneyDomain.of(15000L))
+				.combinable(true)
+				.usageLimit(50)
+				.usedCount(3)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of("POTONGANBESAR"),
+				new BigDecimal("50000"), ORDER_NUMBER, null, STAFF_ID);
+		willReturn(Optional.empty()).given(gateway)
+				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+		willReturn(Optional.of(promotion)).given(gateway)
+				.findByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
+		willReturn(true).given(gateway)
+				.claimUsage(any(PromotionDomain.class));
+		willAnswer(invocation -> invocation.<PromotionRedemptionDomain>getArgument(0)).given(gateway)
+				.save(any(PromotionRedemptionDomain.class));
+
+		useCase.execute(request, presenter);
+
+		then(gateway).should()
+				.save(redemptionCaptor.capture());
+
+		thenSoftly(softly -> softly.then(redemptionCaptor.getValue().discountAmount().value())
+				.isEqualByComparingTo(new BigDecimal("15000.00")));
+	}
+
+	@Test
+	void givenAFirstStackedCodeIsCappedByItsOwnMax_thenTheSecondCodeComputesOffTheCappedRemainder(){
+		Instant now = Instant.now();
+		PromotionDomain first = PromotionDomain.builder()
+				.id("01PROMOPOTONGANBESAR0000")
+				.tenantId(TENANT_ID)
+				.code(new PromotionCodeDomain("SETENGAH"))
+				.name("Diskon Setengah")
+				.description(new NoteDomain("half off, capped"))
+				.type(PromotionType.PERCENTAGE)
+				.percentage(50.0d)
+				.maxDiscountAmount(MoneyDomain.of(10000L))
+				.combinable(true)
+				.usageLimit(50)
+				.usedCount(0)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		PromotionDomain second = PromotionDomain.builder()
+				.id(PROMOTION_ID)
+				.tenantId(TENANT_ID)
+				.code(new PromotionCodeDomain("SEPULUH"))
+				.name("Diskon Sepuluh")
+				.description(new NoteDomain("stacked after the capped code"))
+				.type(PromotionType.PERCENTAGE)
+				.percentage(10.0d)
+				.combinable(true)
+				.usageLimit(50)
+				.usedCount(0)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of("SETENGAH", "SEPULUH"),
+				new BigDecimal("100000"), ORDER_NUMBER, null, STAFF_ID);
+		willReturn(Optional.empty()).given(gateway)
+				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+		willReturn(Optional.of(first)).given(gateway)
+				.findByCode(eq(new PromotionCodeDomain("SETENGAH")), any(TenantIdDomain.class));
+		willReturn(Optional.of(second)).given(gateway)
+				.findByCode(eq(new PromotionCodeDomain("SEPULUH")), any(TenantIdDomain.class));
+		willReturn(true).given(gateway)
+				.claimUsage(any(PromotionDomain.class));
+		willAnswer(invocation -> invocation.<PromotionRedemptionDomain>getArgument(0)).given(gateway)
+				.save(any(PromotionRedemptionDomain.class));
+
+		useCase.execute(request, presenter);
+
+		then(gateway).should(times(2))
+				.save(redemptionCaptor.capture());
+		then(gateway).should(never())
+				.rollback();
+
+		List<PromotionRedemptionDomain> redemptions = redemptionCaptor.getAllValues();
+
+		thenSoftly(softly -> {
+			softly.then(redemptions.getFirst().discountAmount().value()).isEqualByComparingTo(new BigDecimal("10000.00"));
+			softly.then(redemptions.getLast().discountAmount().value()).isEqualByComparingTo(new BigDecimal("9000.00"));
+		});
 	}
 
 }

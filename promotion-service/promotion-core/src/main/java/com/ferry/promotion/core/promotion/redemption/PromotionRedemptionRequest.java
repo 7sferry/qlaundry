@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -15,7 +16,7 @@ import java.util.Set;
  * on Agustus 2026      *
  ************************/
 
-public record PromotionRedemptionRequest(@NotBlank String tenantId, @NotEmpty Set<String> codes,
+public record PromotionRedemptionRequest(@NotBlank String tenantId, @NotEmpty Collection<String> codes,
                                          @NotNull @PositiveOrZero BigDecimal subtotal, @NotBlank String referenceId,
                                          String customerId, @NotBlank String redeemedBy)
 		implements PromotionValidation{

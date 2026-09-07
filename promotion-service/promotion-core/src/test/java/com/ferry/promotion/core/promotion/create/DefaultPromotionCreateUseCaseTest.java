@@ -154,7 +154,7 @@ class DefaultPromotionCreateUseCaseTest{
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("Minimum subtotal must be greater than zero"));
+				.hasMessage("Amount must not be negative"));
 
 		then(gateway).should(never())
 				.save(any(PromotionDomain.class));
