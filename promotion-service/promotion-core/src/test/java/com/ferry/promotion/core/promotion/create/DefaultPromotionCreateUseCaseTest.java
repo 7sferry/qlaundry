@@ -55,7 +55,7 @@ class DefaultPromotionCreateUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		PromotionCreateRequest request = new PromotionCreateRequest(PROMO_CODE, "Diskon Lebaran", "seasonal",
-				PromotionType.PERCENTAGE, 25.0d, null, null, null, null, 100, null, null);
+				PromotionType.PERCENTAGE, new BigDecimal("25"), null, null, null, null, 100, null, null);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(PromotionForbiddenActionException.class)
@@ -72,7 +72,7 @@ class DefaultPromotionCreateUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		PromotionCreateRequest request = new PromotionCreateRequest("   ", "Diskon Lebaran", "seasonal",
-				PromotionType.PERCENTAGE, 25.0d, null, null, null, null, 100, null, null);
+				PromotionType.PERCENTAGE, new BigDecimal("25"), null, null, null, null, 100, null, null);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(ConstraintViolationException.class));
@@ -88,7 +88,7 @@ class DefaultPromotionCreateUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		PromotionCreateRequest request = new PromotionCreateRequest(PROMO_CODE, "Diskon Lebaran", "seasonal",
-				PromotionType.PERCENTAGE, 25.0d, null, null, null, null, 100, null, null);
+				PromotionType.PERCENTAGE, new BigDecimal("25"), null, null, null, null, 100, null, null);
 		willReturn(true).given(gateway)
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
 
@@ -108,7 +108,7 @@ class DefaultPromotionCreateUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		PromotionCreateRequest request = new PromotionCreateRequest(PROMO_CODE, "Diskon Lebaran", "seasonal",
-				PromotionType.PERCENTAGE, 120.0d, null, null, null, null, 100, null, null);
+				PromotionType.PERCENTAGE, new BigDecimal("120"), null, null, null, null, 100, null, null);
 		willReturn(false).given(gateway)
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
 
@@ -128,7 +128,7 @@ class DefaultPromotionCreateUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		PromotionCreateRequest request = new PromotionCreateRequest("KILAT15", "Diskon Kilat", "flash sale",
-				PromotionType.PERCENTAGE, 15.0d, null, BigDecimal.ZERO, null, null, 50, null, null);
+				PromotionType.PERCENTAGE, new BigDecimal("15"), null, BigDecimal.ZERO, null, null, 50, null, null);
 		willReturn(false).given(gateway)
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
 
@@ -148,7 +148,7 @@ class DefaultPromotionCreateUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		PromotionCreateRequest request = new PromotionCreateRequest("BELANJA", "Diskon Belanja", "min spend",
-				PromotionType.PERCENTAGE, 10.0d, null, null, new BigDecimal("-1"), null, 50, null, null);
+				PromotionType.PERCENTAGE, new BigDecimal("10"), null, null, new BigDecimal("-1"), null, 50, null, null);
 		willReturn(false).given(gateway)
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
 
@@ -211,7 +211,7 @@ class DefaultPromotionCreateUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		PromotionCreateRequest request = new PromotionCreateRequest("EKSKLUSIF", "Diskon Eksklusif", "vip only",
-				PromotionType.NON_CUMULATIVE_PERCENTAGE, 30.0d, null, new BigDecimal("75000"),
+				PromotionType.NON_CUMULATIVE_PERCENTAGE, new BigDecimal("30"), null, new BigDecimal("75000"),
 				new BigDecimal("200000"), false, null, null, null);
 		willReturn(false).given(gateway)
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));

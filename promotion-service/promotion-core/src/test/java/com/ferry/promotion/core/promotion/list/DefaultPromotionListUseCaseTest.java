@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -150,7 +151,7 @@ class DefaultPromotionListUseCaseTest{
 				.name("Diskon Kemerdekaan")
 				.description(new NoteDomain("august only"))
 				.type(PromotionType.PERCENTAGE)
-				.percentage(17.0d)
+				.percentage(new BigDecimal("17"))
 				.usageLimit(170)
 				.usedCount(45)
 				.active(true)

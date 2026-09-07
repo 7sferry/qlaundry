@@ -9,7 +9,6 @@ import com.ferry.promotion.domain.promotion.PromotionRejection;
 import com.ferry.promotion.domain.tenant.TenantIdDomain;
 import lombok.RequiredArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -78,8 +77,8 @@ public class DefaultPromotionRedemptionUseCase implements PromotionRedemptionUse
 
 	public DiscountStrategy getDiscountStrategy(PromotionDomain promotion){
 		return switch(promotion.type()){
-			case PERCENTAGE -> new PercentageDiscount(BigDecimal.valueOf(promotion.percentage()), promotion.maxDiscountAmount());
-			case NON_CUMULATIVE_PERCENTAGE -> new NonCumulativePercentageDiscount(BigDecimal.valueOf(promotion.percentage()), promotion.maxDiscountAmount());
+			case PERCENTAGE -> new PercentageDiscount(promotion.percentage(), promotion.maxDiscountAmount());
+			case NON_CUMULATIVE_PERCENTAGE -> new NonCumulativePercentageDiscount(promotion.percentage(), promotion.maxDiscountAmount());
 			case FIXED_AMOUNT -> new AmountDiscount(promotion.amountValue(), promotion.maxDiscountAmount());
 		};
 	}

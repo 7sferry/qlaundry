@@ -8,7 +8,7 @@ import java.math.BigDecimal;
  ************************/
 
 public record PromotionDetailWebResponse(String id, String code, String name, String description, String type,
-                                         Double percentage, BigDecimal amount, BigDecimal maxDiscountAmount,
+                                         BigDecimal percentage, BigDecimal amount, BigDecimal maxDiscountAmount,
                                          BigDecimal minSubtotal, boolean combinable, Integer usageLimit,
                                          int usedCount, Integer remainingUsage, Long startAt, Long endAt,
                                          boolean active, Long createdAt, Long updatedAt){

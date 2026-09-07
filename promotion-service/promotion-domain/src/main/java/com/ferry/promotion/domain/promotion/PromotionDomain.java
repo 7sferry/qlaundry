@@ -1,6 +1,5 @@
 package com.ferry.promotion.domain.promotion;
 
-import com.ferry.promotion.domain.common.Decimals;
 import com.ferry.promotion.domain.common.MoneyDomain;
 import com.ferry.promotion.domain.common.NoteDomain;
 import com.ferry.promotion.domain.common.exception.PromotionNotRedeemableException;
@@ -18,14 +17,15 @@ import java.util.Optional;
 
 @Builder(toBuilder = true)
 public record PromotionDomain(String id, String tenantId, PromotionCodeDomain code, String name,
-                              NoteDomain description, PromotionType type, Double percentage, MoneyDomain amount,
+                              NoteDomain description, PromotionType type, BigDecimal percentage, MoneyDomain amount,
                               MoneyDomain maxDiscountAmount, MoneyDomain minSubtotal, boolean combinable,
                               Integer usageLimit, int usedCount, Instant startAt, Instant endAt, boolean active,
                               Integer version, boolean deleted, Instant createdAt, String createdBy,
                               Instant updatedAt, String updatedBy){
-	private static final double MAX_PERCENTAGE = 100.0d;
+	private static final BigDecimal MAX_PERCENTAGE = BigDecimal.valueOf(100L);
 	private static final BigDecimal HUNDRED = BigDecimal.valueOf(100L);
 	private static final int PERCENTAGE_FACTOR_SCALE = 6;
+	private static final int PERCENTAGE_SCALE = 2;
 
 	public PromotionDomain{
 		if(tenantId == null || tenantId.isBlank()){
@@ -41,10 +41,11 @@ public record PromotionDomain(String id, String tenantId, PromotionCodeDomain co
 			throw new IllegalArgumentException("Promotion type must not be null");
 		}
 		if(type.isPercentageBased()){
-			if(percentage == null || percentage <= 0 || percentage > MAX_PERCENTAGE){
+			if(percentage == null || percentage.compareTo(BigDecimal.ZERO) <= 0
+					|| percentage.compareTo(MAX_PERCENTAGE) > 0){
 				throw new IllegalArgumentException("Percentage must be greater than zero and at most 100");
 			}
-			percentage = Decimals.scaled(percentage);
+			percentage = percentage.setScale(PERCENTAGE_SCALE, RoundingMode.HALF_EVEN);
 		}else if(amount == null || !amount.isPositive()){
 			throw new IllegalArgumentException("Fixed amount must be greater than zero");
 		}
@@ -66,7 +67,7 @@ public record PromotionDomain(String id, String tenantId, PromotionCodeDomain co
 	}
 
 	public static PromotionDomain create(String tenantId, PromotionCodeDomain code, String name,
-	                                     NoteDomain description, PromotionType type, Double percentage,
+	                                     NoteDomain description, PromotionType type, BigDecimal percentage,
 	                                     MoneyDomain amount, MoneyDomain maxDiscountAmount, MoneyDomain minSubtotal,
 	                                     boolean combinable, Integer usageLimit, Instant startAt, Instant endAt,
 	                                     String createdBy){
@@ -77,7 +78,7 @@ public record PromotionDomain(String id, String tenantId, PromotionCodeDomain co
 	}
 
 	public PromotionDomain update(PromotionCodeDomain code, String name, NoteDomain description, PromotionType type,
-	                              Double percentage, MoneyDomain amount, MoneyDomain maxDiscountAmount,
+	                              BigDecimal percentage, MoneyDomain amount, MoneyDomain maxDiscountAmount,
 	                              MoneyDomain minSubtotal, boolean combinable, Integer usageLimit, Instant startAt,
 	                              Instant endAt, boolean active, String updatedBy){
 		return toBuilder()
@@ -162,8 +163,7 @@ public record PromotionDomain(String id, String tenantId, PromotionCodeDomain co
 	}
 
 	private MoneyDomain percentageOf(MoneyDomain subtotal){
-		BigDecimal factor = BigDecimal.valueOf(percentage)
-				.divide(HUNDRED, PERCENTAGE_FACTOR_SCALE, RoundingMode.HALF_EVEN);
+		BigDecimal factor = percentage.divide(HUNDRED, PERCENTAGE_FACTOR_SCALE, RoundingMode.HALF_EVEN);
 		return subtotal.multiply(factor);
 	}
 

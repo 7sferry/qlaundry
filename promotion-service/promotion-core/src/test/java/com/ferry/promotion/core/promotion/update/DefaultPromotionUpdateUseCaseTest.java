@@ -59,7 +59,7 @@ class DefaultPromotionUpdateUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		PromotionUpdateRequest request = new PromotionUpdateRequest(PROMOTION_ID, "AWALBULAN", "Diskon Awal Bulan",
-				"monthly", PromotionType.PERCENTAGE, 10.0d, null, null, null, null, 25, null, null, true);
+				"monthly", PromotionType.PERCENTAGE, new BigDecimal("10"), null, null, null, null, 25, null, null, true);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(PromotionForbiddenActionException.class)
@@ -76,7 +76,7 @@ class DefaultPromotionUpdateUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		PromotionUpdateRequest request = new PromotionUpdateRequest(PROMOTION_ID, "AWALBULAN", "Diskon Awal Bulan",
-				"monthly", PromotionType.PERCENTAGE, 10.0d, null, null, null, null, 25, null, null, true);
+				"monthly", PromotionType.PERCENTAGE, new BigDecimal("10"), null, null, null, null, 25, null, null, true);
 		willReturn(Optional.empty()).given(gateway)
 				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
 
@@ -103,7 +103,7 @@ class DefaultPromotionUpdateUseCaseTest{
 				.name("Diskon Awal Bulan")
 				.description(new NoteDomain("monthly"))
 				.type(PromotionType.PERCENTAGE)
-				.percentage(10.0d)
+				.percentage(new BigDecimal("10"))
 				.combinable(true)
 				.usageLimit(25)
 				.usedCount(3)
@@ -115,7 +115,7 @@ class DefaultPromotionUpdateUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		PromotionUpdateRequest request = new PromotionUpdateRequest(PROMOTION_ID, "TENGAHBULAN",
-				"Diskon Tengah Bulan", "monthly", PromotionType.PERCENTAGE, 10.0d, null, null, null, null, 25, null,
+				"Diskon Tengah Bulan", "monthly", PromotionType.PERCENTAGE, new BigDecimal("10"), null, null, null, null, 25, null,
 				null, true);
 		willReturn(Optional.of(promotion)).given(gateway)
 				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
@@ -157,7 +157,7 @@ class DefaultPromotionUpdateUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		PromotionUpdateRequest request = new PromotionUpdateRequest(PROMOTION_ID, "awalbulan", "Diskon Awal Bulan",
-				"monthly capped", PromotionType.PERCENTAGE, 12.5d, null, new BigDecimal("20000"), null, false, 40,
+				"monthly capped", PromotionType.PERCENTAGE, new BigDecimal("12.5"), null, new BigDecimal("20000"), null, false, 40,
 				null, null, false);
 		willReturn(Optional.of(promotion)).given(gateway)
 				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
@@ -176,7 +176,7 @@ class DefaultPromotionUpdateUseCaseTest{
 		thenSoftly(softly -> {
 			softly.then(saved.codeValue()).isEqualTo("AWALBULAN");
 			softly.then(saved.type()).isEqualTo(PromotionType.PERCENTAGE);
-			softly.then(saved.percentage()).isEqualTo(12.5d);
+			softly.then(saved.percentage()).isEqualByComparingTo(new BigDecimal("12.5"));
 			softly.then(saved.maxDiscountAmountValue()).isEqualByComparingTo(new BigDecimal("20000.00"));
 			softly.then(saved.usageLimit()).isEqualTo(40);
 			softly.then(saved.usedCount()).isEqualTo(7);

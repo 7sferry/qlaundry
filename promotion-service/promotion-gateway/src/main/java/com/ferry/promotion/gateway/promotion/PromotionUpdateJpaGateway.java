@@ -8,7 +8,6 @@ import com.ferry.promotion.domain.tenant.TenantIdDomain;
 import com.ferry.promotion.gateway.promotion.entity.PromotionJpaEntity;
 import com.ferry.promotion.gateway.promotion.entity.PromotionTypeJpaEntity;
 import com.ferry.promotion.gateway.promotion.repository.PromotionJpaRepository;
-import com.ferry.promotion.gateway.promotion.repository.PromotionTypeJpaRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
@@ -21,7 +20,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class PromotionUpdateJpaGateway implements PromotionUpdateGateway{
 	private final PromotionJpaRepository promotionJpaRepository;
-	private final PromotionTypeJpaRepository promotionTypeJpaRepository;
 
 	@Override
 	public Optional<PromotionDomain> findById(PromotionIdDomain promotionId, TenantIdDomain tenantId){
@@ -37,7 +35,6 @@ public class PromotionUpdateJpaGateway implements PromotionUpdateGateway{
 
 	@Override
 	public PromotionDomain save(PromotionDomain promotion){
-		PromotionTypeJpaEntity type = promotionTypeJpaRepository.getReferenceById(promotion.type().getValue());
 		PromotionJpaEntity saved = promotionJpaRepository.save(
 				PromotionJpaEntity.construct(promotion.id(), promotion));
 		return PromotionJpaEntity.construct(saved);

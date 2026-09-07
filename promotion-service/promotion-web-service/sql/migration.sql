@@ -45,9 +45,11 @@ CREATE SCHEMA IF NOT EXISTS promotions;
 --
 -- Money columns (`promotions.amount`, `promotions.max_discount_amount`, `promotion_redemptions.subtotal` /
 -- `discount_amount`) are NUMERIC(19,2) — BigDecimal in the domain, since a percentage of a subtotal produces
--- fractions that must not be rounded away mid-calculation. `promotions.percentage` is DOUBLE PRECISION: it is
--- a factor, not an amount, and the domain pins it to 2 decimals before the multiplication happens in
--- BigDecimal.
+-- fractions that must not be rounded away mid-calculation. `promotions.percentage` is NUMERIC(5,2), BigDecimal
+-- in the domain too — it only ever feeds price math, so it carries the same precision guarantee as the money
+-- columns instead of a floating-point approximation. (It used to be DOUBLE PRECISION with an explicit `scale`
+-- on the JPA column, which Hibernate rejects at boot with "scale has no meaning for SQL floating point types"
+-- — scale/precision only apply to NUMERIC/DECIMAL columns.)
 --
 -- `promotions` holds no PII, so there is no encryption here and no crypto config in this service.
 --

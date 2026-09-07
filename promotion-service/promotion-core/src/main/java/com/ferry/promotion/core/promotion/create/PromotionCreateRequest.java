@@ -14,7 +14,7 @@ import java.math.BigDecimal;
  ************************/
 
 public record PromotionCreateRequest(@NotBlank String code, @NotBlank String name, String description,
-                                     @NotNull PromotionType type, Double percentage, BigDecimal amount,
+                                     @NotNull PromotionType type, BigDecimal percentage, BigDecimal amount,
                                      BigDecimal maxDiscountAmount, BigDecimal minSubtotal, Boolean combinable,
                                      @Positive Integer usageLimit, Long startAt,
                                      Long endAt) implements PromotionValidation{

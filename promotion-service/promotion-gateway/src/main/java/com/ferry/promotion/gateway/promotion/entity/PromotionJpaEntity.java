@@ -41,7 +41,7 @@ public class PromotionJpaEntity{
 	@Column(nullable = false)
 	private short typeId;
 	@Column(precision = 5, scale = MoneyDomain.SCALE)
-	private Double percentage;
+	private BigDecimal percentage;
 	@Column(precision = 19, scale = MoneyDomain.SCALE)
 	private BigDecimal amount;
 	@Column(precision = 19, scale = MoneyDomain.SCALE)

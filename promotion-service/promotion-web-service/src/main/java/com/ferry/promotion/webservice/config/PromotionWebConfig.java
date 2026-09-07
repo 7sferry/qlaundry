@@ -26,7 +26,6 @@ import com.ferry.promotion.gateway.promotion.PromotionRedemptionJpaGateway;
 import com.ferry.promotion.gateway.promotion.PromotionUpdateJpaGateway;
 import com.ferry.promotion.gateway.promotion.repository.PromotionJpaRepository;
 import com.ferry.promotion.gateway.promotion.repository.PromotionRedemptionJpaRepository;
-import com.ferry.promotion.gateway.promotion.repository.PromotionTypeJpaRepository;
 import com.ferry.utils.cache.CacheHandler;
 import com.ferry.utils.cache.DefaultCacheHandler;
 import com.ferry.utils.generator.IdGenerator;
@@ -62,9 +61,8 @@ public class PromotionWebConfig{
 
 	@Bean
 	PromotionCreateGateway promotionCreateGateway(PromotionJpaRepository promotionJpaRepository,
-	                                              PromotionTypeJpaRepository promotionTypeJpaRepository,
 	                                              IdGenerator idGenerator){
-		return new PromotionCreateJpaGateway(promotionJpaRepository, promotionTypeJpaRepository, idGenerator);
+		return new PromotionCreateJpaGateway(promotionJpaRepository, idGenerator);
 	}
 
 	@Bean
@@ -73,9 +71,8 @@ public class PromotionWebConfig{
 	}
 
 	@Bean
-	PromotionUpdateGateway promotionUpdateGateway(PromotionJpaRepository promotionJpaRepository,
-	                                              PromotionTypeJpaRepository promotionTypeJpaRepository){
-		return new PromotionUpdateJpaGateway(promotionJpaRepository, promotionTypeJpaRepository);
+	PromotionUpdateGateway promotionUpdateGateway(PromotionJpaRepository promotionJpaRepository){
+		return new PromotionUpdateJpaGateway(promotionJpaRepository);
 	}
 
 	@Bean
@@ -84,9 +81,8 @@ public class PromotionWebConfig{
 	}
 
 	@Bean
-	PromotionToggleGateway promotionToggleGateway(PromotionJpaRepository promotionJpaRepository,
-	                                              PromotionTypeJpaRepository promotionTypeJpaRepository){
-		return new PromotionToggleJpaGateway(promotionJpaRepository, promotionTypeJpaRepository);
+	PromotionToggleGateway promotionToggleGateway(PromotionJpaRepository promotionJpaRepository){
+		return new PromotionToggleJpaGateway(promotionJpaRepository);
 	}
 
 	@Bean
