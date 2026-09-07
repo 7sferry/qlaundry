@@ -39,11 +39,20 @@ const CLOTHING_TYPES: ClothingType[] = [
 
 const PAYMENT_METHODS: PaymentMethod[] = ['cash'];
 
-/** `toISOString()` reports UTC, which is a different calendar day from local time near midnight — this reads the wall-clock date instead. */
-function todayLocalDate(): string {
-	const d = new Date();
+function toLocalDateString(d: Date): string {
 	const pad = (n: number) => String(n).padStart(2, '0');
 	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** `toISOString()` reports UTC, which is a different calendar day from local time near midnight — this reads the wall-clock date instead. */
+function todayLocalDate(): string {
+	return toLocalDateString(new Date());
+}
+
+/** `new Date('YYYY-MM-DD')` parses as UTC midnight, which is the *previous* calendar day in any timezone behind UTC — this reads it as a local date instead. */
+function parseLocalDate(dateStr: string): Date {
+	const [year, month, day] = dateStr.split('-').map(Number);
+	return new Date(year, month - 1, day);
 }
 
 function initials(fullName: string): string {
@@ -222,9 +231,9 @@ export default function CreateOrderPage() {
 		(pickup: string) => {
 			if (!service || !pickup) return '';
 			const hours = service.estimatedHours * (priority === 'express' ? 0.6 : 1);
-			const d = new Date(pickup);
+			const d = parseLocalDate(pickup);
 			d.setHours(d.getHours() + Math.round(hours));
-			return d.toISOString().split('T')[0];
+			return toLocalDateString(d);
 		},
 		[service, priority],
 	);
