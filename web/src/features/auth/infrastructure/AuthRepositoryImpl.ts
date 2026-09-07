@@ -10,6 +10,7 @@ import {
 	roleFromAccessToken,
 	setAccessToken,
 	setRefreshTokenCookie,
+	tenantNameFromAccessToken,
 	usernameFromAccessToken,
 } from '@/core/auth/tokenStore';
 import {refreshAccessToken} from '@/core/auth/refreshAccessToken';
@@ -43,6 +44,7 @@ function toUser(detail: StaffDetailApiResponse): User {
 		phone: detail.phones[0]?.phone,
 		staffRole: role === 'SUPER_STAFF' || role === 'STAFF' ? role as StaffRole : null,
 		avatarInitials: detail.fullName.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase(),
+		tenantName: tenantNameFromAccessToken() ?? undefined,
 	};
 }
 

@@ -24,7 +24,7 @@ public class DefaultPromotionListUseCase implements PromotionListUseCase{
 	                    PromotionListPresenter presenter){
 		request.validate();
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		PromotionListSortBy sortBy = request.sortBy() == null ? PromotionListSortBy.END_AT : request.sortBy();
+		PromotionListSortBy sortBy = request.sortBy() == null ? PromotionListSortBy.ID : request.sortBy();
 		SortDirection sortDir = request.sortDir() == null ? SortDirection.DESC : request.sortDir();
 		PageDirection direction = request.direction() == null ? PageDirection.NEXT : request.direction();
 		PageCursor cursor = request.cursor() == null ? null : CursorCodec.decode(request.cursor());
@@ -34,6 +34,7 @@ public class DefaultPromotionListUseCase implements PromotionListUseCase{
 				.name(request.name())
 				.type(request.type())
 				.activeOnly(request.activeOnly() == null || request.activeOnly())
+				.currentOnly(request.currentOnly() != null && request.currentOnly())
 				.sortBy(sortBy)
 				.sortDir(sortDir)
 				.pageDirection(direction)
@@ -43,9 +44,8 @@ public class DefaultPromotionListUseCase implements PromotionListUseCase{
 		CursorPage<PromotionDomain> page = CursorPaginator.paginate(fetch, direction, cursor != null,
 				row -> switch(sortBy){
 					case NAME -> List.of(row.name(), row.id());
-					case END_AT -> List.of(row.endAt() == null
-							? PromotionFilter.CURSOR_END_AT_NONE : String.valueOf(row.endAt().toEpochMilli()),
-							row.id());
+					case END_AT -> List.of(String.valueOf(row.endAt().toEpochMilli()), row.id());
+					case CODE -> List.of(row.codeValue(), row.id());
 					case ID -> List.of(row.id(), row.id());
 				});
 		presenter.present(new PromotionListResponse(page.items(), page.nextCursor(), page.prevCursor()));

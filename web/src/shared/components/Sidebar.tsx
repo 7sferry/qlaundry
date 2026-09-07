@@ -13,6 +13,7 @@ import {
 	LogOut,
 	Moon,
 	PackagePlus,
+	Percent,
 	Settings,
 	Sun,
 	UserCog,
@@ -28,6 +29,7 @@ const NAV_ITEMS: { path: string; label: string; icon: FC<{ size?: number }> }[] 
 	{path: '/orders/history', label: 'Order history', icon: ClipboardList},
 	{path: '/customers', label: 'Customers', icon: Users},
 	{path: '/services', label: 'Services', icon: ListChecks},
+	{path: '/promotions', label: 'Promotions', icon: Percent},
 	{path: '/staff', label: 'Staff', icon: UserCog},
 	{path: '/reports', label: 'Reports', icon: BarChart3},
 ];
@@ -120,6 +122,7 @@ const Sidebar: FC = () => {
 							<span className="avatar">{initials}</span>
 								<span>
 				      <strong>{user?.fullName ?? 'User'}</strong>
+				      {user?.tenantName && <small>{user.tenantName}</small>}
 				    </span>
 						</button>
 					</div>

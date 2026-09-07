@@ -4,8 +4,9 @@
  ************************/
 
 import {httpClient} from '@/core/http/httpClient';
-import type {PromotionRepository} from '../domain/PromotionRepository';
-import type {Promotion, PromotionType} from '../domain/Promotion';
+import type {Page} from '@/core/pagination/Pagination';
+import type {PromotionFilters, PromotionRepository} from '../domain/PromotionRepository';
+import type {CreatePromotionInput, Promotion, PromotionType, UpdatePromotionInput} from '../domain/Promotion';
 
 interface PromotionApiItem {
 	id: string;
@@ -32,6 +33,13 @@ interface PromotionListApiResponse {
 	prevCursor: string | null;
 }
 
+interface PromotionToggleApiResponse {
+	id: string;
+	code: string;
+	name: string;
+	active: boolean;
+}
+
 function toPromotion(item: PromotionApiItem): Promotion {
 	return {
 		id: item.id,
@@ -53,19 +61,67 @@ function toPromotion(item: PromotionApiItem): Promotion {
 	};
 }
 
+/** epoch millis, or undefined for a blank/absent date — mirrors `CreateOrderPage`'s date-field handling. */
+function toEpochMillis(value: string | undefined): number | undefined {
+	if (!value) return undefined;
+	const time = new Date(value).getTime();
+	return Number.isNaN(time) ? undefined : time;
+}
+
+/** The management page needs inactive promotions too, so it defaults `activeOnly` off unlike the order-create picker. */
+function buildPromotionQuery(filters?: PromotionFilters): string {
+	const params = new URLSearchParams();
+	if (filters?.search) params.set('name', filters.search);
+	if (filters?.type) params.set('type', filters.type.toUpperCase());
+	params.set('activeOnly', String(filters?.activeOnly ?? false));
+	params.set('currentOnly', String(filters?.currentOnly ?? false));
+	if (filters?.cursor) params.set('cursor', filters.cursor);
+	if (filters?.direction) params.set('direction', filters.direction.toUpperCase());
+	if (filters?.sortBy) params.set('sortBy', filters.sortBy.toUpperCase());
+	if (filters?.sortDir) params.set('sortDir', filters.sortDir.toUpperCase());
+	return `?${params.toString()}`;
+}
+
+function toPromotionBody(input: CreatePromotionInput) {
+	return {
+		code: input.code,
+		name: input.name,
+		description: input.description,
+		type: input.type.toUpperCase(),
+		percentage: input.percentage,
+		amount: input.amount,
+		maxDiscountAmount: input.maxDiscountAmount,
+		minSubtotal: input.minSubtotal,
+		combinable: input.combinable,
+		usageLimit: input.usageLimit,
+		startAt: toEpochMillis(input.startAt),
+		endAt: toEpochMillis(input.endAt),
+	};
+}
+
 export class PromotionRepositoryImpl implements PromotionRepository {
-	async getActivePromotions(): Promise<Promotion[]> {
-		const promotions: Promotion[] = [];
-		let cursor: string | undefined;
-		for (;;) {
-			const params = new URLSearchParams({activeOnly: 'true'});
-			if (cursor) params.set('cursor', cursor);
-			const res = await httpClient.get<PromotionListApiResponse>(`/promotion/list?${params.toString()}`);
-			promotions.push(...res.promotions.map(toPromotion));
-			if (!res.nextCursor) break;
-			cursor = res.nextCursor;
-		}
-		return promotions;
+	async getPromotions(filters?: PromotionFilters): Promise<Page<Promotion>> {
+		const res = await httpClient.get<PromotionListApiResponse>(`/promotion/list${buildPromotionQuery(filters)}`);
+		return {items: res.promotions.map(toPromotion), nextCursor: res.nextCursor, prevCursor: res.prevCursor};
+	}
+
+	async createPromotion(input: CreatePromotionInput): Promise<Promotion> {
+		const res = await httpClient.post<PromotionApiItem>('/promotion/create', toPromotionBody(input));
+		return toPromotion(res);
+	}
+
+	async updatePromotion(input: UpdatePromotionInput): Promise<Promotion> {
+		const res = await httpClient.put<PromotionApiItem>('/promotion/update', {
+			promotionId: input.id,
+			...toPromotionBody(input),
+			active: input.active,
+		});
+		return toPromotion(res);
+	}
+
+	async togglePromotion(id: string, active: boolean): Promise<{ id: string; active: boolean }> {
+		const res = await httpClient.put<PromotionToggleApiResponse>('/promotion/toggle', {promotionId: id, active});
+		return {id: res.id, active: res.active};
 	}
 }
 

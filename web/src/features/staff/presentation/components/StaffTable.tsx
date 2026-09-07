@@ -6,16 +6,17 @@
 import {Plus, Search, Trash2, Users} from 'lucide-react';
 import {Button, Card, Field, Input, Pagination, Select} from '@/core/ui';
 import {formatDate} from '@/core/utils/format';
-import type {SortBy, SortDirection} from '@/core/pagination/Pagination';
+import type {SortDirection} from '@/core/pagination/Pagination';
 import type {Staff} from '../../domain/Staff';
+import type {StaffSortBy} from '../../domain/StaffRepository';
 
 interface StaffTableProps {
 	staff: Staff[];
 	search: string;
 	onSearchChange: (value: string) => void;
-	sortBy: SortBy;
+	sortBy: StaffSortBy;
 	sortDir: SortDirection;
-	onSortChange: (sortBy: SortBy, sortDir: SortDirection) => void;
+	onSortChange: (sortBy: StaffSortBy, sortDir: SortDirection) => void;
 	onSelect: (staff: Staff) => void;
 	onDelete: (staff: Staff) => void;
 	onAdd: () => void;
@@ -27,7 +28,7 @@ interface StaffTableProps {
 	loading: boolean;
 }
 
-const SORT_OPTIONS: { value: string; sortBy: SortBy; sortDir: SortDirection; label: string }[] = [
+const SORT_OPTIONS: { value: string; sortBy: StaffSortBy; sortDir: SortDirection; label: string }[] = [
 	{value: 'id-desc', sortBy: 'id', sortDir: 'desc', label: 'Newest first'},
 	{value: 'id-asc', sortBy: 'id', sortDir: 'asc', label: 'Oldest first'},
 	{value: 'name-asc', sortBy: 'name', sortDir: 'asc', label: 'Name A→Z'},

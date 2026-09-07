@@ -47,6 +47,11 @@ public class PromotionListJpaGateway implements PromotionListGateway{
 					? promotionJpaRepository.findAfterByEndAt(filter, pageable)
 					: promotionJpaRepository.findBeforeByEndAt(filter, pageable);
 		}
+		if(filter.sortBy() == PromotionListSortBy.CODE){
+			return useAfterQuery
+					? promotionJpaRepository.findAfterByCode(filter, pageable)
+					: promotionJpaRepository.findBeforeByCode(filter, pageable);
+		}
 		return useAfterQuery
 				? promotionJpaRepository.findAfterById(filter, pageable)
 				: promotionJpaRepository.findBeforeById(filter, pageable);

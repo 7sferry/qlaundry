@@ -103,6 +103,8 @@ class DefaultPromotionDetailUseCaseTest{
 				.combinable(true)
 				.usageLimit(500)
 				.usedCount(123)
+				.startAt(now.minusSeconds(864000L))
+				.endAt(now.plusSeconds(864000L))
 				.active(true)
 				.deleted(false)
 				.createdAt(now)

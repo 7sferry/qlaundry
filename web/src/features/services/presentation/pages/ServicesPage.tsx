@@ -21,14 +21,15 @@ import {
 	Textarea,
 	useToast,
 } from '@/core/ui';
-import type {SortBy, SortDirection} from '@/core/pagination/Pagination';
+import type {SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency} from '@/core/utils/format';
 import {useAuth} from '@/features/auth/presentation/useAuth';
 import {useServices} from '../useServices';
 import type {LaundryService, ServiceCategory, ServiceUnit} from '../../domain/Service';
 import {SERVICE_CATEGORY_LABELS, SERVICE_UNIT_LABELS} from '../../domain/Service';
+import type {ServiceSortBy} from '../../domain/ServiceRepository';
 
-const SORT_OPTIONS: { value: string; sortBy: SortBy; sortDir: SortDirection; label: string }[] = [
+const SORT_OPTIONS: { value: string; sortBy: ServiceSortBy; sortDir: SortDirection; label: string }[] = [
 	{value: 'id-desc', sortBy: 'id', sortDir: 'desc', label: 'Newest first'},
 	{value: 'id-asc', sortBy: 'id', sortDir: 'asc', label: 'Oldest first'},
 	{value: 'name-asc', sortBy: 'name', sortDir: 'asc', label: 'Name A→Z'},
@@ -151,7 +152,7 @@ export default function ServicesPage() {
 
 	const [search, setSearch] = useState('');
 	const [categoryFilter, setCategoryFilter] = useState<'all' | ServiceCategory>('all');
-	const [sortBy, setSortBy] = useState<SortBy>('id');
+	const [sortBy, setSortBy] = useState<ServiceSortBy>('id');
 	const [sortDir, setSortDir] = useState<SortDirection>('desc');
 	const [selectedService, setSelectedService] = useState<LaundryService | null>(null);
 	const [showAddModal, setShowAddModal] = useState(false);
@@ -159,12 +160,17 @@ export default function ServicesPage() {
 	const [form, setForm] = useState<ServiceFormData>(emptyForm);
 	const [saving, setSaving] = useState(false);
 
-	const didMount = useRef(false);
+	// Compares against the *last processed* filter snapshot, not a boolean "have we mounted" flag —
+	// see `PromotionsPage`'s identical effect for why a boolean (with or without a self-resetting
+	// cleanup) gets this wrong under React 18 StrictMode's dev-only mount double-invoke.
+	const lastFiltersKey = useRef<string>();
 	useEffect(() => {
-		if (!didMount.current) {
-			didMount.current = true;
+		const key = JSON.stringify({search, categoryFilter, sortBy, sortDir});
+		if (lastFiltersKey.current === undefined || lastFiltersKey.current === key) {
+			lastFiltersKey.current = key;
 			return;
 		}
+		lastFiltersKey.current = key;
 		const timer = setTimeout(() => {
 			void refresh({
 				search: search || undefined,
@@ -176,7 +182,7 @@ export default function ServicesPage() {
 		return () => clearTimeout(timer);
 	}, [search, categoryFilter, sortBy, sortDir, refresh]);
 
-	const handleSortChange = useCallback((by: SortBy, dir: SortDirection) => {
+	const handleSortChange = useCallback((by: ServiceSortBy, dir: SortDirection) => {
 		setSortBy(by);
 		setSortDir(dir);
 	}, []);

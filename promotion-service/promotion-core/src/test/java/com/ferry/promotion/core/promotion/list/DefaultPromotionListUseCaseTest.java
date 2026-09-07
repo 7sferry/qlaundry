@@ -54,7 +54,7 @@ class DefaultPromotionListUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		PromotionListRequest request = new PromotionListRequest(null, null, null, null, null, null, null, null);
+		PromotionListRequest request = new PromotionListRequest(null, null, null, null, null, null, null, null, null);
 		willReturn(new CursorFetch<PromotionDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(PromotionFilter.class));
 
@@ -71,7 +71,8 @@ class DefaultPromotionListUseCaseTest{
 			softly.then(filter.name()).isNull();
 			softly.then(filter.type()).isNull();
 			softly.then(filter.activeOnly()).isTrue();
-			softly.then(filter.sortBy()).isEqualTo(PromotionListSortBy.END_AT);
+			softly.then(filter.currentOnly()).isFalse();
+			softly.then(filter.sortBy()).isEqualTo(PromotionListSortBy.ID);
 			softly.then(filter.sortDir()).isEqualTo(SortDirection.DESC);
 			softly.then(filter.pageDirection()).isEqualTo(PageDirection.NEXT);
 			softly.then(filter.cursor()).isNull();
@@ -86,7 +87,7 @@ class DefaultPromotionListUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		PromotionListRequest request = new PromotionListRequest("merdeka", "diskon", PromotionType.FIXED_AMOUNT,
-				false, null, null, null, null);
+				false, null, null, null, null, null);
 		willReturn(new CursorFetch<PromotionDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(PromotionFilter.class));
 
@@ -109,6 +110,25 @@ class DefaultPromotionListUseCaseTest{
 	}
 
 	@Test
+	void givenCurrentOnlyTrue_thenPassesItThroughToTheGateway(){
+		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		PromotionListRequest request = new PromotionListRequest(null, null, null, null, true, null, null, null, null);
+		willReturn(new CursorFetch<PromotionDomain>(List.of(), false)).given(gateway)
+				.findByFilter(any(PromotionFilter.class));
+
+		useCase.execute(request, principal, presenter);
+
+		then(gateway).should()
+				.findByFilter(filterCaptor.capture());
+
+		thenSoftly(softly -> softly.then(filterCaptor.getValue().currentOnly()).isTrue());
+	}
+
+	@Test
 	void givenExplicitCursorSortAndDirection_thenDecodesCursorAndAppliesRequestedSortAndDirection(){
 		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
 				.userId(STAFF_ID)
@@ -116,7 +136,7 @@ class DefaultPromotionListUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		String cursorToken = CursorCodec.encode("Diskon Kemerdekaan", PROMOTION_ID_1);
-		PromotionListRequest request = new PromotionListRequest(null, null, null, null, cursorToken,
+		PromotionListRequest request = new PromotionListRequest(null, null, null, null, null, cursorToken,
 				PageDirection.PREV, PromotionListSortBy.NAME, SortDirection.ASC);
 		willReturn(new CursorFetch<PromotionDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(PromotionFilter.class));
@@ -154,6 +174,8 @@ class DefaultPromotionListUseCaseTest{
 				.percentage(new BigDecimal("17"))
 				.usageLimit(170)
 				.usedCount(45)
+				.startAt(now.minusSeconds(864000L))
+				.endAt(now.plusSeconds(864000L))
 				.active(true)
 				.deleted(false)
 				.createdAt(now)
@@ -170,6 +192,8 @@ class DefaultPromotionListUseCaseTest{
 				.type(PromotionType.FIXED_AMOUNT)
 				.amount(MoneyDomain.of(10000L))
 				.usedCount(2)
+				.startAt(now.minusSeconds(864000L))
+				.endAt(now.plusSeconds(864000L))
 				.active(true)
 				.deleted(false)
 				.createdAt(now)
@@ -178,7 +202,7 @@ class DefaultPromotionListUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		String cursorToken = CursorCodec.encode(PROMOTION_ID_1, PROMOTION_ID_1);
-		PromotionListRequest request = new PromotionListRequest(null, null, null, null, cursorToken,
+		PromotionListRequest request = new PromotionListRequest(null, null, null, null, null, cursorToken,
 				PageDirection.NEXT, PromotionListSortBy.ID, SortDirection.DESC);
 		willReturn(new CursorFetch<>(List.of(promotion1, promotion2), true)).given(gateway)
 				.findByFilter(any(PromotionFilter.class));
@@ -196,6 +220,71 @@ class DefaultPromotionListUseCaseTest{
 			softly.then(response.prevCursor()).isEqualTo(CursorCodec.encode(PROMOTION_ID_1, PROMOTION_ID_1));
 			softly.then(response.promotions().getFirst().remainingUsage()).isEqualTo(125);
 			softly.then(response.promotions().getLast().remainingUsage()).isNull();
+		});
+	}
+
+	@Test
+	void givenSortByCodeWithMoreRowsAndCursorProvided_thenEncodesTheCodeIntoTheNextCursor(){
+		Instant now = Instant.now();
+		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		PromotionDomain promotion1 = PromotionDomain.builder()
+				.id(PROMOTION_ID_1)
+				.tenantId(TENANT_ID)
+				.code(new PromotionCodeDomain("GAJIAN30"))
+				.name("Diskon Gajian")
+				.description(new NoteDomain("payday sale"))
+				.type(PromotionType.PERCENTAGE)
+				.percentage(new BigDecimal("30"))
+				.usageLimit(200)
+				.usedCount(11)
+				.startAt(now.minusSeconds(864000L))
+				.endAt(now.plusSeconds(864000L))
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		PromotionDomain promotion2 = PromotionDomain.builder()
+				.id(PROMOTION_ID_2)
+				.tenantId(TENANT_ID)
+				.code(new PromotionCodeDomain("LEBARAN25"))
+				.name("Diskon Lebaran")
+				.description(new NoteDomain("seasonal"))
+				.type(PromotionType.PERCENTAGE)
+				.percentage(new BigDecimal("25"))
+				.usedCount(3)
+				.startAt(now.minusSeconds(864000L))
+				.endAt(now.plusSeconds(864000L))
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		String cursorToken = CursorCodec.encode("GAJIAN30", PROMOTION_ID_1);
+		PromotionListRequest request = new PromotionListRequest(null, null, null, null, null, cursorToken,
+				PageDirection.NEXT, PromotionListSortBy.CODE, SortDirection.ASC);
+		willReturn(new CursorFetch<>(List.of(promotion1, promotion2), true)).given(gateway)
+				.findByFilter(any(PromotionFilter.class));
+
+		useCase.execute(request, principal, presenter);
+
+		then(presenter).should()
+				.present(responseCaptor.capture());
+
+		PromotionListResponse response = responseCaptor.getValue();
+
+		thenSoftly(softly -> {
+			softly.then(response.promotions()).containsExactly(promotion1, promotion2);
+			softly.then(response.nextCursor()).isEqualTo(CursorCodec.encode("LEBARAN25", PROMOTION_ID_2));
+			softly.then(response.prevCursor()).isEqualTo(CursorCodec.encode("GAJIAN30", PROMOTION_ID_1));
 		});
 	}
 

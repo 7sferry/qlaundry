@@ -37,6 +37,7 @@ interface JwtPayload {
 	sub?: string;
 	exp?: number;
 	role?: string;
+	tenantName?: string;
 }
 
 function decodeJwtPayload(token: string): JwtPayload | null {
@@ -67,4 +68,10 @@ export function usernameFromAccessToken(): string | null {
 export function roleFromAccessToken(): string | null {
 	if (!accessToken) return null;
 	return decodeJwtPayload(accessToken)?.role ?? null;
+}
+
+/** Tenant name from the JWT `tenantName` claim. */
+export function tenantNameFromAccessToken(): string | null {
+	if (!accessToken) return null;
+	return decodeJwtPayload(accessToken)?.tenantName ?? null;
 }

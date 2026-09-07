@@ -134,6 +134,16 @@ function toOrder(item: OrderApiItem): Order {
 	};
 }
 
+/**
+ * `OrderListSortBy` (backend) doesn't have a plain `NAME` member — orders have no "name" of their own,
+ * only a customer name snapshot, so the enum member is `CUSTOMER_NAME`. Every other list's sort-by-name
+ * enum (staff/customer/service/promotion) does happen to be `NAME`, which is what the shared `SortBy`
+ * value `'name'` blindly uppercases to — order-service is the one real exception, so it needs its own
+ * explicit mapping instead of relying on that coincidence. Sending the wrong enum name fails Spring's
+ * binding with a 400 and no application-level log line (see CLAUDE.md).
+ */
+const ORDER_SORT_BY: Record<string, string> = {name: 'CUSTOMER_NAME'};
+
 function buildOrderQuery(filters?: OrderFilters): string {
 	const params = new URLSearchParams();
 	if (filters?.status) params.set('status', filters.status.toUpperCase());
@@ -143,7 +153,7 @@ function buildOrderQuery(filters?: OrderFilters): string {
 	if (filters?.to) params.set('to', String(toEpochMillis(filters.to)));
 	if (filters?.cursor) params.set('cursor', filters.cursor);
 	if (filters?.direction) params.set('direction', filters.direction.toUpperCase());
-	if (filters?.sortBy) params.set('sortBy', filters.sortBy.toUpperCase());
+	if (filters?.sortBy) params.set('sortBy', ORDER_SORT_BY[filters.sortBy] ?? filters.sortBy.toUpperCase());
 	if (filters?.sortDir) params.set('sortDir', filters.sortDir.toUpperCase());
 	const query = params.toString();
 	return query ? `?${query}` : '';

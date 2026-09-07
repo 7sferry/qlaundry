@@ -6,7 +6,9 @@
 import type {Page, PaginationParams} from '@/core/pagination/Pagination';
 import type {CreateServiceInput, LaundryService, ServiceCategory, UpdateServiceInput} from './Service';
 
-export interface ServiceFilters extends PaginationParams {
+export type ServiceSortBy = 'id' | 'name';
+
+export interface ServiceFilters extends PaginationParams<ServiceSortBy> {
 	search?: string;
 	category?: ServiceCategory;
 	activeOnly?: boolean;

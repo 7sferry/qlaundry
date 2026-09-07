@@ -6,7 +6,9 @@
 import type {Page, PaginationParams} from '@/core/pagination/Pagination';
 import type {CreateCustomerInput, Customer, UpdateCustomerInput} from './Customer';
 
-export interface CustomerFilters extends PaginationParams {
+export type CustomerSortBy = 'id' | 'name';
+
+export interface CustomerFilters extends PaginationParams<CustomerSortBy> {
 	search?: string;
 }
 

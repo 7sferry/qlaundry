@@ -64,3 +64,30 @@ CREATE SCHEMA IF NOT EXISTS promotions;
 --
 -- The usage limit is enforced by the conditional UPDATE in PromotionJpaRepository.claimUsage, not by reading
 -- used_count and writing it back — two concurrent orders racing for the last slot cannot both win it.
+--
+-- `promotions.start_at` and `promotions.end_at` are now NOT NULL — every promotion has a bounded validity
+-- window, there is no "no expiry" option any more (PromotionDomain's compact constructor rejects a null
+-- either way, and PromotionCreateRequest/PromotionUpdateRequest are both @NotNull + cross-field
+-- @AssertFalse-checked so a bad request never reaches the domain). ddl-auto: update does not retroactively
+-- add a NOT NULL constraint to an existing nullable column, so on a pre-existing database with any
+-- open-ended (null start_at/end_at) promotions, backfill them to a real window first, then:
+--
+-- ALTER TABLE promotions.promotions ALTER COLUMN start_at SET NOT NULL;
+-- ALTER TABLE promotions.promotions ALTER COLUMN end_at SET NOT NULL;
+--
+-- The END_AT sort's null-handling in PromotionJpaRepository (findAfterByEndAt/findBeforeByEndAt) has been
+-- removed — no `case when p.endAt is null then 1 else 0 end` in the ORDER BY, no PromotionFilter.
+-- CURSOR_END_AT_NONE cursor sentinel, no cursorEndAtIsNull(). Run the backfill and the two ALTERs above
+-- BEFORE deploying this: with the null-handling gone, a lingering null start_at/end_at row sorts wherever
+-- Postgres's default NULLS ordering puts it (NULLS LAST for `asc`, NULLS FIRST for `desc`) on the page it's
+-- first returned on, and then silently drops out of the keyset once the cursor moves past it (`p.endAt >
+-- :cursorEndAt` against a NULL end_at is neither true nor false in SQL, so the row just stops matching) —
+-- it doesn't error, it just becomes unreachable via pagination. Not a concern once every row has real dates.
+--
+-- `/promotion/list?currentOnly=true` filters to promotions whose window contains right now
+-- (`p.startAt <= CURRENT_TIMESTAMP and p.endAt > CURRENT_TIMESTAMP`, added to all six hand-written JPQL
+-- queries in PromotionJpaRepository alongside the existing activeOnly condition) — this is what the
+-- order-create picker uses so pagination reflects only genuinely redeemable promotions, not a page that
+-- looks emptier than it is because the frontend quietly hid rows that were already-expired or not-yet-started.
+-- Defaults to false (opt-in), same as activeOnly defaults to true (opt-out) — the management page never
+-- sets it, since staff need to see future-scheduled and expired promotions too.

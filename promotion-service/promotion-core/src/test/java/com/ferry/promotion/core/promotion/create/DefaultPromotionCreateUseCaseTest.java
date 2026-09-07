@@ -82,13 +82,16 @@ class DefaultPromotionCreateUseCaseTest{
 
 	@Test
 	void givenDuplicateCode_thenThrowsIllegalArgumentException(){
+		Instant startAt = Instant.parse("2026-09-01T00:00:00Z");
+		Instant endAt = Instant.parse("2026-09-30T00:00:00Z");
 		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		PromotionCreateRequest request = new PromotionCreateRequest(PROMO_CODE, "Diskon Lebaran", "seasonal",
-				PromotionType.PERCENTAGE, new BigDecimal("25"), null, null, null, null, 100, null, null);
+				PromotionType.PERCENTAGE, new BigDecimal("25"), null, null, null, null, 100,
+				startAt.toEpochMilli(), endAt.toEpochMilli());
 		willReturn(true).given(gateway)
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
 
@@ -102,13 +105,16 @@ class DefaultPromotionCreateUseCaseTest{
 
 	@Test
 	void givenPercentageOverOneHundred_thenThrowsIllegalArgumentException(){
+		Instant startAt = Instant.parse("2026-09-01T00:00:00Z");
+		Instant endAt = Instant.parse("2026-09-30T00:00:00Z");
 		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		PromotionCreateRequest request = new PromotionCreateRequest(PROMO_CODE, "Diskon Lebaran", "seasonal",
-				PromotionType.PERCENTAGE, new BigDecimal("120"), null, null, null, null, 100, null, null);
+				PromotionType.PERCENTAGE, new BigDecimal("120"), null, null, null, null, 100,
+				startAt.toEpochMilli(), endAt.toEpochMilli());
 		willReturn(false).given(gateway)
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
 
@@ -122,13 +128,16 @@ class DefaultPromotionCreateUseCaseTest{
 
 	@Test
 	void givenNonPositiveMaxDiscountAmount_thenThrowsIllegalArgumentException(){
+		Instant startAt = Instant.parse("2026-09-01T00:00:00Z");
+		Instant endAt = Instant.parse("2026-09-30T00:00:00Z");
 		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		PromotionCreateRequest request = new PromotionCreateRequest("KILAT15", "Diskon Kilat", "flash sale",
-				PromotionType.PERCENTAGE, new BigDecimal("15"), null, BigDecimal.ZERO, null, null, 50, null, null);
+				PromotionType.PERCENTAGE, new BigDecimal("15"), null, BigDecimal.ZERO, null, null, 50,
+				startAt.toEpochMilli(), endAt.toEpochMilli());
 		willReturn(false).given(gateway)
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
 
@@ -142,13 +151,16 @@ class DefaultPromotionCreateUseCaseTest{
 
 	@Test
 	void givenNonPositiveMinSubtotal_thenThrowsIllegalArgumentException(){
+		Instant startAt = Instant.parse("2026-09-01T00:00:00Z");
+		Instant endAt = Instant.parse("2026-09-30T00:00:00Z");
 		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		PromotionCreateRequest request = new PromotionCreateRequest("BELANJA", "Diskon Belanja", "min spend",
-				PromotionType.PERCENTAGE, new BigDecimal("10"), null, null, new BigDecimal("-1"), null, 50, null, null);
+				PromotionType.PERCENTAGE, new BigDecimal("10"), null, null, new BigDecimal("-1"), null, 50,
+				startAt.toEpochMilli(), endAt.toEpochMilli());
 		willReturn(false).given(gateway)
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
 
@@ -205,6 +217,8 @@ class DefaultPromotionCreateUseCaseTest{
 
 	@Test
 	void givenNonCumulativePercentageWithMinSubtotalAndNotCombinable_thenSavesThemAsGiven(){
+		Instant startAt = Instant.parse("2026-09-01T00:00:00Z");
+		Instant endAt = Instant.parse("2026-09-30T00:00:00Z");
 		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
@@ -212,7 +226,7 @@ class DefaultPromotionCreateUseCaseTest{
 				.build();
 		PromotionCreateRequest request = new PromotionCreateRequest("EKSKLUSIF", "Diskon Eksklusif", "vip only",
 				PromotionType.NON_CUMULATIVE_PERCENTAGE, new BigDecimal("30"), null, new BigDecimal("75000"),
-				new BigDecimal("200000"), false, null, null, null);
+				new BigDecimal("200000"), false, null, startAt.toEpochMilli(), endAt.toEpochMilli());
 		willReturn(false).given(gateway)
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
 		willAnswer(invocation -> invocation.<PromotionDomain>getArgument(0)).given(gateway)

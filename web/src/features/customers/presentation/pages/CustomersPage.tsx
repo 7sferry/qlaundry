@@ -20,12 +20,13 @@ import {
 	Textarea,
 	useToast
 } from '@/core/ui';
-import type {SortBy, SortDirection} from '@/core/pagination/Pagination';
+import type {SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency, formatDate} from '@/core/utils/format';
 import {useCustomers} from '../useCustomers';
 import type {Customer} from '../../domain/Customer';
+import type {CustomerSortBy} from '../../domain/CustomerRepository';
 
-const SORT_OPTIONS: { value: string; sortBy: SortBy; sortDir: SortDirection; label: string }[] = [
+const SORT_OPTIONS: { value: string; sortBy: CustomerSortBy; sortDir: SortDirection; label: string }[] = [
 	{value: 'id-desc', sortBy: 'id', sortDir: 'desc', label: 'Newest first'},
 	{value: 'id-asc', sortBy: 'id', sortDir: 'asc', label: 'Oldest first'},
 	{value: 'name-asc', sortBy: 'name', sortDir: 'asc', label: 'Name A→Z'},
@@ -105,7 +106,7 @@ export default function CustomersPage() {
 	const toast = useToast();
 
 	const [search, setSearch] = useState('');
-	const [sortBy, setSortBy] = useState<SortBy>('id');
+	const [sortBy, setSortBy] = useState<CustomerSortBy>('id');
 	const [sortDir, setSortDir] = useState<SortDirection>('desc');
 	const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 	const [showAddModal, setShowAddModal] = useState(false);
@@ -113,19 +114,24 @@ export default function CustomersPage() {
 	const [form, setForm] = useState<CustomerFormData>(emptyForm);
 	const [saving, setSaving] = useState(false);
 
-	const didMount = useRef(false);
+	// Compares against the *last processed* filter snapshot, not a boolean "have we mounted" flag —
+	// see `PromotionsPage`'s identical effect for why a boolean (with or without a self-resetting
+	// cleanup) gets this wrong under React 18 StrictMode's dev-only mount double-invoke.
+	const lastFiltersKey = useRef<string>();
 	useEffect(() => {
-		if (!didMount.current) {
-			didMount.current = true;
+		const key = JSON.stringify({search, sortBy, sortDir});
+		if (lastFiltersKey.current === undefined || lastFiltersKey.current === key) {
+			lastFiltersKey.current = key;
 			return;
 		}
+		lastFiltersKey.current = key;
 		const timer = setTimeout(() => {
 			void refresh({search: search || undefined, sortBy, sortDir});
 		}, 300);
 		return () => clearTimeout(timer);
 	}, [search, sortBy, sortDir, refresh]);
 
-	const handleSortChange = useCallback((by: SortBy, dir: SortDirection) => {
+	const handleSortChange = useCallback((by: CustomerSortBy, dir: SortDirection) => {
 		setSortBy(by);
 		setSortDir(dir);
 	}, []);

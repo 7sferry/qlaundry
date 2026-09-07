@@ -61,7 +61,13 @@ public record PromotionDomain(String id, String tenantId, PromotionCodeDomain co
 		if(usedCount < 0){
 			throw new IllegalArgumentException("Used count must not be negative");
 		}
-		if(startAt != null && endAt != null && !endAt.isAfter(startAt)){
+		if(startAt == null){
+			throw new IllegalArgumentException("Promotion start date must not be null");
+		}
+		if(endAt == null){
+			throw new IllegalArgumentException("Promotion end date must not be null");
+		}
+		if(!endAt.isAfter(startAt)){
 			throw new IllegalArgumentException("Promotion end date must be after its start date");
 		}
 	}

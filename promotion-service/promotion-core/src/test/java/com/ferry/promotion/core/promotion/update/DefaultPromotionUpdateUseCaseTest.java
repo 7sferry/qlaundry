@@ -70,13 +70,16 @@ class DefaultPromotionUpdateUseCaseTest{
 
 	@Test
 	void givenUnknownPromotion_thenThrowsNotFoundException(){
+		Instant startAt = Instant.parse("2026-09-01T00:00:00Z");
+		Instant endAt = Instant.parse("2026-09-30T00:00:00Z");
 		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		PromotionUpdateRequest request = new PromotionUpdateRequest(PROMOTION_ID, "AWALBULAN", "Diskon Awal Bulan",
-				"monthly", PromotionType.PERCENTAGE, new BigDecimal("10"), null, null, null, null, 25, null, null, true);
+				"monthly", PromotionType.PERCENTAGE, new BigDecimal("10"), null, null, null, null, 25,
+				startAt.toEpochMilli(), endAt.toEpochMilli(), true);
 		willReturn(Optional.empty()).given(gateway)
 				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
 
@@ -91,6 +94,8 @@ class DefaultPromotionUpdateUseCaseTest{
 	@Test
 	void givenACodeAlreadyTakenByAnotherPromotion_thenThrowsIllegalArgumentException(){
 		Instant now = Instant.now();
+		Instant startAt = Instant.parse("2026-09-01T00:00:00Z");
+		Instant endAt = Instant.parse("2026-09-30T00:00:00Z");
 		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
@@ -107,6 +112,8 @@ class DefaultPromotionUpdateUseCaseTest{
 				.combinable(true)
 				.usageLimit(25)
 				.usedCount(3)
+				.startAt(now.minusSeconds(864000L))
+				.endAt(now.plusSeconds(864000L))
 				.active(true)
 				.deleted(false)
 				.createdAt(now)
@@ -115,8 +122,8 @@ class DefaultPromotionUpdateUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		PromotionUpdateRequest request = new PromotionUpdateRequest(PROMOTION_ID, "TENGAHBULAN",
-				"Diskon Tengah Bulan", "monthly", PromotionType.PERCENTAGE, new BigDecimal("10"), null, null, null, null, 25, null,
-				null, true);
+				"Diskon Tengah Bulan", "monthly", PromotionType.PERCENTAGE, new BigDecimal("10"), null, null, null, null, 25,
+				startAt.toEpochMilli(), endAt.toEpochMilli(), true);
 		willReturn(Optional.of(promotion)).given(gateway)
 				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
 		willReturn(true).given(gateway)
@@ -133,6 +140,8 @@ class DefaultPromotionUpdateUseCaseTest{
 	@Test
 	void givenAChangeToACappedPercentage_thenKeepsTheUsageAlreadySpent(){
 		Instant now = Instant.now();
+		Instant startAt = Instant.parse("2026-09-01T00:00:00Z");
+		Instant endAt = Instant.parse("2026-09-30T00:00:00Z");
 		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
@@ -149,6 +158,8 @@ class DefaultPromotionUpdateUseCaseTest{
 				.combinable(true)
 				.usageLimit(25)
 				.usedCount(7)
+				.startAt(now.minusSeconds(864000L))
+				.endAt(now.plusSeconds(864000L))
 				.active(true)
 				.deleted(false)
 				.createdAt(now)
@@ -158,7 +169,7 @@ class DefaultPromotionUpdateUseCaseTest{
 				.build();
 		PromotionUpdateRequest request = new PromotionUpdateRequest(PROMOTION_ID, "awalbulan", "Diskon Awal Bulan",
 				"monthly capped", PromotionType.PERCENTAGE, new BigDecimal("12.5"), null, new BigDecimal("20000"), null, false, 40,
-				null, null, false);
+				startAt.toEpochMilli(), endAt.toEpochMilli(), false);
 		willReturn(Optional.of(promotion)).given(gateway)
 				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
 		willReturn(false).given(gateway)

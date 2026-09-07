@@ -11,7 +11,7 @@ import com.ferry.utils.pagination.SortDirection;
  * on Agustus 2026      *
  ************************/
 
-public record PromotionListRequest(String code, String name, PromotionType type, Boolean activeOnly, String cursor,
-                                   PageDirection direction, PromotionListSortBy sortBy,
-                                   SortDirection sortDir) implements PromotionValidation{
+public record PromotionListRequest(String code, String name, PromotionType type, Boolean activeOnly,
+                                   Boolean currentOnly, String cursor, PageDirection direction,
+                                   PromotionListSortBy sortBy, SortDirection sortDir) implements PromotionValidation{
 }

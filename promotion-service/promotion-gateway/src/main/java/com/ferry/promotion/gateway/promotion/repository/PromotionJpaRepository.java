@@ -49,6 +49,7 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 			"(:#{#filter?.typeValue()} is null or p.typeId = :#{#filter?.typeValue()}) AND " +
 			"(:#{#filter?.tenantId} is null or p.tenantId = :#{#filter?.tenantId}) AND " +
 			"(:#{#filter?.activeOnly} = false or p.active = true) AND " +
+			"(:#{#filter?.currentOnly} = false or (p.startAt <= CURRENT_TIMESTAMP and p.endAt > CURRENT_TIMESTAMP)) AND " +
 			"(:#{#filter?.cursor?.id} is null or p.id > :#{#filter?.cursor?.id}) AND " +
 			"p.deleted IS FALSE " +
 			"order by p.id asc")
@@ -62,6 +63,7 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 			"(:#{#filter?.typeValue()} is null or p.typeId = :#{#filter?.typeValue()}) AND " +
 			"(:#{#filter?.tenantId} is null or p.tenantId = :#{#filter?.tenantId}) AND " +
 			"(:#{#filter?.activeOnly} = false or p.active = true) AND " +
+			"(:#{#filter?.currentOnly} = false or (p.startAt <= CURRENT_TIMESTAMP and p.endAt > CURRENT_TIMESTAMP)) AND " +
 			"(:#{#filter?.cursor?.id} is null or p.id < :#{#filter?.cursor?.id}) AND " +
 			"p.deleted IS FALSE " +
 			"order by p.id desc")
@@ -75,6 +77,7 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 			"(:#{#filter?.typeValue()} is null or p.typeId = :#{#filter?.typeValue()}) AND " +
 			"(:#{#filter?.tenantId} is null or p.tenantId = :#{#filter?.tenantId}) AND " +
 			"(:#{#filter?.activeOnly} = false or p.active = true) AND " +
+			"(:#{#filter?.currentOnly} = false or (p.startAt <= CURRENT_TIMESTAMP and p.endAt > CURRENT_TIMESTAMP)) AND " +
 			"(:#{#filter?.cursor?.sortValue} is null or p.name > :#{#filter?.cursor?.sortValue} or " +
 			"  (p.name = :#{#filter?.cursor?.sortValue} and p.id > :#{#filter?.cursor?.id})) AND " +
 			"p.deleted IS FALSE " +
@@ -89,6 +92,7 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 			"(:#{#filter?.typeValue()} is null or p.typeId = :#{#filter?.typeValue()}) AND " +
 			"(:#{#filter?.tenantId} is null or p.tenantId = :#{#filter?.tenantId}) AND " +
 			"(:#{#filter?.activeOnly} = false or p.active = true) AND " +
+			"(:#{#filter?.currentOnly} = false or (p.startAt <= CURRENT_TIMESTAMP and p.endAt > CURRENT_TIMESTAMP)) AND " +
 			"(:#{#filter?.cursor?.sortValue} is null or p.name < :#{#filter?.cursor?.sortValue} or " +
 			"  (p.name = :#{#filter?.cursor?.sortValue} and p.id < :#{#filter?.cursor?.id})) AND " +
 			"p.deleted IS FALSE " +
@@ -103,15 +107,41 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 			"(:#{#filter?.typeValue()} is null or p.typeId = :#{#filter?.typeValue()}) AND " +
 			"(:#{#filter?.tenantId} is null or p.tenantId = :#{#filter?.tenantId}) AND " +
 			"(:#{#filter?.activeOnly} = false or p.active = true) AND " +
-			"(:#{#filter?.cursor?.id} is null or " +
-			"  (:#{#filter?.cursorEndAtIsNull()} = true and p.endAt is null and p.id > :#{#filter?.cursor?.id}) or " +
-			"  (:#{#filter?.cursorEndAtIsNull()} = false and p.endAt is null) or " +
-			"  (:#{#filter?.cursorEndAtIsNull()} = false and p.endAt is not null and " +
-			"    (p.endAt > :#{#filter?.cursorEndAt()} or " +
-			"     (p.endAt = :#{#filter?.cursorEndAt()} and p.id > :#{#filter?.cursor?.id})))" +
-			") AND " +
+			"(:#{#filter?.currentOnly} = false or (p.startAt <= CURRENT_TIMESTAMP and p.endAt > CURRENT_TIMESTAMP)) AND " +
+			"(:#{#filter?.cursor?.sortValue} is null or p.code > :#{#filter?.cursor?.sortValue} or " +
+			"  (p.code = :#{#filter?.cursor?.sortValue} and p.id > :#{#filter?.cursor?.id})) AND " +
 			"p.deleted IS FALSE " +
-			"order by case when p.endAt is null then 1 else 0 end asc, p.endAt asc, p.id asc")
+			"order by p.code asc, p.id asc")
+	List<PromotionJpaEntity> findAfterByCode(@Param("filter") PromotionFilter filter, Pageable pageable);
+
+	@Query("select p " +
+			"from PromotionJpaEntity p " +
+			"where " +
+			"(:#{#filter?.codeStartsWith()} is null or p.code like :#{#filter?.codeStartsWith()}) AND " +
+			"(:#{#filter?.nameStartsWith()} is null or lower(p.name) like :#{#filter?.nameStartsWith()}) AND " +
+			"(:#{#filter?.typeValue()} is null or p.typeId = :#{#filter?.typeValue()}) AND " +
+			"(:#{#filter?.tenantId} is null or p.tenantId = :#{#filter?.tenantId}) AND " +
+			"(:#{#filter?.activeOnly} = false or p.active = true) AND " +
+			"(:#{#filter?.currentOnly} = false or (p.startAt <= CURRENT_TIMESTAMP and p.endAt > CURRENT_TIMESTAMP)) AND " +
+			"(:#{#filter?.cursor?.sortValue} is null or p.code < :#{#filter?.cursor?.sortValue} or " +
+			"  (p.code = :#{#filter?.cursor?.sortValue} and p.id < :#{#filter?.cursor?.id})) AND " +
+			"p.deleted IS FALSE " +
+			"order by p.code desc, p.id desc")
+	List<PromotionJpaEntity> findBeforeByCode(@Param("filter") PromotionFilter filter, Pageable pageable);
+
+	@Query("select p " +
+			"from PromotionJpaEntity p " +
+			"where " +
+			"(:#{#filter?.codeStartsWith()} is null or p.code like :#{#filter?.codeStartsWith()}) AND " +
+			"(:#{#filter?.nameStartsWith()} is null or lower(p.name) like :#{#filter?.nameStartsWith()}) AND " +
+			"(:#{#filter?.typeValue()} is null or p.typeId = :#{#filter?.typeValue()}) AND " +
+			"(:#{#filter?.tenantId} is null or p.tenantId = :#{#filter?.tenantId}) AND " +
+			"(:#{#filter?.activeOnly} = false or p.active = true) AND " +
+			"(:#{#filter?.currentOnly} = false or (p.startAt <= CURRENT_TIMESTAMP and p.endAt > CURRENT_TIMESTAMP)) AND " +
+			"(:#{#filter?.cursor?.sortValue} is null or p.endAt > :#{#filter?.cursorEndAt()} or " +
+			"  (p.endAt = :#{#filter?.cursorEndAt()} and p.id > :#{#filter?.cursor?.id})) AND " +
+			"p.deleted IS FALSE " +
+			"order by p.endAt asc, p.id asc")
 	List<PromotionJpaEntity> findAfterByEndAt(@Param("filter") PromotionFilter filter, Pageable pageable);
 
 	@Query("select p " +
@@ -122,15 +152,11 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 			"(:#{#filter?.typeValue()} is null or p.typeId = :#{#filter?.typeValue()}) AND " +
 			"(:#{#filter?.tenantId} is null or p.tenantId = :#{#filter?.tenantId}) AND " +
 			"(:#{#filter?.activeOnly} = false or p.active = true) AND " +
-			"(:#{#filter?.cursor?.id} is null or " +
-			"  (:#{#filter?.cursorEndAtIsNull()} = true and p.endAt is null and p.id < :#{#filter?.cursor?.id}) or " +
-			"  (:#{#filter?.cursorEndAtIsNull()} = false and p.endAt is null) or " +
-			"  (:#{#filter?.cursorEndAtIsNull()} = false and p.endAt is not null and " +
-			"    (p.endAt < :#{#filter?.cursorEndAt()} or " +
-			"     (p.endAt = :#{#filter?.cursorEndAt()} and p.id < :#{#filter?.cursor?.id})))" +
-			") AND " +
+			"(:#{#filter?.currentOnly} = false or (p.startAt <= CURRENT_TIMESTAMP and p.endAt > CURRENT_TIMESTAMP)) AND " +
+			"(:#{#filter?.cursor?.sortValue} is null or p.endAt < :#{#filter?.cursorEndAt()} or " +
+			"  (p.endAt = :#{#filter?.cursorEndAt()} and p.id < :#{#filter?.cursor?.id})) AND " +
 			"p.deleted IS FALSE " +
-			"order by case when p.endAt is null then 1 else 0 end asc, p.endAt desc, p.id desc")
+			"order by p.endAt desc, p.id desc")
 	List<PromotionJpaEntity> findBeforeByEndAt(@Param("filter") PromotionFilter filter, Pageable pageable);
 
 }

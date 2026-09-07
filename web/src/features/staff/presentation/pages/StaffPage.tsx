@@ -7,13 +7,14 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {UserPlus, Users} from 'lucide-react';
 import {Button, Loading, Modal, PageHeader, StatCard, useToast} from '@/core/ui';
 import {useAuth} from '@/features/auth/presentation/useAuth';
-import type {SortBy, SortDirection} from '@/core/pagination/Pagination';
+import type {SortDirection} from '@/core/pagination/Pagination';
 import {useStaff} from '../useStaff';
 import StaffForm from '../components/StaffForm';
 import {type StaffFormData, emptyStaffForm} from '../components/staffFormData';
 import StaffTable from '../components/StaffTable';
 import StaffDetailDrawer from '../components/StaffDetailDrawer';
 import type {CreateStaffInput, Staff} from '../../domain/Staff';
+import type {StaffSortBy} from '../../domain/StaffRepository';
 
 export default function StaffPage() {
 	const {staff, loading, hasNext, hasPrev, refresh, goNext, goPrevious, createStaff, deleteStaff} = useStaff();
@@ -24,26 +25,31 @@ export default function StaffPage() {
 	const canAdd = user?.staffRole === 'SUPER_STAFF';
 
 	const [search, setSearch] = useState('');
-	const [sortBy, setSortBy] = useState<SortBy>('id');
+	const [sortBy, setSortBy] = useState<StaffSortBy>('id');
 	const [sortDir, setSortDir] = useState<SortDirection>('desc');
 	const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [form, setForm] = useState<StaffFormData>(emptyStaffForm);
 	const [saving, setSaving] = useState(false);
 
-	const didMount = useRef(false);
+	// Compares against the *last processed* filter snapshot, not a boolean "have we mounted" flag —
+	// see `PromotionsPage`'s identical effect for why a boolean (with or without a self-resetting
+	// cleanup) gets this wrong under React 18 StrictMode's dev-only mount double-invoke.
+	const lastFiltersKey = useRef<string>();
 	useEffect(() => {
-		if (!didMount.current) {
-			didMount.current = true;
+		const key = JSON.stringify({search, sortBy, sortDir});
+		if (lastFiltersKey.current === undefined || lastFiltersKey.current === key) {
+			lastFiltersKey.current = key;
 			return;
 		}
+		lastFiltersKey.current = key;
 		const timer = setTimeout(() => {
 			void refresh({search: search || undefined, sortBy, sortDir});
 		}, 300);
 		return () => clearTimeout(timer);
 	}, [search, sortBy, sortDir, refresh]);
 
-	const handleSortChange = useCallback((by: SortBy, dir: SortDirection) => {
+	const handleSortChange = useCallback((by: StaffSortBy, dir: SortDirection) => {
 		setSortBy(by);
 		setSortDir(dir);
 	}, []);

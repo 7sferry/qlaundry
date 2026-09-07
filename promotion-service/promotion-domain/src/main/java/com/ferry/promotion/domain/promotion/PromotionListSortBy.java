@@ -6,5 +6,5 @@ package com.ferry.promotion.domain.promotion;
  ************************/
 
 public enum PromotionListSortBy{
-	ID, NAME, END_AT
+	ID, NAME, END_AT, CODE
 }

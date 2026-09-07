@@ -13,6 +13,7 @@ export interface User {
 	phone?: string;
 	staffRole: StaffRole | null;
 	outletName?: string;
+	tenantName?: string;
 	avatarInitials?: string;
 }
 

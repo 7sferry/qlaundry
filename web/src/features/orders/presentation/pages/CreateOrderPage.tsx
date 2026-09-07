@@ -3,7 +3,7 @@
  * on Juli 2026         *
  ************************/
 
-import React, {useCallback, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {
 	ArrowRight,
@@ -27,6 +27,7 @@ import {useOrders, useServices} from '../useOrders';
 import {useCustomerSearch} from '@/features/customers/presentation/useCustomers';
 import type {Customer} from '@/features/customers/domain/Customer';
 import {usePromotions} from '@/features/promotions/presentation/usePromotions';
+import {hasPromotionEnded, hasPromotionStarted, type Promotion} from '@/features/promotions/domain/Promotion';
 import type {ClothingItem, ClothingType, PaymentMethod} from '../../domain/Order';
 import {CLOTHING_TYPE_LABELS} from '../../domain/Order';
 
@@ -45,8 +46,11 @@ export default function CreateOrderPage() {
 	const {placeOrder} = useOrders();
 	const {services, loading: servicesLoading} = useServices();
 	const {matches: customerMatches, searching: searchingCustomers, hasNext, hasPrev, search, goNext, goPrevious} =
-			useCustomerSearch();
-	const {promotions, loading: promotionsLoading} = usePromotions();
+		useCustomerSearch();
+	const {
+		promotions, loading: promotionsLoading,
+		hasNext: promoHasNext, hasPrev: promoHasPrev, goNext: promoGoNext, goPrevious: promoGoPrevious,
+	} = usePromotions();
 
 	const [selectedServiceId, setSelectedServiceId] = useState('');
 	const [priority, setPriority] = useState<'normal' | 'express'>('normal');
@@ -61,7 +65,10 @@ export default function CreateOrderPage() {
 	const [nameSearch, setNameSearch] = useState('');
 	const [searchModalOpen, setSearchModalOpen] = useState(false);
 	const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>(undefined);
-	const [selectedPromoCodes, setSelectedPromoCodes] = useState<string[]>([]);
+	// A map, not just `string[]` codes, because the picker is now paginated (see usePromotions()) — a code
+	// selected on one page would otherwise vanish from `selectedPromotions`/the discount preview/the removable
+	// chip list the moment the user pages away from wherever it happened to be shown.
+	const [selectedPromoMap, setSelectedPromoMap] = useState<Record<string, Promotion>>({});
 	const [promoModalOpen, setPromoModalOpen] = useState(false);
 	const [form, setForm] = useState({
 		customerName: '',
@@ -73,26 +80,26 @@ export default function CreateOrderPage() {
 	});
 
 	const update = (key: keyof typeof form) => (
-			e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
 	) => setForm((prev) => ({...prev, [key]: e.target.value}));
 
 	// Editing a customer field by hand after picking a match means the order no longer maps 1:1
 	// to that customer record, so the link is dropped and the fields become a plain walk-in entry.
 	const updateCustomerField = (key: 'customerName' | 'customerPhone' | 'customerAddress') => (
-			e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
 	) => {
 		setSelectedCustomerId(undefined);
 		setForm((prev) => ({...prev, [key]: e.target.value}));
 	};
 
 	const service = useMemo(
-			() => services.find((s) => s.id === selectedServiceId) ?? services[0],
-			[services, selectedServiceId],
+		() => services.find((s) => s.id === selectedServiceId) ?? services[0],
+		[services, selectedServiceId],
 	);
 
 	const totalQty = useMemo(
-			() => items.reduce((sum, i) => sum + i.quantity, 0),
-			[items],
+		() => items.reduce((sum, i) => sum + i.quantity, 0),
+		[items],
 	);
 
 	const subtotal = useMemo(() => {
@@ -102,46 +109,84 @@ export default function CreateOrderPage() {
 		return Math.round(service.pricePerUnit * multiplier * qty);
 	}, [service, weightKg, totalQty, priority]);
 
-	const selectedPromotions = useMemo(
-			() => promotions.filter((p) => selectedPromoCodes.includes(p.code)),
-			[promotions, selectedPromoCodes],
-	);
+	const selectedPromotions = useMemo(() => Object.values(selectedPromoMap), [selectedPromoMap]);
+	const selectedPromoCodes = useMemo(() => Object.keys(selectedPromoMap), [selectedPromoMap]);
 
 	const anyNonCombinableSelected = useMemo(
-			() => selectedPromotions.some((p) => !p.combinable),
-			[selectedPromotions],
+		() => selectedPromotions.some((p) => !p.combinable),
+		[selectedPromotions],
 	);
 
-	const isPromoDisabled = useCallback((promo: { code: string; combinable: boolean }) => {
-		if (selectedPromoCodes.includes(promo.code)) return false;
-		if (anyNonCombinableSelected) return true;
-		return !promo.combinable && selectedPromoCodes.length > 0;
-	}, [selectedPromoCodes, anyNonCombinableSelected]);
+	// Mirrors the backend's own eligibility checks (`PromotionDomain.rejectionAt`/`rejectionFor`) for the ones
+	// this page can already evaluate client-side, so a doomed pick is caught here instead of surfacing as a
+	// 400 on submit. Stacking/redemption-order maths still only happen server-side — this is eligibility only.
+	const promoEligibilityIssue = useCallback((promo: Promotion): string | null => {
+		// usePromotions() already filters out not-yet-started/expired promotions, but this stays as a
+		// defensive second check — a selected code auto-drops via the effect below the instant it goes
+		// stale (clock skew, a stale fetch, etc.) rather than assuming the list is always current.
+		if (!hasPromotionStarted(promo)) return 'not started yet';
+		if (hasPromotionEnded(promo)) return 'expired';
+		if (promo.remainingUsage !== undefined && promo.remainingUsage <= 0) return 'usage limit reached';
+		if (promo.minSubtotal && subtotal < promo.minSubtotal) {
+			return `needs a subtotal of at least ${formatCurrency(promo.minSubtotal)}`;
+		}
+		return null;
+	}, [subtotal]);
 
-	const togglePromo = (code: string) =>
-			setSelectedPromoCodes((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
+	const promoDisabledReason = useCallback((promo: Promotion): string | null => {
+		if (selectedPromoMap[promo.code]) return null;
+		const eligibilityIssue = promoEligibilityIssue(promo);
+		if (eligibilityIssue) return eligibilityIssue;
+		if (anyNonCombinableSelected) return 'cannot combine with the selected code';
+		if (!promo.combinable && selectedPromotions.length > 0) return 'cannot be combined with other codes';
+		return null;
+	}, [selectedPromoMap, selectedPromotions.length, anyNonCombinableSelected, promoEligibilityIssue]);
+
+	const togglePromo = (promo: Promotion) =>
+		setSelectedPromoMap((prev) => {
+			if (prev[promo.code]) {
+				const {[promo.code]: _removed, ...rest} = prev;
+				return rest;
+			}
+			return {...prev, [promo.code]: promo};
+		});
+
+	// A selected code can go stale without the user touching it — e.g. lowering the quantity drops the
+	// subtotal below its minSubtotal, or it simply expires while the form is open. Drop it automatically
+	// rather than letting a doomed promoCodes entry ride along to submit. Re-checked against the promotion
+	// snapshot captured at selection time, not the current page's `promotions` — the selected one may no
+	// longer even be on the visible page.
+	useEffect(() => {
+		setSelectedPromoMap((prev) => {
+			const next: Record<string, Promotion> = {};
+			for (const [code, promo] of Object.entries(prev)) {
+				if (!promoEligibilityIssue(promo)) next[code] = promo;
+			}
+			return next;
+		});
+	}, [subtotal, promoEligibilityIssue]);
 
 	// A rough, non-chained preview — the real amount (min-spend, per-code caps, stacking order) is only known
 	// once the backend prices the order; this is a "preview", same caveat as the subtotal above it.
 	const estimatedDiscount = useMemo(
-			() => selectedPromotions.reduce((sum, promo) => {
-				const raw = promo.percentage ? subtotal * (promo.percentage / 100) : (promo.amount ?? 0);
-				return sum + (promo.maxDiscountAmount ? Math.min(raw, promo.maxDiscountAmount) : raw);
-			}, 0),
-			[selectedPromotions, subtotal],
+		() => selectedPromotions.reduce((sum, promo) => {
+			const raw = promo.percentage ? subtotal * (promo.percentage / 100) : (promo.amount ?? 0);
+			return sum + (promo.maxDiscountAmount ? Math.min(raw, promo.maxDiscountAmount) : raw);
+		}, 0),
+		[selectedPromotions, subtotal],
 	);
 
 	const total = Math.max(0, subtotal - estimatedDiscount);
 
 	const autoDelivery = useCallback(
-			(pickup: string) => {
-				if (!service || !pickup) return '';
-				const hours = service.estimatedHours * (priority === 'express' ? 0.6 : 1);
-				const d = new Date(pickup);
-				d.setHours(d.getHours() + Math.round(hours));
-				return d.toISOString().split('T')[0];
-			},
-			[service, priority],
+		(pickup: string) => {
+			if (!service || !pickup) return '';
+			const hours = service.estimatedHours * (priority === 'express' ? 0.6 : 1);
+			const d = new Date(pickup);
+			d.setHours(d.getHours() + Math.round(hours));
+			return d.toISOString().split('T')[0];
+		},
+		[service, priority],
 	);
 
 	const handlePickupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,22 +199,22 @@ export default function CreateOrderPage() {
 	};
 
 	const addItem = () =>
-			setItems((prev) => [...prev, {type: 'shirt', label: CLOTHING_TYPE_LABELS.shirt, quantity: 1}]);
+		setItems((prev) => [...prev, {type: 'shirt', label: CLOTHING_TYPE_LABELS.shirt, quantity: 1}]);
 
 	const removeItem = (idx: number) =>
-			setItems((prev) => prev.filter((_, i) => i !== idx));
+		setItems((prev) => prev.filter((_, i) => i !== idx));
 
 	const updateItem = (idx: number, field: keyof ClothingItem, value: string | number) =>
-			setItems((prev) =>
-					prev.map((item, i) => {
-						if (i !== idx) return item;
-						if (field === 'type') {
-							const t = value as ClothingType;
-							return {...item, type: t, label: CLOTHING_TYPE_LABELS[t]};
-						}
-						return {...item, [field]: value};
-					}),
-			);
+		setItems((prev) =>
+			prev.map((item, i) => {
+				if (i !== idx) return item;
+				if (field === 'type') {
+					const t = value as ClothingType;
+					return {...item, type: t, label: CLOTHING_TYPE_LABELS[t]};
+				}
+				return {...item, [field]: value};
+			}),
+		);
 
 	// Phone takes priority when both fields are filled — it is the more specific lookup (exact match
 	// on the blind index) while name is a prefix search likely to return more results.
@@ -224,462 +269,481 @@ export default function CreateOrderPage() {
 		}
 	};
 
- if (servicesLoading) {
-    return (
-            <div className="center-box">
-              <WashingMachine size={28} className="spin"/>
-              <span>Loading services…</span>
-            </div>
-    );
-  }
+	if (servicesLoading) {
+		return (
+			<div className="center-box">
+				<WashingMachine size={28} className="spin"/>
+				<span>Loading services…</span>
+			</div>
+		);
+	}
 
 	if (success) {
 		return (
-        <div className="center-box" style={{flexDirection: 'column', gap: 16, paddingTop: 80}}>
-          <div className="success-circle"><Check size={32}/></div>
-          <h2>Order created successfully!</h2>
-          <p className="muted">Redirecting to order history…</p>
-        </div>
-    );
-  }
+			<div className="center-box" style={{flexDirection: 'column', gap: 16, paddingTop: 80}}>
+				<div className="success-circle"><Check size={32}/></div>
+				<h2>Order created successfully!</h2>
+				<p className="muted">Redirecting to order history…</p>
+			</div>
+		);
+	}
 
 	return (
-			<>
-    <PageHeader
-            title="Create new order"
-            description="Fill in the details below to schedule the laundry service."
-        />
+		<>
+			<PageHeader
+				title="Create new order"
+				description="Fill in the details below to schedule the laundry service."
+			/>
 
-				<form onSubmit={submit}>
-					<div className="order-layout">
-						<div className="stack">
-       <Card title="1. Choose service" subtitle="Select the required care type.">
-								<div className="service-grid">
-									{services.map((s) => (
-											<button
-													key={s.id}
-													type="button"
-													className={`service-card ${service?.id === s.id ? 'service-card--selected' : ''}`}
-													onClick={() => {
-														setSelectedServiceId(s.id);
-														setForm((prev) => ({
-															...prev,
-															estimatedDelivery: autoDelivery(prev.pickupDate),
-														}));
-													}}
-											>
-												<div className="service-card__top">
-													<span className="service-card__icon"><Sparkles size={16}/></span>
-             {s.popular && <Badge tone="info">Popular</Badge>}
-												</div>
-												<strong>{s.name}</strong>
-												<p>{s.description}</p>
-												<div className="row row--between mt-16">
+			<form onSubmit={submit}>
+				<div className="order-layout">
+					<div className="stack">
+						<Card title="1. Choose service" subtitle="Select the required care type.">
+							<div className="service-grid">
+								{services.map((s) => (
+									<button
+										key={s.id}
+										type="button"
+										className={`service-card ${service?.id === s.id ? 'service-card--selected' : ''}`}
+										onClick={() => {
+											setSelectedServiceId(s.id);
+											setForm((prev) => ({
+												...prev,
+												estimatedDelivery: autoDelivery(prev.pickupDate),
+											}));
+										}}
+									>
+										<div className="service-card__top">
+											<span className="service-card__icon"><Sparkles size={16}/></span>
+											{s.popular && <Badge tone="info">Popular</Badge>}
+										</div>
+										<strong>{s.name}</strong>
+										<p>{s.description}</p>
+										<div className="row row--between mt-16">
                       <span className="service-card__price">
                         {formatCurrency(s.pricePerUnit)}<small> / {s.unit}</small>
                       </span>
-                          <span className="muted" style={{fontSize: 11}}>~{s.estimatedHours}h</span>
-												</div>
-											</button>
-									))}
-								</div>
+											<span className="muted" style={{fontSize: 11}}>~{s.estimatedHours}h</span>
+										</div>
+									</button>
+								))}
+							</div>
 
-								<div className="priority-row mt-16">
+							<div className="priority-row mt-16">
                 <span className="field__label" style={{fontSize: 13, fontWeight: 600, color: 'var(--text-muted)'}}>
                   Work priority
                 </span>
-									<div className="priority-toggle">
-										<button
-												type="button"
-												className={`priority-btn ${priority === 'normal' ? 'priority-btn--active' : ''}`}
-												onClick={() => setPriority('normal')}
-										>
-           <WashingMachine size={14}/> Normal
-										</button>
-										<button
-												type="button"
-												className={`priority-btn priority-btn--express ${priority === 'express' ? 'priority-btn--active priority-btn--express-active' : ''}`}
-												onClick={() => setPriority('express')}
-										>
-           <Zap size={14}/> Express
-											{service && (
-													<Badge tone="warning">×{service.expressMultiplier}</Badge>
-											)}
-										</button>
-									</div>
+								<div className="priority-toggle">
+									<button
+										type="button"
+										className={`priority-btn ${priority === 'normal' ? 'priority-btn--active' : ''}`}
+										onClick={() => setPriority('normal')}
+									>
+										<WashingMachine size={14}/> Normal
+									</button>
+									<button
+										type="button"
+										className={`priority-btn priority-btn--express ${priority === 'express' ? 'priority-btn--active priority-btn--express-active' : ''}`}
+										onClick={() => setPriority('express')}
+									>
+										<Zap size={14}/> Express
+										{service && (
+											<Badge tone="warning">×{service.expressMultiplier}</Badge>
+										)}
+									</button>
 								</div>
-							</Card>
+							</div>
+						</Card>
 
-       <Card title="2. Customer details" subtitle="Enter or look up the customer.">
-								<div className="form-grid">
-       <Field label="Find by phone number" htmlFor="phoneSearch">
-										<div className="input-with-icon">
-											<Phone size={16}/>
-											<Input
-												id="phoneSearch"
-												type="tel"
-												value={phoneSearch}
-												onChange={(e) => setPhoneSearch(e.target.value)}
-           placeholder="07XXXXXXXXX"
-											/>
-										</div>
-									</Field>
-       <Field label="Find by name" htmlFor="nameSearch">
-										<div className="input-with-icon">
-											<User2 size={16}/>
-											<Input
-												id="nameSearch"
-												value={nameSearch}
-												onChange={(e) => setNameSearch(e.target.value)}
-           placeholder="Start typing a name…"
-											/>
-										</div>
-									</Field>
-								</div>
-
-								<Button type="button" variant="ghost"
-										disabled={searchingCustomers || (!phoneSearch.trim() && !nameSearch.trim())}
-										onClick={() => void searchCustomers()} style={{marginBottom: 16}}>
-                  <Search size={15}/> Search customer
-                </Button>
-
-								{selectedCustomerId && (
-									<div className="customer-linked-chip">
-										<Check size={13}/> Linked to an existing customer
-										<button type="button" onClick={clearSelectedCustomer}>
-											<X size={13}/> Clear
-										</button>
-									</div>
-								)}
-
-								<div className="form-grid">
-         <Field label="Customer name" htmlFor="custName">
-										<div className="input-with-icon">
-											<User2 size={16}/>
-											<Input
-													id="custName"
-													required
-													value={form.customerName}
-													onChange={updateCustomerField('customerName')}
-             placeholder="Full name"
-											/>
-										</div>
-									</Field>
-         <Field label="Telephone" htmlFor="custPhone">
-										<div className="input-with-icon">
-											<Phone size={16}/>
-											<Input
-													id="custPhone"
-													type="tel"
-													required
-													value={form.customerPhone}
-													onChange={updateCustomerField('customerPhone')}
-             placeholder="07XXXXXXXXX"
-											/>
-										</div>
-									</Field>
-								</div>
-        <Field label="Pickup address" htmlFor="custAddr">
+						<Card title="2. Customer details" subtitle="Enter or look up the customer.">
+							<div className="form-grid">
+								<Field label="Find by phone number" htmlFor="phoneSearch">
 									<div className="input-with-icon">
-										<MapPin size={16}/>
+										<Phone size={16}/>
 										<Input
-												id="custAddr"
-												required
-												value={form.customerAddress}
-												onChange={updateCustomerField('customerAddress')}
-            placeholder="e.g. 10 High Street, City"
+											id="phoneSearch"
+											type="tel"
+											value={phoneSearch}
+											onChange={(e) => setPhoneSearch(e.target.value)}
+											placeholder="07XXXXXXXXX"
 										/>
 									</div>
 								</Field>
-							</Card>
+								<Field label="Find by name" htmlFor="nameSearch">
+									<div className="input-with-icon">
+										<User2 size={16}/>
+										<Input
+											id="nameSearch"
+											value={nameSearch}
+											onChange={(e) => setNameSearch(e.target.value)}
+											placeholder="Start typing a name…"
+										/>
+									</div>
+								</Field>
+							</div>
 
-       <Card title="3. Garment details" subtitle="Add garment types and quantities.">
-								<div className="items-list">
-									{items.map((item, idx) => (
-											<div key={idx} className="item-row">
-												<Select
-														value={item.type}
-														onChange={(e) => updateItem(idx, 'type', e.target.value)}
-														style={{flex: 1}}
-												>
-													{CLOTHING_TYPES.map((t) => (
-															<option key={t} value={t}>{CLOTHING_TYPE_LABELS[t]}</option>
-													))}
-												</Select>
-												<div className="quantity-control" style={{width: 140}}>
-													<button
-															type="button"
-															onClick={() => updateItem(idx, 'quantity', Math.max(1, item.quantity - 1))}
-													>
-														<Minus size={14}/>
-													</button>
-													<Input
-															type="number"
-															min={1}
-															max={99}
-															value={item.quantity}
-															onChange={(e) => updateItem(idx, 'quantity', Number(e.target.value))}
-													/>
-													<button
-															type="button"
-															onClick={() => updateItem(idx, 'quantity', Math.min(99, item.quantity + 1))}
-													>
-														<Plus size={14}/>
-													</button>
-												</div>
-												{items.length > 1 && (
-														<button type="button" className="icon-btn icon-btn--danger" onClick={() => removeItem(idx)}>
-															×
-														</button>
-												)}
-											</div>
-									))}
+							<Button type="button" variant="ghost"
+							        disabled={searchingCustomers || (!phoneSearch.trim() && !nameSearch.trim())}
+							        onClick={() => void searchCustomers()} style={{marginBottom: 16}}>
+								<Search size={15}/> Search customer
+							</Button>
+
+							{selectedCustomerId && (
+								<div className="customer-linked-chip">
+									<Check size={13}/> Linked to an existing customer
+									<button type="button" onClick={clearSelectedCustomer}>
+										<X size={13}/> Clear
+									</button>
 								</div>
-        <Button type="button" variant="ghost" onClick={addItem} style={{marginTop: 10}}>
-                  <Plus size={14}/> Add garment type
-                </Button>
+							)}
 
-        {service?.unit === 'kg' && (
-                    <Field label="Estimated weight (kg)" htmlFor="weight"
-                           hint="Optional — recalculated at weighing">
+							<div className="form-grid">
+								<Field label="Customer name" htmlFor="custName">
+									<div className="input-with-icon">
+										<User2 size={16}/>
+										<Input
+											id="custName"
+											required
+											value={form.customerName}
+											onChange={updateCustomerField('customerName')}
+											placeholder="Full name"
+										/>
+									</div>
+								</Field>
+								<Field label="Telephone" htmlFor="custPhone">
+									<div className="input-with-icon">
+										<Phone size={16}/>
+										<Input
+											id="custPhone"
+											type="tel"
+											required
+											value={form.customerPhone}
+											onChange={updateCustomerField('customerPhone')}
+											placeholder="07XXXXXXXXX"
+										/>
+									</div>
+								</Field>
+							</div>
+							<Field label="Pickup address" htmlFor="custAddr">
+								<div className="input-with-icon">
+									<MapPin size={16}/>
+									<Input
+										id="custAddr"
+										required
+										value={form.customerAddress}
+										onChange={updateCustomerField('customerAddress')}
+										placeholder="e.g. 10 High Street, City"
+									/>
+								</div>
+							</Field>
+						</Card>
+
+						<Card title="3. Garment details" subtitle="Add garment types and quantities.">
+							<div className="items-list">
+								{items.map((item, idx) => (
+									<div key={idx} className="item-row">
+										<Select
+											value={item.type}
+											onChange={(e) => updateItem(idx, 'type', e.target.value)}
+											style={{flex: 1}}
+										>
+											{CLOTHING_TYPES.map((t) => (
+												<option key={t} value={t}>{CLOTHING_TYPE_LABELS[t]}</option>
+											))}
+										</Select>
+										<div className="quantity-control" style={{width: 140}}>
+											<button
+												type="button"
+												onClick={() => updateItem(idx, 'quantity', Math.max(1, item.quantity - 1))}
+											>
+												<Minus size={14}/>
+											</button>
 											<Input
-													id="weight"
-													type="number"
-													step="0.1"
-													min="0.1"
-													value={weightKg}
-													onChange={(e) => setWeightKg(e.target.value === '' ? '' : Number(e.target.value))}
-             placeholder="e.g. 3.5"
-													style={{maxWidth: 160}}
+												type="number"
+												min={1}
+												max={99}
+												value={item.quantity}
+												onChange={(e) => updateItem(idx, 'quantity', Number(e.target.value))}
 											/>
-										</Field>
-								)}
+											<button
+												type="button"
+												onClick={() => updateItem(idx, 'quantity', Math.min(99, item.quantity + 1))}
+											>
+												<Plus size={14}/>
+											</button>
+										</div>
+										{items.length > 1 && (
+											<button type="button" className="icon-btn icon-btn--danger"
+											        onClick={() => removeItem(idx)}>
+												×
+											</button>
+										)}
+									</div>
+								))}
+							</div>
+							<Button type="button" variant="ghost" onClick={addItem} style={{marginTop: 10}}>
+								<Plus size={14}/> Add garment type
+							</Button>
 
-        <Field label="Special notes" htmlFor="notes" hint="Optional — instructions for the team">
-									<Textarea
-											id="notes"
-											value={form.notes}
-											onChange={update('notes')}
-           placeholder="e.g. separate whites, no softener"
-											rows={2}
+							{service?.unit === 'kg' && (
+								<Field label="Estimated weight (kg)" htmlFor="weight"
+								       hint="Optional — recalculated at weighing">
+									<Input
+										id="weight"
+										type="number"
+										step="0.1"
+										min="0.1"
+										value={weightKg}
+										onChange={(e) => setWeightKg(e.target.value === '' ? '' : Number(e.target.value))}
+										placeholder="e.g. 3.5"
+										style={{maxWidth: 160}}
 									/>
 								</Field>
-							</Card>
+							)}
 
-       <Card title="4. Schedule & payment" subtitle="Choose the dates and payment method.">
-								<div className="form-grid">
-         <Field label="Pickup date" htmlFor="pickup">
-										<Input
-												id="pickup"
-												type="date"
-												required
-												value={form.pickupDate}
-												onChange={handlePickupChange}
-												min={new Date().toISOString().split('T')[0]}
-										/>
-									</Field>
-         <Field label="Estimated completion" htmlFor="delivery">
-										<Input
-												id="delivery"
-												type="date"
-												required
-												value={form.estimatedDelivery || autoDelivery(form.pickupDate)}
-												onChange={update('estimatedDelivery')}
-												min={form.pickupDate}
-										/>
-									</Field>
-								</div>
+							<Field label="Special notes" htmlFor="notes" hint="Optional — instructions for the team">
+								<Textarea
+									id="notes"
+									value={form.notes}
+									onChange={update('notes')}
+									placeholder="e.g. separate whites, no softener"
+									rows={2}
+								/>
+							</Field>
+						</Card>
 
-        <Field label="Payment method">
-									<div className="payment-grid">
-										{PAYMENT_METHODS.map((method) => (
-												<button
-														key={method}
-														type="button"
-														className={`payment-btn ${paymentMethod === method ? 'payment-btn--active' : ''}`}
-														onClick={() => setPaymentMethod(method)}
-												>
-													{method === 'cash' && '💵'}
-													{method === 'transfer' && '🏦'}
-													{method === 'qris' && '📱'}
-             <span>{method === 'cash' ? 'Cash' : method === 'transfer' ? 'Bank transfer' : 'QRIS'}</span>
-												</button>
-										))}
-									</div>
+						<Card title="4. Schedule & payment" subtitle="Choose the dates and payment method.">
+							<div className="form-grid">
+								<Field label="Pickup date" htmlFor="pickup">
+									<Input
+										id="pickup"
+										type="date"
+										required
+										value={form.pickupDate}
+										onChange={handlePickupChange}
+										min={new Date().toISOString().split('T')[0]}
+									/>
 								</Field>
-							</Card>
+								<Field label="Estimated completion" htmlFor="delivery">
+									<Input
+										id="delivery"
+										type="date"
+										required
+										value={form.estimatedDelivery || autoDelivery(form.pickupDate)}
+										onChange={update('estimatedDelivery')}
+										min={form.pickupDate}
+									/>
+								</Field>
+							</div>
 
-      <Card title="5. Promotions" subtitle="Optionally apply one or more promo codes.">
-								<Button type="button" variant="ghost" disabled={promotionsLoading}
-										onClick={() => setPromoModalOpen(true)}>
-									<Tag size={15}/> Select promotions
-								</Button>
+							<Field label="Payment method">
+								<div className="payment-grid">
+									{PAYMENT_METHODS.map((method) => (
+										<button
+											key={method}
+											type="button"
+											className={`payment-btn ${paymentMethod === method ? 'payment-btn--active' : ''}`}
+											onClick={() => setPaymentMethod(method)}
+										>
+											{method === 'cash' && '💵'}
+											{method === 'transfer' && '🏦'}
+											{method === 'qris' && '📱'}
+											<span>{method === 'cash' ? 'Cash' : method === 'transfer' ? 'Bank transfer' : 'QRIS'}</span>
+										</button>
+									))}
+								</div>
+							</Field>
+						</Card>
 
-								{selectedPromotions.length > 0 && (
-										<div className="promo-chip-list">
-											{selectedPromotions.map((promo) => (
-													<span key={promo.code} className="promo-chip">
+						<Card title="5. Promotions" subtitle="Optionally apply one or more promo codes.">
+							<Button type="button" variant="ghost" disabled={promotionsLoading}
+							        onClick={() => setPromoModalOpen(true)}>
+								<Tag size={15}/> Select promotions
+							</Button>
+
+							{selectedPromotions.length > 0 && (
+								<div className="promo-chip-list">
+									{selectedPromotions.map((promo) => (
+										<span key={promo.code} className="promo-chip">
                         {promo.code}
-														<button type="button" onClick={() => togglePromo(promo.code)}>
+											<button type="button" onClick={() => togglePromo(promo)}>
 															<X size={12}/>
 														</button>
                       </span>
-											))}
-										</div>
-								)}
-							</Card>
-						</div>
-
-						<aside className="stack" style={{position: 'sticky', top: 80, alignSelf: 'start'}}>
-       <Card title="Order summary">
-								{service && (
-										<div className="summary-service">
-											<div className="order-icon"><WashingMachine size={18}/></div>
-											<div>
-												<strong>{service.name}</strong>
-												<span>
-                      {priority === 'express' ? '⚡ Express' : 'Normal'} · ~
-                    {Math.round(service.estimatedHours * (priority === 'express' ? 0.6 : 1))}h
-                    </span>
-											</div>
-										</div>
-								)}
-
-        <div className="summary-line">
-                  <span>Unit price</span>
-									<span>
-                  {service ? formatCurrency(service.pricePerUnit * (priority === 'express' ? service.expressMultiplier : 1)) : '—'} / {service?.unit}
-                </span>
-								</div>
-        <div className="summary-line">
-                  <span>Quantity</span>
-									<span>
-                  {service?.unit === 'kg' && weightKg ? `${weightKg} kg` : `${totalQty} pcs`}
-                </span>
-								</div>
-        <div className="summary-line">
-                  <span>Subtotal</span>
-									<span>{formatCurrency(subtotal)}</span>
-								</div>
-        {estimatedDiscount > 0 && (
-            <div className="summary-line">
-                  <span>Promo discount (estimated)</span>
-                    <span className="promo-success">−{formatCurrency(estimatedDiscount)}</span>
-                  </div>
-        )}
-        <div className="summary-line">
-                  <span>Pickup & delivery</span>
-                  <span className="summary-free">Free</span>
-                </div>
-
-        <div className="summary-total">
-                  <span>Total</span>
-                  <span>{formatCurrency(total)}</span>
-                </div>
-
-								<div style={{
-									marginTop: 6,
-									color: 'var(--text-muted)',
-									fontSize: 12,
-									display: 'flex',
-									alignItems: 'center',
-									gap: 6
-								}}>
-									<Truck size={13}/>
-         {paymentMethod === 'cash' ? 'Pay cash at pickup' : paymentMethod === 'transfer' ? 'Transfer to outlet account' : 'Scan QRIS at outlet'}
-                </div>
-
-        <Button block type="submit" disabled={submitting || !form.customerName} style={{marginTop: 20}}>
-                  {submitting ? 'Creating order…' : <><Check size={16}/> Create order <ArrowRight size={16}/></>}
-                </Button>
-							</Card>
-
-       <Card className="help-card">
-              <p className="muted" style={{fontSize: 13}}>Need help? Contact our team.</p>
-              <a href="tel:+6281234567890"
-                 style={{display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8, fontSize: 14}}>
-                <Phone size={14}/> 0812-3456-7890
-              </a>
-            </Card>
-						</aside>
-					</div>
-				</form>
-
-				<Modal open={searchModalOpen} onClose={() => setSearchModalOpen(false)} title="Select a customer" size="sm">
-					{searchingCustomers ? (
-							<div className="center-box" style={{padding: '24px 0', minHeight: 0}}>
-								<WashingMachine size={22} className="spin"/>
-								<span>Searching…</span>
-							</div>
-					) : customerMatches.length > 0 ? (
-							<>
-								<div className="customer-match-list">
-									{customerMatches.map((c) => (
-											<button key={c.id} type="button" className="customer-match" onClick={() => selectCustomer(c)}>
-												<div className="customer-avatar">{initials(c.fullName)}</div>
-												<div className="customer-match__info">
-													<strong>{c.fullName}</strong>
-													<span>{c.phone}{c.address ? ` · ${c.address}` : ''}</span>
-												</div>
-											</button>
 									))}
 								</div>
-								{(hasNext || hasPrev) && (
-										<Pagination
-												hasNext={hasNext} hasPrev={hasPrev}
-												onNext={() => void goNext()} onPrev={() => void goPrevious()}
-												loading={searchingCustomers}
-										/>
-								)}
-							</>
-					) : (
-							<p className="muted" style={{fontSize: 13}}>
-								No matching customer found — you can still fill in the details manually for a walk-in order.
-							</p>
-					)}
-				</Modal>
+							)}
+						</Card>
+					</div>
 
-				<Modal open={promoModalOpen} onClose={() => setPromoModalOpen(false)} title="Select promotions" size="sm">
-					{promotionsLoading ? (
-							<div className="center-box" style={{padding: '24px 0', minHeight: 0}}>
-								<WashingMachine size={22} className="spin"/>
-								<span>Loading promotions…</span>
+					<aside className="stack" style={{position: 'sticky', top: 80, alignSelf: 'start'}}>
+						<Card title="Order summary">
+							{service && (
+								<div className="summary-service">
+									<div className="order-icon"><WashingMachine size={18}/></div>
+									<div>
+										<strong>{service.name}</strong>
+										<span>
+                      {priority === 'express' ? '⚡ Express' : 'Normal'} · ~
+											{Math.round(service.estimatedHours * (priority === 'express' ? 0.6 : 1))}h
+                    </span>
+									</div>
+								</div>
+							)}
+
+							<div className="summary-line">
+								<span>Unit price</span>
+								<span>
+                  {service ? formatCurrency(service.pricePerUnit * (priority === 'express' ? service.expressMultiplier : 1)) : '—'} / {service?.unit}
+                </span>
 							</div>
-					) : promotions.length > 0 ? (
-							<div className="promo-option-list">
-								{promotions.map((promo) => {
-									const disabled = isPromoDisabled(promo);
-									const checked = selectedPromoCodes.includes(promo.code);
-									return (
-											<label
-													key={promo.code}
-													className={`promo-option ${disabled ? 'promo-option--disabled' : ''}`}
-											>
-												<input
-														type="checkbox"
-														checked={checked}
-														disabled={disabled}
-														onChange={() => togglePromo(promo.code)}
-												/>
-												<div className="promo-option__info">
-													<strong>{promo.code} — {promo.name}</strong>
-													<span>
+							<div className="summary-line">
+								<span>Quantity</span>
+								<span>
+                  {service?.unit === 'kg' && weightKg ? `${weightKg} kg` : `${totalQty} pcs`}
+                </span>
+							</div>
+							<div className="summary-line">
+								<span>Subtotal</span>
+								<span>{formatCurrency(subtotal)}</span>
+							</div>
+							{estimatedDiscount > 0 && (
+								<div className="summary-line">
+									<span>Promo discount (estimated)</span>
+									<span className="promo-success">−{formatCurrency(estimatedDiscount)}</span>
+								</div>
+							)}
+							<div className="summary-line">
+								<span>Pickup & delivery</span>
+								<span className="summary-free">Free</span>
+							</div>
+
+							<div className="summary-total">
+								<span>Total</span>
+								<span>{formatCurrency(total)}</span>
+							</div>
+
+							<div style={{
+								marginTop: 6,
+								color: 'var(--text-muted)',
+								fontSize: 12,
+								display: 'flex',
+								alignItems: 'center',
+								gap: 6
+							}}>
+								<Truck size={13}/>
+								{paymentMethod === 'cash' ? 'Pay cash at pickup' : paymentMethod === 'transfer' ? 'Transfer to outlet account' : 'Scan QRIS at outlet'}
+							</div>
+
+							<Button block type="submit" disabled={submitting || !form.customerName}
+							        style={{marginTop: 20}}>
+								{submitting ? 'Creating order…' : <><Check size={16}/> Create order <ArrowRight
+									size={16}/></>}
+							</Button>
+						</Card>
+
+						<Card className="help-card">
+							<p className="muted" style={{fontSize: 13}}>Need help? Contact our team.</p>
+							<a href="tel:+6281234567890"
+							   style={{
+								   display: 'inline-flex',
+								   alignItems: 'center',
+								   gap: 6,
+								   marginTop: 8,
+								   fontSize: 14
+							   }}>
+								<Phone size={14}/> 0812-3456-7890
+							</a>
+						</Card>
+					</aside>
+				</div>
+			</form>
+
+			<Modal open={searchModalOpen} onClose={() => setSearchModalOpen(false)} title="Select a customer" size="sm">
+				{searchingCustomers ? (
+					<div className="center-box" style={{padding: '24px 0', minHeight: 0}}>
+						<WashingMachine size={22} className="spin"/>
+						<span>Searching…</span>
+					</div>
+				) : customerMatches.length > 0 ? (
+					<>
+						<div className="customer-match-list">
+							{customerMatches.map((c) => (
+								<button key={c.id} type="button" className="customer-match"
+								        onClick={() => selectCustomer(c)}>
+									<div className="customer-avatar">{initials(c.fullName)}</div>
+									<div className="customer-match__info">
+										<strong>{c.fullName}</strong>
+										<span>{c.phone}{c.address ? ` · ${c.address}` : ''}</span>
+									</div>
+								</button>
+							))}
+						</div>
+						{(hasNext || hasPrev) && (
+							<Pagination
+								hasNext={hasNext} hasPrev={hasPrev}
+								onNext={() => void goNext()} onPrev={() => void goPrevious()}
+								loading={searchingCustomers}
+							/>
+						)}
+					</>
+				) : (
+					<p className="muted" style={{fontSize: 13}}>
+						No matching customer found — you can still fill in the details manually for a walk-in order.
+					</p>
+				)}
+			</Modal>
+
+			<Modal open={promoModalOpen} onClose={() => setPromoModalOpen(false)} title="Select promotions" size="sm">
+				{promotionsLoading && promotions.length === 0 ? (
+					<div className="center-box" style={{padding: '24px 0', minHeight: 0}}>
+						<WashingMachine size={22} className="spin"/>
+						<span>Loading promotions…</span>
+					</div>
+				) : promotions.length > 0 ? (
+					<>
+						<div className="promo-option-list">
+							{promotions.map((promo) => {
+								const disabledReason = promoDisabledReason(promo);
+								const checked = selectedPromoCodes.includes(promo.code);
+								return (
+									<label
+										key={promo.code}
+										className={`promo-option ${disabledReason ? 'promo-option--disabled' : ''}`}
+									>
+										<input
+											type="checkbox"
+											checked={checked}
+											disabled={disabledReason !== null}
+											onChange={() => togglePromo(promo)}
+										/>
+										<div className="promo-option__info">
+											<strong>{promo.code} — {promo.name}</strong>
+											<span>
                         {promo.percentage ? `${promo.percentage}% off` : formatCurrency(promo.amount ?? 0) + ' off'}
-														{promo.minSubtotal ? ` · min. ${formatCurrency(promo.minSubtotal)}` : ''}
-														{!promo.combinable ? ' · cannot be combined with other codes' : ''}
+												{promo.minSubtotal ? ` · min. ${formatCurrency(promo.minSubtotal)}` : ''}
+												{disabledReason ? ` · ${disabledReason}` : ''}
                       </span>
-												</div>
-											</label>
-									);
-								})}
-							</div>
-					) : (
-							<p className="muted" style={{fontSize: 13}}>No active promotions right now.</p>
-					)}
-					<Button block type="button" style={{marginTop: 16}} onClick={() => setPromoModalOpen(false)}>
-						Done
-					</Button>
-				</Modal>
-			</>
+										</div>
+									</label>
+								);
+							})}
+						</div>
+						{(promoHasNext || promoHasPrev) && (
+							<Pagination
+								hasNext={promoHasNext} hasPrev={promoHasPrev}
+								onNext={() => void promoGoNext()} onPrev={() => void promoGoPrevious()}
+								loading={promotionsLoading}
+							/>
+						)}
+					</>
+				) : (
+					<p className="muted" style={{fontSize: 13}}>No active promotions right now.</p>
+				)}
+				<Button block type="button" style={{marginTop: 16}} onClick={() => setPromoModalOpen(false)}>
+					Done
+				</Button>
+			</Modal>
+		</>
 	);
 }

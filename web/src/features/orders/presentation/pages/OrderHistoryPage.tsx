@@ -20,14 +20,15 @@ import {
 	Select,
 	useToast
 } from '@/core/ui';
-import type {SortBy, SortDirection} from '@/core/pagination/Pagination';
+import type {SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency, formatDate, formatRelative} from '@/core/utils/format';
 import {PopupBlockedError} from '@/core/utils/openUrlInNewTab';
 import {useOrders} from '../useOrders';
 import type {Order, OrderStatus} from '../../domain/Order';
 import {CLOTHING_TYPE_LABELS, ORDER_STATUS_LABELS} from '../../domain/Order';
+import type {OrderSortBy} from '../../domain/OrderRepository';
 
-const SORT_OPTIONS: { value: string; sortBy: SortBy; sortDir: SortDirection; label: string }[] = [
+const SORT_OPTIONS: { value: string; sortBy: OrderSortBy; sortDir: SortDirection; label: string }[] = [
 	{value: 'id-desc', sortBy: 'id', sortDir: 'desc', label: 'Newest first'},
 	{value: 'id-asc', sortBy: 'id', sortDir: 'asc', label: 'Oldest first'},
 	{value: 'name-asc', sortBy: 'name', sortDir: 'asc', label: 'Customer A→Z'},
@@ -75,17 +76,22 @@ export default function OrderHistoryPage() {
 	const [filterPriority, setFilterPriority] = useState<'all' | 'normal' | 'express'>('all');
 	const [dateFrom, setDateFrom] = useState('');
 	const [dateTo, setDateTo] = useState('');
-	const [sortBy, setSortBy] = useState<SortBy>('id');
+	const [sortBy, setSortBy] = useState<OrderSortBy>('id');
 	const [sortDir, setSortDir] = useState<SortDirection>('desc');
 	const [showFilters, setShowFilters] = useState(false);
 	const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-	const didMount = useRef(false);
+	// Compares against the *last processed* filter snapshot, not a boolean "have we mounted" flag —
+	// see `PromotionsPage`'s identical effect for why a boolean (with or without a self-resetting
+	// cleanup) gets this wrong under React 18 StrictMode's dev-only mount double-invoke.
+	const lastFiltersKey = useRef<string>();
 	useEffect(() => {
-		if (!didMount.current) {
-			didMount.current = true;
+		const key = JSON.stringify({search, filterStatus, filterPriority, dateFrom, dateTo, sortBy, sortDir});
+		if (lastFiltersKey.current === undefined || lastFiltersKey.current === key) {
+			lastFiltersKey.current = key;
 			return;
 		}
+		lastFiltersKey.current = key;
 		const timer = setTimeout(() => {
 			void refresh({
 				search: search || undefined,
@@ -100,7 +106,7 @@ export default function OrderHistoryPage() {
 		return () => clearTimeout(timer);
 	}, [search, filterStatus, filterPriority, dateFrom, dateTo, sortBy, sortDir, refresh]);
 
-	const handleSortChange = useCallback((by: SortBy, dir: SortDirection) => {
+	const handleSortChange = useCallback((by: OrderSortBy, dir: SortDirection) => {
 		setSortBy(by);
 		setSortDir(dir);
 	}, []);

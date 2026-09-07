@@ -54,9 +54,9 @@ public class PromotionJpaEntity{
 	private Integer usageLimit;
 	@Column(nullable = false)
 	private int usedCount;
-	@Column
+	@Column(nullable = false)
 	private Instant startAt;
-	@Column
+	@Column(nullable = false)
 	private Instant endAt;
 	@Column(nullable = false)
 	private boolean active;

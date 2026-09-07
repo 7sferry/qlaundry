@@ -15,19 +15,11 @@ import java.util.Locale;
 
 @Builder(toBuilder = true)
 public record PromotionFilter(String tenantId, String code, String name, PromotionType type, boolean activeOnly,
-                              PromotionListSortBy sortBy, SortDirection sortDir, PageDirection pageDirection, PageCursor cursor){
-
-	public static final String CURSOR_END_AT_NONE = "NONE";
-
-	public Boolean cursorEndAtIsNull(){
-		if(cursor == null){
-			return null;
-		}
-		return CURSOR_END_AT_NONE.equals(cursor.sortValue());
-	}
+                              boolean currentOnly, PromotionListSortBy sortBy, SortDirection sortDir,
+                              PageDirection pageDirection, PageCursor cursor){
 
 	public Instant cursorEndAt(){
-		if(cursor == null || CURSOR_END_AT_NONE.equals(cursor.sortValue())){
+		if(cursor == null){
 			return null;
 		}
 		return Instant.ofEpochMilli(Long.parseLong(cursor.sortValue()));

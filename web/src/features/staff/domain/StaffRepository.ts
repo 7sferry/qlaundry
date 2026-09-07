@@ -6,7 +6,9 @@
 import type {Page, PaginationParams} from '@/core/pagination/Pagination';
 import type {CreateStaffInput, Staff, UpdateStaffInput} from './Staff';
 
-export interface StaffFilters extends PaginationParams {
+export type StaffSortBy = 'id' | 'name';
+
+export interface StaffFilters extends PaginationParams<StaffSortBy> {
 	search?: string;
 }
 
