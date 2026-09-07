@@ -9,6 +9,9 @@ import com.ferry.order.core.order.complete.OrderCompleteUseCase;
 import com.ferry.order.core.order.confirm.DefaultOrderConfirmUseCase;
 import com.ferry.order.core.order.confirm.OrderConfirmGateway;
 import com.ferry.order.core.order.confirm.OrderConfirmUseCase;
+import com.ferry.order.core.customer.totals.CustomerOrderTotalsGateway;
+import com.ferry.order.core.customer.totals.CustomerOrderTotalsUseCase;
+import com.ferry.order.core.customer.totals.DefaultCustomerOrderTotalsUseCase;
 import com.ferry.order.core.order.create.OrderCustomerGateway;
 import com.ferry.order.core.order.create.DefaultOrderCreateUseCase;
 import com.ferry.order.core.order.create.OrderCreateGateway;
@@ -53,6 +56,7 @@ import com.ferry.order.core.service.list.LaundryServiceListUseCase;
 import com.ferry.order.core.service.update.DefaultLaundryServiceUpdateUseCase;
 import com.ferry.order.core.service.update.LaundryServiceUpdateGateway;
 import com.ferry.order.core.service.update.LaundryServiceUpdateUseCase;
+import com.ferry.order.gateway.customer.CustomerOrderTotalsJpaGateway;
 import com.ferry.order.gateway.customer.OrderCustomerHttpGateway;
 import com.ferry.order.gateway.promotion.OrderPromotionHttpGateway;
 import com.ferry.order.gateway.invoice.DefaultInvoiceHtmlComposer;
@@ -263,6 +267,16 @@ public class OrderWebConfig{
 	@Bean
 	OrderDetailUseCase orderDetailUseCase(OrderDetailGateway orderDetailGateway){
 		return new DefaultOrderDetailUseCase(orderDetailGateway);
+	}
+
+	@Bean
+	CustomerOrderTotalsGateway customerOrderTotalsGateway(OrderJpaRepository orderJpaRepository){
+		return new CustomerOrderTotalsJpaGateway(orderJpaRepository);
+	}
+
+	@Bean
+	CustomerOrderTotalsUseCase customerOrderTotalsUseCase(CustomerOrderTotalsGateway customerOrderTotalsGateway){
+		return new DefaultCustomerOrderTotalsUseCase(customerOrderTotalsGateway);
 	}
 
 	@Bean

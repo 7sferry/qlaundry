@@ -24,10 +24,8 @@ interface CustomerListApiResponse {
 	prevCursor: string | null;
 }
 
-/** Only the three fields the spend rollup needs — the full order shape belongs to the orders feature. */
-interface OrderTotalsApiResponse {
-	orders: { customerId: string | null; totalPrice: number; createdAt: number }[];
-	nextCursor: string | null;
+interface CustomerOrderTotalsApiResponse {
+	totals: { customerId: string; totalOrders: number; totalSpend: number; lastOrderAt: number }[];
 }
 
 interface CustomerTotals {
@@ -40,31 +38,22 @@ const NO_TOTALS: CustomerTotals = {totalOrders: 0, totalSpend: 0};
 
 /**
  * user-service owns the customer, order-service owns the orders, and neither reads the other's tables — so
- * "how much has this customer spent" is a join that only exists here. `/order/list` is now cursor-paginated
- * (20 per page), so a full rollup means walking every page until `nextCursor` is null — still one round of
- * requests per customer list, just N requests instead of 1 when there are more than 20 matching orders.
+ * "how much has this customer spent" is a join that only exists here. `/order/customer-totals` computes the
+ * rollup server-side (one grouped SQL query) so this is always a single request, regardless of how many
+ * orders a customer has.
  */
-async function fetchTotals(customerId?: string): Promise<Map<string, CustomerTotals>> {
+async function fetchTotals(customerIds: string[]): Promise<Map<string, CustomerTotals>> {
 	const totals = new Map<string, CustomerTotals>();
-	let cursor: string | undefined;
-	for (;;) {
-		const params = new URLSearchParams();
-		if (customerId) params.set('customerId', customerId);
-		if (cursor) params.set('cursor', cursor);
-		const query = params.toString();
-		const res = await httpClient.get<OrderTotalsApiResponse>(`/order/list${query ? `?${query}` : ''}`);
-		for (const order of res.orders) {
-			if (!order.customerId) continue;
-			const current = totals.get(order.customerId) ?? {totalOrders: 0, totalSpend: 0};
-			const createdAt = new Date(order.createdAt).toISOString();
-			totals.set(order.customerId, {
-				totalOrders: current.totalOrders + 1,
-				totalSpend: current.totalSpend + order.totalPrice,
-				lastOrderAt: !current.lastOrderAt || createdAt > current.lastOrderAt ? createdAt : current.lastOrderAt,
-			});
-		}
-		if (!res.nextCursor) break;
-		cursor = res.nextCursor;
+	if (customerIds.length === 0) return totals;
+	const params = new URLSearchParams();
+	for (const id of customerIds) params.append('customerIds', id);
+	const res = await httpClient.get<CustomerOrderTotalsApiResponse>(`/order/customer-totals?${params.toString()}`);
+	for (const t of res.totals) {
+		totals.set(t.customerId, {
+			totalOrders: t.totalOrders,
+			totalSpend: t.totalSpend,
+			lastOrderAt: new Date(t.lastOrderAt).toISOString(),
+		});
 	}
 	return totals;
 }
@@ -109,10 +98,8 @@ function buildCustomerQuery(filters?: CustomerFilters): string {
 
 export class CustomerRepositoryImpl implements CustomerRepository {
 	async getCustomers(filters?: CustomerFilters): Promise<Page<Customer>> {
-		const [res, totals] = await Promise.all([
-			httpClient.get<CustomerListApiResponse>(`/customer/list${buildCustomerQuery(filters)}`),
-			fetchTotals(),
-		]);
+		const res = await httpClient.get<CustomerListApiResponse>(`/customer/list${buildCustomerQuery(filters)}`);
+		const totals = await fetchTotals(res.customers.map((c) => c.id));
 		const customers = res.customers.map((c) => toCustomer(c, totals.get(c.id) ?? NO_TOTALS));
 		return {items: customers, nextCursor: res.nextCursor, prevCursor: res.prevCursor};
 	}
@@ -120,7 +107,7 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 	async getCustomerById(id: string): Promise<Customer> {
 		const [res, totals] = await Promise.all([
 			httpClient.get<CustomerApiItem>(`/customer/detail?customerId=${encodeURIComponent(id)}`),
-			fetchTotals(id),
+			fetchTotals([id]),
 		]);
 		return toCustomer(res, totals.get(id) ?? NO_TOTALS);
 	}
@@ -171,7 +158,7 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 			address: input.address,
 			notes: input.notes,
 		});
-		const totals = await fetchTotals(input.id);
+		const totals = await fetchTotals([input.id]);
 		return toCustomer(res, totals.get(input.id) ?? NO_TOTALS);
 	}
 
