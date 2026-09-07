@@ -68,7 +68,7 @@ public class PromotionSecurityConfig{
 	@Bean
 	@SneakyThrows
 	TokenParser tokenParser(@Value("${app.token.public-key}") String base64PublicKey){
-		PublicKey publicKey = KeyFactory.getInstance("RSA")
+		PublicKey publicKey = KeyFactory.getInstance("Ed25519")
 				.generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(base64PublicKey)));
 		return new DefaultTokenParser(publicKey);
 	}

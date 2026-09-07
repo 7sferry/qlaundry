@@ -46,6 +46,7 @@ public class UserSecurityConfig{
 			"/auth/tenant/resendConfirmation",
 			"/auth/staff/resetPassword"
 	};
+	private static final String KEY_ALGORITHM = "Ed25519";
 
 	@Bean
 	UserJwtAuthenticationFilter jwtAuthenticationFilter(TokenParser tokenParser){
@@ -83,7 +84,7 @@ public class UserSecurityConfig{
 	@Bean
 	@SneakyThrows
 	TokenParser tokenParser(@Value("${app.token.public-key}") String base64PublicKey){
-		PublicKey publicKey = KeyFactory.getInstance("RSA")
+		PublicKey publicKey = KeyFactory.getInstance(KEY_ALGORITHM)
 				.generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(base64PublicKey)));
 		return new DefaultTokenParser(publicKey);
 	}
@@ -94,7 +95,7 @@ public class UserSecurityConfig{
 	                              @Value("${app.token.refresh-duration-in-seconds}") long refreshDurationInSeconds,
 	                              @Value("${app.token.rotation-duration-before-expire-in-seconds}") long rotationDurationBeforeExpireInSeconds,
 	                              @Value("${app.token.access-duration-in-seconds}") long accessDurationInSeconds){
-		PrivateKey privateKey = KeyFactory.getInstance("RSA")
+		PrivateKey privateKey = KeyFactory.getInstance(KEY_ALGORITHM)
 				.generatePrivate(new PKCS8EncodedKeySpec(Base64.getDecoder().decode(base64PrivateKey)));
 		DefaultTokenGenerator tokenManager = new DefaultTokenGenerator(privateKey);
 		return new DefaultTokenProcessor(tokenManager, refreshDurationInSeconds, accessDurationInSeconds,

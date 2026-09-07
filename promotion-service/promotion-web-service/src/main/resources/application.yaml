@@ -41,4 +41,4 @@ app:
         v1: '0ad6b70012fc50e0f74531ea48191e1c911623cc73f614f99c273265e403c5a4'
   token:
     # the public half of user-service's RS256 key pair — this service only verifies access tokens
-    public-key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzYDVIz9eZH4Y/dmx0QZctvRTjfGHip/CFsqPoUjGIzAaFBDDtXllL4MD4zUXUK1fqghIyWqdUgacgEAHJDFUTaP5oLPuVkuUdC+g8o7pGF7N8S44XfKTz89LNekYZ76Kj57mBZQgp3UZyPzFQpt/+N/y3ns3+DJecMEsWNit+NlS/gVFEypabVAqwl5OsmrfYOnocLL3aZFbKGM6OJ7skRCxw3zLm77eppYtag/qNX8akdjiYW4nSXV6d10YALGn7b5f/fKUyDws0RVsboMDmlWbAfqHdrFouhV2rIfUD1MfVZLtRsZkrwwhZUyvXd6WVTrzk+A7KLVyK/libJM3wQIDAQAB"
+    public-key: "MCowBQYDK2VwAyEAewlqN7GKlxKGgyXUobhnMF+76ytxBpSKYX+r3bYMaVM="

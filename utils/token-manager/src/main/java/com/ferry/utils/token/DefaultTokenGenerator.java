@@ -32,7 +32,7 @@ public class DefaultTokenGenerator implements TokenGenerator{
 	@Override
 	public String hashToken(String token){
 		String uniquePart = token.substring(10);
-		MessageDigest sha256 = MessageDigest.getInstance("SHA256");
+		MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
 		byte[] digest = sha256.digest(uniquePart.getBytes());
 		return token.substring(0, 10) + GeneratorHolder.BASE_64_ENCODER.encodeToString(digest);
 	}

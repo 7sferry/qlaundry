@@ -6,6 +6,7 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.security.Key;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
@@ -18,7 +19,6 @@ import java.util.function.Supplier;
 
 public class AesGcmCryptoTool implements CryptoTool{
 	private static final String TRANSFORMATION = "AES/GCM/NoPadding";
-	private static final String KEY_ALGORITHM = "AES";
 	private static final String HMAC_ALGORITHM = "HmacSHA256";
 	private static final int NONCE_LENGTH = 12;
 	private static final int TAG_LENGTH_BITS = 128;
@@ -55,8 +55,9 @@ public class AesGcmCryptoTool implements CryptoTool{
 		String activeKeyId = activeKeyId();
 		try{
 			Cipher cipher = Cipher.getInstance(TRANSFORMATION);
-			SecretKeySpec key = new SecretKeySpec(config.keys().get(activeKeyId), KEY_ALGORITHM);
-			cipher.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(TAG_LENGTH_BITS, nonce));
+			Key key = config.keys().get(activeKeyId);
+			GCMParameterSpec params = new GCMParameterSpec(TAG_LENGTH_BITS, nonce);
+			cipher.init(Cipher.ENCRYPT_MODE, key, params);
 			cipher.updateAAD(aad.bytes());
 			byte[] encrypted = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
 			byte[] wire = new byte[nonce.length + encrypted.length];
@@ -77,7 +78,7 @@ public class AesGcmCryptoTool implements CryptoTool{
 		}
 		int separator = ciphertext.indexOf(KEY_ID_SEPARATOR);
 		String keyId = separator < 0 ? null : ciphertext.substring(0, separator);
-		byte[] key = keyId == null ? null : config.keys().get(keyId);
+		Key key = keyId == null ? null : config.keys().get(keyId);
 		if(key == null){
 			if(config.allowPlaintextRead()){
 				return ciphertext;
@@ -87,8 +88,8 @@ public class AesGcmCryptoTool implements CryptoTool{
 		try{
 			byte[] wire = Base64.getUrlDecoder().decode(ciphertext.substring(separator + 1));
 			Cipher cipher = Cipher.getInstance(TRANSFORMATION);
-			cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, KEY_ALGORITHM),
-					new GCMParameterSpec(TAG_LENGTH_BITS, wire, 0, NONCE_LENGTH));
+			GCMParameterSpec params = new GCMParameterSpec(TAG_LENGTH_BITS, wire, 0, NONCE_LENGTH);
+			cipher.init(Cipher.DECRYPT_MODE, key, params);
 			cipher.updateAAD(aad.bytes());
 			byte[] decrypted = cipher.doFinal(wire, NONCE_LENGTH, wire.length - NONCE_LENGTH);
 			return new String(decrypted, StandardCharsets.UTF_8);
@@ -104,7 +105,7 @@ public class AesGcmCryptoTool implements CryptoTool{
 		}
 		try{
 			Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-			mac.init(new SecretKeySpec(config.blindIndexKey(), HMAC_ALGORITHM));
+			mac.init(config.blindIndexKey());
 			byte[] hash = mac.doFinal(normalizedValue.getBytes(StandardCharsets.UTF_8));
 			return HexFormat.of().formatHex(hash);
 		}catch(GeneralSecurityException e){
