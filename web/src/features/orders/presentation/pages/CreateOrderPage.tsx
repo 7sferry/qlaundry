@@ -74,10 +74,11 @@ export default function CreateOrderPage() {
 	const [priority, setPriority] = useState<'normal' | 'express'>('normal');
 	const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer' | 'qris'>('cash');
 	const [items, setItems] = useState<ClothingItem[]>([
-		{type: 'shirt', label: 'Shirt / Blouse', quantity: 3},
+		{type: 'shirt', label: 'Shirt / Blouse', quantity: 0},
 	]);
 	const [weightKg, setWeightKg] = useState<number | ''>('');
 	const [submitting, setSubmitting] = useState(false);
+	const [pickedUpImmediately, setPickedUpImmediately] = useState(false);
 	const [success, setSuccess] = useState(false);
 	const [phoneSearch, setPhoneSearch] = useState('');
 	const [nameSearch, setNameSearch] = useState('');
@@ -310,6 +311,7 @@ export default function CreateOrderPage() {
 				estimatedDelivery: form.estimatedDelivery || autoDelivery(form.pickupDate),
 				notes: form.notes,
 				promoCodes: selectedPromoCodes.length > 0 ? selectedPromoCodes : undefined,
+				pickedUpImmediately,
 			});
 			setSuccess(true);
 			setTimeout(() => navigate('/orders/history'), 1200);
@@ -534,21 +536,22 @@ export default function CreateOrderPage() {
 								<Plus size={14}/> Add garment type
 							</Button>
 
-							{service?.unit === 'kg' && (
-								<Field label="Estimated weight (kg)" htmlFor="weight"
-								       hint="Optional — recalculated at weighing">
-									<Input
-										id="weight"
-										type="number"
-										step="0.1"
-										min="0.1"
-										value={weightKg}
-										onChange={(e) => setWeightKg(e.target.value === '' ? '' : Number(e.target.value))}
-										placeholder="e.g. 3.5"
-										style={{maxWidth: 160}}
-									/>
-								</Field>
-							)}
+							<Field label="Estimated weight (kg)" htmlFor="weight"
+							       hint={service?.unit === 'kg'
+								       ? 'Required for per-kg services — recalculated at weighing'
+								       : 'Optional — for reference only, this service is not priced by weight'}>
+								<Input
+									id="weight"
+									type="number"
+									required={service?.unit === 'kg'}
+									step="0.1"
+									min="0.1"
+									value={weightKg}
+									onChange={(e) => setWeightKg(e.target.value === '' ? '' : Number(e.target.value))}
+									placeholder="e.g. 3.5"
+									style={{maxWidth: 160}}
+								/>
+							</Field>
 
 							<Field label="Special notes" htmlFor="notes" hint="Optional — instructions for the team">
 								<Textarea
@@ -709,8 +712,17 @@ export default function CreateOrderPage() {
 								{paymentMethod === 'cash' ? 'Pay cash at pickup' : paymentMethod === 'transfer' ? 'Transfer to outlet account' : 'Scan QRIS at outlet'}
 							</div>
 
+							<label className="row" style={{gap: 6, fontSize: 13, marginTop: 14, cursor: 'pointer'}}>
+								<input
+									type="checkbox"
+									checked={pickedUpImmediately}
+									onChange={(e) => setPickedUpImmediately(e.target.checked)}
+								/>
+								Mark as picked up immediately
+							</label>
+
 							<Button block type="submit" disabled={submitting || !form.customerName}
-							        style={{marginTop: 20}}>
+							        style={{marginTop: 12}}>
 								{submitting ? 'Creating order…' : <><Check size={16}/> Create order <ArrowRight
 									size={16}/></>}
 							</Button>

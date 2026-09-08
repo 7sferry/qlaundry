@@ -27,8 +27,7 @@ public class DefaultOrderPickupUseCase implements OrderPickupUseCase{
 				.orElseThrow(() -> new NotFoundException("Order Not Found"));
 		NoteDomain staffNotes = request.staffNotes() == null || request.staffNotes().isBlank()
 				? null : new NoteDomain(request.staffNotes());
-		OrderDomain saved = gateway.save(order.changeStatus(OrderStatus.PICKED_UP, staffNotes,
-				principal.userId()));
+		OrderDomain saved = gateway.save(order.changeStatus(OrderStatus.PICKED_UP, staffNotes, principal.userId()));
 		presenter.present(new OrderPickupResponse(saved));
 	}
 

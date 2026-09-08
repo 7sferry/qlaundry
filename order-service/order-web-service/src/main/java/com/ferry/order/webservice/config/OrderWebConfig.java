@@ -227,11 +227,13 @@ public class OrderWebConfig{
 	                                      OrderStatusJpaRepository orderStatusJpaRepository,
 	                                      ClothingTypeJpaRepository clothingTypeJpaRepository,
 	                                      IdGenerator idGenerator,
-	                                      CryptoTool cryptoTool){
+	                                      CryptoTool cryptoTool,
+	                                      OrderConfirmUseCase orderConfirmUseCase,
+	                                      OrderPickupUseCase orderPickupUseCase){
 		return new OrderCreateJpaGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
 				laundryServiceJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
 				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
-				clothingTypeJpaRepository, idGenerator, cryptoTool);
+				clothingTypeJpaRepository, idGenerator, cryptoTool, orderConfirmUseCase, orderPickupUseCase);
 	}
 
 	@Bean

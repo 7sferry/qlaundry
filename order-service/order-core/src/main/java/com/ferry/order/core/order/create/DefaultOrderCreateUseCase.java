@@ -61,15 +61,25 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 				pickupAt, estimatedDeliveryAt, new NoteDomain(request.notes()), principal.userId());
 		Set<String> codes = distinctCodes(request.promoCodes());
 		List<PromotionRedemptionHttpResponse> redemptions = redeemPromotions(order, codes, tenantId, principal);
+		OrderDomain running = applyPromotionsToOrder(order, redemptions);
+		OrderDomain saved = gateway.save(running);
+		List<OrderPromotionDomain> promotions = savePromotions(saved, redemptions, principal);
+		List<OrderItemDomain> items = saveItems(request, saved, principal);
+		if(Boolean.TRUE.equals(request.pickedUpImmediately())){
+			OrderDomain pickedUpOrder = gateway.markPickedUp(saved, principal);
+			presenter.present(new OrderCreateResponse(pickedUpOrder, items, promotions));
+			return;
+		}
+		presenter.present(new OrderCreateResponse(saved, items, promotions));
+	}
+
+	private OrderDomain applyPromotionsToOrder(OrderDomain order, List<PromotionRedemptionHttpResponse> redemptions){
 		OrderDomain running = order;
 		for(PromotionRedemptionHttpResponse response : redemptions){
 			MoneyDomain granted = new MoneyDomain(response.discountAmount()).min(running.discountRoom());
 			running = running.applyPromotionDiscount(granted);
 		}
-		OrderDomain saved = gateway.save(running);
-		List<OrderPromotionDomain> promotions = savePromotions(saved, redemptions, principal);
-		List<OrderItemDomain> items = saveItems(request, saved, principal);
-		presenter.present(new OrderCreateResponse(saved, items, promotions));
+		return running;
 	}
 
 	private Set<String> distinctCodes(List<String> promoCodes){

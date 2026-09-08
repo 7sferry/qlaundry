@@ -6,6 +6,7 @@ import com.ferry.order.domain.order.OrderPromotionDomain;
 import com.ferry.order.domain.service.LaundryServiceDomain;
 import com.ferry.order.domain.service.LaundryServiceIdDomain;
 import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.token.OrderAuthPrincipal;
 
 import java.util.Optional;
 
@@ -22,4 +23,6 @@ public interface OrderCreateGateway{
 	OrderItemDomain save(OrderItemDomain item);
 
 	OrderPromotionDomain save(OrderPromotionDomain promotion);
+
+	OrderDomain markPickedUp(OrderDomain order, OrderAuthPrincipal principal);
 }

@@ -233,6 +233,7 @@ export class OrderRepositoryImpl implements OrderRepository {
 			estimatedDeliveryAt: toEpochMillis(input.estimatedDelivery),
 			notes: input.notes,
 			promoCodes: input.promoCodes,
+			pickedUpImmediately: input.pickedUpImmediately,
 		});
 		return toOrder(res);
 	}

@@ -82,6 +82,8 @@ export interface CreateOrderInput {
 	estimatedDelivery: string;
 	notes?: string;
 	promoCodes?: string[];
+	/** Skips straight to `PICKED_UP` after creation — handled server-side in one call, not by chaining status-update requests. */
+	pickedUpImmediately?: boolean;
 }
 
 export interface UpdateOrderStatusInput {

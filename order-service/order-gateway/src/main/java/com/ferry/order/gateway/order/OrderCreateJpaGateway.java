@@ -1,12 +1,17 @@
 package com.ferry.order.gateway.order;
 
+import com.ferry.order.core.order.confirm.OrderConfirmRequest;
+import com.ferry.order.core.order.confirm.OrderConfirmUseCase;
 import com.ferry.order.core.order.create.OrderCreateGateway;
+import com.ferry.order.core.order.pickup.OrderPickupRequest;
+import com.ferry.order.core.order.pickup.OrderPickupUseCase;
 import com.ferry.order.domain.order.OrderDomain;
 import com.ferry.order.domain.order.OrderItemDomain;
 import com.ferry.order.domain.order.OrderPromotionDomain;
 import com.ferry.order.domain.service.LaundryServiceDomain;
 import com.ferry.order.domain.service.LaundryServiceIdDomain;
 import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.token.OrderAuthPrincipal;
 import com.ferry.order.gateway.order.entity.ClothingTypeJpaEntity;
 import com.ferry.order.gateway.order.entity.OrderItemJpaEntity;
 import com.ferry.order.gateway.order.entity.OrderJpaEntity;
@@ -52,6 +57,8 @@ public class OrderCreateJpaGateway implements OrderCreateGateway{
 	private final ClothingTypeJpaRepository clothingTypeJpaRepository;
 	private final IdGenerator idGenerator;
 	private final CryptoTool cryptoTool;
+	private final OrderConfirmUseCase orderConfirmUseCase;
+	private final OrderPickupUseCase orderPickupUseCase;
 
 	@Override
 	public Optional<LaundryServiceDomain> findServiceById(LaundryServiceIdDomain serviceId, TenantIdDomain tenantId){
@@ -90,6 +97,17 @@ public class OrderCreateJpaGateway implements OrderCreateGateway{
 		OrderPromotionJpaEntity saved = orderPromotionJpaRepository.save(
 				OrderPromotionJpaEntity.construct(id, promotion, order));
 		return OrderPromotionJpaEntity.construct(saved);
+	}
+
+	@Override
+	public OrderDomain markPickedUp(OrderDomain order, OrderAuthPrincipal principal){
+		OrderDomain[] confirmed = new OrderDomain[1];
+		orderConfirmUseCase.execute(new OrderConfirmRequest(order.id(), null), principal,
+				response -> confirmed[0] = response.order());
+		OrderDomain[] pickedUp = new OrderDomain[1];
+		orderPickupUseCase.execute(new OrderPickupRequest(confirmed[0].id(), null), principal,
+				response -> pickedUp[0] = response.order());
+		return pickedUp[0];
 	}
 
 }

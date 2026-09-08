@@ -27,8 +27,7 @@ public class DefaultOrderConfirmUseCase implements OrderConfirmUseCase{
 				.orElseThrow(() -> new NotFoundException("Order Not Found"));
 		NoteDomain staffNotes = request.staffNotes() == null || request.staffNotes().isBlank()
 				? null : new NoteDomain(request.staffNotes());
-		OrderDomain saved = gateway.save(order.changeStatus(OrderStatus.CONFIRMED, staffNotes,
-				principal.userId()));
+		OrderDomain saved = gateway.save(order.changeStatus(OrderStatus.CONFIRMED, staffNotes, principal.userId()));
 		presenter.present(new OrderConfirmResponse(saved));
 	}
 
