@@ -8,7 +8,6 @@ import com.ferry.promotion.gateway.promotion.entity.PromotionJpaEntity;
 import com.ferry.promotion.gateway.promotion.repository.PromotionJpaRepository;
 import com.ferry.utils.pagination.CursorFetch;
 import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.PaginationConstant;
 import com.ferry.utils.pagination.SortDirection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -29,11 +28,11 @@ public class PromotionListJpaGateway implements PromotionListGateway{
 	public CursorFetch<PromotionDomain> findByFilter(PromotionFilter filter){
 		List<PromotionJpaEntity> raw = fetchByFilter(filter);
 		List<PromotionDomain> rows = raw.stream().map(PromotionJpaEntity::construct).toList();
-		return CursorFetch.of(rows, PaginationConstant.PAGE_SIZE, filter.pageDirection());
+		return CursorFetch.of(rows, filter.pageSize(), filter.pageDirection());
 	}
 
 	private List<PromotionJpaEntity> fetchByFilter(PromotionFilter filter){
-		Pageable pageable = PageRequest.ofSize(PaginationConstant.PAGE_SIZE + 1);
+		Pageable pageable = PageRequest.ofSize(filter.pageSize() + 1);
 		boolean forward = filter.pageDirection() == PageDirection.NEXT;
 		boolean ascending = filter.sortDir() == SortDirection.ASC;
 		boolean useAfterQuery = forward == ascending;

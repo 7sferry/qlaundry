@@ -6,7 +6,7 @@
 import {Plus, Search, Trash2, Users} from 'lucide-react';
 import {Button, Card, Field, Input, Pagination, Select} from '@/core/ui';
 import {formatDate} from '@/core/utils/format';
-import type {SortDirection} from '@/core/pagination/Pagination';
+import {PAGE_SIZE_OPTIONS, type SortDirection} from '@/core/pagination/Pagination';
 import type {Staff} from '../../domain/Staff';
 import type {StaffSortBy} from '../../domain/StaffRepository';
 
@@ -25,6 +25,8 @@ interface StaffTableProps {
 	hasPrev: boolean;
 	onNext: () => void;
 	onPrev: () => void;
+	pageSize: number;
+	onPageSizeChange: (size: number) => void;
 	loading: boolean;
 }
 
@@ -37,7 +39,8 @@ const SORT_OPTIONS: { value: string; sortBy: StaffSortBy; sortDir: SortDirection
 
 export default function StaffTable({
 	                                    staff, search, onSearchChange, sortBy, sortDir, onSortChange, onSelect, onDelete,
-	                                    onAdd, canDelete, hasNext, hasPrev, onNext, onPrev, loading,
+	                                    onAdd, canDelete, hasNext, hasPrev, onNext, onPrev, pageSize, onPageSizeChange,
+	                                    loading,
                                     }: StaffTableProps) {
 	return (
 			<Card style={{marginTop: 24, marginBottom: 20}}>
@@ -62,6 +65,14 @@ export default function StaffTable({
 						>
 							{SORT_OPTIONS.map((o) => (
 									<option key={o.value} value={o.value}>{o.label}</option>
+							))}
+						</Select>
+					</Field>
+					<Field>
+						<Select value={pageSize} onChange={(e) => onPageSizeChange(Number(e.target.value))}
+						        aria-label="Rows per page">
+							{PAGE_SIZE_OPTIONS.map((size) => (
+								<option key={size} value={size}>{size} / page</option>
 							))}
 						</Select>
 					</Field>

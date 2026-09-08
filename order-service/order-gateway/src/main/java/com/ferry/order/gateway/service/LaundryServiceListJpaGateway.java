@@ -3,7 +3,6 @@ package com.ferry.order.gateway.service;
 import com.ferry.order.core.service.list.LaundryServiceListGateway;
 import com.ferry.order.domain.service.ServiceListSortBy;
 import com.ferry.utils.pagination.CursorFetch;
-import com.ferry.utils.pagination.PaginationConstant;
 import com.ferry.utils.pagination.PageDirection;
 import com.ferry.utils.pagination.SortDirection;
 import com.ferry.order.domain.service.LaundryServiceDomain;
@@ -29,11 +28,11 @@ public class LaundryServiceListJpaGateway implements LaundryServiceListGateway{
 	public CursorFetch<LaundryServiceDomain> findByFilter(LaundryServiceFilter filter){
 		List<LaundryServiceJpaEntity> raw = fetchByFilter(filter);
 		List<LaundryServiceDomain> rows = raw.stream().map(LaundryServiceJpaEntity::construct).toList();
-		return CursorFetch.of(rows, PaginationConstant.PAGE_SIZE, filter.pageDirection());
+		return CursorFetch.of(rows, filter.pageSize(), filter.pageDirection());
 	}
 
 	private List<LaundryServiceJpaEntity> fetchByFilter(LaundryServiceFilter filter){
-		Pageable pageable = PageRequest.ofSize(PaginationConstant.PAGE_SIZE + 1);
+		Pageable pageable = PageRequest.ofSize(filter.pageSize() + 1);
 		boolean forward = filter.pageDirection() == PageDirection.NEXT;
 		boolean ascending = filter.sortDir() == SortDirection.ASC;
 		boolean useAfterQuery = forward == ascending;

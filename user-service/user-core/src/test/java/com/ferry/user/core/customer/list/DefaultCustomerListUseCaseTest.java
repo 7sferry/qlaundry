@@ -54,7 +54,7 @@ class DefaultCustomerListUseCaseTest{
 		willReturn(new CursorFetch<>(List.of(), false)).given(gateway)
 				.findByFilter(any(CustomerFilter.class));
 
-		useCase.execute(new CustomerListRequest(null, null, null, null, null, null), principal, presenter);
+		useCase.execute(new CustomerListRequest(null, null, null, null, null, null, null), principal, presenter);
 
 		then(gateway).should(never()).findEmailsByFilter(any(CustomerEmailFilter.class));
 		then(gateway).should(never()).findPhonesByFilter(any(CustomerPhoneFilter.class));
@@ -87,7 +87,7 @@ class DefaultCustomerListUseCaseTest{
 		willReturn(List.of(address2)).given(gateway)
 				.findAddressesByFilter(any(CustomerAddressFilter.class));
 
-		useCase.execute(new CustomerListRequest(null, null, null, null, null, null), principal, presenter);
+		useCase.execute(new CustomerListRequest(null, null, null, null, null, null, null), principal, presenter);
 
 		then(presenter).should().present(responseCaptor.capture());
 
@@ -108,7 +108,7 @@ class DefaultCustomerListUseCaseTest{
 		willReturn(new CursorFetch<>(List.of(), false)).given(gateway)
 				.findByFilter(filterCaptor.capture());
 
-		useCase.execute(new CustomerListRequest("dewi", null, null, null, null, null), principal, presenter);
+		useCase.execute(new CustomerListRequest("dewi", null, null, null, null, null, null), principal, presenter);
 
 		CustomerFilter filter = filterCaptor.getValue();
 		thenSoftly(softly -> {
@@ -124,7 +124,7 @@ class DefaultCustomerListUseCaseTest{
 		willReturn(new CursorFetch<>(List.of(), false)).given(gateway)
 				.findByFilter(filterCaptor.capture());
 
-		useCase.execute(new CustomerListRequest(null, "   ", null, null, null, null), principal, presenter);
+		useCase.execute(new CustomerListRequest(null, "   ", null, null, null, null, null), principal, presenter);
 
 		thenSoftly(softly -> softly.then(filterCaptor.getValue().phone()).isNull());
 	}
@@ -135,7 +135,7 @@ class DefaultCustomerListUseCaseTest{
 		willReturn(new CursorFetch<>(List.of(), false)).given(gateway)
 				.findByFilter(filterCaptor.capture());
 
-		useCase.execute(new CustomerListRequest(null, "0811-2233-4455", null, null, null, null), principal, presenter);
+		useCase.execute(new CustomerListRequest(null, "0811-2233-4455", null, null, null, null, null), principal, presenter);
 
 		thenSoftly(softly -> softly.then(filterCaptor.getValue().phone()).isEqualTo("+6281122334455"));
 	}
@@ -146,7 +146,7 @@ class DefaultCustomerListUseCaseTest{
 		willReturn(new CursorFetch<>(List.of(), false)).given(gateway)
 				.findByFilter(filterCaptor.capture());
 
-		useCase.execute(new CustomerListRequest(null, null, null, null, null, null), principal, presenter);
+		useCase.execute(new CustomerListRequest(null, null, null, null, null, null, null), principal, presenter);
 
 		CustomerFilter filter = filterCaptor.getValue();
 		thenSoftly(softly -> {
@@ -168,7 +168,7 @@ class DefaultCustomerListUseCaseTest{
 		willReturn(List.of()).given(gateway).findPhonesByFilter(any(CustomerPhoneFilter.class));
 		willReturn(List.of()).given(gateway).findAddressesByFilter(any(CustomerAddressFilter.class));
 
-		useCase.execute(new CustomerListRequest(null, null, null, null, null, null), principal, presenter);
+		useCase.execute(new CustomerListRequest(null, null, null, null, null, null, null), principal, presenter);
 
 		then(presenter).should().present(responseCaptor.capture());
 		CustomerListResponse response = responseCaptor.getValue();
@@ -190,7 +190,7 @@ class DefaultCustomerListUseCaseTest{
 		willReturn(List.of()).given(gateway).findAddressesByFilter(any(CustomerAddressFilter.class));
 		String cursor = CursorCodec.encode(CUSTOMER_ID_1, CUSTOMER_ID_1);
 
-		useCase.execute(new CustomerListRequest(null, null, cursor, PageDirection.NEXT, null, null),
+		useCase.execute(new CustomerListRequest(null, null, cursor, null, null, null, null),
 				principal, presenter);
 
 		then(presenter).should().present(responseCaptor.capture());
@@ -214,8 +214,8 @@ class DefaultCustomerListUseCaseTest{
 		willReturn(List.of()).given(gateway).findAddressesByFilter(any(CustomerAddressFilter.class));
 		String cursor = CursorCodec.encode(CUSTOMER_ID_2, CUSTOMER_ID_2);
 
-		useCase.execute(new CustomerListRequest(null, null, cursor, PageDirection.PREV, CustomerListSortBy.NAME,
-				SortDirection.ASC), principal, presenter);
+		useCase.execute(new CustomerListRequest(null, null, null, cursor, CustomerListSortBy.NAME,
+				SortDirection.ASC, null), principal, presenter);
 
 		CustomerFilter filter = filterCaptor.getValue();
 		thenSoftly(softly -> {

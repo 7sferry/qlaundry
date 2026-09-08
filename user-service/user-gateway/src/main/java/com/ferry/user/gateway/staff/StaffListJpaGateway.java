@@ -16,7 +16,6 @@ import com.ferry.user.gateway.staff.repository.StaffPhoneJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.pagination.CursorFetch;
 import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.PaginationConstant;
 import com.ferry.utils.pagination.SortDirection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -40,11 +39,11 @@ public class StaffListJpaGateway implements StaffListGateway{
 	@Override
 	public CursorFetch<StaffListProjection> findByFilter(StaffFilter filter){
 		List<StaffListProjection> raw = fetchByFilter(filter);
-		return CursorFetch.of(raw, PaginationConstant.PAGE_SIZE, filter.pageDirection());
+		return CursorFetch.of(raw, filter.pageSize(), filter.pageDirection());
 	}
 
 	private List<StaffListProjection> fetchByFilter(StaffFilter filter){
-		Pageable pageable = PageRequest.ofSize(PaginationConstant.PAGE_SIZE + 1);
+		Pageable pageable = PageRequest.ofSize(filter.pageSize() + 1);
 		boolean forward = filter.pageDirection() == PageDirection.NEXT;
 		boolean ascending = filter.sortDir() == SortDirection.ASC;
 		boolean useAfterQuery = forward == ascending;

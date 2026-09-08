@@ -29,8 +29,9 @@ public class DefaultCustomerListUseCase implements CustomerListUseCase{
 				? null : new PhoneDomain(request.phone()).value();
 		CustomerListSortBy sortBy = request.sortBy() == null ? CustomerListSortBy.ID : request.sortBy();
 		SortDirection sortDir = request.sortDir() == null ? SortDirection.DESC : request.sortDir();
-		PageDirection direction = request.direction() == null ? PageDirection.NEXT : request.direction();
-		PageCursor cursor = request.cursor() == null ? null : CursorCodec.decode(request.cursor());
+		PageDirection direction = PageDirection.direction(request.before());
+		PageCursor cursor = PageCursor.cursor(request.after(), request.before());
+		int pageSize = PaginationConstant.resolvePageSize(request.pageSize());
 		CustomerFilter filter = CustomerFilter.builder()
 				.fullName(request.fullName())
 				.phone(phone)
@@ -39,6 +40,7 @@ public class DefaultCustomerListUseCase implements CustomerListUseCase{
 				.sortDir(sortDir)
 				.pageDirection(direction)
 				.cursor(cursor)
+				.pageSize(pageSize)
 				.build();
 		CursorFetch<CustomerDomain> fetch = gateway.findByFilter(filter);
 		CursorPage<CustomerDomain> page = CursorPaginator.paginate(fetch, direction, cursor != null,

@@ -26,8 +26,9 @@ public class DefaultPromotionListUseCase implements PromotionListUseCase{
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
 		PromotionListSortBy sortBy = request.sortBy() == null ? PromotionListSortBy.ID : request.sortBy();
 		SortDirection sortDir = request.sortDir() == null ? SortDirection.DESC : request.sortDir();
-		PageDirection direction = request.direction() == null ? PageDirection.NEXT : request.direction();
-		PageCursor cursor = request.cursor() == null ? null : CursorCodec.decode(request.cursor());
+		PageDirection direction = PageDirection.direction(request.before());
+		PageCursor cursor = PageCursor.cursor(request.after(), request.before());
+		int pageSize = PaginationConstant.resolvePageSize(request.pageSize());
 		PromotionFilter filter = PromotionFilter.builder()
 				.tenantId(tenantId.value())
 				.code(request.code())
@@ -39,6 +40,7 @@ public class DefaultPromotionListUseCase implements PromotionListUseCase{
 				.sortDir(sortDir)
 				.pageDirection(direction)
 				.cursor(cursor)
+				.pageSize(pageSize)
 				.build();
 		CursorFetch<PromotionDomain> fetch = gateway.findByFilter(filter);
 		CursorPage<PromotionDomain> page = CursorPaginator.paginate(fetch, direction, cursor != null,

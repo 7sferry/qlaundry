@@ -7,7 +7,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {UserPlus, Users} from 'lucide-react';
 import {Button, Loading, Modal, PageHeader, StatCard, useToast} from '@/core/ui';
 import {useAuth} from '@/features/auth/presentation/useAuth';
-import type {SortDirection} from '@/core/pagination/Pagination';
+import {DEFAULT_PAGE_SIZE, type SortDirection} from '@/core/pagination/Pagination';
 import {useStaff} from '../useStaff';
 import StaffForm from '../components/StaffForm';
 import {type StaffFormData, emptyStaffForm} from '../components/staffFormData';
@@ -27,6 +27,7 @@ export default function StaffPage() {
 	const [search, setSearch] = useState('');
 	const [sortBy, setSortBy] = useState<StaffSortBy>('id');
 	const [sortDir, setSortDir] = useState<SortDirection>('desc');
+	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [form, setForm] = useState<StaffFormData>(emptyStaffForm);
@@ -37,17 +38,17 @@ export default function StaffPage() {
 	// cleanup) gets this wrong under React 18 StrictMode's dev-only mount double-invoke.
 	const lastFiltersKey = useRef<string>();
 	useEffect(() => {
-		const key = JSON.stringify({search, sortBy, sortDir});
+		const key = JSON.stringify({search, sortBy, sortDir, pageSize});
 		if (lastFiltersKey.current === undefined || lastFiltersKey.current === key) {
 			lastFiltersKey.current = key;
 			return;
 		}
 		lastFiltersKey.current = key;
 		const timer = setTimeout(() => {
-			void refresh({search: search || undefined, sortBy, sortDir});
+			void refresh({search: search || undefined, sortBy, sortDir, pageSize});
 		}, 300);
 		return () => clearTimeout(timer);
-	}, [search, sortBy, sortDir, refresh]);
+	}, [search, sortBy, sortDir, pageSize, refresh]);
 
 	const handleSortChange = useCallback((by: StaffSortBy, dir: SortDirection) => {
 		setSortBy(by);
@@ -149,6 +150,8 @@ export default function StaffPage() {
 				hasPrev={hasPrev}
 				onNext={() => void goNext()}
 				onPrev={() => void goPrevious()}
+				pageSize={pageSize}
+				onPageSizeChange={setPageSize}
 				loading={loading}
 			/>
 

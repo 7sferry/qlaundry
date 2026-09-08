@@ -16,7 +16,7 @@ import java.util.Locale;
 @Builder(toBuilder = true)
 public record PromotionFilter(String tenantId, String code, String name, PromotionType type, boolean activeOnly,
                               boolean currentOnly, PromotionListSortBy sortBy, SortDirection sortDir,
-                              PageDirection pageDirection, PageCursor cursor){
+                              PageDirection pageDirection, PageCursor cursor, int pageSize){
 
 	public Instant cursorEndAt(){
 		if(cursor == null){

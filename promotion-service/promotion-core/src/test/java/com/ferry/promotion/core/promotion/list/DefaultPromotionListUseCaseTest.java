@@ -54,7 +54,8 @@ class DefaultPromotionListUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		PromotionListRequest request = new PromotionListRequest(null, null, null, null, null, null, null, null, null);
+		PromotionListRequest request = new PromotionListRequest(null, null, null, null, null, null, null, null, null,
+				null);
 		willReturn(new CursorFetch<PromotionDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(PromotionFilter.class));
 
@@ -87,7 +88,7 @@ class DefaultPromotionListUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		PromotionListRequest request = new PromotionListRequest("merdeka", "diskon", PromotionType.FIXED_AMOUNT,
-				false, null, null, null, null, null);
+				false, null, null, null, null, null, null);
 		willReturn(new CursorFetch<PromotionDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(PromotionFilter.class));
 
@@ -116,7 +117,8 @@ class DefaultPromotionListUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		PromotionListRequest request = new PromotionListRequest(null, null, null, null, true, null, null, null, null);
+		PromotionListRequest request = new PromotionListRequest(null, null, null, null, true, null, null, null, null,
+				null);
 		willReturn(new CursorFetch<PromotionDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(PromotionFilter.class));
 
@@ -136,8 +138,8 @@ class DefaultPromotionListUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		String cursorToken = CursorCodec.encode("Diskon Kemerdekaan", PROMOTION_ID_1);
-		PromotionListRequest request = new PromotionListRequest(null, null, null, null, null, cursorToken,
-				PageDirection.PREV, PromotionListSortBy.NAME, SortDirection.ASC);
+		PromotionListRequest request = new PromotionListRequest(null, null, null, null, null, null,
+				cursorToken, PromotionListSortBy.NAME, SortDirection.ASC, null);
 		willReturn(new CursorFetch<PromotionDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(PromotionFilter.class));
 
@@ -203,7 +205,7 @@ class DefaultPromotionListUseCaseTest{
 				.build();
 		String cursorToken = CursorCodec.encode(PROMOTION_ID_1, PROMOTION_ID_1);
 		PromotionListRequest request = new PromotionListRequest(null, null, null, null, null, cursorToken,
-				PageDirection.NEXT, PromotionListSortBy.ID, SortDirection.DESC);
+				null, PromotionListSortBy.ID, SortDirection.DESC, null);
 		willReturn(new CursorFetch<>(List.of(promotion1, promotion2), true)).given(gateway)
 				.findByFilter(any(PromotionFilter.class));
 
@@ -270,7 +272,7 @@ class DefaultPromotionListUseCaseTest{
 				.build();
 		String cursorToken = CursorCodec.encode("GAJIAN30", PROMOTION_ID_1);
 		PromotionListRequest request = new PromotionListRequest(null, null, null, null, null, cursorToken,
-				PageDirection.NEXT, PromotionListSortBy.CODE, SortDirection.ASC);
+				null, PromotionListSortBy.CODE, SortDirection.ASC, null);
 		willReturn(new CursorFetch<>(List.of(promotion1, promotion2), true)).given(gateway)
 				.findByFilter(any(PromotionFilter.class));
 

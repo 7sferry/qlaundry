@@ -57,7 +57,7 @@ class DefaultStaffListUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
 		willReturn(new CursorFetch<>(List.of(), false)).given(gateway).findByFilter(any(StaffFilter.class));
 
-		useCase.execute(new StaffListRequest(null, null, null, null, null), principal, presenter);
+		useCase.execute(new StaffListRequest(null, null, null, null, null, null), principal, presenter);
 
 		then(gateway).should(never()).findPhonesByFilter(any());
 		then(gateway).should(never()).findEmailsByFilter(any());
@@ -80,7 +80,7 @@ class DefaultStaffListUseCaseTest{
 		StaffAddressListProjection address1 = new StaffAddressListProjection(STAFF_ID_2, "Jl. Malioboro No. 5");
 		willReturn(List.of(address1)).given(gateway).findAddressesByFilter(any(StaffAddressFilter.class));
 
-		useCase.execute(new StaffListRequest(null, null, null, null, null), principal, presenter);
+		useCase.execute(new StaffListRequest(null, null, null, null, null, null), principal, presenter);
 
 		then(presenter).should().present(responseCaptor.capture());
 
@@ -100,7 +100,7 @@ class DefaultStaffListUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
 		willReturn(new CursorFetch<>(List.of(), false)).given(gateway).findByFilter(filterCaptor.capture());
 
-		useCase.execute(new StaffListRequest("eka", null, null, null, null), principal, presenter);
+		useCase.execute(new StaffListRequest("eka", null, null, null, null, null), principal, presenter);
 
 		StaffFilter filter = filterCaptor.getValue();
 		thenSoftly(softly -> {
@@ -118,7 +118,7 @@ class DefaultStaffListUseCaseTest{
 		willReturn(List.of()).given(gateway).findEmailsByFilter(any(StaffEmailFilter.class));
 		willReturn(List.of()).given(gateway).findAddressesByFilter(any(StaffAddressFilter.class));
 
-		useCase.execute(new StaffListRequest(null, null, null, null, null), principal, presenter);
+		useCase.execute(new StaffListRequest(null, null, null, null, null, null), principal, presenter);
 
 		then(presenter).should().present(responseCaptor.capture());
 		StaffListResponse response = responseCaptor.getValue();
@@ -134,7 +134,7 @@ class DefaultStaffListUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
 		willReturn(new CursorFetch<>(List.of(), false)).given(gateway).findByFilter(filterCaptor.capture());
 
-		useCase.execute(new StaffListRequest(null, null, null, null, null), principal, presenter);
+		useCase.execute(new StaffListRequest(null, null, null, null, null, null), principal, presenter);
 
 		StaffFilter filter = filterCaptor.getValue();
 		thenSoftly(softly -> {
@@ -154,7 +154,7 @@ class DefaultStaffListUseCaseTest{
 		willReturn(List.of()).given(gateway).findEmailsByFilter(any(StaffEmailFilter.class));
 		willReturn(List.of()).given(gateway).findAddressesByFilter(any(StaffAddressFilter.class));
 
-		useCase.execute(new StaffListRequest(null, null, null, null, null), principal, presenter);
+		useCase.execute(new StaffListRequest(null, null, null, null, null, null), principal, presenter);
 
 		then(presenter).should().present(responseCaptor.capture());
 		StaffListResponse response = responseCaptor.getValue();
@@ -174,7 +174,7 @@ class DefaultStaffListUseCaseTest{
 		willReturn(List.of()).given(gateway).findAddressesByFilter(any(StaffAddressFilter.class));
 		String cursor = CursorCodec.encode(STAFF_ID_1, STAFF_ID_1);
 
-		useCase.execute(new StaffListRequest(null, cursor, PageDirection.NEXT, null, null), principal, presenter);
+		useCase.execute(new StaffListRequest(null, cursor, null, null, null, null), principal, presenter);
 
 		then(presenter).should().present(responseCaptor.capture());
 		StaffListResponse response = responseCaptor.getValue();
@@ -194,7 +194,7 @@ class DefaultStaffListUseCaseTest{
 		willReturn(List.of()).given(gateway).findAddressesByFilter(any(StaffAddressFilter.class));
 		String cursor = CursorCodec.encode(STAFF_ID_2, STAFF_ID_2);
 
-		useCase.execute(new StaffListRequest(null, cursor, PageDirection.PREV, StaffListSortBy.NAME, SortDirection.ASC), principal, presenter);
+		useCase.execute(new StaffListRequest(null, null, cursor, StaffListSortBy.NAME, SortDirection.ASC, null), principal, presenter);
 
 		then(presenter).should().present(responseCaptor.capture());
 		StaffListResponse response = responseCaptor.getValue();

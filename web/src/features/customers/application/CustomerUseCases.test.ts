@@ -71,7 +71,7 @@ describe('customerUseCases', () => {
 	it('searchByPhone passes pagination params through to the repository', async () => {
 		const {repo, fns} = makeRepo();
 		const useCases = customerUseCases(repo);
-		const pagination = {cursor: 'abc', direction: 'next' as const};
+		const pagination = {after: 'abc'};
 
 		await useCases.searchByPhone('08987654321', pagination);
 
@@ -90,7 +90,7 @@ describe('customerUseCases', () => {
 	it('searchByName passes pagination params through to the repository', async () => {
 		const {repo, fns} = makeRepo();
 		const useCases = customerUseCases(repo);
-		const pagination = {cursor: 'xyz', direction: 'prev' as const};
+		const pagination = {before: 'xyz'};
 
 		await useCases.searchByName('Siti', pagination);
 

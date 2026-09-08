@@ -95,10 +95,11 @@ function buildPromotionQuery(filters?: PromotionFilters): string {
 	if (filters?.type) params.set('type', filters.type.toUpperCase());
 	params.set('activeOnly', String(filters?.activeOnly ?? false));
 	params.set('currentOnly', String(filters?.currentOnly ?? false));
-	if (filters?.cursor) params.set('cursor', filters.cursor);
-	if (filters?.direction) params.set('direction', filters.direction.toUpperCase());
+	if (filters?.after) params.set('after', filters.after);
+	if (filters?.before) params.set('before', filters.before);
 	if (filters?.sortBy) params.set('sortBy', filters.sortBy.toUpperCase());
 	if (filters?.sortDir) params.set('sortDir', filters.sortDir.toUpperCase());
+	if (filters?.pageSize) params.set('pageSize', String(filters.pageSize));
 	return `?${params.toString()}`;
 }
 

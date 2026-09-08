@@ -2,7 +2,6 @@ package com.ferry.user.core.staff.list;
 
 import com.ferry.user.core.tools.UserValidation;
 import com.ferry.user.domain.staff.StaffListSortBy;
-import com.ferry.utils.pagination.PageDirection;
 import com.ferry.utils.pagination.SortDirection;
 
 /************************
@@ -10,6 +9,6 @@ import com.ferry.utils.pagination.SortDirection;
  * on Juli 2026         *
  ************************/
 
-public record StaffListRequest(String fullName, String cursor, PageDirection direction, StaffListSortBy sortBy,
-                               SortDirection sortDir) implements UserValidation{
+public record StaffListRequest(String fullName, String after, String before, StaffListSortBy sortBy,
+                               SortDirection sortDir, Integer pageSize) implements UserValidation{
 }

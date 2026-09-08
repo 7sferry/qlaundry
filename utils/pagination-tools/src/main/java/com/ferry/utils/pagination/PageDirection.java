@@ -6,5 +6,11 @@ package com.ferry.utils.pagination;
  ************************/
 
 public enum PageDirection{
-	NEXT, PREV
+	NEXT, PREV,
+	;
+
+	public static PageDirection direction(String before){
+		return before != null ? PageDirection.PREV : PageDirection.NEXT;
+	}
+
 }

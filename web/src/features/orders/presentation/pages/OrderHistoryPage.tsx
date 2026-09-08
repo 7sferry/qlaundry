@@ -5,7 +5,7 @@
 
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {FileText, Filter, MoreHorizontal, Package, PackagePlus, Search, X,} from 'lucide-react';
+import {FileText, MoreHorizontal, Package, PackagePlus, Search, X,} from 'lucide-react';
 import {
 	Badge,
 	type BadgeTone,
@@ -20,7 +20,7 @@ import {
 	Select,
 	useToast
 } from '@/core/ui';
-import type {SortDirection} from '@/core/pagination/Pagination';
+import {DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS, type SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency, formatDate, formatRelative} from '@/core/utils/format';
 import {PopupBlockedError} from '@/core/utils/openUrlInNewTab';
 import {useOrders} from '../useOrders';
@@ -73,12 +73,11 @@ export default function OrderHistoryPage() {
 	const [search, setSearch] = useState('');
 	const [openingInvoice, setOpeningInvoice] = useState(false);
 	const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
-	const [filterPriority, setFilterPriority] = useState<'all' | 'normal' | 'express'>('all');
 	const [dateFrom, setDateFrom] = useState('');
 	const [dateTo, setDateTo] = useState('');
 	const [sortBy, setSortBy] = useState<OrderSortBy>('id');
 	const [sortDir, setSortDir] = useState<SortDirection>('desc');
-	const [showFilters, setShowFilters] = useState(false);
+	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
 	// Compares against the *last processed* filter snapshot, not a boolean "have we mounted" flag —
@@ -86,7 +85,7 @@ export default function OrderHistoryPage() {
 	// cleanup) gets this wrong under React 18 StrictMode's dev-only mount double-invoke.
 	const lastFiltersKey = useRef<string>();
 	useEffect(() => {
-		const key = JSON.stringify({search, filterStatus, filterPriority, dateFrom, dateTo, sortBy, sortDir});
+		const key = JSON.stringify({search, filterStatus, dateFrom, dateTo, sortBy, sortDir, pageSize});
 		if (lastFiltersKey.current === undefined || lastFiltersKey.current === key) {
 			lastFiltersKey.current = key;
 			return;
@@ -96,15 +95,15 @@ export default function OrderHistoryPage() {
 			void refresh({
 				search: search || undefined,
 				status: filterStatus === 'all' ? undefined : filterStatus,
-				priority: filterPriority === 'all' ? undefined : filterPriority,
 				from: dateFrom || undefined,
 				to: dateTo || undefined,
 				sortBy,
 				sortDir,
+				pageSize,
 			});
 		}, 300);
 		return () => clearTimeout(timer);
-	}, [search, filterStatus, filterPriority, dateFrom, dateTo, sortBy, sortDir, refresh]);
+	}, [search, filterStatus, dateFrom, dateTo, sortBy, sortDir, pageSize, refresh]);
 
 	const handleSortChange = useCallback((by: OrderSortBy, dir: SortDirection) => {
 		setSortBy(by);
@@ -152,13 +151,11 @@ export default function OrderHistoryPage() {
 	const clearFilters = () => {
 		setSearch('');
 		setFilterStatus('all');
-		setFilterPriority('all');
 		setDateFrom('');
 		setDateTo('');
 	};
 
-	const hasActiveFilters =
-			search || filterStatus !== 'all' || filterPriority !== 'all' || dateFrom || dateTo;
+	const hasActiveFilters = search || filterStatus !== 'all' || dateFrom || dateTo;
 
 	return (
 			<>
@@ -166,77 +163,67 @@ export default function OrderHistoryPage() {
 						title="Order history"
 						description={`${orders.length} orders on this page`}
 						actions={
-							<div className="row" style={{gap: 8}}>
- 							<Button variant="ghost" onClick={() => setShowFilters((v) => !v)}>
- 								<Filter size={15}/> Filters {hasActiveFilters ? `(active)` : ''}
- 							</Button>
- 							<Button onClick={() => navigate('/orders/new')}>
- 								<PackagePlus size={15}/> New order
- 							</Button>
-							</div>
+							<Button onClick={() => navigate('/orders/new')}>
+								<PackagePlus size={15}/> New order
+							</Button>
 						}
 				/>
 
-				{showFilters && (
-						<Card style={{marginBottom: 20}}>
-							<div className="filters-grid">
-								<Field label="Search">
-									<div className="input-with-icon">
-										<Search size={15}/>
-										<Input
-												value={search}
-												onChange={(e) => setSearch(e.target.value)}
-												placeholder="Order no., name, phone…"
-										/>
-									</div>
-								</Field>
-								<Field label="Status">
-									<Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}>
-										<option value="all">All statuses</option>
-										{Object.entries(ORDER_STATUS_LABELS).map(([k, v]) => (
-											<option key={k} value={k}>{v}</option>
-										))}
-									</Select>
-								</Field>
-								<Field label="Priority">
-									<Select
-											value={filterPriority}
-											onChange={(e) => setFilterPriority(e.target.value as typeof filterPriority)}
-									>
-										<option value="all">All</option>
-										<option value="normal">Normal</option>
-										<option value="express">Express</option>
-									</Select>
-								</Field>
-								<Field label="Created from" hint="Filters by order creation date">
-									<Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}/>
-								</Field>
-								<Field label="Created to" hint="Filters by order creation date">
-									<Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}/>
-								</Field>
-								<Field label="Sort by">
-									<Select
-											value={`${sortBy}-${sortDir}`}
-											onChange={(e) => {
-												const opt = SORT_OPTIONS.find((o) => o.value === e.target.value);
-												if (opt) handleSortChange(opt.sortBy, opt.sortDir);
-											}}
-									>
-										{SORT_OPTIONS.map((o) => (
-												<option key={o.value} value={o.value}>{o.label}</option>
-										))}
-									</Select>
-								</Field>
-								{hasActiveFilters && (
-									<div style={{display: 'flex', alignItems: 'flex-end', paddingBottom: 16}}>
-										<Button variant="ghost" onClick={clearFilters}>
-											<X size={14}/> Reset filters
-										</Button>
-									</div>
-								)}
+				<Card style={{marginBottom: 20}}>
+					<div className="filters-grid">
+						<Field label="Search">
+							<div className="input-with-icon">
+								<Search size={15}/>
+								<Input
+										value={search}
+										onChange={(e) => setSearch(e.target.value)}
+										placeholder="Order no., name, phone…"
+								/>
 							</div>
-						</Card>
-				)}
+						</Field>
+						<Field label="Status">
+							<Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}>
+								<option value="all">All statuses</option>
+								{Object.entries(ORDER_STATUS_LABELS).map(([k, v]) => (
+									<option key={k} value={k}>{v}</option>
+								))}
+							</Select>
+						</Field>
+						<Field label="Created from" hint="Filters by order creation date">
+							<Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}/>
+						</Field>
+						<Field label="Created to" hint="Filters by order creation date">
+							<Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}/>
+						</Field>
+						<Field label="Sort by">
+							<Select
+									value={`${sortBy}-${sortDir}`}
+									onChange={(e) => {
+										const opt = SORT_OPTIONS.find((o) => o.value === e.target.value);
+										if (opt) handleSortChange(opt.sortBy, opt.sortDir);
+									}}
+							>
+								{SORT_OPTIONS.map((o) => (
+										<option key={o.value} value={o.value}>{o.label}</option>
+								))}
+							</Select>
+						</Field>
+						<Field label="Rows per page">
+							<Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
+								{PAGE_SIZE_OPTIONS.map((size) => (
+									<option key={size} value={size}>{size} / page</option>
+								))}
+							</Select>
+						</Field>
+						{hasActiveFilters && (
+							<div style={{display: 'flex', alignItems: 'flex-end', paddingBottom: 16}}>
+								<Button variant="ghost" onClick={clearFilters}>
+									<X size={14}/> Reset filters
+								</Button>
+							</div>
+						)}
+					</div>
+				</Card>
 
 				<Card>
 					<div className="table-wrap">

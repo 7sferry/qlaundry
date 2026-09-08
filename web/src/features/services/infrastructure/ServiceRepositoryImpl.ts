@@ -48,10 +48,11 @@ function buildServiceQuery(filters?: ServiceFilters): string {
 	if (filters?.search) params.set('name', filters.search);
 	if (filters?.category) params.set('category', filters.category.toUpperCase());
 	params.set('activeOnly', String(filters?.activeOnly ?? false));
-	if (filters?.cursor) params.set('cursor', filters.cursor);
-	if (filters?.direction) params.set('direction', filters.direction.toUpperCase());
+	if (filters?.after) params.set('after', filters.after);
+	if (filters?.before) params.set('before', filters.before);
 	if (filters?.sortBy) params.set('sortBy', filters.sortBy.toUpperCase());
 	if (filters?.sortDir) params.set('sortDir', filters.sortDir.toUpperCase());
+	if (filters?.pageSize) params.set('pageSize', String(filters.pageSize));
 	return `?${params.toString()}`;
 }
 

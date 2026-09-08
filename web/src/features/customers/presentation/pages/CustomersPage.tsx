@@ -20,7 +20,7 @@ import {
 	Textarea,
 	useToast
 } from '@/core/ui';
-import type {SortDirection} from '@/core/pagination/Pagination';
+import {DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS, type SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency, formatDate} from '@/core/utils/format';
 import {useCustomers} from '../useCustomers';
 import type {Customer} from '../../domain/Customer';
@@ -108,6 +108,7 @@ export default function CustomersPage() {
 	const [search, setSearch] = useState('');
 	const [sortBy, setSortBy] = useState<CustomerSortBy>('id');
 	const [sortDir, setSortDir] = useState<SortDirection>('desc');
+	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [editMode, setEditMode] = useState(false);
@@ -119,17 +120,17 @@ export default function CustomersPage() {
 	// cleanup) gets this wrong under React 18 StrictMode's dev-only mount double-invoke.
 	const lastFiltersKey = useRef<string>();
 	useEffect(() => {
-		const key = JSON.stringify({search, sortBy, sortDir});
+		const key = JSON.stringify({search, sortBy, sortDir, pageSize});
 		if (lastFiltersKey.current === undefined || lastFiltersKey.current === key) {
 			lastFiltersKey.current = key;
 			return;
 		}
 		lastFiltersKey.current = key;
 		const timer = setTimeout(() => {
-			void refresh({search: search || undefined, sortBy, sortDir});
+			void refresh({search: search || undefined, sortBy, sortDir, pageSize});
 		}, 300);
 		return () => clearTimeout(timer);
-	}, [search, sortBy, sortDir, refresh]);
+	}, [search, sortBy, sortDir, pageSize, refresh]);
 
 	const handleSortChange = useCallback((by: CustomerSortBy, dir: SortDirection) => {
 		setSortBy(by);
@@ -246,6 +247,14 @@ export default function CustomersPage() {
 							>
 								{SORT_OPTIONS.map((o) => (
 										<option key={o.value} value={o.value}>{o.label}</option>
+								))}
+							</Select>
+						</Field>
+						<Field>
+							<Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}
+							        aria-label="Rows per page">
+								{PAGE_SIZE_OPTIONS.map((size) => (
+									<option key={size} value={size}>{size} / page</option>
 								))}
 							</Select>
 						</Field>

@@ -65,7 +65,7 @@ export function usePaginatedList<T, F extends PaginationParams>(
 		setLoading(true);
 		setError(null);
 		try {
-			applyPage(await fetchPage({...baseFilters.current, cursor: nextCursor.current, direction: 'next'} as F));
+			applyPage(await fetchPage({...baseFilters.current, after: nextCursor.current} as F));
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Failed to load');
 		} finally {
@@ -78,7 +78,7 @@ export function usePaginatedList<T, F extends PaginationParams>(
 		setLoading(true);
 		setError(null);
 		try {
-			applyPage(await fetchPage({...baseFilters.current, cursor: prevCursor.current, direction: 'prev'} as F));
+			applyPage(await fetchPage({...baseFilters.current, before: prevCursor.current} as F));
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Failed to load');
 		} finally {

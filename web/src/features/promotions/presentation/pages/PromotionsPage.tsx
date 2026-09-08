@@ -21,7 +21,7 @@ import {
 	Textarea,
 	useToast,
 } from '@/core/ui';
-import type {SortDirection} from '@/core/pagination/Pagination';
+import {DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS, type SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency, formatDatetime} from '@/core/utils/format';
 import {useAuth} from '@/features/auth/presentation/useAuth';
 import {usePromotionList} from '../usePromotionList';
@@ -214,6 +214,7 @@ export default function PromotionsPage() {
 	const [typeFilter, setTypeFilter] = useState<'all' | PromotionType>('all');
 	const [sortBy, setSortBy] = useState<PromotionSortBy>('id');
 	const [sortDir, setSortDir] = useState<SortDirection>('desc');
+	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null);
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [editMode, setEditMode] = useState(false);
@@ -232,7 +233,7 @@ export default function PromotionsPage() {
 	// it's never mistaken for a replay no matter how the ref got into its current state.
 	const lastFiltersKey = useRef<string>();
 	useEffect(() => {
-		const key = JSON.stringify({search, typeFilter, sortBy, sortDir});
+		const key = JSON.stringify({search, typeFilter, sortBy, sortDir, pageSize});
 		if (lastFiltersKey.current === undefined || lastFiltersKey.current === key) {
 			lastFiltersKey.current = key;
 			return;
@@ -244,10 +245,11 @@ export default function PromotionsPage() {
 				type: typeFilter === 'all' ? undefined : typeFilter,
 				sortBy,
 				sortDir,
+				pageSize,
 			});
 		}, 300);
 		return () => clearTimeout(timer);
-	}, [search, typeFilter, sortBy, sortDir, refresh]);
+	}, [search, typeFilter, sortBy, sortDir, pageSize, refresh]);
 
 	const handleSortChange = useCallback((by: PromotionSortBy, dir: SortDirection) => {
 		setSortBy(by);
@@ -399,6 +401,14 @@ export default function PromotionsPage() {
 						>
 							{SORT_OPTIONS.map((o) => (
 								<option key={o.value} value={o.value}>{o.label}</option>
+							))}
+						</Select>
+					</Field>
+					<Field>
+						<Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}
+						        aria-label="Rows per page">
+							{PAGE_SIZE_OPTIONS.map((size) => (
+								<option key={size} value={size}>{size} / page</option>
 							))}
 						</Select>
 					</Field>

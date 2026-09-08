@@ -13,7 +13,6 @@ import com.ferry.user.gateway.customer.repository.CustomerPhoneJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.pagination.CursorFetch;
 import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.PaginationConstant;
 import com.ferry.utils.pagination.SortDirection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -38,12 +37,12 @@ public class CustomerListJpaGateway implements CustomerListGateway{
 	public CursorFetch<CustomerDomain> findByFilter(CustomerFilter filter){
 		List<CustomerJpaEntity> raw = fetchByFilter(filter);
 		List<CustomerDomain> rows = raw.stream().map(CustomerJpaEntity::construct).toList();
-		return CursorFetch.of(rows, PaginationConstant.PAGE_SIZE, filter.pageDirection());
+		return CursorFetch.of(rows, filter.pageSize(), filter.pageDirection());
 	}
 
 	private List<CustomerJpaEntity> fetchByFilter(CustomerFilter filter){
 		String phoneHash = filter.hasPhone() ? cryptoTool.blindIndex(filter.phone()) : null;
-		Pageable pageable = PageRequest.ofSize(PaginationConstant.PAGE_SIZE + 1);
+		Pageable pageable = PageRequest.ofSize(filter.pageSize() + 1);
 		boolean forward = filter.pageDirection() == PageDirection.NEXT;
 		boolean ascending = filter.sortDir() == SortDirection.ASC;
 		boolean useAfterQuery = forward == ascending;

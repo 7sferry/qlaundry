@@ -4,7 +4,10 @@
  ************************/
 
 export type SortDirection = 'asc' | 'desc';
-export type PageDirection = 'next' | 'prev';
+
+/** Mirrors the backend's `PaginationConstant` — keep both in sync. */
+export const DEFAULT_PAGE_SIZE = 3;
+export const PAGE_SIZE_OPTIONS = [3, 5, 10, 20, 50] as const;
 
 /**
  * `SortBy` is deliberately not a single cross-feature union here — each feature's own repository
@@ -15,10 +18,14 @@ export type PageDirection = 'next' | 'prev';
  * concept is exactly what caused that mismatch to go unnoticed.
  */
 export interface PaginationParams<SortBy extends string = string> {
-	cursor?: string;
-	direction?: PageDirection;
+	/** Page forward from this cursor. Mutually exclusive with `before` — never send both. */
+	after?: string;
+	/** Page backward from this cursor. Mutually exclusive with `after` — never send both. */
+	before?: string;
 	sortBy?: SortBy;
 	sortDir?: SortDirection;
+	/** Rows per page. Omitted defaults to the backend's `PaginationConstant.DEFAULT_PAGE_SIZE` (3); the backend clamps anything over `MAX_PAGE_SIZE` (50) rather than rejecting it. */
+	pageSize?: number;
 }
 
 export interface Page<T> {

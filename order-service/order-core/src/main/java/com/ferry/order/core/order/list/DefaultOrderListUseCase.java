@@ -1,12 +1,12 @@
 package com.ferry.order.core.order.list;
 
 import com.ferry.order.domain.order.OrderListSortBy;
-import com.ferry.utils.pagination.CursorCodec;
 import com.ferry.utils.pagination.CursorFetch;
 import com.ferry.utils.pagination.CursorPage;
 import com.ferry.utils.pagination.CursorPaginator;
 import com.ferry.utils.pagination.PageCursor;
 import com.ferry.utils.pagination.PageDirection;
+import com.ferry.utils.pagination.PaginationConstant;
 import com.ferry.utils.pagination.SortDirection;
 import com.ferry.order.domain.order.OrderDomain;
 import com.ferry.order.domain.order.OrderFilter;
@@ -36,9 +36,10 @@ public class DefaultOrderListUseCase implements OrderListUseCase{
 		request.validate();
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
 		SortDirection sortDir = request.sortDir() == null ? SortDirection.DESC : request.sortDir();
-		PageDirection direction = request.direction() == null ? PageDirection.NEXT : request.direction();
-		PageCursor cursor = request.cursor() == null ? null : CursorCodec.decode(request.cursor());
+		PageDirection direction = PageDirection.direction(request.before());
+		PageCursor cursor = PageCursor.cursor(request.after(), request.before());
 		OrderListSortBy sortBy = request.sortBy() == null ? OrderListSortBy.ID : request.sortBy();
+		int pageSize = PaginationConstant.resolvePageSize(request.pageSize());
 		OrderFilter filter = OrderFilter.builder()
 				.tenantId(tenantId.value())
 				.status(request.status())
@@ -51,6 +52,7 @@ public class DefaultOrderListUseCase implements OrderListUseCase{
 				.sortDir(sortDir)
 				.pageDirection(direction)
 				.cursor(cursor)
+				.pageSize(pageSize)
 				.build();
 		CursorFetch<OrderDomain> fetch = gateway.findByFilter(filter);
 		CursorPage<OrderDomain> page = CursorPaginator.paginate(fetch, direction, cursor != null,

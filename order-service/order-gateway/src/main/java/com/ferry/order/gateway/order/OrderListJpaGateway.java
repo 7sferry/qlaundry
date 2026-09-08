@@ -11,7 +11,6 @@ import com.ferry.order.gateway.order.repository.OrderPromotionJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.pagination.CursorFetch;
 import com.ferry.utils.pagination.PageDirection;
-import com.ferry.utils.pagination.PaginationConstant;
 import com.ferry.utils.pagination.SortDirection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -36,11 +35,11 @@ public class OrderListJpaGateway implements OrderListGateway{
 	public CursorFetch<OrderDomain> findByFilter(OrderFilter filter){
 		List<OrderJpaEntity> raw = fetchByFilter(filter);
 		List<OrderDomain> rows = raw.stream().map(entity -> OrderJpaEntity.construct(entity, cryptoTool)).toList();
-		return CursorFetch.of(rows, PaginationConstant.PAGE_SIZE, filter.pageDirection());
+		return CursorFetch.of(rows, filter.pageSize(), filter.pageDirection());
 	}
 
 	private List<OrderJpaEntity> fetchByFilter(OrderFilter filter){
-		Pageable pageable = PageRequest.ofSize(PaginationConstant.PAGE_SIZE + 1);
+		Pageable pageable = PageRequest.ofSize(filter.pageSize() + 1);
 		boolean forward = filter.pageDirection() == PageDirection.NEXT;
 		boolean ascending = filter.sortDir() == SortDirection.ASC;
 		boolean useAfterQuery = forward == ascending;

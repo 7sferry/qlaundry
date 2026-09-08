@@ -74,10 +74,11 @@ function toCustomer(item: CustomerApiItem, totals: CustomerTotals): Customer {
 }
 
 function appendPaginationParams(params: URLSearchParams, pagination?: PaginationParams): void {
-	if (pagination?.cursor) params.set('cursor', pagination.cursor);
-	if (pagination?.direction) params.set('direction', pagination.direction.toUpperCase());
+	if (pagination?.after) params.set('after', pagination.after);
+	if (pagination?.before) params.set('before', pagination.before);
 	if (pagination?.sortBy) params.set('sortBy', pagination.sortBy.toUpperCase());
 	if (pagination?.sortDir) params.set('sortDir', pagination.sortDir.toUpperCase());
+	if (pagination?.pageSize) params.set('pageSize', String(pagination.pageSize));
 }
 
 /**

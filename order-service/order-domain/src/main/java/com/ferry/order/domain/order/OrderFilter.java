@@ -15,7 +15,7 @@ import java.time.Instant;
 @Builder(toBuilder = true)
 public record OrderFilter(String tenantId, OrderStatus status, OrderPriority priority, String customerId,
                           String orderNumber, Instant from, Instant to, OrderListSortBy sortBy, SortDirection sortDir,
-                          PageDirection pageDirection, PageCursor cursor){
+                          PageDirection pageDirection, PageCursor cursor, int pageSize){
 
 	public Short statusValue(){
 		return status == null ? null : status.getValue();

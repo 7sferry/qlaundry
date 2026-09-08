@@ -151,10 +151,11 @@ function buildOrderQuery(filters?: OrderFilters): string {
 	if (filters?.search) params.set('orderNumber', filters.search);
 	if (filters?.from) params.set('from', String(toEpochMillis(filters.from)));
 	if (filters?.to) params.set('to', String(toEpochMillis(filters.to)));
-	if (filters?.cursor) params.set('cursor', filters.cursor);
-	if (filters?.direction) params.set('direction', filters.direction.toUpperCase());
+	if (filters?.after) params.set('after', filters.after);
+	if (filters?.before) params.set('before', filters.before);
 	if (filters?.sortBy) params.set('sortBy', ORDER_SORT_BY[filters.sortBy] ?? filters.sortBy.toUpperCase());
 	if (filters?.sortDir) params.set('sortDir', filters.sortDir.toUpperCase());
+	if (filters?.pageSize) params.set('pageSize', String(filters.pageSize));
 	const query = params.toString();
 	return query ? `?${query}` : '';
 }
@@ -201,7 +202,7 @@ export class OrderRepositoryImpl implements OrderRepository {
 		let cursor: string | undefined;
 		for (;;) {
 			const params = new URLSearchParams({activeOnly: 'true'});
-			if (cursor) params.set('cursor', cursor);
+			if (cursor) params.set('after', cursor);
 			const res = await httpClient.get<ServiceListApiResponse>(`/service/list?${params.toString()}`);
 			services.push(...res.services.map(toService));
 			if (!res.nextCursor) break;

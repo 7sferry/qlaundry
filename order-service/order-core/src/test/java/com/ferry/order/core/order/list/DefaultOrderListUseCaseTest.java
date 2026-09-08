@@ -58,7 +58,7 @@ class DefaultOrderListUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		OrderListRequest request = new OrderListRequest(null, null, null, null, null, null, null, null, null, null);
+		OrderListRequest request = new OrderListRequest(null, null, null, null, null, null, null, null, null, null, null);
 		willReturn(new CursorFetch<OrderDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(OrderFilter.class));
 
@@ -96,7 +96,7 @@ class DefaultOrderListUseCaseTest{
 		long from = 1755043200000L;
 		long to = 1755129600000L;
 		OrderListRequest request = new OrderListRequest(OrderStatus.IN_PROGRESS, OrderPriority.EXPRESS,
-				"01CUSTOMERRATNA00000000000", "inv-20260813", from, to, null, null, null, null);
+				"01CUSTOMERRATNA00000000000", "inv-20260813", from, to, null, null, null, null, null);
 		willReturn(new CursorFetch<OrderDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(OrderFilter.class));
 
@@ -125,8 +125,8 @@ class DefaultOrderListUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		String cursorToken = CursorCodec.encode("budi santoso", ORDER_ID_1);
-		OrderListRequest request = new OrderListRequest(null, null, null, null, null, null, cursorToken,
-				PageDirection.PREV, OrderListSortBy.CUSTOMER_NAME, SortDirection.ASC);
+		OrderListRequest request = new OrderListRequest(null, null, null, null, null, null, null,
+				cursorToken, OrderListSortBy.CUSTOMER_NAME, SortDirection.ASC, null);
 		willReturn(new CursorFetch<OrderDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(OrderFilter.class));
 
@@ -241,7 +241,7 @@ class DefaultOrderListUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		OrderListRequest request = new OrderListRequest(null, null, null, null, null, null, null, null, null, null);
+		OrderListRequest request = new OrderListRequest(null, null, null, null, null, null, null, null, null, null, null);
 		willReturn(new CursorFetch<>(List.of(order1, order2), false)).given(gateway)
 				.findByFilter(any(OrderFilter.class));
 		willReturn(List.of(item1a, item2a)).given(gateway)
@@ -274,7 +274,7 @@ class DefaultOrderListUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		OrderListRequest request = new OrderListRequest(null, null, null, null, null, null, null, null, null, null);
+		OrderListRequest request = new OrderListRequest(null, null, null, null, null, null, null, null, null, null, null);
 		willReturn(new CursorFetch<OrderDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(OrderFilter.class));
 

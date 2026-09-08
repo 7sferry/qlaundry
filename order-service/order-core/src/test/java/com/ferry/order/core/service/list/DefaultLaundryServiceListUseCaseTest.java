@@ -53,7 +53,8 @@ class DefaultLaundryServiceListUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceListRequest request = new LaundryServiceListRequest(null, null, null, null, null, null, null);
+		LaundryServiceListRequest request = new LaundryServiceListRequest(null, null, null, null, null, null, null,
+				null);
 		willReturn(new CursorFetch<LaundryServiceDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(LaundryServiceFilter.class));
 
@@ -84,7 +85,7 @@ class DefaultLaundryServiceListUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		LaundryServiceListRequest request = new LaundryServiceListRequest("cuci", ServiceCategory.DRY_CLEAN, false,
-				null, null, null, null);
+				null, null, null, null, null);
 		willReturn(new CursorFetch<LaundryServiceDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(LaundryServiceFilter.class));
 
@@ -110,8 +111,8 @@ class DefaultLaundryServiceListUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		String cursorToken = CursorCodec.encode("cuci kiloan", SERVICE_ID_1);
-		LaundryServiceListRequest request = new LaundryServiceListRequest(null, null, null, cursorToken,
-				PageDirection.PREV, ServiceListSortBy.NAME, SortDirection.ASC);
+		LaundryServiceListRequest request = new LaundryServiceListRequest(null, null, null, null,
+				cursorToken, ServiceListSortBy.NAME, SortDirection.ASC, null);
 		willReturn(new CursorFetch<LaundryServiceDomain>(List.of(), false)).given(gateway)
 				.findByFilter(any(LaundryServiceFilter.class));
 
@@ -176,7 +177,7 @@ class DefaultLaundryServiceListUseCaseTest{
 				.build();
 		String cursorToken = CursorCodec.encode(SERVICE_ID_1, SERVICE_ID_1);
 		LaundryServiceListRequest request = new LaundryServiceListRequest(null, null, null, cursorToken,
-				PageDirection.NEXT, ServiceListSortBy.ID, SortDirection.DESC);
+				null, ServiceListSortBy.ID, SortDirection.DESC, null);
 		willReturn(new CursorFetch<>(List.of(service1, service2), true)).given(gateway)
 				.findByFilter(any(LaundryServiceFilter.class));
 

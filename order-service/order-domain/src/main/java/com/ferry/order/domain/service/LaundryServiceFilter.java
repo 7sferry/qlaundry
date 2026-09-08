@@ -13,7 +13,7 @@ import lombok.Builder;
 @Builder(toBuilder = true)
 public record LaundryServiceFilter(String tenantId, String name, ServiceCategory category, boolean activeOnly,
                                    ServiceListSortBy sortBy, SortDirection sortDir, PageDirection pageDirection,
-                                   PageCursor cursor){
+                                   PageCursor cursor, int pageSize){
 
 	public String nameStartsWith(){
 		if(name == null || name.isBlank()){

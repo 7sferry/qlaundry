@@ -30,8 +30,9 @@ public class DefaultStaffListUseCase implements StaffListUseCase{
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
 		StaffListSortBy sortBy = request.sortBy() == null ? StaffListSortBy.ID : request.sortBy();
 		SortDirection sortDir = request.sortDir() == null ? SortDirection.DESC : request.sortDir();
-		PageDirection pageDir = request.direction() == null ? PageDirection.NEXT : request.direction();
-		PageCursor cursor = request.cursor() == null ? null : CursorCodec.decode(request.cursor());
+		PageDirection pageDir = PageDirection.direction(request.before());
+		PageCursor cursor = PageCursor.cursor(request.after(), request.before());
+		int pageSize = PaginationConstant.resolvePageSize(request.pageSize());
 		StaffFilter filter = StaffFilter.builder()
 				.fullName(request.fullName())
 				.tenantId(tenantId.value())
@@ -39,6 +40,7 @@ public class DefaultStaffListUseCase implements StaffListUseCase{
 				.sortDir(sortDir)
 				.pageDirection(pageDir)
 				.cursor(cursor)
+				.pageSize(pageSize)
 				.build();
 		CursorFetch<StaffListProjection> fetch = gateway.findByFilter(filter);
 		CursorPage<StaffListProjection> page = CursorPaginator.paginate(fetch, pageDir, cursor != null,

@@ -6,4 +6,10 @@ package com.ferry.utils.pagination;
  ************************/
 
 public record PageCursor(String sortValue, String id){
+
+	public static PageCursor cursor(String after, String before){
+		String token = before != null ? before : after;
+		return token == null ? null : CursorCodec.decode(token);
+	}
+
 }

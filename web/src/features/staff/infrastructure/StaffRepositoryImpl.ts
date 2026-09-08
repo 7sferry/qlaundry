@@ -28,10 +28,11 @@ interface StaffListApiResponse {
 function buildStaffListQuery(filters?: StaffFilters): string {
 	const params = new URLSearchParams();
 	if (filters?.search) params.set('fullName', filters.search);
-	if (filters?.cursor) params.set('cursor', filters.cursor);
-	if (filters?.direction) params.set('direction', filters.direction.toUpperCase());
+	if (filters?.after) params.set('after', filters.after);
+	if (filters?.before) params.set('before', filters.before);
 	if (filters?.sortBy) params.set('sortBy', filters.sortBy.toUpperCase());
 	if (filters?.sortDir) params.set('sortDir', filters.sortDir.toUpperCase());
+	if (filters?.pageSize) params.set('pageSize', String(filters.pageSize));
 	const query = params.toString();
 	return query ? `?${query}` : '';
 }

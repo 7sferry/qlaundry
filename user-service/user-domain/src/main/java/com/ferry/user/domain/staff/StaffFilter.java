@@ -12,7 +12,7 @@ import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record StaffFilter(String fullName, String tenantId, String username, StaffListSortBy sortBy, SortDirection sortDir,
-                          PageDirection pageDirection, PageCursor cursor){
+                          PageDirection pageDirection, PageCursor cursor, int pageSize){
 
 	public String fullNameStartsWith(){
 		if(fullName == null || fullName.isBlank()){

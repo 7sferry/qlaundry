@@ -26,8 +26,9 @@ public class DefaultLaundryServiceListUseCase implements LaundryServiceListUseCa
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
 		ServiceListSortBy sortBy = request.sortBy() == null ? ServiceListSortBy.ID : request.sortBy();
 		SortDirection sortDir = request.sortDir() == null ? SortDirection.DESC : request.sortDir();
-		PageDirection direction = request.direction() == null ? PageDirection.NEXT : request.direction();
-		PageCursor cursor = request.cursor() == null ? null : CursorCodec.decode(request.cursor());
+		PageDirection direction = PageDirection.direction(request.before());
+		PageCursor cursor = PageCursor.cursor(request.after(), request.before());
+		int pageSize = PaginationConstant.resolvePageSize(request.pageSize());
 		LaundryServiceFilter filter = LaundryServiceFilter.builder()
 				.tenantId(tenantId.value())
 				.name(request.name())
@@ -37,6 +38,7 @@ public class DefaultLaundryServiceListUseCase implements LaundryServiceListUseCa
 				.sortDir(sortDir)
 				.pageDirection(direction)
 				.cursor(cursor)
+				.pageSize(pageSize)
 				.build();
 		CursorFetch<LaundryServiceDomain> fetch = gateway.findByFilter(filter);
 		CursorPage<LaundryServiceDomain> page = CursorPaginator.paginate(fetch, direction, cursor != null,
