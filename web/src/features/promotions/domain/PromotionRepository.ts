@@ -29,7 +29,7 @@ export interface PromotionRepository {
 
 	updatePromotion(input: UpdatePromotionInput): Promise<Promotion>;
 
-	/** `PUT /promotion/toggle` — the cheap, idempotent path for pausing/resuming from the list screen, distinct from a full `updatePromotion`. */
+	/** `PATCH /promotion/toggle` — the cheap, idempotent path for pausing/resuming from the list screen, distinct from a full `updatePromotion`. */
 	togglePromotion(id: string, active: boolean): Promise<{ id: string; active: boolean }>;
 
 	/**

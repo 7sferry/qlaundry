@@ -161,7 +161,7 @@ export class PromotionRepositoryImpl implements PromotionRepository {
 	}
 
 	async togglePromotion(id: string, active: boolean): Promise<{ id: string; active: boolean }> {
-		const res = await httpClient.put<PromotionToggleApiResponse>('/promotion/toggle', {promotionId: id, active});
+		const res = await httpClient.patch<PromotionToggleApiResponse>('/promotion/toggle', {promotionId: id, active});
 		return {id: res.id, active: res.active};
 	}
 

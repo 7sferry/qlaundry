@@ -243,7 +243,7 @@ export class OrderRepositoryImpl implements OrderRepository {
 			throw new Error(`No endpoint moves an order to ${input.status}`);
 		}
 		// the transition endpoints answer with the status fields only, so re-read the order for the full shape
-		await httpClient.put<{ id: string }>(endpoint, {
+		await httpClient.patch<{ id: string }>(endpoint, {
 			orderId: input.orderId,
 			staffNotes: input.staffNotes,
 		});

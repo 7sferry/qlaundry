@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,7 +22,7 @@ public class OrderConfirmWebController{
 	private final OrderConfirmUseCase orderConfirmUseCase;
 
 	@Transactional
-	@PutMapping("/order/confirm")
+	@PatchMapping("/order/confirm")
 	public ResponseEntity<?> confirm(@RequestBody OrderConfirmRequest request,
 	                                 @AuthenticationPrincipal OrderAuthPrincipal principal){
 		OrderConfirmWebPresenter presenter = new OrderConfirmWebPresenter();
