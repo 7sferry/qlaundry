@@ -13,12 +13,14 @@ import com.ferry.order.domain.order.OrderDomain;
 import com.ferry.order.domain.order.OrderItemDomain;
 import com.ferry.order.domain.order.OrderPriority;
 import com.ferry.order.domain.order.OrderPromotionDomain;
+import com.ferry.order.domain.order.OrderPromotionSagaDomain;
 import com.ferry.order.domain.order.PaymentMethod;
 import com.ferry.order.domain.service.LaundryServiceDomain;
 import com.ferry.order.domain.service.LaundryServiceIdDomain;
 import com.ferry.order.domain.tenant.TenantIdDomain;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.*;
@@ -28,11 +30,13 @@ import java.util.*;
  * on Agustus 2026      *
  ************************/
 
+@Slf4j
 @RequiredArgsConstructor
 public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 	private final OrderCreateGateway gateway;
 	private final OrderCustomerGateway customerGateway;
 	private final OrderPromotionGateway promotionGateway;
+	private final OrderPromotionSagaGateway sagaGateway;
 
 	@Override
 	public void execute(OrderCreateRequest request, OrderAuthPrincipal principal, OrderCreatePresenter presenter){
@@ -60,17 +64,60 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 				customerAddress, service, request.quantity(), request.weightKg(), discount, priority, paymentMethod,
 				pickupAt, estimatedDeliveryAt, new NoteDomain(request.notes()), principal.userId());
 		Set<String> codes = distinctCodes(request.promoCodes());
-		List<PromotionRedemptionHttpResponse> redemptions = redeemPromotions(order, codes, tenantId, principal);
-		OrderDomain running = applyPromotionsToOrder(order, redemptions);
-		OrderDomain saved = gateway.save(running);
+		if(codes.isEmpty()){
+			presenter.present(persist(request, order, List.of(), principal));
+			return;
+		}
+		OrderPromotionSagaDomain saga = OrderPromotionSagaDomain.open(tenantId.value(), order.orderNumberValue(),
+				principal.userId());
+		sagaGateway.open(saga);
+		List<PromotionRedemptionHttpResponse> redemptions = redeemPromotions(order, codes, tenantId, principal, saga);
+		try{
+			OrderDomain running = applyPromotionsToOrder(order, redemptions);
+			OrderCreateResponse response = persist(request, running, redemptions, principal);
+			sagaGateway.markCommittedAfterCommit(saga.commit(principal.userId()));
+			presenter.present(response);
+		}catch(RuntimeException e){
+			releasePromotions(saga, principal, e);
+			throw e;
+		}
+	}
+
+	private OrderCreateResponse persist(OrderCreateRequest request, OrderDomain order,
+	                                    List<PromotionRedemptionHttpResponse> redemptions,
+	                                    OrderAuthPrincipal principal){
+		OrderDomain saved = gateway.save(order);
 		List<OrderPromotionDomain> promotions = savePromotions(saved, redemptions, principal);
 		List<OrderItemDomain> items = saveItems(request, saved, principal);
 		if(Boolean.TRUE.equals(request.pickedUpImmediately())){
-			OrderDomain pickedUpOrder = gateway.markPickedUp(saved, principal);
-			presenter.present(new OrderCreateResponse(pickedUpOrder, items, promotions));
-			return;
+			return new OrderCreateResponse(gateway.markPickedUp(saved, principal), items, promotions);
 		}
-		presenter.present(new OrderCreateResponse(saved, items, promotions));
+		return new OrderCreateResponse(saved, items, promotions);
+	}
+
+	private void releasePromotions(OrderPromotionSagaDomain saga, OrderAuthPrincipal principal,
+	                               RuntimeException cause){
+		PromotionReleaseHttpRequest release = new PromotionReleaseHttpRequest(saga.tenantId(), saga.referenceId(),
+				principal.userId());
+		try{
+			promotionGateway.release(release);
+			sagaGateway.markReleased(saga.release(principal.userId()));
+		}catch(RuntimeException e){
+			log.error("Failed to release promotion redemption(s) claimed for order {}; the saga sweeper will retry",
+					saga.referenceId(), e);
+			cause.addSuppressed(e);
+		}
+	}
+
+	private void closeRejectedSaga(OrderPromotionSagaDomain saga, OrderAuthPrincipal principal,
+	                               RuntimeException cause){
+		try{
+			sagaGateway.markReleased(saga.release(principal.userId()));
+		}catch(RuntimeException e){
+			log.warn("Failed to close the promotion saga for rejected order {}; the saga sweeper will close it",
+					saga.referenceId(), e);
+			cause.addSuppressed(e);
+		}
 	}
 
 	private OrderDomain applyPromotionsToOrder(OrderDomain order, List<PromotionRedemptionHttpResponse> redemptions){
@@ -101,18 +148,20 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 
 	private List<PromotionRedemptionHttpResponse> redeemPromotions(OrderDomain order, Collection<String> codes,
 	                                                                TenantIdDomain tenantId,
-	                                                                OrderAuthPrincipal principal){
-		if(codes.isEmpty()){
-			return List.of();
-		}
+	                                                                OrderAuthPrincipal principal,
+	                                                                OrderPromotionSagaDomain saga){
 		PromotionRedemptionHttpRequest request = new PromotionRedemptionHttpRequest(tenantId.value(),
 				codes, order.subtotal().value(), order.orderNumberValue(), order.customerId(),
 				principal.userId());
 		List<PromotionRedemptionHttpResponse> responses = promotionGateway.redeem(request);
 		for(PromotionRedemptionHttpResponse response : responses){
-			if(response == null || !response.applied()){
-				throw new IllegalArgumentException(response == null
-						? "Promotion code is not recognised" : response.message());
+			if(response == null){
+				throw new IllegalArgumentException("Promotion code is not recognised");
+			}
+			if(!response.applied()){
+				IllegalArgumentException rejection = new IllegalArgumentException(response.message());
+				closeRejectedSaga(saga, principal, rejection);
+				throw rejection;
 			}
 		}
 		return responses;

@@ -9,4 +9,6 @@ public interface PromotionServiceClient{
 
 	PromotionRedemptionBatchResult redeem(PromotionRedemptionParams params);
 
+	PromotionReleaseResult release(PromotionReleaseParams params);
+
 }

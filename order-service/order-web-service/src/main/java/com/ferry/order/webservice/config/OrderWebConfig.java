@@ -17,6 +17,10 @@ import com.ferry.order.core.order.create.DefaultOrderCreateUseCase;
 import com.ferry.order.core.order.create.OrderCreateGateway;
 import com.ferry.order.core.order.create.OrderCreateUseCase;
 import com.ferry.order.core.order.create.OrderPromotionGateway;
+import com.ferry.order.core.order.create.OrderPromotionSagaGateway;
+import com.ferry.order.core.order.saga.DefaultOrderPromotionSagaSweepUseCase;
+import com.ferry.order.core.order.saga.OrderPromotionSagaSweepGateway;
+import com.ferry.order.core.order.saga.OrderPromotionSagaSweepUseCase;
 import com.ferry.order.core.order.deliver.DefaultOrderDeliverUseCase;
 import com.ferry.order.core.order.deliver.OrderDeliverGateway;
 import com.ferry.order.core.order.deliver.OrderDeliverUseCase;
@@ -71,12 +75,16 @@ import com.ferry.order.gateway.order.OrderListJpaGateway;
 import com.ferry.order.gateway.order.OrderPaymentJpaGateway;
 import com.ferry.order.gateway.order.OrderPickupJpaGateway;
 import com.ferry.order.gateway.order.OrderProcessJpaGateway;
+import com.ferry.order.gateway.order.OrderPromotionSagaJpaGateway;
+import com.ferry.order.gateway.order.OrderPromotionSagaSweepJpaGateway;
 import com.ferry.order.gateway.order.OrderReadyJpaGateway;
 import com.ferry.order.gateway.order.repository.ClothingTypeJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderItemJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderPriorityJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderPromotionJpaRepository;
+import com.ferry.order.gateway.order.repository.OrderPromotionSagaJpaRepository;
+import com.ferry.order.gateway.order.repository.OrderPromotionSagaStatusJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderStatusJpaRepository;
 import com.ferry.order.gateway.order.repository.PaymentMethodJpaRepository;
 import com.ferry.order.gateway.order.repository.PaymentStatusJpaRepository;
@@ -87,6 +95,7 @@ import com.ferry.order.gateway.service.LaundryServiceUpdateJpaGateway;
 import com.ferry.order.gateway.service.repository.LaundryServiceJpaRepository;
 import com.ferry.order.gateway.service.repository.ServiceCategoryJpaRepository;
 import com.ferry.order.gateway.service.repository.ServiceUnitJpaRepository;
+import com.ferry.order.webservice.order.saga.OrderPromotionSagaScheduler;
 import com.ferry.promotion.client.DefaultPromotionServiceClient;
 import com.ferry.promotion.client.PromotionServiceClient;
 import com.ferry.promotion.client.PromotionServiceClientConfig;
@@ -106,6 +115,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
@@ -237,10 +247,46 @@ public class OrderWebConfig{
 	}
 
 	@Bean
+	OrderPromotionSagaGateway orderPromotionSagaGateway(OrderPromotionSagaJpaRepository orderPromotionSagaJpaRepository,
+	                                                    OrderPromotionSagaStatusJpaRepository orderPromotionSagaStatusJpaRepository,
+	                                                    IdGenerator idGenerator,
+	                                                    PlatformTransactionManager transactionManager){
+		return new OrderPromotionSagaJpaGateway(orderPromotionSagaJpaRepository, orderPromotionSagaStatusJpaRepository,
+				idGenerator, transactionManager);
+	}
+
+	@Bean
 	OrderCreateUseCase orderCreateUseCase(OrderCreateGateway orderCreateGateway,
 	                                      OrderCustomerGateway customerGateway,
-	                                      OrderPromotionGateway promotionGateway){
-		return new DefaultOrderCreateUseCase(orderCreateGateway, customerGateway, promotionGateway);
+	                                      OrderPromotionGateway promotionGateway,
+	                                      OrderPromotionSagaGateway orderPromotionSagaGateway){
+		return new DefaultOrderCreateUseCase(orderCreateGateway, customerGateway, promotionGateway,
+				orderPromotionSagaGateway);
+	}
+
+	@Bean
+	OrderPromotionSagaSweepGateway orderPromotionSagaSweepGateway(
+			OrderPromotionSagaJpaRepository orderPromotionSagaJpaRepository,
+			OrderPromotionSagaStatusJpaRepository orderPromotionSagaStatusJpaRepository,
+			OrderJpaRepository orderJpaRepository,
+			PlatformTransactionManager transactionManager){
+		return new OrderPromotionSagaSweepJpaGateway(orderPromotionSagaJpaRepository,
+				orderPromotionSagaStatusJpaRepository, orderJpaRepository, transactionManager);
+	}
+
+	@Bean
+	OrderPromotionSagaSweepUseCase orderPromotionSagaSweepUseCase(
+			OrderPromotionSagaSweepGateway orderPromotionSagaSweepGateway,
+			OrderPromotionGateway promotionGateway){
+		return new DefaultOrderPromotionSagaSweepUseCase(orderPromotionSagaSweepGateway, promotionGateway);
+	}
+
+	@Bean
+	@Lazy(false)
+	OrderPromotionSagaScheduler orderPromotionSagaScheduler(OrderPromotionSagaSweepUseCase orderPromotionSagaSweepUseCase){
+		OrderPromotionSagaScheduler scheduler = new OrderPromotionSagaScheduler(orderPromotionSagaSweepUseCase);
+		Thread.startVirtualThread(scheduler::sweep);
+		return scheduler;
 	}
 
 	@Bean

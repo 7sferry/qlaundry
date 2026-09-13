@@ -7,4 +7,5 @@ package com.ferry.promotion.client;
 
 public class InternalPromotionPaths{
 	public static final String REDEMPTION_PATH = "/internal/promotion/redemption";
+	public static final String RELEASE_PATH = "/internal/promotion/redemption/release";
 }

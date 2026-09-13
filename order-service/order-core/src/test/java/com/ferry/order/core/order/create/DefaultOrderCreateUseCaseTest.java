@@ -3,11 +3,14 @@ package com.ferry.order.core.order.create;
 import com.ferry.order.domain.common.MoneyDomain;
 import com.ferry.order.domain.common.NoteDomain;
 import com.ferry.order.domain.common.exception.NotFoundException;
+import com.ferry.order.domain.common.exception.PromotionUnavailableException;
 import com.ferry.order.domain.order.ClothingType;
 import com.ferry.order.domain.order.OrderDomain;
 import com.ferry.order.domain.order.OrderItemDomain;
 import com.ferry.order.domain.order.OrderPriority;
 import com.ferry.order.domain.order.OrderPromotionDomain;
+import com.ferry.order.domain.order.OrderPromotionSagaDomain;
+import com.ferry.order.domain.order.OrderPromotionSagaStatus;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.order.PaymentMethod;
 import com.ferry.order.domain.order.PaymentStatus;
@@ -34,6 +37,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willAnswer;
 import static org.mockito.BDDMockito.willReturn;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -60,6 +64,8 @@ class DefaultOrderCreateUseCaseTest{
 	OrderCustomerGateway customerGateway;
 	@Mock
 	OrderPromotionGateway promotionGateway;
+	@Mock
+	OrderPromotionSagaGateway sagaGateway;
 	@InjectMocks
 	DefaultOrderCreateUseCase useCase;
 	@Mock
@@ -74,6 +80,10 @@ class DefaultOrderCreateUseCaseTest{
 	ArgumentCaptor<PromotionRedemptionHttpRequest> redemptionCaptor;
 	@Captor
 	ArgumentCaptor<OrderPromotionDomain> orderPromotionCaptor;
+	@Captor
+	ArgumentCaptor<PromotionReleaseHttpRequest> releaseCaptor;
+	@Captor
+	ArgumentCaptor<OrderPromotionSagaDomain> sagaCaptor;
 
 	@Test
 	void givenBlankCustomerName_thenThrowsConstraintViolationException(){
@@ -403,6 +413,20 @@ class DefaultOrderCreateUseCaseTest{
 
 		then(gateway).should(never())
 				.save(any(OrderDomain.class));
+		then(promotionGateway).should(never())
+				.release(any(PromotionReleaseHttpRequest.class));
+		then(sagaGateway).should()
+				.open(any(OrderPromotionSagaDomain.class));
+		then(sagaGateway).should()
+				.markReleased(sagaCaptor.capture());
+		then(sagaGateway).should(never())
+				.markCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
+
+		thenSoftly(softly -> {
+			softly.then(sagaCaptor.getValue().status()).isEqualTo(OrderPromotionSagaStatus.RELEASED);
+			softly.then(sagaCaptor.getValue().tenantId()).isEqualTo(TENANT_ID);
+			softly.then(sagaCaptor.getValue().updatedBy()).isEqualTo(STAFF_ID);
+		});
 	}
 
 	@Test
@@ -747,6 +771,391 @@ class DefaultOrderCreateUseCaseTest{
 				.redeem(redemptionCaptor.capture());
 
 		thenSoftly(softly -> softly.then(redemptionCaptor.getValue().codes()).containsExactly("HEMAT10"));
+	}
+
+	@Test
+	void givenSaveFailsAfterPromoRedemption_thenReleasesTheRedemptionAndRethrows(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		LaundryServiceDomain service = LaundryServiceDomain.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Cuci Kiloan Reguler")
+				.description(new NoteDomain("regular wash"))
+				.pricePerUnit(MoneyDomain.of(7000L))
+				.unit(ServiceUnit.KG)
+				.category(ServiceCategory.WASH)
+				.estimatedHours(48)
+				.expressMultiplier(1.5d)
+				.popular(true)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
+				SERVICE_ID, List.of(), 1, 2.0d, null, null, null, null, null, null, List.of("HEMAT10"), null);
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID, "HEMAT10",
+				new BigDecimal("2000")))).given(promotionGateway)
+				.redeem(any(PromotionRedemptionHttpRequest.class));
+		willThrow(new IllegalStateException("connection reset")).given(gateway)
+				.save(any(OrderDomain.class));
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessage("connection reset"));
+
+		then(promotionGateway).should()
+				.redeem(redemptionCaptor.capture());
+		then(promotionGateway).should()
+				.release(releaseCaptor.capture());
+		then(presenter).should(never())
+				.present(any(OrderCreateResponse.class));
+
+		then(sagaGateway).should()
+				.markReleased(sagaCaptor.capture());
+		then(sagaGateway).should(never())
+				.markCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
+
+		PromotionReleaseHttpRequest release = releaseCaptor.getValue();
+		OrderPromotionSagaDomain released = sagaCaptor.getValue();
+
+		thenSoftly(softly -> {
+			softly.then(release.tenantId()).isEqualTo(TENANT_ID);
+			softly.then(release.referenceId()).isEqualTo(redemptionCaptor.getValue().referenceId());
+			softly.then(release.releasedBy()).isEqualTo(STAFF_ID);
+			softly.then(released.status()).isEqualTo(OrderPromotionSagaStatus.RELEASED);
+			softly.then(released.referenceId()).isEqualTo(release.referenceId());
+		});
+	}
+
+	@Test
+	void givenPickupFailsAfterPromoRedemption_thenReleasesTheRedemptionAndRethrows(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		LaundryServiceDomain service = LaundryServiceDomain.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Cuci Sepatu")
+				.description(new NoteDomain("shoe wash"))
+				.pricePerUnit(MoneyDomain.of(50000L))
+				.unit(ServiceUnit.ITEM)
+				.category(ServiceCategory.WASH)
+				.estimatedHours(36)
+				.expressMultiplier(1.75d)
+				.popular(false)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
+				SERVICE_ID, List.of(), 1, null, null, null, null, null, null, null, List.of("AAA", "BBB"), true);
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+		willReturn(List.of(
+				new PromotionRedemptionHttpResponse(true, "Promotion applied", "01PROMOAAA0000000000000000", "AAA",
+						new BigDecimal("10000")),
+				new PromotionRedemptionHttpResponse(true, "Promotion applied", "01PROMOBBB0000000000000000", "BBB",
+						new BigDecimal("8000"))))
+				.given(promotionGateway)
+				.redeem(any(PromotionRedemptionHttpRequest.class));
+		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+				.given(gateway)
+				.save(any(OrderDomain.class));
+		willAnswer(invocation -> invocation.<OrderPromotionDomain>getArgument(0)).given(gateway)
+				.save(any(OrderPromotionDomain.class));
+		willThrow(new IllegalStateException("status transition failed")).given(gateway)
+				.markPickedUp(any(OrderDomain.class), any(OrderAuthPrincipal.class));
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessage("status transition failed"));
+
+		then(promotionGateway).should()
+				.release(releaseCaptor.capture());
+		then(presenter).should(never())
+				.present(any(OrderCreateResponse.class));
+
+		thenSoftly(softly -> softly.then(releaseCaptor.getValue().referenceId()).startsWith("INV-"));
+	}
+
+	@Test
+	void givenReleaseAlsoFails_thenTheOriginalFailureStillSurfacesWithTheReleaseFailureSuppressed(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		LaundryServiceDomain service = LaundryServiceDomain.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Setrika Satuan")
+				.description(new NoteDomain("iron only"))
+				.pricePerUnit(MoneyDomain.of(5000L))
+				.unit(ServiceUnit.ITEM)
+				.category(ServiceCategory.IRON)
+				.estimatedHours(24)
+				.expressMultiplier(1.0d)
+				.popular(false)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
+				SERVICE_ID, List.of(), 2, null, null, null, null, null, null, null, List.of("HEMAT10"), null);
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID, "HEMAT10",
+				new BigDecimal("1500")))).given(promotionGateway)
+				.redeem(any(PromotionRedemptionHttpRequest.class));
+		willThrow(new IllegalStateException("insert failed")).given(gateway)
+				.save(any(OrderDomain.class));
+		willThrow(new IllegalStateException("promotion service down")).given(promotionGateway)
+				.release(any(PromotionReleaseHttpRequest.class));
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessage("insert failed")
+				.hasSuppressedException(new IllegalStateException("promotion service down")));
+
+		then(promotionGateway).should()
+				.release(any(PromotionReleaseHttpRequest.class));
+		then(sagaGateway).should(never())
+				.markReleased(any(OrderPromotionSagaDomain.class));
+		then(presenter).should(never())
+				.present(any(OrderCreateResponse.class));
+	}
+
+	@Test
+	void givenSaveFailsWithoutAnyPromoCode_thenNothingIsReleased(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		LaundryServiceDomain service = LaundryServiceDomain.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Setrika Satuan")
+				.description(new NoteDomain("iron only"))
+				.pricePerUnit(MoneyDomain.of(5000L))
+				.unit(ServiceUnit.ITEM)
+				.category(ServiceCategory.IRON)
+				.estimatedHours(24)
+				.expressMultiplier(1.0d)
+				.popular(false)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
+				SERVICE_ID, List.of(), 2, null, null, null, null, null, null, null, null, null);
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+		willThrow(new IllegalStateException("insert failed")).given(gateway)
+				.save(any(OrderDomain.class));
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessage("insert failed"));
+
+		then(promotionGateway).shouldHaveNoInteractions();
+		then(sagaGateway).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void givenPromoCode_thenOpensTheSagaBeforeRedeemingAndMarksItCommittedAfterPersisting(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		LaundryServiceDomain service = LaundryServiceDomain.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Cuci Kiloan Reguler")
+				.description(new NoteDomain("regular wash"))
+				.pricePerUnit(MoneyDomain.of(7000L))
+				.unit(ServiceUnit.KG)
+				.category(ServiceCategory.WASH)
+				.estimatedHours(48)
+				.expressMultiplier(1.5d)
+				.popular(true)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
+				SERVICE_ID, List.of(), 1, 3.0d, null, null, null, null, null, null, List.of("GAJIAN25"), null);
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID, "GAJIAN25",
+				new BigDecimal("2500")))).given(promotionGateway)
+				.redeem(any(PromotionRedemptionHttpRequest.class));
+		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+				.given(gateway)
+				.save(any(OrderDomain.class));
+		willAnswer(invocation -> invocation.<OrderPromotionDomain>getArgument(0)).given(gateway)
+				.save(any(OrderPromotionDomain.class));
+
+		useCase.execute(request, principal, presenter);
+
+		InOrder inOrder = Mockito.inOrder(sagaGateway, promotionGateway, gateway, presenter);
+		then(sagaGateway).should(inOrder)
+				.open(sagaCaptor.capture());
+		then(promotionGateway).should(inOrder)
+				.redeem(redemptionCaptor.capture());
+		then(gateway).should(inOrder)
+				.save(any(OrderDomain.class));
+		then(sagaGateway).should(inOrder)
+				.markCommittedAfterCommit(sagaCaptor.capture());
+		then(presenter).should(inOrder)
+				.present(any(OrderCreateResponse.class));
+		then(sagaGateway).should(never())
+				.markReleased(any(OrderPromotionSagaDomain.class));
+		then(promotionGateway).should(never())
+				.release(any(PromotionReleaseHttpRequest.class));
+
+		OrderPromotionSagaDomain opened = sagaCaptor.getAllValues().getFirst();
+		OrderPromotionSagaDomain committed = sagaCaptor.getAllValues().getLast();
+
+		thenSoftly(softly -> {
+			softly.then(opened.status()).isEqualTo(OrderPromotionSagaStatus.PENDING);
+			softly.then(opened.tenantId()).isEqualTo(TENANT_ID);
+			softly.then(opened.referenceId()).isEqualTo(redemptionCaptor.getValue().referenceId());
+			softly.then(opened.createdBy()).isEqualTo(STAFF_ID);
+			softly.then(opened.attempts()).isZero();
+			softly.then(committed.status()).isEqualTo(OrderPromotionSagaStatus.COMMITTED);
+			softly.then(committed.referenceId()).isEqualTo(opened.referenceId());
+		});
+	}
+
+	@Test
+	void givenRedemptionFailsInTransit_thenTheSagaStaysPendingForTheSweeperAndNothingIsReleased(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		LaundryServiceDomain service = LaundryServiceDomain.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Setrika Satuan")
+				.description(new NoteDomain("iron only"))
+				.pricePerUnit(MoneyDomain.of(5000L))
+				.unit(ServiceUnit.ITEM)
+				.category(ServiceCategory.IRON)
+				.estimatedHours(24)
+				.expressMultiplier(1.0d)
+				.popular(false)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
+				SERVICE_ID, List.of(), 4, null, null, null, null, null, null, null, List.of("MERDEKA17"), null);
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+		willThrow(new PromotionUnavailableException("Promotion service is unavailable. Please try again.",
+				new RuntimeException("read timed out"))).given(promotionGateway)
+				.redeem(any(PromotionRedemptionHttpRequest.class));
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(PromotionUnavailableException.class)
+				.hasMessage("Promotion service is unavailable. Please try again."));
+
+		then(sagaGateway).should()
+				.open(sagaCaptor.capture());
+		then(sagaGateway).should(never())
+				.markReleased(any(OrderPromotionSagaDomain.class));
+		then(sagaGateway).should(never())
+				.markCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
+		then(promotionGateway).should(never())
+				.release(any(PromotionReleaseHttpRequest.class));
+		then(gateway).should(never())
+				.save(any(OrderDomain.class));
+
+		thenSoftly(softly -> softly.then(sagaCaptor.getValue().status()).isEqualTo(OrderPromotionSagaStatus.PENDING));
+	}
+
+	@Test
+	void givenReleaseSucceedsButClosingTheSagaFails_thenTheOriginalFailureSurfacesWithTheSagaFailureSuppressed(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		LaundryServiceDomain service = LaundryServiceDomain.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Cuci Karpet")
+				.description(new NoteDomain("carpet deep clean"))
+				.pricePerUnit(MoneyDomain.of(30000L))
+				.unit(ServiceUnit.ITEM)
+				.category(ServiceCategory.SPECIALTY)
+				.estimatedHours(96)
+				.expressMultiplier(1.25d)
+				.popular(false)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
+				SERVICE_ID, List.of(), 1, null, null, null, null, null, null, null, List.of("RAMADHAN"), null);
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID, "RAMADHAN",
+				new BigDecimal("3000")))).given(promotionGateway)
+				.redeem(any(PromotionRedemptionHttpRequest.class));
+		willThrow(new IllegalStateException("orders insert failed")).given(gateway)
+				.save(any(OrderDomain.class));
+		willThrow(new IllegalStateException("saga row locked")).given(sagaGateway)
+				.markReleased(any(OrderPromotionSagaDomain.class));
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessage("orders insert failed")
+				.hasSuppressedException(new IllegalStateException("saga row locked")));
+
+		then(promotionGateway).should()
+				.release(any(PromotionReleaseHttpRequest.class));
+		then(presenter).should(never())
+				.present(any(OrderCreateResponse.class));
 	}
 
 	@Test

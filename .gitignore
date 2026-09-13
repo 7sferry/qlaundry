@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 
 logs/
+todo/
 
 ### self-signed dev TLS cert for the nginx gateway (never commit a private key) ###
 gateway/certs/

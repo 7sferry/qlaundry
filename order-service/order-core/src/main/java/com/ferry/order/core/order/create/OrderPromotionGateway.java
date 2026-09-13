@@ -9,4 +9,6 @@ import java.util.List;
 
 public interface OrderPromotionGateway{
 	List<PromotionRedemptionHttpResponse> redeem(PromotionRedemptionHttpRequest request);
+
+	void release(PromotionReleaseHttpRequest request);
 }

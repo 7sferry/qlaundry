@@ -83,6 +83,8 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, String
 			"order by o.customerName desc, o.id desc")
 	List<OrderJpaEntity> findBeforeByCustomerName(@Param("filter") OrderFilter filter, Pageable pageable);
 
+	boolean existsByOrderNumberAndTenantId(String orderNumber, String tenantId);
+
 	@Query("select case when count(o) > 0 then true else false end " +
 			"from OrderJpaEntity o " +
 			"where o.serviceId = :serviceId and o.tenantId = :tenantId " +

@@ -38,6 +38,10 @@ public record PromotionRedemptionDomain(String id, String promotionId, String te
 				referenceId, customerId, subtotal, discountAmount, null, false, now, createdBy, now, createdBy);
 	}
 
+	public PromotionRedemptionDomain release(String updatedBy){
+		return toBuilder().deleted(true).updatedBy(updatedBy).updatedAt(Instant.now()).build();
+	}
+
 	public String codeValue(){
 		return code.value();
 	}

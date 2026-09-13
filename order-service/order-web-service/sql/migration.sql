@@ -9,9 +9,14 @@
 CREATE SCHEMA IF NOT EXISTS orders;
 
 -- 1. boot order-web-service once so Hibernate creates the tables
--- 2. then seed every lookup table from order-gateway/src/main/resources/init.sql:
+-- 2. then seed every lookup table from order-gateway/sql/init.sql:
 --      order_statuses, order_priorities, payment_methods, payment_statuses,
---      clothing_types, service_units, service_categories
+--      clothing_types, service_units, service_categories, order_promotion_saga_statuses
+--
+-- An existing database only needs the saga seed: boot once so ddl-auto creates order_promotion_sagas and
+-- order_promotion_saga_statuses, then run the three order_promotion_saga_statuses inserts from init.sql.
+-- Until they exist, every /order/create carrying promoCodes fails at the saga insert (FK to status 1) before
+-- any promotion is redeemed, so nothing is claimed; walk-in orders without promo codes are unaffected.
 --
 -- payment_methods deliberately holds only CASH (id 1) for now. When transfer/QRIS land, insert them with the
 -- ids reserved in com.ferry.order.domain.order.PaymentMethod's comment and add the enum members — never

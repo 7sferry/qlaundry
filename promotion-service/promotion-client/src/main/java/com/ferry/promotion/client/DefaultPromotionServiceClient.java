@@ -27,4 +27,14 @@ public class DefaultPromotionServiceClient implements PromotionServiceClient{
 				.send(PromotionRedemptionBatchResult.class);
 	}
 
+	@Override
+	public PromotionReleaseResult release(PromotionReleaseParams params){
+		return HttpRequestBuilder.post(config.baseUrl() + InternalPromotionPaths.RELEASE_PATH)
+				.requestBody(params)
+				.header(API_KEY_HEADER, config.apiKey())
+				.timeout(config.timeout())
+				.build()
+				.send(PromotionReleaseResult.class);
+	}
+
 }

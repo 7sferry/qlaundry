@@ -17,6 +17,9 @@ import com.ferry.promotion.core.promotion.preview.PromotionPreviewUseCase;
 import com.ferry.promotion.core.promotion.redemption.DefaultPromotionRedemptionUseCase;
 import com.ferry.promotion.core.promotion.redemption.PromotionRedemptionGateway;
 import com.ferry.promotion.core.promotion.redemption.PromotionRedemptionUseCase;
+import com.ferry.promotion.core.promotion.release.DefaultPromotionReleaseUseCase;
+import com.ferry.promotion.core.promotion.release.PromotionReleaseGateway;
+import com.ferry.promotion.core.promotion.release.PromotionReleaseUseCase;
 import com.ferry.promotion.core.promotion.update.DefaultPromotionUpdateUseCase;
 import com.ferry.promotion.core.promotion.update.PromotionUpdateGateway;
 import com.ferry.promotion.core.promotion.update.PromotionUpdateUseCase;
@@ -25,6 +28,7 @@ import com.ferry.promotion.gateway.promotion.PromotionToggleJpaGateway;
 import com.ferry.promotion.gateway.promotion.PromotionDetailJpaGateway;
 import com.ferry.promotion.gateway.promotion.PromotionListJpaGateway;
 import com.ferry.promotion.gateway.promotion.PromotionRedemptionJpaGateway;
+import com.ferry.promotion.gateway.promotion.PromotionReleaseJpaGateway;
 import com.ferry.promotion.gateway.promotion.PromotionUpdateJpaGateway;
 import com.ferry.promotion.gateway.promotion.repository.PromotionJpaRepository;
 import com.ferry.promotion.gateway.promotion.repository.PromotionRedemptionJpaRepository;
@@ -124,6 +128,17 @@ public class PromotionWebConfig{
 	@Bean
 	PromotionRedemptionUseCase promotionRedemptionUseCase(PromotionRedemptionGateway promotionRedemptionGateway){
 		return new DefaultPromotionRedemptionUseCase(promotionRedemptionGateway);
+	}
+
+	@Bean
+	PromotionReleaseGateway promotionReleaseGateway(PromotionJpaRepository promotionJpaRepository,
+	                                                PromotionRedemptionJpaRepository promotionRedemptionJpaRepository){
+		return new PromotionReleaseJpaGateway(promotionJpaRepository, promotionRedemptionJpaRepository);
+	}
+
+	@Bean
+	PromotionReleaseUseCase promotionReleaseUseCase(PromotionReleaseGateway promotionReleaseGateway){
+		return new DefaultPromotionReleaseUseCase(promotionReleaseGateway);
 	}
 
 	@Bean

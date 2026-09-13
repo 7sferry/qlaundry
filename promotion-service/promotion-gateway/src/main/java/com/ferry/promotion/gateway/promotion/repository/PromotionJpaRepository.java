@@ -41,6 +41,16 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 	int claimUsage(@Param("id") String id, @Param("tenantId") String tenantId, @Param("updatedBy") String updatedBy,
 	               @Param("updatedAt") Instant updatedAt);
 
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query("update PromotionJpaEntity p " +
+			"set p.usedCount = p.usedCount - 1, p.updatedBy = :updatedBy, p.updatedAt = :updatedAt " +
+			"where " +
+			"p.id = :id AND " +
+			"p.tenantId = :tenantId AND " +
+			"p.usedCount > 0")
+	int releaseUsage(@Param("id") String id, @Param("tenantId") String tenantId,
+	                 @Param("updatedBy") String updatedBy, @Param("updatedAt") Instant updatedAt);
+
 	@Query("select p " +
 			"from PromotionJpaEntity p " +
 			"where " +
