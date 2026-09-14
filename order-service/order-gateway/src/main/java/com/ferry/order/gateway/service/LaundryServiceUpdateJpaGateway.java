@@ -35,7 +35,7 @@ public class LaundryServiceUpdateJpaGateway implements LaundryServiceUpdateGatew
 	public LaundryServiceDomain save(LaundryServiceDomain service){
 		ServiceUnitJpaEntity unit = serviceUnitJpaRepository.getReferenceById(service.unit().getValue());
 		ServiceCategoryJpaEntity category = serviceCategoryJpaRepository.getReferenceById(service.category().getValue());
-		LaundryServiceJpaEntity saved = laundryServiceJpaRepository.save(
+		LaundryServiceJpaEntity saved = laundryServiceJpaRepository.saveAndFlush(
 				LaundryServiceJpaEntity.construct(service.id(), service, unit, category));
 		return LaundryServiceJpaEntity.construct(saved);
 	}

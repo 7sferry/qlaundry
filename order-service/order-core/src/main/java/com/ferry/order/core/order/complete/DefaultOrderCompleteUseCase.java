@@ -1,5 +1,9 @@
 package com.ferry.order.core.order.complete;
 
+import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsMessage;
+import com.ferry.order.domain.analytics.AnalyticsEventType;
 import com.ferry.order.domain.common.NoteDomain;
 import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.order.OrderDomain;
@@ -17,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DefaultOrderCompleteUseCase implements OrderCompleteUseCase{
 	private final OrderCompleteGateway gateway;
+	private final AnalyticsEventPublisher publisher;
 
 	@Override
 	public void execute(OrderCompleteRequest request, OrderAuthPrincipal principal, OrderCompletePresenter presenter){
@@ -29,6 +34,9 @@ public class DefaultOrderCompleteUseCase implements OrderCompleteUseCase{
 				? null : new NoteDomain(request.staffNotes());
 		OrderDomain saved = gateway.save(order.changeStatus(OrderStatus.COMPLETED, staffNotes,
 				principal.userId()));
+		publisher.publish(publisher.save(AnalyticsEventConfig.order(AnalyticsEventType.ORDER_STATUS_CHANGED,
+				OrderAnalyticsMessage.from(saved, gateway.findItemsByOrderId(orderId),
+						gateway.findPromotionsByOrderId(orderId)), principal.userId())));
 		presenter.present(new OrderCompleteResponse(saved));
 	}
 

@@ -3,7 +3,6 @@
  * on Juli 2026         *
  ************************/
 
-import {useState} from 'react';
 import {BarChart2, Download, TrendingUp, Users, WashingMachine,} from 'lucide-react';
 import {
 	Bar,
@@ -20,19 +19,31 @@ import {
 } from 'recharts';
 import {Button, Card, Loading, PageHeader, StatCard} from '@/core/ui';
 import {formatCurrency} from '@/core/utils/format';
+import {REPORT_PERIODS, type ReportPeriod} from '@/features/dashboard/domain/Dashboard';
 import {useDashboard} from '@/features/dashboard/presentation/useDashboard';
 import {useCustomers} from '@/features/customers/presentation/useCustomers';
 
-type Period = 'week' | 'month' | 'quarter' | 'year';
+const PERIOD_LABELS: Record<ReportPeriod, string> = {
+	week: 'Week',
+	month: 'Month',
+	quarter: 'Quarter',
+	year: 'Year',
+};
+
+const TREND_SUBTITLES: Record<ReportPeriod, string> = {
+	week: 'Daily revenue for the last 7 days',
+	month: 'Daily revenue this month',
+	quarter: 'Weekly revenue for the last 3 months',
+	year: 'Monthly revenue for the last 12 months',
+};
 
 const COLORS = ['var(--brand)', 'var(--info)', 'var(--success)', 'var(--warning)', 'var(--danger)'];
 
 export default function ReportsPage() {
-	const {stats, loading} = useDashboard();
+	const {summary, report, period, setPeriod, loading} = useDashboard();
 	const {customers} = useCustomers();
-	const [period, setPeriod] = useState<Period>('month');
 
-	if (loading && !stats) return <Loading label="Preparing reports…"/>;
+	if (loading && !summary) return <Loading label="Preparing reports…"/>;
 
 	const topCustomers = [...customers]
 			.sort((a, b) => b.totalSpend - a.totalSpend)
@@ -46,13 +57,13 @@ export default function ReportsPage() {
 						actions={
 							<div className="row" style={{gap: 10}}>
 								<div className="period-tabs">
- 								{(['week', 'month', 'quarter', 'year'] as Period[]).map((p) => (
+ 								{REPORT_PERIODS.map((p) => (
  										<button
  												key={p}
  												className={`period-tab ${period === p ? 'period-tab--active' : ''}`}
- 												onClick={() => setPeriod(p)}
+ 												onClick={() => void setPeriod(p)}
  										>
- 											{p === 'week' ? 'Week' : p === 'month' ? 'Month' : p === 'quarter' ? 'Quarter' : 'Year'}
+ 											{PERIOD_LABELS[p]}
  										</button>
  								))}
 								</div>
@@ -66,19 +77,19 @@ export default function ReportsPage() {
 				<div className="grid grid--stats">
 					<StatCard
 							icon={<BarChart2 size={20}/>}
-							value={stats?.monthOrders ?? 0}
+							value={summary?.monthOrders ?? 0}
 							label="Total orders"
-							hint={`This month · ${stats?.ordersGrowth ?? 0}% vs last month`}
+							hint={`This month · ${summary?.ordersGrowth ?? 0}% vs last month`}
 					/>
 					<StatCard
 							icon={<TrendingUp size={20}/>}
-							value={formatCurrency(stats?.monthRevenue ?? 0)}
+							value={formatCurrency(summary?.monthRevenue ?? 0)}
 							label="Total revenue"
-							hint={`${stats?.revenueGrowth ?? 0}% vs last month`}
+							hint={`${summary?.revenueGrowth ?? 0}% vs last month`}
 					/>
 					<StatCard
 							icon={<WashingMachine size={20}/>}
-							value={stats?.inProgressOrders ?? 0}
+							value={summary?.inProgressOrders ?? 0}
 							label="In progress"
 							hint="Active orders"
 					/>
@@ -93,11 +104,11 @@ export default function ReportsPage() {
 				<div className="grid grid--2 mt-24">
 					<Card
 							title="Revenue trend"
-							subtitle="Monthly revenue for the last 6 months"
+							subtitle={TREND_SUBTITLES[period]}
 					>
 						<div className="chart-wrap">
 							<ResponsiveContainer width="100%" height="100%">
-								<ComposedChart data={stats?.revenueTrend ?? []}>
+								<ComposedChart data={report?.revenueTrend ?? []}>
 									<CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)"/>
 									<XAxis
 											dataKey="period"
@@ -145,13 +156,13 @@ export default function ReportsPage() {
 						</div>
 					</Card>
 
-						<Card title="Service distribution" subtitle="Contribution by service this month">
+						<Card title="Service distribution" subtitle="Contribution by service for the selected period">
 						<div style={{display: 'flex', gap: 20, alignItems: 'center'}}>
 							<div style={{flex: '0 0 160px', height: 160}}>
 								<ResponsiveContainer width="100%" height="100%">
 									<PieChart>
 										<Pie
-												data={(stats?.serviceBreakdown ?? []).map((item, idx) => ({
+												data={(report?.serviceBreakdown ?? []).map((item, idx) => ({
 													...item,
 													fill: COLORS[idx % COLORS.length],
 												}))}
@@ -175,7 +186,7 @@ export default function ReportsPage() {
 								</ResponsiveContainer>
 							</div>
 							<div className="service-mix" style={{flex: 1}}>
-								{(stats?.serviceBreakdown ?? []).map((s, idx) => (
+								{(report?.serviceBreakdown ?? []).map((s, idx) => (
 										<div key={s.serviceId} className="mix-row">
 											<div className="mix-label">
 												<span className="mix-dot" style={{background: COLORS[idx % COLORS.length]}}/>
@@ -193,12 +204,12 @@ export default function ReportsPage() {
 				</div>
 
 				<div className="grid grid--2 mt-24">
-						<Card title="Revenue by service" subtitle="Total revenue per service">
+						<Card title="Revenue by service" subtitle="Total revenue per service for the selected period">
 						<div style={{height: 220}}>
 							<ResponsiveContainer width="100%" height="100%">
 								<BarChart
 										layout="vertical"
-										data={[...(stats?.serviceBreakdown ?? [])].sort((a, b) => b.revenue - a.revenue)}
+										data={[...(report?.serviceBreakdown ?? [])].sort((a, b) => b.revenue - a.revenue)}
 										margin={{left: 10, right: 20}}
 								>
 									<CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)"/>
@@ -257,10 +268,10 @@ export default function ReportsPage() {
 				</div>
 
 				<div className="mt-24">
-						<Card title="Order status summary" subtitle="Distribution of all orders by status">
+						<Card title="Order status summary" subtitle="Orders created this month by status">
 						<div style={{height: 60, display: 'flex', gap: 4, borderRadius: 8, overflow: 'hidden'}}>
-							{(stats?.statusDistribution ?? []).filter(s => s.count > 0).map((s, idx) => {
-								const total = (stats?.statusDistribution ?? []).reduce((sum, x) => sum + x.count, 0);
+							{(summary?.statusDistribution ?? []).filter(s => s.count > 0).map((s, idx) => {
+								const total = (summary?.statusDistribution ?? []).reduce((sum, x) => sum + x.count, 0);
 								const pct = total > 0 ? (s.count / total) * 100 : 0;
 								return (
 										<div
@@ -286,7 +297,7 @@ export default function ReportsPage() {
 							})}
 						</div>
 						<div className="status-dist" style={{marginTop: 16}}>
-							{(stats?.statusDistribution ?? []).filter(s => s.count > 0).map((s, idx) => (
+							{(summary?.statusDistribution ?? []).filter(s => s.count > 0).map((s, idx) => (
 									<div key={s.status} className="status-dist__row">
 										<div className="row" style={{gap: 10}}>
 											<span style={{

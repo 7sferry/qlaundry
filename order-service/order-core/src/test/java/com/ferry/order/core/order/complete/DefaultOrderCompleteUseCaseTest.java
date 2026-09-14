@@ -1,5 +1,11 @@
 package com.ferry.order.core.order.complete;
 
+import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsMessage;
+import com.ferry.order.domain.analytics.AnalyticsAggregate;
+import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEventType;
 import com.ferry.order.domain.common.FullNameDomain;
 import com.ferry.order.domain.common.MoneyDomain;
 import com.ferry.order.domain.common.PhoneDomain;
@@ -51,6 +57,10 @@ class DefaultOrderCompleteUseCaseTest{
 
 	@Mock
 	OrderCompleteGateway gateway;
+	@Mock
+	AnalyticsEventPublisher publisher;
+	@Captor
+	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
 	@InjectMocks
 	DefaultOrderCompleteUseCase useCase;
 	@Mock
@@ -180,9 +190,16 @@ class DefaultOrderCompleteUseCaseTest{
 				.findById(any(OrderIdDomain.class), any(TenantIdDomain.class));
 		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0)).given(gateway)
 				.save(any(OrderDomain.class));
+		willReturn(AnalyticsEventDomain.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_STATUS_CHANGED,
+				TENANT_ID, ORDER_ID, 1, "{}", STAFF_ID)).given(publisher)
+				.save(any(AnalyticsEventConfig.class));
 
 		useCase.execute(new OrderCompleteRequest(ORDER_ID, "handed over at the counter"), principal, presenter);
 
+		then(publisher).should()
+				.save(analyticsCaptor.capture());
+		then(publisher).should()
+				.publish(any(AnalyticsEventDomain.class));
 		then(gateway).should()
 				.findById(eq(new OrderIdDomain(ORDER_ID)), eq(new TenantIdDomain(TENANT_ID)));
 		then(gateway).should()
@@ -193,6 +210,10 @@ class DefaultOrderCompleteUseCaseTest{
 		OrderDomain saved = orderCaptor.getValue();
 
 		thenSoftly(softly -> {
+			softly.then(analyticsCaptor.getValue().type()).isEqualTo(AnalyticsEventType.ORDER_STATUS_CHANGED);
+			softly.then(analyticsCaptor.getValue().aggregate()).isEqualTo(AnalyticsAggregate.ORDER);
+			softly.then(((OrderAnalyticsMessage) analyticsCaptor.getValue().payload()).completedAt())
+					.isNotNull();
 			softly.then(saved.status()).isEqualTo(OrderStatus.COMPLETED);
 			softly.then(saved.completedAt()).isNotNull();
 			softly.then(saved.staffNotesValue()).isEqualTo("handed over at the counter");

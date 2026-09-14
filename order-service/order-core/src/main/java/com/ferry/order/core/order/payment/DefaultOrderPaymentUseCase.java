@@ -1,5 +1,9 @@
 package com.ferry.order.core.order.payment;
 
+import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsMessage;
+import com.ferry.order.domain.analytics.AnalyticsEventType;
 import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.common.exception.UnsupportedPaymentMethodException;
 import com.ferry.order.domain.order.OrderDomain;
@@ -17,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DefaultOrderPaymentUseCase implements OrderPaymentUseCase{
 	private final OrderPaymentGateway gateway;
+	private final AnalyticsEventPublisher publisher;
 
 	@Override
 	public void execute(OrderPaymentRequest request, OrderAuthPrincipal principal, OrderPaymentPresenter presenter){
@@ -27,6 +32,9 @@ public class DefaultOrderPaymentUseCase implements OrderPaymentUseCase{
 		OrderDomain order = gateway.findById(orderId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Order Not Found"));
 		OrderDomain saved = gateway.save(order.markPaid(principal.userId()));
+		publisher.publish(publisher.save(AnalyticsEventConfig.order(AnalyticsEventType.ORDER_PAID,
+				OrderAnalyticsMessage.from(saved, gateway.findItemsByOrderId(orderId),
+						gateway.findPromotionsByOrderId(orderId)), principal.userId())));
 		presenter.present(new OrderPaymentResponse(saved));
 	}
 

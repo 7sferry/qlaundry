@@ -1,5 +1,11 @@
 package com.ferry.order.core.order.pickup;
 
+import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsMessage;
+import com.ferry.order.domain.analytics.AnalyticsAggregate;
+import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEventType;
 import com.ferry.order.domain.common.FullNameDomain;
 import com.ferry.order.domain.common.MoneyDomain;
 import com.ferry.order.domain.common.PhoneDomain;
@@ -51,6 +57,10 @@ class DefaultOrderPickupUseCaseTest{
 
 	@Mock
 	OrderPickupGateway gateway;
+	@Mock
+	AnalyticsEventPublisher publisher;
+	@Captor
+	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
 	@InjectMocks
 	DefaultOrderPickupUseCase useCase;
 	@Mock
@@ -182,9 +192,16 @@ class DefaultOrderPickupUseCaseTest{
 				.findById(any(OrderIdDomain.class), any(TenantIdDomain.class));
 		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0)).given(gateway)
 				.save(any(OrderDomain.class));
+		willReturn(AnalyticsEventDomain.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_STATUS_CHANGED,
+				TENANT_ID, ORDER_ID, 1, "{}", STAFF_ID)).given(publisher)
+				.save(any(AnalyticsEventConfig.class));
 
 		useCase.execute(new OrderPickupRequest(ORDER_ID, "picked up by driver joko"), principal, presenter);
 
+		then(publisher).should()
+				.save(analyticsCaptor.capture());
+		then(publisher).should()
+				.publish(any(AnalyticsEventDomain.class));
 		then(gateway).should()
 				.findById(eq(new OrderIdDomain(ORDER_ID)), eq(new TenantIdDomain(TENANT_ID)));
 		then(gateway).should()
@@ -195,6 +212,10 @@ class DefaultOrderPickupUseCaseTest{
 		OrderDomain saved = orderCaptor.getValue();
 
 		thenSoftly(softly -> {
+			softly.then(analyticsCaptor.getValue().type()).isEqualTo(AnalyticsEventType.ORDER_STATUS_CHANGED);
+			softly.then(analyticsCaptor.getValue().aggregate()).isEqualTo(AnalyticsAggregate.ORDER);
+			softly.then(((OrderAnalyticsMessage) analyticsCaptor.getValue().payload()).status())
+					.isEqualTo(OrderStatus.PICKED_UP);
 			softly.then(saved.status()).isEqualTo(OrderStatus.PICKED_UP);
 			softly.then(saved.completedAt()).isNull();
 			softly.then(saved.staffNotesValue()).isEqualTo("picked up by driver joko");

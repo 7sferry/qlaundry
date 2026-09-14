@@ -11,7 +11,15 @@ CREATE SCHEMA IF NOT EXISTS orders;
 -- 1. boot order-web-service once so Hibernate creates the tables
 -- 2. then seed every lookup table from order-gateway/sql/init.sql:
 --      order_statuses, order_priorities, payment_methods, payment_statuses,
---      clothing_types, service_units, service_categories, order_promotion_saga_statuses
+--      clothing_types, service_units, service_categories, order_promotion_saga_statuses,
+--      analytics_aggregates, analytics_event_statuses
+--
+-- An existing database only needs the analytics outbox seed: boot once so ddl-auto creates analytics_events,
+-- analytics_aggregates and analytics_event_statuses, then run the four analytics_* inserts from init.sql.
+-- Until they exist, every write that emits an analytics event (order create, the seven status transitions,
+-- payment, service create/update/delete) fails at the outbox insert (FK to aggregate/status) and rolls back.
+-- analytics_events.payload is NOT encrypted: it carries no PII by construction (no customer name/phone/email/
+-- address, no notes) — see "analytics-service" in the root CLAUDE.md.
 --
 -- An existing database only needs the saga seed: boot once so ddl-auto creates order_promotion_sagas and
 -- order_promotion_saga_statuses, then run the three order_promotion_saga_statuses inserts from init.sql.

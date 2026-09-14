@@ -19,6 +19,15 @@ public interface LaundryServiceJpaRepository extends JpaRepository<LaundryServic
 
 	Optional<LaundryServiceJpaEntity> findByIdAndTenantIdAndDeletedIsFalse(String id, String tenantId);
 
+	@Query("select s " +
+			"from LaundryServiceJpaEntity s " +
+			"where " +
+			"(:tenantId is null or s.tenantId = :tenantId) AND " +
+			"(:afterId is null or s.id > :afterId) " +
+			"order by s.id asc")
+	List<LaundryServiceJpaEntity> findBackfillPage(@Param("tenantId") String tenantId, @Param("afterId") String afterId,
+	                                               Pageable pageable);
+
 	boolean existsByNameIgnoreCaseAndTenantIdAndDeletedIsFalse(String name, String tenantId);
 
 	@Query("select s " +

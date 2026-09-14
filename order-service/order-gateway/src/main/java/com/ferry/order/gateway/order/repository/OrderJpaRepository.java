@@ -2,12 +2,14 @@ package com.ferry.order.gateway.order.repository;
 
 import com.ferry.order.domain.customer.totals.CustomerOrderTotalsProjection;
 import com.ferry.order.domain.order.OrderFilter;
+import com.ferry.order.domain.order.schedule.OrderScheduleProjection;
 import com.ferry.order.gateway.order.entity.OrderJpaEntity;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +22,15 @@ import java.util.Optional;
 public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, String>{
 
 	Optional<OrderJpaEntity> findByIdAndTenantIdAndDeletedIsFalse(String id, String tenantId);
+
+	@Query("select o " +
+			"from OrderJpaEntity o " +
+			"where " +
+			"(:tenantId is null or o.tenantId = :tenantId) AND " +
+			"(:afterId is null or o.id > :afterId) " +
+			"order by o.id asc")
+	List<OrderJpaEntity> findBackfillPage(@Param("tenantId") String tenantId, @Param("afterId") String afterId,
+	                                      Pageable pageable);
 
 	@Query("select o " +
 			"from OrderJpaEntity o " +
@@ -99,5 +110,25 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, String
 			"group by o.customerId")
 	List<CustomerOrderTotalsProjection> findTotalsByCustomerIds(@Param("tenantId") String tenantId,
 	                                                             @Param("customerIds") Collection<String> customerIds);
+
+	@Query("select new com.ferry.order.domain.order.schedule.OrderScheduleProjection(" +
+			"o.id, o.orderNumber, o.customerName, o.pickupAt, o.statusId) " +
+			"from OrderJpaEntity o " +
+			"where o.tenantId = :tenantId and o.pickupAt >= :from and o.pickupAt < :to " +
+			"and o.statusId in :statusIds and o.deleted is false " +
+			"order by o.pickupAt asc, o.id asc")
+	List<OrderScheduleProjection> findPickupSchedule(@Param("tenantId") String tenantId, @Param("from") Instant from,
+	                                                 @Param("to") Instant to,
+	                                                 @Param("statusIds") Collection<Short> statusIds);
+
+	@Query("select new com.ferry.order.domain.order.schedule.OrderScheduleProjection(" +
+			"o.id, o.orderNumber, o.customerName, o.estimatedDeliveryAt, o.statusId) " +
+			"from OrderJpaEntity o " +
+			"where o.tenantId = :tenantId and o.estimatedDeliveryAt >= :from and o.estimatedDeliveryAt < :to " +
+			"and o.statusId in :statusIds and o.deleted is false " +
+			"order by o.estimatedDeliveryAt asc, o.id asc")
+	List<OrderScheduleProjection> findDeliverySchedule(@Param("tenantId") String tenantId, @Param("from") Instant from,
+	                                                   @Param("to") Instant to,
+	                                                   @Param("statusIds") Collection<Short> statusIds);
 
 }

@@ -22,6 +22,10 @@
 		<module>promotion-service/promotion-web-service</module>
 		<module>promotion-service/promotion-gateway</module>
 		<module>promotion-service/promotion-client</module>
+		<module>analytics-service/analytics-core</module>
+		<module>analytics-service/analytics-domain</module>
+		<module>analytics-service/analytics-web-service</module>
+		<module>analytics-service/analytics-gateway</module>
 		<module>notification-service/notification-core</module>
 		<module>notification-service/notification-domain</module>
 		<module>notification-service/notification-web-service</module>

@@ -11,6 +11,11 @@ spring:
       ddl-auto: update
     show-sql: true
     open-in-view: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: '12345'
   threads:
     virtual:
       enabled: true
@@ -26,6 +31,14 @@ logging:
     name: logs/order-web-service.log
 
 app:
+  analytics:
+    stream:
+      event:
+        # must match analytics-service's app.analytics.stream.event.key; full stream name is key + AGGREGATE
+        key: 'analytics:event:'
+    backfill:
+      # only read by the analytics-backfill profile; blank means every tenant
+      tenant-id: ''
   internal:
     # credential for the /internal/** call into user-service, as <clientId>:<version>:<secret>. user-service stores
     # only the SHA-256 of the secret part. Rotating means pointing this at a new version that user-service already

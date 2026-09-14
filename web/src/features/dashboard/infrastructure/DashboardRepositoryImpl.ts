@@ -3,20 +3,33 @@
  * on Juli 2026         *
  ************************/
 
-import {httpClient, withFallback} from '@/core/http/httpClient';
-import type {DashboardStats} from '../domain/DashboardStats';
-import {fallbackDashboardStats} from './dashboardFallbackData';
-
-export interface DashboardRepository {
-	getStats(): Promise<DashboardStats>;
-}
+import {httpClient} from '@/core/http/httpClient';
+import type {DashboardReport, DashboardSummary, ReportPeriod, ScheduleItem} from '../domain/Dashboard';
+import type {DashboardRepository} from '../domain/DashboardRepository';
+import {
+	type DashboardReportWire,
+	type DashboardSummaryWire,
+	type OrderScheduleWire,
+	REPORT_PERIOD_TO_WIRE,
+	toDashboardReport,
+	toDashboardSummary,
+	toScheduleItems,
+} from './dashboardWireMapping';
 
 export class DashboardRepositoryImpl implements DashboardRepository {
-	async getStats(): Promise<DashboardStats> {
-		return withFallback<DashboardStats>(
-				() => httpClient.get<DashboardStats>('/api/dashboard/stats'),
-				() => fallbackDashboardStats,
+	async getSummary(): Promise<DashboardSummary> {
+		return toDashboardSummary(await httpClient.get<DashboardSummaryWire>('/analytics/dashboard'));
+	}
+
+	async getReport(period: ReportPeriod): Promise<DashboardReport> {
+		const wire = await httpClient.get<DashboardReportWire>(
+				`/analytics/report?period=${REPORT_PERIOD_TO_WIRE[period]}`,
 		);
+		return toDashboardReport(wire, period);
+	}
+
+	async getTodaySchedule(): Promise<ScheduleItem[]> {
+		return toScheduleItems(await httpClient.get<OrderScheduleWire>('/order/schedule'));
 	}
 }
 

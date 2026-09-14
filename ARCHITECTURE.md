@@ -35,19 +35,27 @@ flowchart LR
         PSAPI["REST API\npromo codes + redemption"]
     end
 
+    subgraph AS["analytics-service :8105"]
+        ASAPI["REST API\ndashboard, reports"]
+        ASC["Redis Stream consumer\nanalytics events"]
+    end
+
     PG[("Postgres qlaundry\nschemas: users, orders,\npromotions, notif")]
-    Redis[("Redis\ntokens, OTP cache, confirmation\ntokens, email streams,\ninternal API keys")]
+    Redis[("Redis\ntokens, OTP cache, confirmation\ntokens, email + analytics\nstreams, internal API keys")]
     SMTP[("SMTP dev server\n:1025 (Mailpit/MailHog)")]
+    CH[("ClickHouse\nqlaundry_analytics\n(Docker :8123)")]
 
     Browser --> NG
     NG -->|"/api/auth /api/staff /api/customer"| USAPI
     NG -->|"/api/order /api/service /api/invoice /api/public/invoice"| OSAPI
     NG -->|"/api/promotion"| PSAPI
+    NG -->|"/api/analytics"| ASAPI
     NG -->|"everything else, incl. HMR ws"| Vite
 
     USAPI --> PG
     USAPI --> Redis
     OSAPI --> PG
+    OSAPI -->|"publishes analytics events"| Redis
     PSAPI --> PG
     PSAPI --> Redis
     OSAPI -->|"GET /internal/customer/verification"| USAPI
@@ -56,6 +64,9 @@ flowchart LR
     NSC -->|"consumes email jobs"| Redis
     NSC --> PG
     NSC --> SMTP
+    ASC -->|"consumes analytics events"| Redis
+    ASC --> CH
+    ASAPI --> CH
 ```
 
 - **One entry point.** The browser only ever talks to nginx on `:8100`. Only
@@ -70,20 +81,22 @@ flowchart LR
 - **`notification-service` has no REST endpoints and is not behind the
   gateway.** It is a pure Redis Streams consumer — see
   [Email flow](#email-flow-tenant-registration-example) below.
-- **Shared infra, independent services.** All four point at the same local
-  Postgres but own **disjoint schemas** (`users`, `orders`, `promotions`,
-  `notif`) — there is no cross-service database access, ever. `order-service`
-  needs no Redis at all; `promotion-service` uses it only to resolve internal
-  API keys.
+- **Shared infra, independent services.** The four Postgres-backed services
+  point at the same local Postgres but own **disjoint schemas** (`users`,
+  `orders`, `promotions`, `notif`) — there is no cross-service database
+  access, ever. `order-service` uses Redis only to publish analytics events;
+  `promotion-service` uses it only to resolve internal API keys.
+  `analytics-service` has **no Postgres at all** — its store is ClickHouse,
+  rebuildable from order-service's rows at any time.
 - **Two kinds of inter-service traffic, and they're chosen deliberately.**
-  Anything that can be asynchronous goes over a Redis stream (email). Anything
+  Anything that can be asynchronous goes over a Redis stream (email, analytics). Anything
   the caller must have an answer to *before* it can commit goes over a
   synchronous `/internal/**` HTTP call (customer verification, promo
   redemption). See [Service-to-service calls](#service-to-service-calls).
-- The only screen still without a backend is the dashboard; it is covered by
-  the frontend's `withFallback` mock data (see
-  [Frontend architecture](#frontend-architecture)). `promotion-service` is the
-  reverse case — a backend with no frontend yet.
+- Every screen has a backend now — the dashboard and reports pages read
+  `analytics-service` (see [OLTP → OLAP](#oltp--olap-analytics-events)), and
+  the last frontend mock is gone. `promotion-service` is the reverse case — a
+  backend with no frontend yet.
 
 ## Backend: Clean Architecture, one Maven module per layer
 
@@ -152,9 +165,15 @@ user-service (user-core/.../core)
 
 order-service (order-core/.../core)
 ├── service/   create · list · update · delete          (the per-tenant price list)
-├── order/     create · list · detail · payment
+├── order/     create · list · detail · payment · schedule
 │              confirm · pickup · process · ready · deliver · complete · cancel
-└── invoice/   link (mint a presigned URL) · pdf (render it)
+├── invoice/   link (mint a presigned URL) · pdf (render it)
+└── analytics/ sweep (republish the outbox) · backfill (replay every row)
+
+analytics-service (analytics-core/.../core)
+├── event/     order · laundryservice              (stream consumers → ClickHouse upsert)
+├── dashboard/ summary
+└── report/    period trend + service breakdown
 
 promotion-service (promotion-core/.../core)
 └── promotion/ create · list · detail · update · toggle · redemption (internal)
@@ -550,6 +569,46 @@ sequenceDiagram
   then calls back into `user-service` itself.
 - Stream listeners **never log recipients** (PII) — trigger ids only.
 
+## OLTP → OLAP (analytics events)
+
+The dashboard numbers come from ClickHouse, fed by the same outbox shape as
+the email flow above, one ring over.
+
+```mermaid
+sequenceDiagram
+    participant OS as order-service
+    participant PG as Postgres (orders)
+    participant R as Redis Stream
+    participant AS as analytics-service
+    participant CH as ClickHouse
+
+    OS->>PG: save order + analytics_events row (same tx)
+    PG-->>OS: commit
+    OS->>R: afterCommit XADD analytics:event:ORDER
+    OS->>PG: mark row PUBLISHED (REQUIRES_NEW)
+    R-->>AS: XREADGROUP analytics-service
+    AS->>CH: insert orders_current / order_items / order_promotions
+    AS->>R: XACK
+```
+
+- **Events are full-state snapshots**, not deltas: the whole row plus its JPA
+  `@Version`. ClickHouse's `ReplacingMergeTree(version)` keeps the highest
+  version per key, so a replayed, duplicated or out-of-order event can't
+  corrupt anything, and reads use `FINAL` on a tenant-filtered query.
+- **Unlike the email outbox, this one has a retry job**: a 5-minute sweeper
+  republishes rows still `CREATED` two minutes after they were written — a
+  missing analytics row is a wrong number on a screen forever.
+- **No PII leaves order-service**: the payload carries `customer_id` only, no
+  name/phone/email/address, no notes. That is why the dashboard's "today's
+  schedule" (which shows customer names) is `GET /order/schedule` in
+  order-service, not an analytics endpoint.
+- A record that fails five deliveries moves to
+  `analytics:event:<AGGREGATE>:dlq`; a per-minute reclaim job re-runs anything
+  idle in the PEL. Streams and DLQs are trimmed daily after 7 days.
+- ClickHouse is rebuildable: run order-service with the `analytics-backfill`
+  profile and every row is replayed through the same outbox. Runbook:
+  `analytics-service/analytics-gateway/sql/reconcile.md`.
+
 ## Frontend architecture
 
 `web/` is React 19 + TypeScript 6 + Vite, using screaming + clean
@@ -559,7 +618,7 @@ architecture: every feature is a self-contained vertical slice under
 ```
 src/features/<feature>/
 ├── domain/          pure types & repository interfaces (zero deps)
-├── infrastructure/  repository implementations: API call → withFallback → mock data
+├── infrastructure/  repository implementations: API call → map the wire format
 ├── application/     use cases (thin orchestration, no React)
 └── presentation/    React hooks (use*) + page components
 ```
@@ -568,14 +627,10 @@ Features today: `auth`, `staff`, `orders`, `customers`, `dashboard`,
 `reports`. Cross-feature code lives in `src/core/` (ui, theme, http, auth,
 config, utils) and `src/shared/` (Sidebar, Topbar).
 
-**`withFallback(live, fallback)`** (`src/core/http/httpClient.ts`) is the seam
-between "backend exists" and "backend doesn't exist yet": the live call hits
-the backend, and on any failure it returns bundled mock data instead. Auth,
-staff, customers and orders now call live-only and propagate errors to the UI
-directly; **only the dashboard still routes through the fallback**, since no
-dashboard/reports backend exists. This let the whole app be demoable and
-testable before every backend service was built, and the remaining usage marks
-exactly what's left to build.
+Every feature calls its backend live-only and propagates errors to the UI.
+The old `withFallback(live, fallback)` seam — bundled mock data for screens
+whose backend didn't exist yet — was deleted together with its last caller,
+the dashboard, once `analytics-service` landed.
 
 The access token lives only in JS memory; session survives a reload via the
 `refresh_token` httpOnly cookie. See `web/CLAUDE.md` for the full state/auth

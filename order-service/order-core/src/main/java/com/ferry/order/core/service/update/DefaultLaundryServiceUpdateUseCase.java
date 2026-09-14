@@ -1,5 +1,9 @@
 package com.ferry.order.core.service.update;
 
+import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
+import com.ferry.order.domain.analytics.AnalyticsEventType;
 import com.ferry.order.domain.common.MoneyDomain;
 import com.ferry.order.domain.common.NoteDomain;
 import com.ferry.order.domain.common.exception.NotFoundException;
@@ -21,6 +25,7 @@ public class DefaultLaundryServiceUpdateUseCase implements LaundryServiceUpdateU
 	private static final double DEFAULT_EXPRESS_MULTIPLIER = 1.0d;
 
 	private final LaundryServiceUpdateGateway gateway;
+	private final AnalyticsEventPublisher publisher;
 
 	@Override
 	public void execute(LaundryServiceUpdateRequest request, OrderAuthPrincipal principal,
@@ -40,6 +45,8 @@ public class DefaultLaundryServiceUpdateUseCase implements LaundryServiceUpdateU
 				new NoteDomain(request.description()), new MoneyDomain(request.pricePerUnit()), request.unit(),
 				request.category(), request.estimatedHours(), expressMultiplier, request.popular(), active,
 				principal.userId()));
+		publisher.publish(publisher.save(AnalyticsEventConfig.laundryService(AnalyticsEventType.LAUNDRY_SERVICE_UPDATED,
+				LaundryServiceAnalyticsMessage.from(saved), principal.userId())));
 		presenter.present(new LaundryServiceUpdateResponse(saved));
 	}
 

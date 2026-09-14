@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: analytics-web-service
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: '12345'
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: 8105
+
+logging:
+  file:
+    name: logs/analytics-web-service.log
+
+app:
+  clickhouse:
+    # the ClickHouse container from analytics-service/docker-compose.yml — dev-only credentials
+    url: 'http://localhost:8123'
+    database: qlaundry_analytics
+    username: analytics
+    password: '12345'
+    timeout: 10s
+  analytics:
+    stream:
+      event:
+        # must match order-service's app.analytics.stream.event.key; full stream name is key + AGGREGATE
+        key: 'analytics:event:'
+        group: analytics-service
+        consumer: analytics-1
+        retention-days: 7
+  token:
+    # the public half of user-service's RS256 key pair — this service only verifies access tokens
+    public-key: "MCowBQYDK2VwAyEAewlqN7GKlxKGgyXUobhnMF+76ytxBpSKYX+r3bYMaVM="

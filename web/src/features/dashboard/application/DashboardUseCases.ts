@@ -3,8 +3,11 @@
  * on Juli 2026         *
  ************************/
 
-import type {DashboardRepository} from '../infrastructure/DashboardRepositoryImpl';
+import type {ReportPeriod} from '../domain/Dashboard';
+import type {DashboardRepository} from '../domain/DashboardRepository';
 
 export const dashboardUseCases = (repository: DashboardRepository) => ({
-	getStats: () => repository.getStats(),
+	getSummary: () => repository.getSummary(),
+	getReport: (period: ReportPeriod) => repository.getReport(period),
+	getTodaySchedule: () => repository.getTodaySchedule(),
 });

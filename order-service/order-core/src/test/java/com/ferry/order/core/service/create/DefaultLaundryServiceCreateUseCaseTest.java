@@ -1,5 +1,11 @@
 package com.ferry.order.core.service.create;
 
+import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
+import com.ferry.order.domain.analytics.AnalyticsAggregate;
+import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEventType;
 import com.ferry.order.domain.common.exception.OrderForbiddenActionException;
 import com.ferry.order.domain.service.LaundryServiceDomain;
 import com.ferry.order.domain.service.ServiceCategory;
@@ -41,6 +47,10 @@ class DefaultLaundryServiceCreateUseCaseTest{
 
 	@Mock
 	LaundryServiceCreateGateway gateway;
+	@Mock
+	AnalyticsEventPublisher publisher;
+	@Captor
+	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
 	@InjectMocks
 	DefaultLaundryServiceCreateUseCase useCase;
 	@Mock
@@ -115,8 +125,16 @@ class DefaultLaundryServiceCreateUseCaseTest{
 		willAnswer(invocation -> invocation.<LaundryServiceDomain>getArgument(0)).given(gateway)
 				.save(any(LaundryServiceDomain.class));
 
+		willReturn(AnalyticsEventDomain.create(AnalyticsAggregate.LAUNDRY_SERVICE, AnalyticsEventType.LAUNDRY_SERVICE_CREATED, TENANT_ID,
+				"01SERVICEBARU0000000000000", 1, "{}", STAFF_ID)).given(publisher)
+				.save(any(AnalyticsEventConfig.class));
+
 		useCase.execute(request, principal, presenter);
 
+		then(publisher).should()
+				.save(analyticsCaptor.capture());
+		then(publisher).should()
+				.publish(any(AnalyticsEventDomain.class));
 		then(gateway).should()
 				.existsByName(eq(SERVICE_NAME), eq(new TenantIdDomain(TENANT_ID)));
 		then(gateway).should()
@@ -127,6 +145,11 @@ class DefaultLaundryServiceCreateUseCaseTest{
 		LaundryServiceDomain saved = serviceCaptor.getValue();
 
 		thenSoftly(softly -> {
+			softly.then(analyticsCaptor.getValue().type())
+					.isEqualTo(AnalyticsEventType.LAUNDRY_SERVICE_CREATED);
+			softly.then(analyticsCaptor.getValue().aggregate()).isEqualTo(AnalyticsAggregate.LAUNDRY_SERVICE);
+			softly.then(((LaundryServiceAnalyticsMessage) analyticsCaptor.getValue().payload()).active())
+					.isTrue();
 			softly.then(saved.unit()).isEqualTo(ServiceUnit.KG);
 			softly.then(saved.category()).isEqualTo(ServiceCategory.WASH);
 			softly.then(saved.pricePerUnit().value()).isEqualByComparingTo(new BigDecimal("9000.00"));

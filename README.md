@@ -14,10 +14,11 @@ Laundry management system — monorepo with a React frontend and a Java/Spring B
 |---|---|---|
 | `user-service` | 8101 | Auth (JWT + refresh tokens), tenants, staff, customers — REST API |
 | `notification-service` | 8102 | Tenant-registration & OTP emails — Redis Stream consumer, **no REST API** |
-| `order-service` | 8103 | Laundry service price list + orders — REST API, verifies user-service's JWT (no Redis) |
+| `order-service` | 8103 | Laundry service price list + orders — REST API, verifies user-service's JWT; publishes analytics events to Redis streams through an outbox |
 | `promotion-service` | 8104 | Per-tenant promo codes + their redemption during ordering — REST API, verifies user-service's JWT (Redis only for internal API keys) |
+| `analytics-service` | 8105 | Dashboard + reports numbers — Redis Stream consumer into ClickHouse, plus `GET /analytics/dashboard` and `/analytics/report`; verifies user-service's JWT, **no Postgres, no PII** |
 
-There is no dashboard/reports backend yet — the dashboard is the only screen still served by the frontend's `withFallback` mock data; orders, customers, staff and auth all call the real services. `promotion-service` has no frontend yet either.
+Every screen calls a real backend — there is no mock data left in the frontend. The dashboard and reports pages read `analytics-service` (ClickHouse, fed from order-service over `analytics:event:*` Redis streams) plus `GET /order/schedule` for today's pickups/deliveries, which stays in order-service because it shows customer names and ClickHouse holds no PII. `promotion-service` has no frontend yet.
 
 Customers live in `user-service` (`customers` + the `customer_emails` / `customer_phones` / `customer_addresses` child tables); `order-service` only stores a `customer_id` plus the name/phone/email/address snapshot the invoice was raised with, and never reads user-service's schema. Payments are **cash only** for now.
 
@@ -33,6 +34,7 @@ Phone numbers are normalised before validation, so `0812…`, `62812…` or `+62
 user-service/          user-domain, user-core, user-gateway, user-web-service, user-client
 order-service/         order-domain, order-core, order-gateway, order-web-service
 promotion-service/     promotion-domain, promotion-core, promotion-gateway, promotion-web-service, promotion-client
+analytics-service/     analytics-domain, analytics-core, analytics-gateway, analytics-web-service, docker-compose.yml (ClickHouse)
 notification-service/  notification-domain, notification-core, notification-gateway, notification-web-service
 utils/                  identity-generator, cache-tools, token-manager, json-tools, internal-commons, crypto-tools,
                         pagination-tools, http-client, link-signer
@@ -46,7 +48,7 @@ Full backend architecture, code conventions, and the email/stream contract are d
 
 - Java 25, Maven (or use the bundled `./mvnw`)
 - Bun (frontend package manager / runner)
-- Docker (for the gateway)
+- Docker (for the gateway and for ClickHouse)
 - Local Postgres (`localhost:5432/qlaundry`, user `postgres`) and Redis (`localhost:6379`, password `12345`)
 - SMTP dev server on `localhost:1025` (e.g. Mailpit/MailHog) for notification-service
 
@@ -61,6 +63,8 @@ cd user-service/user-web-service && ./mvnw spring-boot:run          # :8101
 cd notification-service/notification-web-service && ./mvnw spring-boot:run  # :8102
 cd order-service/order-web-service && ./mvnw spring-boot:run         # :8103
 cd promotion-service/promotion-web-service && ./mvnw spring-boot:run # :8104
+cd analytics-service && docker compose up -d                          # ClickHouse :8123 (http) / :9000 (native)
+cd analytics-service/analytics-web-service && ./mvnw spring-boot:run # :8105
 
 # 3. Frontend (Vite dev server — internal, not exposed directly)
 cd qlaundry-web && bun install && bun dev                            # :5173
@@ -80,7 +84,7 @@ docker exec qlaundry-gateway nginx -s reload
 
 `gateway/certs/` is gitignored — never commit the key. Chrome will show a warning on first visit; click Advanced → Proceed.
 
-Open the app at `https://localhost:8100` — nginx serves the frontend (proxying to Vite on `:5173`, including HMR websockets — `vite.config.ts`'s `hmrClientPort` already defaults to `8100`) and forwards `/api/*` to the backend via `host.docker.internal` (`/api/auth/`, `/api/staff/`, `/api/customer/` → user-service on `:8101`; `/api/order/`, `/api/service/`, `/api/invoice/`, `/api/public/invoice/` → order-service on `:8103`; `/api/promotion/` → promotion-service on `:8104`), stripping the `/api` prefix so Spring controllers keep their existing paths (`/api/auth/staff/login` → `/auth/staff/login`). The frontend calls the backend with a relative base URL (`VITE_API_BASE_URL=/api`, see `web/.env`), so both are same-origin — no CORS involved at runtime.
+Open the app at `https://localhost:8100` — nginx serves the frontend (proxying to Vite on `:5173`, including HMR websockets — `vite.config.ts`'s `hmrClientPort` already defaults to `8100`) and forwards `/api/*` to the backend via `host.docker.internal` (`/api/auth/`, `/api/staff/`, `/api/customer/` → user-service on `:8101`; `/api/order/`, `/api/service/`, `/api/invoice/`, `/api/public/invoice/` → order-service on `:8103`; `/api/promotion/` → promotion-service on `:8104`; `/api/analytics/` → analytics-service on `:8105`), stripping the `/api` prefix so Spring controllers keep their existing paths (`/api/auth/staff/login` → `/auth/staff/login`). The frontend calls the backend with a relative base URL (`VITE_API_BASE_URL=/api`, see `web/.env`), so both are same-origin — no CORS involved at runtime.
 
 The gateway used to also publish a plain-HTTP `:8100` alongside a TLS `:8443`, kept only so a download manager (IDM) grabbing `application/pdf` invoice responses off the plain-HTTP socket had a TLS escape hatch (IDM cannot see inside TLS). That's gone now — `gateway/docker-compose.yml` publishes only `8100:443` — but typing `http://localhost:8100` still works and just redirects to `https://localhost:8100`: `gateway/nginx.conf` has a `stream` block in front that peeks at each connection's first bytes (`ssl_preread`, no cert needed for this) to tell a TLS handshake from a plain HTTP request line, then hands it to one of two internal, unpublished `http` servers — the real app on `127.0.0.1:8443`, or a `return 301 https://$http_host$request_uri;`-only server on `127.0.0.1:8080` for anything that isn't TLS. Both HTTP and HTTPS therefore work on the same external port, and the invoice-hijacking problem from above is avoided by default rather than being an opt-in workaround.
 
@@ -124,6 +128,7 @@ DELETE /api/service/delete
 POST   /api/order/create
 GET    /api/order/list
 GET    /api/order/detail
+GET    /api/order/schedule       ?date=     → today's (or that Jakarta day's) due pickups and deliveries
 GET    /api/invoice/link         ?orderId=  → {token, expiresAt} (bearer token)
 GET    /api/public/invoice/pdf   ?token=    → application/pdf (no bearer token — the signature is the auth)
 PUT    /api/order/confirm
@@ -157,6 +162,17 @@ Invoices live under `/api/invoice/*`, not `/api/order/*` — they are their own 
 **Unauthenticated endpoints are namespaced under `/public/`.** `OrderSecurityConfig` permits `/public/**` and nothing else, so an endpoint's auth posture is readable from its URL instead of from a list of exact paths in a config file — the mirror of the `/internal/` prefix that bounds service-to-service calls. The rule that falls out of it: anything mapped under `/public/` *is* public, so never route something there that needs a principal. The gateway proxies these per-resource (`/api/public/invoice/` → order-service) rather than as one blanket `/api/public/` location, so another service can own its own public surface later.
 
 The invoice PDF is rendered with Thymeleaf + openhtmltopdf and served **inline** (`Content-Type: application/pdf`, `Content-Disposition: inline; filename="<orderNumber>.pdf"`). "View invoice" in the UI works like a presigned S3 link: the app calls the authenticated `/api/invoice/link` to mint a 1-hour HMAC-signed, tenant-scoped token, then opens a new tab straight at `/api/public/invoice/pdf?token=…`. Because that is an ordinary browser navigation — not a `fetch` into a blob and not an `<a download>` — the browser renders the PDF in its built-in viewer instead of prompting to save it. A navigation cannot carry an `Authorization` header, so the signature and its embedded expiry are the auth (`app.invoice.link.secret`, rotate it to invalidate every outstanding link at once). The tenant id travels inside the signed payload and scopes the lookup, so the unauthenticated hop is not a principal-less read. The mint endpoint deliberately stays authenticated and outside `/public/` — moving it there would let anyone forge a link for any order id.
+
+### `analytics-service`
+
+```
+GET    /api/analytics/dashboard           → {todayOrders, todayRevenue, monthOrders, monthRevenue, pendingOrders, inProgressOrders, readyOrders, revenueGrowth, ordersGrowth, statusDistribution}
+GET    /api/analytics/report   ?period=WEEK|MONTH|QUARTER|YEAR → {period, revenueTrend, serviceBreakdown}
+```
+
+Revenue and order counts exclude cancelled orders; days, weeks and months are bucketed in `Asia/Jakarta`; growth compares this calendar month with the previous one (`0` when last month was empty). Poke at ClickHouse with `docker exec -it clickhouse clickhouse-client --user analytics --password 12345`. The schema is `analytics-service/analytics-gateway/sql/init.sql` and only runs on an **empty volume** — a schema change in dev is `docker compose down -v` then the backfill below.
+
+order-service writes an `analytics_events` outbox row in the same transaction as every order/service change and `XADD`s it to `analytics:event:ORDER` or `analytics:event:LAUNDRY_SERVICE` after commit; a 5-minute sweeper republishes anything Redis missed. Each event is the full row plus its JPA ``, and ClickHouse's `ReplacingMergeTree(version)` keeps the newest, so duplicates and replays are harmless. To load orders that existed before this (or rebuild ClickHouse), run order-service once with `-Dspring-boot.run.profiles=analytics-backfill`; reconciliation queries and the DLQ runbook are in `analytics-service/analytics-gateway/sql/reconcile.md`. After a fresh install also seed `analytics_aggregates` and `analytics_event_statuses` from `order-gateway/sql/init.sql`.
 
 ### Service-to-service (not exposed through the gateway)
 

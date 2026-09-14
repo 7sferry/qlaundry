@@ -1,5 +1,9 @@
 package com.ferry.order.core.service.create;
 
+import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
+import com.ferry.order.domain.analytics.AnalyticsEventType;
 import com.ferry.order.domain.common.MoneyDomain;
 import com.ferry.order.domain.common.NoteDomain;
 import com.ferry.order.domain.common.exception.OrderForbiddenActionException;
@@ -19,6 +23,7 @@ public class DefaultLaundryServiceCreateUseCase implements LaundryServiceCreateU
 	private static final double DEFAULT_EXPRESS_MULTIPLIER = 1.0d;
 
 	private final LaundryServiceCreateGateway gateway;
+	private final AnalyticsEventPublisher publisher;
 
 	@Override
 	public void execute(LaundryServiceCreateRequest request, OrderAuthPrincipal principal,
@@ -37,6 +42,8 @@ public class DefaultLaundryServiceCreateUseCase implements LaundryServiceCreateU
 				new NoteDomain(request.description()), new MoneyDomain(request.pricePerUnit()), request.unit(),
 				request.category(), request.estimatedHours(), expressMultiplier, request.popular(),
 				principal.userId()));
+		publisher.publish(publisher.save(AnalyticsEventConfig.laundryService(AnalyticsEventType.LAUNDRY_SERVICE_CREATED,
+				LaundryServiceAnalyticsMessage.from(saved), principal.userId())));
 		presenter.present(new LaundryServiceCreateResponse(saved));
 	}
 

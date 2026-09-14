@@ -1,5 +1,9 @@
 package com.ferry.order.core.order.pickup;
 
+import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsMessage;
+import com.ferry.order.domain.analytics.AnalyticsEventType;
 import com.ferry.order.domain.common.NoteDomain;
 import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.order.OrderDomain;
@@ -17,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DefaultOrderPickupUseCase implements OrderPickupUseCase{
 	private final OrderPickupGateway gateway;
+	private final AnalyticsEventPublisher publisher;
 
 	@Override
 	public void execute(OrderPickupRequest request, OrderAuthPrincipal principal, OrderPickupPresenter presenter){
@@ -28,6 +33,9 @@ public class DefaultOrderPickupUseCase implements OrderPickupUseCase{
 		NoteDomain staffNotes = request.staffNotes() == null || request.staffNotes().isBlank()
 				? null : new NoteDomain(request.staffNotes());
 		OrderDomain saved = gateway.save(order.changeStatus(OrderStatus.PICKED_UP, staffNotes, principal.userId()));
+		publisher.publish(publisher.save(AnalyticsEventConfig.order(AnalyticsEventType.ORDER_STATUS_CHANGED,
+				OrderAnalyticsMessage.from(saved, gateway.findItemsByOrderId(orderId),
+						gateway.findPromotionsByOrderId(orderId)), principal.userId())));
 		presenter.present(new OrderPickupResponse(saved));
 	}
 

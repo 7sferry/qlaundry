@@ -1,5 +1,9 @@
 package com.ferry.order.core.order.create;
 
+import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsMessage;
+import com.ferry.order.domain.analytics.AnalyticsEventType;
 import com.ferry.order.domain.common.AddressLineDomain;
 import com.ferry.order.domain.common.EmailDomain;
 import com.ferry.order.domain.common.FullNameDomain;
@@ -37,6 +41,7 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 	private final OrderCustomerGateway customerGateway;
 	private final OrderPromotionGateway promotionGateway;
 	private final OrderPromotionSagaGateway sagaGateway;
+	private final AnalyticsEventPublisher publisher;
 
 	@Override
 	public void execute(OrderCreateRequest request, OrderAuthPrincipal principal, OrderCreatePresenter presenter){
@@ -89,10 +94,11 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		OrderDomain saved = gateway.save(order);
 		List<OrderPromotionDomain> promotions = savePromotions(saved, redemptions, principal);
 		List<OrderItemDomain> items = saveItems(request, saved, principal);
-		if(Boolean.TRUE.equals(request.pickedUpImmediately())){
-			return new OrderCreateResponse(gateway.markPickedUp(saved, principal), items, promotions);
-		}
-		return new OrderCreateResponse(saved, items, promotions);
+		OrderDomain current = Boolean.TRUE.equals(request.pickedUpImmediately())
+				? gateway.markPickedUp(saved, principal) : saved;
+		publisher.publish(publisher.save(AnalyticsEventConfig.order(AnalyticsEventType.ORDER_CREATED,
+				OrderAnalyticsMessage.from(current, items, promotions), principal.userId())));
+		return new OrderCreateResponse(current, items, promotions);
 	}
 
 	private void releasePromotions(OrderPromotionSagaDomain saga, OrderAuthPrincipal principal,

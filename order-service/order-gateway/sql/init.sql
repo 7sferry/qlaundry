@@ -44,6 +44,12 @@ INSERT INTO order_promotion_saga_statuses (id, name) VALUES (1, 'PENDING');
 INSERT INTO order_promotion_saga_statuses (id, name) VALUES (2, 'COMMITTED');
 INSERT INTO order_promotion_saga_statuses (id, name) VALUES (3, 'RELEASED');
 
+INSERT INTO analytics_aggregates (id, name) VALUES (1, 'ORDER');
+INSERT INTO analytics_aggregates (id, name) VALUES (2, 'LAUNDRY_SERVICE');
+
+INSERT INTO analytics_event_statuses (id, name) VALUES (1, 'CREATED');
+INSERT INTO analytics_event_statuses (id, name) VALUES (2, 'PUBLISHED');
+
 -- Default laundry service price list (mirrors web/'s old orderFallbackData.ts).
 -- laundry_services is tenant-scoped (tenant_id NOT NULL), so this is a per-tenant
 -- seed, not a global lookup like the tables above — replace REPLACE_WITH_TENANT_ID

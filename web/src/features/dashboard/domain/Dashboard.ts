@@ -1,9 +1,15 @@
 /************************
  * Made by [MR Ferry™]  *
- * on Juli 2026         *
+ * on September 2026    *
  ************************/
 
-export interface DashboardStats {
+import type {OrderStatus} from '@/features/orders/domain/Order';
+
+export type ReportPeriod = 'week' | 'month' | 'quarter' | 'year';
+
+export const REPORT_PERIODS: ReportPeriod[] = ['week', 'month', 'quarter', 'year'];
+
+export interface DashboardSummary {
 	todayOrders: number;
 	todayRevenue: number;
 	monthOrders: number;
@@ -13,10 +19,13 @@ export interface DashboardStats {
 	readyOrders: number;
 	revenueGrowth: number;
 	ordersGrowth: number;
+	statusDistribution: StatusCount[];
+}
+
+export interface DashboardReport {
+	period: ReportPeriod;
 	revenueTrend: RevenuePeriod[];
 	serviceBreakdown: ServiceBreakdown[];
-	statusDistribution: StatusCount[];
-	todaySchedule: ScheduleItem[];
 }
 
 export interface RevenuePeriod {
@@ -34,16 +43,18 @@ export interface ServiceBreakdown {
 }
 
 export interface StatusCount {
-	status: string;
+	status: OrderStatus;
 	label: string;
 	count: number;
 }
+
+export type ScheduleType = 'pickup' | 'delivery';
 
 export interface ScheduleItem {
 	orderId: string;
 	orderNumber: string;
 	customerName: string;
-	type: 'pickup' | 'delivery';
+	type: ScheduleType;
 	scheduledAt: string;
-	status: string;
+	status: OrderStatus;
 }

@@ -45,12 +45,12 @@ function statusLabel(status: string): string {
 
 export default function DashboardPage() {
 	const navigate = useNavigate();
-	const {stats, loading, refresh} = useDashboard();
+	const {summary, report, schedule, loading, refresh} = useDashboard();
 
-	if (loading && !stats) return <Loading label="Loading dashboard…"/>;
+	if (loading && !summary) return <Loading label="Loading dashboard…"/>;
 
-	const growth = stats?.revenueGrowth ?? 0;
-	const ordersGrowth = stats?.ordersGrowth ?? 0;
+	const growth = summary?.revenueGrowth ?? 0;
+	const ordersGrowth = summary?.ordersGrowth ?? 0;
 
 	return (
 			<>
@@ -72,35 +72,35 @@ export default function DashboardPage() {
 				<div className="grid grid--stats">
 					<StatCard
 							icon={<Package size={20}/>}
-							value={stats?.todayOrders ?? 0}
+							value={summary?.todayOrders ?? 0}
  						label="Orders today"
 							hint={
 								<span className={`trend ${ordersGrowth >= 0 ? 'trend--up' : 'trend--down'}`}>
 				      {ordersGrowth >= 0 ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>}
-								{Math.abs(ordersGrowth)}% vs yesterday
+								{Math.abs(ordersGrowth)}% vs last month
 				    </span>
 							}
 					/>
 					<StatCard
 							icon={<PackageCheck size={20}/>}
-							value={formatCurrency(stats?.todayRevenue ?? 0)}
+							value={formatCurrency(summary?.todayRevenue ?? 0)}
  						label="Revenue today"
 							hint={
 								<span className={`trend ${growth >= 0 ? 'trend--up' : 'trend--down'}`}>
 				      {growth >= 0 ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>}
-								{Math.abs(growth)}% vs yesterday
+								{Math.abs(growth)}% vs last month
 				    </span>
 							}
 					/>
 					<StatCard
 							icon={<Clock3 size={20}/>}
-							value={stats?.inProgressOrders ?? 0}
+							value={summary?.inProgressOrders ?? 0}
  						label="In progress"
  						hint="Active orders now"
 					/>
 					<StatCard
 							icon={<WashingMachine size={20}/>}
-							value={stats?.pendingOrders ?? 0}
+							value={summary?.pendingOrders ?? 0}
  						label="Awaiting confirmation"
  						hint="Needs attention"
 					/>
@@ -109,14 +109,14 @@ export default function DashboardPage() {
 				<div className="grid grid--2 mt-24">
 					<Card
 							title="Revenue trend"
-							subtitle="Revenue & order count for the last 6 months"
+							subtitle="Revenue & order count for this month"
 							actions={
-								<Badge tone="info">{stats?.monthOrders ?? 0} orders this month</Badge>
+								<Badge tone="info">{summary?.monthOrders ?? 0} orders this month</Badge>
 							}
 					>
 						<div className="chart-wrap">
 							<ResponsiveContainer width="100%" height="100%">
-								<ComposedChart data={stats?.revenueTrend ?? []}>
+								<ComposedChart data={report?.revenueTrend ?? []}>
 									<CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)"/>
 									<XAxis
 											dataKey="period"
@@ -160,10 +160,10 @@ export default function DashboardPage() {
 					</Card>
 
 						<Card title="Today’s schedule" subtitle="Scheduled pickups & deliveries">
-						{stats?.todaySchedule?.length ? (
+						{schedule.length ? (
 								<div className="schedule-list">
-									{stats.todaySchedule.map((item) => (
-											<div key={item.orderId} className="schedule-row">
+									{schedule.map((item) => (
+											<div key={`${item.type}-${item.orderId}`} className="schedule-row">
 												<div className={`schedule-type schedule-type--${item.type}`}>
 													{item.type === 'pickup' ? <Package size={14}/> : <Truck size={14}/>}
 												</div>
@@ -193,7 +193,7 @@ export default function DashboardPage() {
 				<div className="grid grid--2 mt-24">
 					<Card title="Service distribution" subtitle="This month’s service breakdown">
 						<div className="service-breakdown">
-							{(stats?.serviceBreakdown ?? []).map((s) => (
+							{(report?.serviceBreakdown ?? []).map((s) => (
 									<div key={s.serviceId} className="breakdown-row">
 										<div className="breakdown-row__label">
 											<WashingMachine size={14}/>
@@ -211,9 +211,9 @@ export default function DashboardPage() {
 						</div>
 					</Card>
 
-					<Card title="Order status" subtitle="Current status distribution">
+					<Card title="Order status" subtitle="Orders created this month by status">
 						<div className="status-dist">
-							{(stats?.statusDistribution ?? []).map((s) => (
+							{(summary?.statusDistribution ?? []).map((s) => (
 									<div key={s.status} className="status-dist__row">
 										<div className="row" style={{gap: 10}}>
 											<span className={`status-dot status-dot--${s.status}`}/>

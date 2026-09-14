@@ -1,5 +1,9 @@
 package com.ferry.order.core.service.delete;
 
+import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
+import com.ferry.order.domain.analytics.AnalyticsEventType;
 import com.ferry.order.domain.common.exception.OrderForbiddenActionException;
 import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.service.LaundryServiceDomain;
@@ -17,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DefaultLaundryServiceDeleteUseCase implements LaundryServiceDeleteUseCase{
 	private final LaundryServiceDeleteGateway gateway;
+	private final AnalyticsEventPublisher publisher;
 
 	@Override
 	public void execute(LaundryServiceDeleteRequest request, OrderAuthPrincipal principal,
@@ -32,7 +37,9 @@ public class DefaultLaundryServiceDeleteUseCase implements LaundryServiceDeleteU
 		if(gateway.hasOpenOrders(serviceId, tenantId)){
 			throw new OrderForbiddenActionException("Cannot delete a service that still has orders in progress");
 		}
-		gateway.save(service.markDeleted(principal.userId()));
+		LaundryServiceDomain saved = gateway.save(service.markDeleted(principal.userId()));
+		publisher.publish(publisher.save(AnalyticsEventConfig.laundryService(AnalyticsEventType.LAUNDRY_SERVICE_DELETED,
+				LaundryServiceAnalyticsMessage.from(saved), principal.userId())));
 		presenter.present(new LaundryServiceDeleteResponse(service.id()));
 	}
 

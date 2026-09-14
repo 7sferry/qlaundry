@@ -1,5 +1,11 @@
 package com.ferry.order.core.order.create;
 
+import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsMessage;
+import com.ferry.order.domain.analytics.AnalyticsAggregate;
+import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEventType;
 import com.ferry.order.domain.common.MoneyDomain;
 import com.ferry.order.domain.common.NoteDomain;
 import com.ferry.order.domain.common.exception.NotFoundException;
@@ -66,12 +72,16 @@ class DefaultOrderCreateUseCaseTest{
 	OrderPromotionGateway promotionGateway;
 	@Mock
 	OrderPromotionSagaGateway sagaGateway;
+	@Mock
+	AnalyticsEventPublisher publisher;
 	@InjectMocks
 	DefaultOrderCreateUseCase useCase;
 	@Mock
 	OrderCreatePresenter presenter;
 	@Captor
 	ArgumentCaptor<OrderDomain> orderCaptor;
+	@Captor
+	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
 	@Captor
 	ArgumentCaptor<OrderItemDomain> itemCaptor;
 	@Captor
@@ -838,6 +848,68 @@ class DefaultOrderCreateUseCaseTest{
 	}
 
 	@Test
+	void givenOutboxWriteFailsAfterPromoRedemption_thenReleasesTheRedemptionLikeAnyPersistFailure(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.SUPER_STAFF)
+				.build();
+		LaundryServiceDomain service = LaundryServiceDomain.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Cuci Karpet")
+				.description(new NoteDomain("carpet wash"))
+				.pricePerUnit(MoneyDomain.of(15000L))
+				.unit(ServiceUnit.KG)
+				.category(ServiceCategory.SPECIALTY)
+				.estimatedHours(72)
+				.expressMultiplier(1.5d)
+				.popular(false)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
+				SERVICE_ID, List.of(), 1, 4.0d, null, null, null, null, null, null, List.of("KARPETBERSIH"), null);
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID,
+				"KARPETBERSIH", new BigDecimal("6000")))).given(promotionGateway)
+				.redeem(any(PromotionRedemptionHttpRequest.class));
+		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+				.given(gateway)
+				.save(any(OrderDomain.class));
+		willAnswer(invocation -> invocation.<OrderPromotionDomain>getArgument(0)).given(gateway)
+				.save(any(OrderPromotionDomain.class));
+		willThrow(new IllegalStateException("analytics_events insert failed")).given(publisher)
+				.save(any(AnalyticsEventConfig.class));
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessage("analytics_events insert failed"));
+
+		then(promotionGateway).should()
+				.release(releaseCaptor.capture());
+		then(sagaGateway).should()
+				.markReleased(sagaCaptor.capture());
+		then(sagaGateway).should(never())
+				.markCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
+		then(publisher).should(never())
+				.publish(any(AnalyticsEventDomain.class));
+		then(presenter).should(never())
+				.present(any(OrderCreateResponse.class));
+
+		thenSoftly(softly -> {
+			softly.then(releaseCaptor.getValue().tenantId()).isEqualTo(TENANT_ID);
+			softly.then(releaseCaptor.getValue().releasedBy()).isEqualTo(STAFF_ID);
+			softly.then(sagaCaptor.getValue().status()).isEqualTo(OrderPromotionSagaStatus.RELEASED);
+		});
+	}
+	@Test
 	void givenPickupFailsAfterPromoRedemption_thenReleasesTheRedemptionAndRethrows(){
 		Instant now = Instant.now();
 		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
@@ -1196,11 +1268,18 @@ class DefaultOrderCreateUseCaseTest{
 						.build())
 				.given(gateway)
 				.markPickedUp(any(OrderDomain.class), any(OrderAuthPrincipal.class));
+		willReturn(AnalyticsEventDomain.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_CREATED,
+				TENANT_ID, ORDER_ID, 0, "{}", STAFF_ID)).given(publisher)
+				.save(any(AnalyticsEventConfig.class));
 
 		useCase.execute(request, principal, presenter);
 
 		then(gateway).should()
 				.markPickedUp(orderCaptor.capture(), eq(principal));
+		then(publisher).should()
+				.save(analyticsCaptor.capture());
+		then(publisher).should()
+				.publish(any(AnalyticsEventDomain.class));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
@@ -1208,6 +1287,10 @@ class DefaultOrderCreateUseCaseTest{
 			softly.then(orderCaptor.getValue().id()).isEqualTo(ORDER_ID);
 			softly.then(orderCaptor.getValue().status()).isEqualTo(OrderStatus.PENDING);
 			softly.then(responseCaptor.getValue().order().status()).isEqualTo(OrderStatus.PICKED_UP);
+			softly.then(analyticsCaptor.getValue().type()).isEqualTo(AnalyticsEventType.ORDER_CREATED);
+			softly.then(analyticsCaptor.getValue().aggregateId()).isEqualTo(ORDER_ID);
+			softly.then(((OrderAnalyticsMessage) analyticsCaptor.getValue().payload()).status())
+					.isEqualTo(OrderStatus.PICKED_UP);
 		});
 	}
 
