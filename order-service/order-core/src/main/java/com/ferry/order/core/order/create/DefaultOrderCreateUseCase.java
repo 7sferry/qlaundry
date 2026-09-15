@@ -40,7 +40,6 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 	private final OrderCreateGateway gateway;
 	private final OrderCustomerGateway customerGateway;
 	private final OrderPromotionGateway promotionGateway;
-	private final OrderPromotionSagaGateway sagaGateway;
 	private final AnalyticsEventPublisher publisher;
 
 	@Override
@@ -75,12 +74,12 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		}
 		OrderPromotionSagaDomain saga = OrderPromotionSagaDomain.open(tenantId.value(), order.orderNumberValue(),
 				principal.userId());
-		sagaGateway.open(saga);
+		promotionGateway.openSaga(saga);
 		List<PromotionRedemptionHttpResponse> redemptions = redeemPromotions(order, codes, tenantId, principal, saga);
 		try{
 			OrderDomain running = applyPromotionsToOrder(order, redemptions);
 			OrderCreateResponse response = persist(request, running, redemptions, principal);
-			sagaGateway.markCommittedAfterCommit(saga.commit(principal.userId()));
+			promotionGateway.markSagaCommittedAfterCommit(saga.commit(principal.userId()));
 			presenter.present(response);
 		}catch(RuntimeException e){
 			releasePromotions(saga, principal, e);
@@ -107,7 +106,7 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 				principal.userId());
 		try{
 			promotionGateway.release(release);
-			sagaGateway.markReleased(saga.release(principal.userId()));
+			promotionGateway.markSagaReleased(saga.release(principal.userId()));
 		}catch(RuntimeException e){
 			log.error("Failed to release promotion redemption(s) claimed for order {}; the saga sweeper will retry",
 					saga.referenceId(), e);
@@ -118,7 +117,7 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 	private void closeRejectedSaga(OrderPromotionSagaDomain saga, OrderAuthPrincipal principal,
 	                               RuntimeException cause){
 		try{
-			sagaGateway.markReleased(saga.release(principal.userId()));
+			promotionGateway.markSagaReleased(saga.release(principal.userId()));
 		}catch(RuntimeException e){
 			log.warn("Failed to close the promotion saga for rejected order {}; the saga sweeper will close it",
 					saga.referenceId(), e);

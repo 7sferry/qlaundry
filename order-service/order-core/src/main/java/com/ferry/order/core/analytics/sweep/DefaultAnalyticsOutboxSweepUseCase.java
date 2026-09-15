@@ -5,6 +5,7 @@ import com.ferry.order.domain.analytics.AnalyticsEventDomain;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
@@ -17,12 +18,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DefaultAnalyticsOutboxSweepUseCase implements AnalyticsOutboxSweepUseCase{
 	private final AnalyticsOutboxSweepGateway gateway;
+	private final Duration gracePeriod;
+	private final int sweepBatchSize;
 
 	@Override
 	public AnalyticsOutboxSweepResponse execute(){
-		Instant cutoff = Instant.now().minus(AnalyticsOutboxConstant.GRACE_PERIOD);
-		List<AnalyticsEventDomain> unpublished = gateway.findUnpublishedCreatedBefore(cutoff,
-				AnalyticsOutboxConstant.SWEEP_BATCH_SIZE);
+		Instant cutoff = Instant.now().minus(gracePeriod);
+		List<AnalyticsEventDomain> unpublished = gateway.findUnpublishedCreatedBefore(cutoff, sweepBatchSize);
 		int republished = 0;
 		int failed = 0;
 		for(AnalyticsEventDomain event : unpublished){

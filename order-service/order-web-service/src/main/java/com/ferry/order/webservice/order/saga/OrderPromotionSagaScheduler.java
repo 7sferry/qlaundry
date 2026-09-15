@@ -18,7 +18,8 @@ import java.util.concurrent.TimeUnit;
 public class OrderPromotionSagaScheduler{
 	private final OrderPromotionSagaSweepUseCase orderPromotionSagaSweepUseCase;
 
-	@Scheduled(initialDelay = 1, fixedDelay = 1, timeUnit = TimeUnit.HOURS)
+	@Scheduled(initialDelayString = "${app.promotion.saga.sweep-interval-hours}",
+			fixedDelayString = "${app.promotion.saga.sweep-interval-hours}", timeUnit = TimeUnit.HOURS)
 	public void sweep(){
 		OrderPromotionSagaSweepResponse response = orderPromotionSagaSweepUseCase.execute();
 		if(!response.isEmpty()){

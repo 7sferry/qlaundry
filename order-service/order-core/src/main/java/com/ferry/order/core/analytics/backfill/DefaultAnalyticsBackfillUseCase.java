@@ -24,6 +24,7 @@ import java.util.List;
 public class DefaultAnalyticsBackfillUseCase implements AnalyticsBackfillUseCase{
 	private final AnalyticsBackfillGateway gateway;
 	private final AnalyticsEventPublisher publisher;
+	private final int batchSize;
 
 	@Override
 	public AnalyticsBackfillResponse execute(AnalyticsBackfillRequest request){
@@ -32,8 +33,7 @@ public class DefaultAnalyticsBackfillUseCase implements AnalyticsBackfillUseCase
 		String afterServiceId = null;
 		List<LaundryServiceDomain> servicePage;
 		do{
-			servicePage = gateway.findServicesAfter(tenantId, afterServiceId,
-					AnalyticsOutboxConstant.BACKFILL_BATCH_SIZE);
+			servicePage = gateway.findServicesAfter(tenantId, afterServiceId, batchSize);
 			for(LaundryServiceDomain service : servicePage){
 				publisher.publish(publisher.save(AnalyticsEventConfig.laundryService(
 						AnalyticsEventType.LAUNDRY_SERVICE_BACKFILLED, LaundryServiceAnalyticsMessage.from(service),
@@ -41,12 +41,12 @@ public class DefaultAnalyticsBackfillUseCase implements AnalyticsBackfillUseCase
 				afterServiceId = service.id();
 				services++;
 			}
-		}while(servicePage.size() == AnalyticsOutboxConstant.BACKFILL_BATCH_SIZE);
+		}while(servicePage.size() == batchSize);
 		int orders = 0;
 		String afterOrderId = null;
 		List<OrderDomain> orderPage;
 		do{
-			orderPage = gateway.findOrdersAfter(tenantId, afterOrderId, AnalyticsOutboxConstant.BACKFILL_BATCH_SIZE);
+			orderPage = gateway.findOrdersAfter(tenantId, afterOrderId, batchSize);
 			for(OrderDomain order : orderPage){
 				OrderIdDomain orderId = new OrderIdDomain(order.id());
 				publisher.publish(publisher.save(AnalyticsEventConfig.order(AnalyticsEventType.ORDER_BACKFILLED,
@@ -58,7 +58,7 @@ public class DefaultAnalyticsBackfillUseCase implements AnalyticsBackfillUseCase
 			if(!orderPage.isEmpty()){
 				log.info("Analytics backfill published {} order(s) so far", orders);
 			}
-		}while(orderPage.size() == AnalyticsOutboxConstant.BACKFILL_BATCH_SIZE);
+		}while(orderPage.size() == batchSize);
 		return new AnalyticsBackfillResponse(orders, services);
 	}
 

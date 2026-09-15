@@ -62,3 +62,5 @@ app:
         group: notification-service
         consumer: notification-web-service-1
         retention-days: 7
+        # daily XTRIM MINID cron for both email streams (see EmailStreamTrimScheduler)
+        trim-cron: '0 30 3 * * *'

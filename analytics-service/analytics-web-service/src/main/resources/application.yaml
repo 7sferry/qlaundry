@@ -36,6 +36,17 @@ app:
         group: analytics-service
         consumer: analytics-1
         retention-days: 7
+        # daily XTRIM MINID cron for both event streams and both DLQs (see AnalyticsStreamTrimScheduler)
+        trim-cron: '0 45 3 * * *'
+        reclaim:
+          # after this many failed deliveries a pending entry is dead-lettered instead of retried again
+          max-deliveries: 5
+          # how long a pending entry must sit idle before AnalyticsPelReclaimScheduler claims it
+          min-idle: 60s
+          # XPENDING page size per stream, per tick
+          batch-size: 100
+          # @Scheduled reads this as a plain number of minutes (see AnalyticsPelReclaimScheduler)
+          interval-minutes: 1
   token:
     # the public half of user-service's RS256 key pair — this service only verifies access tokens
     public-key: "MCowBQYDK2VwAyEAewlqN7GKlxKGgyXUobhnMF+76ytxBpSKYX+r3bYMaVM="

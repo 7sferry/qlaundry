@@ -123,6 +123,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password4j.Argon2Password4jPasswordEncoder;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.Duration;
 import java.util.List;
 
 /************************
@@ -334,8 +335,9 @@ public class UserWebConfig{
 	}
 
 	@Bean
-	TenantExpirationUseCase tenantExpirationUseCase(TenantExpirationGateway tenantExpirationGateway){
-		return new DefaultTenantExpirationUseCase(tenantExpirationGateway);
+	TenantExpirationUseCase tenantExpirationUseCase(TenantExpirationGateway tenantExpirationGateway,
+	                                                @Value("${app.tenant.expiration.pending-expiry}") Duration pendingExpiryDuration){
+		return new DefaultTenantExpirationUseCase(tenantExpirationGateway, pendingExpiryDuration);
 	}
 
 	@Bean

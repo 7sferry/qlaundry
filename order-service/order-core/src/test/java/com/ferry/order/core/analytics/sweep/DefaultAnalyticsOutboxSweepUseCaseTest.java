@@ -9,10 +9,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
@@ -36,11 +36,11 @@ class DefaultAnalyticsOutboxSweepUseCaseTest{
 
 	private static final String TENANT_ID = "01TENANTTERATAIPUTIH00000";
 	private static final String STAFF_ID = "01STAFFGILANGRAMADHAN0000";
+	private static final Duration GRACE_PERIOD = Duration.ofMinutes(2);
+	private static final int SWEEP_BATCH_SIZE = 200;
 
 	@Mock
 	AnalyticsOutboxSweepGateway gateway;
-	@InjectMocks
-	DefaultAnalyticsOutboxSweepUseCase useCase;
 	@Captor
 	ArgumentCaptor<Instant> cutoffCaptor;
 	@Captor
@@ -48,6 +48,8 @@ class DefaultAnalyticsOutboxSweepUseCaseTest{
 
 	@Test
 	void givenNothingStuckInTheOutbox_thenReturnsAnEmptySweepLookingBackOnlyPastTheGracePeriod(){
+		DefaultAnalyticsOutboxSweepUseCase useCase = new DefaultAnalyticsOutboxSweepUseCase(gateway, GRACE_PERIOD,
+				SWEEP_BATCH_SIZE);
 		willReturn(List.of()).given(gateway)
 				.findUnpublishedCreatedBefore(any(Instant.class), anyInt());
 		Instant before = Instant.now();
@@ -56,15 +58,14 @@ class DefaultAnalyticsOutboxSweepUseCaseTest{
 
 		Instant after = Instant.now();
 		then(gateway).should()
-				.findUnpublishedCreatedBefore(cutoffCaptor.capture(), eq(AnalyticsOutboxConstant.SWEEP_BATCH_SIZE));
+				.findUnpublishedCreatedBefore(cutoffCaptor.capture(), eq(SWEEP_BATCH_SIZE));
 		then(gateway).should(never())
 				.republish(any(AnalyticsEventDomain.class));
 
 		thenSoftly(softly -> {
 			softly.then(response.isEmpty()).isTrue();
 			softly.then(cutoffCaptor.getValue())
-					.isBetween(before.minus(AnalyticsOutboxConstant.GRACE_PERIOD),
-							after.minus(AnalyticsOutboxConstant.GRACE_PERIOD));
+					.isBetween(before.minus(GRACE_PERIOD), after.minus(GRACE_PERIOD));
 		});
 	}
 
@@ -89,6 +90,8 @@ class DefaultAnalyticsOutboxSweepUseCaseTest{
 				.build();
 		willReturn(List.of(event)).given(gateway)
 				.findUnpublishedCreatedBefore(any(Instant.class), anyInt());
+		DefaultAnalyticsOutboxSweepUseCase useCase = new DefaultAnalyticsOutboxSweepUseCase(gateway, GRACE_PERIOD,
+				SWEEP_BATCH_SIZE);
 
 		AnalyticsOutboxSweepResponse response = useCase.execute();
 
@@ -143,6 +146,8 @@ class DefaultAnalyticsOutboxSweepUseCaseTest{
 				.findUnpublishedCreatedBefore(any(Instant.class), anyInt());
 		willThrow(new IllegalStateException("Unable to connect to localhost:6379")).willDoNothing().given(gateway)
 				.republish(any(AnalyticsEventDomain.class));
+		DefaultAnalyticsOutboxSweepUseCase useCase = new DefaultAnalyticsOutboxSweepUseCase(gateway, GRACE_PERIOD,
+				SWEEP_BATCH_SIZE);
 
 		AnalyticsOutboxSweepResponse response = useCase.execute();
 

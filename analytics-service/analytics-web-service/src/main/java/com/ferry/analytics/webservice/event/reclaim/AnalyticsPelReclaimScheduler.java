@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,8 +35,12 @@ public class AnalyticsPelReclaimScheduler{
 	private final Map<String, StreamListener<String, MapRecord<String, String, String>>> listenersByStream;
 	private final String group;
 	private final String consumer;
+	private final int maxDeliveries;
+	private final Duration reclaimMinIdle;
+	private final long reclaimBatchSize;
 
-	@Scheduled(initialDelay = 1, fixedDelay = 1, timeUnit = TimeUnit.MINUTES)
+	@Scheduled(initialDelayString = "${app.analytics.stream.event.reclaim.interval-minutes}",
+			fixedDelayString = "${app.analytics.stream.event.reclaim.interval-minutes}", timeUnit = TimeUnit.MINUTES)
 	public void reclaim(){
 		listenersByStream.forEach((streamKey, listener) -> {
 			try{
@@ -48,18 +53,17 @@ public class AnalyticsPelReclaimScheduler{
 
 	private void reclaim(String streamKey, StreamListener<String, MapRecord<String, String, String>> listener){
 		StreamOperations<String, Object, Object> streams = stringRedisTemplate.opsForStream();
-		PendingMessages pending = streams.pending(streamKey, group, Range.unbounded(),
-				AnalyticsStreamConstant.RECLAIM_BATCH_SIZE);
+		PendingMessages pending = streams.pending(streamKey, group, Range.unbounded(), reclaimBatchSize);
 		for(PendingMessage message : pending){
-			if(message.getElapsedTimeSinceLastDelivery().compareTo(AnalyticsStreamConstant.RECLAIM_MIN_IDLE) < 0){
+			if(message.getElapsedTimeSinceLastDelivery().compareTo(reclaimMinIdle) < 0){
 				continue;
 			}
-			if(message.getTotalDeliveryCount() >= AnalyticsStreamConstant.MAX_DELIVERIES){
+			if(message.getTotalDeliveryCount() >= maxDeliveries){
 				deadLetter(streams, streamKey, message);
 				continue;
 			}
 			List<MapRecord<String, Object, Object>> claimed = streams.claim(streamKey, group, consumer,
-					AnalyticsStreamConstant.RECLAIM_MIN_IDLE, message.getId());
+					reclaimMinIdle, message.getId());
 			for(MapRecord<String, Object, Object> record : claimed){
 				listener.onMessage(StreamRecords.newRecord()
 						.in(streamKey)

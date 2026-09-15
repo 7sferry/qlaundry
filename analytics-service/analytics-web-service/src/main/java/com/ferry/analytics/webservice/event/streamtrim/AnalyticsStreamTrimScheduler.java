@@ -23,7 +23,7 @@ public class AnalyticsStreamTrimScheduler{
 	private final List<String> streamKeys;
 	private final Duration retention;
 
-	@Scheduled(cron = "0 45 3 * * *")
+	@Scheduled(cron = "${app.analytics.stream.event.trim-cron}")
 	public void trimOldEntries(){
 		String minId = (System.currentTimeMillis() - retention.toMillis()) + "-0";
 		streamKeys.forEach(streamKey -> {

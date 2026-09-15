@@ -93,12 +93,16 @@ public class AnalyticsStreamConfig{
 	                                                          LaundryServiceEventStreamListener laundryServiceEventStreamListener,
 	                                                          @Value("${app.analytics.stream.event.key}") String streamKeyPrefix,
 	                                                          @Value("${app.analytics.stream.event.group}") String group,
-	                                                          @Value("${app.analytics.stream.event.consumer}") String consumer){
+	                                                          @Value("${app.analytics.stream.event.consumer}") String consumer,
+	                                                          @Value("${app.analytics.stream.event.reclaim.max-deliveries}") int maxDeliveries,
+	                                                          @Value("${app.analytics.stream.event.reclaim.min-idle}") Duration reclaimMinIdle,
+	                                                          @Value("${app.analytics.stream.event.reclaim.batch-size}") long reclaimBatchSize){
 		Map<String, StreamListener<String, MapRecord<String, String, String>>> listenersByStream = new LinkedHashMap<>();
 		listenersByStream.put(streamKeyPrefix + AnalyticsAggregate.ORDER.name(), orderEventStreamListener);
 		listenersByStream.put(streamKeyPrefix + AnalyticsAggregate.LAUNDRY_SERVICE.name(),
 				laundryServiceEventStreamListener);
-		return new AnalyticsPelReclaimScheduler(stringRedisTemplate, listenersByStream, group, consumer);
+		return new AnalyticsPelReclaimScheduler(stringRedisTemplate, listenersByStream, group, consumer,
+				maxDeliveries, reclaimMinIdle, reclaimBatchSize);
 	}
 
 	@Bean

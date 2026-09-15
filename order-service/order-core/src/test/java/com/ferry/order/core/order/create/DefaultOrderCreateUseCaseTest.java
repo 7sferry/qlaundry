@@ -71,8 +71,6 @@ class DefaultOrderCreateUseCaseTest{
 	@Mock
 	OrderPromotionGateway promotionGateway;
 	@Mock
-	OrderPromotionSagaGateway sagaGateway;
-	@Mock
 	AnalyticsEventPublisher publisher;
 	@InjectMocks
 	DefaultOrderCreateUseCase useCase;
@@ -425,12 +423,12 @@ class DefaultOrderCreateUseCaseTest{
 				.save(any(OrderDomain.class));
 		then(promotionGateway).should(never())
 				.release(any(PromotionReleaseHttpRequest.class));
-		then(sagaGateway).should()
-				.open(any(OrderPromotionSagaDomain.class));
-		then(sagaGateway).should()
-				.markReleased(sagaCaptor.capture());
-		then(sagaGateway).should(never())
-				.markCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
+		then(promotionGateway).should()
+				.openSaga(any(OrderPromotionSagaDomain.class));
+		then(promotionGateway).should()
+				.markSagaReleased(sagaCaptor.capture());
+		then(promotionGateway).should(never())
+				.markSagaCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
 
 		thenSoftly(softly -> {
 			softly.then(sagaCaptor.getValue().status()).isEqualTo(OrderPromotionSagaStatus.RELEASED);
@@ -830,10 +828,10 @@ class DefaultOrderCreateUseCaseTest{
 		then(presenter).should(never())
 				.present(any(OrderCreateResponse.class));
 
-		then(sagaGateway).should()
-				.markReleased(sagaCaptor.capture());
-		then(sagaGateway).should(never())
-				.markCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
+		then(promotionGateway).should()
+				.markSagaReleased(sagaCaptor.capture());
+		then(promotionGateway).should(never())
+				.markSagaCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
 
 		PromotionReleaseHttpRequest release = releaseCaptor.getValue();
 		OrderPromotionSagaDomain released = sagaCaptor.getValue();
@@ -894,10 +892,10 @@ class DefaultOrderCreateUseCaseTest{
 
 		then(promotionGateway).should()
 				.release(releaseCaptor.capture());
-		then(sagaGateway).should()
-				.markReleased(sagaCaptor.capture());
-		then(sagaGateway).should(never())
-				.markCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
+		then(promotionGateway).should()
+				.markSagaReleased(sagaCaptor.capture());
+		then(promotionGateway).should(never())
+				.markSagaCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
 		then(publisher).should(never())
 				.publish(any(AnalyticsEventDomain.class));
 		then(presenter).should(never())
@@ -1011,8 +1009,8 @@ class DefaultOrderCreateUseCaseTest{
 
 		then(promotionGateway).should()
 				.release(any(PromotionReleaseHttpRequest.class));
-		then(sagaGateway).should(never())
-				.markReleased(any(OrderPromotionSagaDomain.class));
+		then(promotionGateway).should(never())
+				.markSagaReleased(any(OrderPromotionSagaDomain.class));
 		then(presenter).should(never())
 				.present(any(OrderCreateResponse.class));
 	}
@@ -1055,7 +1053,7 @@ class DefaultOrderCreateUseCaseTest{
 				.hasMessage("insert failed"));
 
 		then(promotionGateway).shouldHaveNoInteractions();
-		then(sagaGateway).shouldHaveNoInteractions();
+		then(promotionGateway).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -1099,19 +1097,19 @@ class DefaultOrderCreateUseCaseTest{
 
 		useCase.execute(request, principal, presenter);
 
-		InOrder inOrder = Mockito.inOrder(sagaGateway, promotionGateway, gateway, presenter);
-		then(sagaGateway).should(inOrder)
-				.open(sagaCaptor.capture());
+		InOrder inOrder = Mockito.inOrder(promotionGateway, promotionGateway, gateway, presenter);
+		then(promotionGateway).should(inOrder)
+				.openSaga(sagaCaptor.capture());
 		then(promotionGateway).should(inOrder)
 				.redeem(redemptionCaptor.capture());
 		then(gateway).should(inOrder)
 				.save(any(OrderDomain.class));
-		then(sagaGateway).should(inOrder)
-				.markCommittedAfterCommit(sagaCaptor.capture());
+		then(promotionGateway).should(inOrder)
+				.markSagaCommittedAfterCommit(sagaCaptor.capture());
 		then(presenter).should(inOrder)
 				.present(any(OrderCreateResponse.class));
-		then(sagaGateway).should(never())
-				.markReleased(any(OrderPromotionSagaDomain.class));
+		then(promotionGateway).should(never())
+				.markSagaReleased(any(OrderPromotionSagaDomain.class));
 		then(promotionGateway).should(never())
 				.release(any(PromotionReleaseHttpRequest.class));
 

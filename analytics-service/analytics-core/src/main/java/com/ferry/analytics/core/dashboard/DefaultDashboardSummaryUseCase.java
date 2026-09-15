@@ -44,7 +44,7 @@ public class DefaultDashboardSummaryUseCase implements DashboardSummaryUseCase{
 
 	private BigDecimal growth(BigDecimal current, BigDecimal previous){
 		if(previous.signum() == 0){
-			return BigDecimal.ZERO.setScale(AnalyticsConstant.PERCENTAGE_SCALE);
+			return BigDecimal.ZERO;
 		}
 		return current.subtract(previous)
 				.multiply(HUNDRED)

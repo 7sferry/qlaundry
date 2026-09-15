@@ -28,7 +28,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -58,13 +57,12 @@ class DefaultAnalyticsBackfillUseCaseTest{
 	private static final String STAFF_ID = "01STAFFIRAWANSETIADI00000";
 	private static final String ORDER_ID = "01ORDERSARUNGBANTAL000000";
 	private static final String SERVICE_ID = "01SERVICECUCISELIMUT00000";
+	private static final int BATCH_SIZE = 500;
 
 	@Mock
 	AnalyticsBackfillGateway gateway;
 	@Mock
 	AnalyticsEventPublisher publisher;
-	@InjectMocks
-	DefaultAnalyticsBackfillUseCase useCase;
 	@Captor
 	ArgumentCaptor<AnalyticsEventConfig> configCaptor;
 
@@ -143,13 +141,14 @@ class DefaultAnalyticsBackfillUseCaseTest{
 		willReturn(AnalyticsEventDomain.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_BACKFILLED,
 				TENANT_ID, ORDER_ID, 5, "{}", AnalyticsOutboxConstant.BACKFILL_ACTOR)).given(publisher)
 				.save(any(AnalyticsEventConfig.class));
+		DefaultAnalyticsBackfillUseCase useCase = new DefaultAnalyticsBackfillUseCase(gateway, publisher, BATCH_SIZE);
 
 		AnalyticsBackfillResponse response = useCase.execute(new AnalyticsBackfillRequest(" " + TENANT_ID + " "));
 
 		then(gateway).should()
-				.findServicesAfter(eq(TENANT_ID), isNull(), eq(AnalyticsOutboxConstant.BACKFILL_BATCH_SIZE));
+				.findServicesAfter(eq(TENANT_ID), isNull(), eq(BATCH_SIZE));
 		then(gateway).should()
-				.findOrdersAfter(eq(TENANT_ID), isNull(), eq(AnalyticsOutboxConstant.BACKFILL_BATCH_SIZE));
+				.findOrdersAfter(eq(TENANT_ID), isNull(), eq(BATCH_SIZE));
 		then(gateway).should()
 				.findItemsByOrderId(eq(new OrderIdDomain(ORDER_ID)));
 		then(publisher).should(times(2))
@@ -181,6 +180,7 @@ class DefaultAnalyticsBackfillUseCaseTest{
 				.findServicesAfter(isNull(), isNull(), anyInt());
 		willReturn(List.of()).given(gateway)
 				.findOrdersAfter(isNull(), isNull(), anyInt());
+		DefaultAnalyticsBackfillUseCase useCase = new DefaultAnalyticsBackfillUseCase(gateway, publisher, BATCH_SIZE);
 
 		AnalyticsBackfillResponse response = useCase.execute(new AnalyticsBackfillRequest(""));
 

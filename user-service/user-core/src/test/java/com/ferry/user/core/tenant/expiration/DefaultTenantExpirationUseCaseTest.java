@@ -1,15 +1,14 @@
 package com.ferry.user.core.tenant.expiration;
 
-import com.ferry.user.core.tenant.constant.TenantExpirationConstant;
 import com.ferry.user.domain.tenant.TenantIdDomain;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
@@ -26,15 +25,16 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class DefaultTenantExpirationUseCaseTest{
 
+	private static final Duration PENDING_EXPIRY_DURATION = Duration.ofDays(30);
+
 	@Mock
 	TenantExpirationGateway gateway;
-	@InjectMocks
-	DefaultTenantExpirationUseCase useCase;
 	@Captor
 	ArgumentCaptor<Instant> cutoffCaptor;
 
 	@Test
 	void givenNoPendingTenantsPastCutoff_thenExpiresNoneAndReturnsZero(){
+		DefaultTenantExpirationUseCase useCase = new DefaultTenantExpirationUseCase(gateway, PENDING_EXPIRY_DURATION);
 		willReturn(List.of()).given(gateway).findPendingOlderThan(any(Instant.class));
 
 		int expired = useCase.execute();
@@ -45,6 +45,7 @@ class DefaultTenantExpirationUseCaseTest{
 
 	@Test
 	void givenPendingTenantsPastCutoff_thenExpiresEachOneAndReturnsCount(){
+		DefaultTenantExpirationUseCase useCase = new DefaultTenantExpirationUseCase(gateway, PENDING_EXPIRY_DURATION);
 		TenantIdDomain first = new TenantIdDomain("tnt-cirebon-01");
 		TenantIdDomain second = new TenantIdDomain("tnt-cirebon-02");
 		willReturn(List.of(first, second)).given(gateway).findPendingOlderThan(any(Instant.class));
@@ -58,11 +59,12 @@ class DefaultTenantExpirationUseCaseTest{
 
 	@Test
 	void givenExecute_thenQueriesGatewayWithCutoffAtLeastThirtyDaysAgo(){
+		DefaultTenantExpirationUseCase useCase = new DefaultTenantExpirationUseCase(gateway, PENDING_EXPIRY_DURATION);
 		willReturn(List.of()).given(gateway).findPendingOlderThan(cutoffCaptor.capture());
 
-		Instant beforeCall = Instant.now().minus(TenantExpirationConstant.PENDING_EXPIRY_DURATION);
+		Instant beforeCall = Instant.now().minus(PENDING_EXPIRY_DURATION);
 		useCase.execute();
-		Instant afterCall = Instant.now().minus(TenantExpirationConstant.PENDING_EXPIRY_DURATION);
+		Instant afterCall = Instant.now().minus(PENDING_EXPIRY_DURATION);
 
 		thenSoftly(softly -> {
 			softly.then(cutoffCaptor.getValue()).isAfterOrEqualTo(beforeCall);

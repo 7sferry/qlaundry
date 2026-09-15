@@ -12,10 +12,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
@@ -40,13 +40,13 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 	private static final String TENANT_ID = "01TENANTFLAMBOYAN00000000";
 	private static final String STAFF_ID = "01STAFFYOGAPERMANA000000";
 	private static final String ORDER_NUMBER = "INV-20260913-8KD41MZQ2R7XA";
+	private static final Duration GRACE_PERIOD = Duration.ofMinutes(90);
+	private static final int SWEEP_BATCH_SIZE = 100;
 
 	@Mock
 	OrderPromotionSagaSweepGateway gateway;
 	@Mock
 	OrderPromotionGateway promotionGateway;
-	@InjectMocks
-	DefaultOrderPromotionSagaSweepUseCase useCase;
 	@Captor
 	ArgumentCaptor<Instant> cutoffCaptor;
 	@Captor
@@ -56,6 +56,8 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 
 	@Test
 	void givenNoStalePendingSaga_thenReturnsAnEmptySweepLookingBackOnlyPastTheGracePeriod(){
+		DefaultOrderPromotionSagaSweepUseCase useCase = new DefaultOrderPromotionSagaSweepUseCase(gateway,
+				promotionGateway, GRACE_PERIOD, SWEEP_BATCH_SIZE);
 		willReturn(List.of()).given(gateway)
 				.findPendingUntouchedSince(any(Instant.class), anyInt());
 		Instant before = Instant.now();
@@ -64,14 +66,13 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 
 		Instant after = Instant.now();
 		then(gateway).should()
-				.findPendingUntouchedSince(cutoffCaptor.capture(), eq(OrderPromotionSagaConstant.SWEEP_BATCH_SIZE));
+				.findPendingUntouchedSince(cutoffCaptor.capture(), eq(SWEEP_BATCH_SIZE));
 		then(promotionGateway).shouldHaveNoInteractions();
 
 		thenSoftly(softly -> {
 			softly.then(response.isEmpty()).isTrue();
 			softly.then(cutoffCaptor.getValue())
-					.isBetween(before.minus(OrderPromotionSagaConstant.GRACE_PERIOD),
-							after.minus(OrderPromotionSagaConstant.GRACE_PERIOD));
+					.isBetween(before.minus(GRACE_PERIOD), after.minus(GRACE_PERIOD));
 		});
 	}
 
@@ -95,6 +96,8 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 				.findPendingUntouchedSince(any(Instant.class), anyInt());
 		willReturn(true).given(gateway)
 				.orderExists(any(OrderNumberDomain.class), any(TenantIdDomain.class));
+		DefaultOrderPromotionSagaSweepUseCase useCase = new DefaultOrderPromotionSagaSweepUseCase(gateway,
+				promotionGateway, GRACE_PERIOD, SWEEP_BATCH_SIZE);
 
 		OrderPromotionSagaSweepResponse response = useCase.execute();
 
@@ -135,6 +138,8 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 				.findPendingUntouchedSince(any(Instant.class), anyInt());
 		willReturn(false).given(gateway)
 				.orderExists(any(OrderNumberDomain.class), any(TenantIdDomain.class));
+		DefaultOrderPromotionSagaSweepUseCase useCase = new DefaultOrderPromotionSagaSweepUseCase(gateway,
+				promotionGateway, GRACE_PERIOD, SWEEP_BATCH_SIZE);
 
 		OrderPromotionSagaSweepResponse response = useCase.execute();
 
@@ -183,6 +188,8 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 		willThrow(new PromotionUnavailableException("Promotion service is unavailable. Please try again.",
 				new RuntimeException("connect timed out"))).given(promotionGateway)
 				.release(any(PromotionReleaseHttpRequest.class));
+		DefaultOrderPromotionSagaSweepUseCase useCase = new DefaultOrderPromotionSagaSweepUseCase(gateway,
+				promotionGateway, GRACE_PERIOD, SWEEP_BATCH_SIZE);
 
 		OrderPromotionSagaSweepResponse response = useCase.execute();
 
@@ -239,6 +246,8 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 				.orderExists(any(OrderNumberDomain.class), any(TenantIdDomain.class));
 		willThrow(new IllegalStateException("promotion-service returned 502")).willDoNothing().given(promotionGateway)
 				.release(any(PromotionReleaseHttpRequest.class));
+		DefaultOrderPromotionSagaSweepUseCase useCase = new DefaultOrderPromotionSagaSweepUseCase(gateway,
+				promotionGateway, GRACE_PERIOD, SWEEP_BATCH_SIZE);
 
 		OrderPromotionSagaSweepResponse response = useCase.execute();
 

@@ -1,32 +1,19 @@
 package com.ferry.order.webservice.config;
 
-import com.ferry.order.core.order.schedule.DefaultOrderScheduleUseCase;
-import com.ferry.order.core.order.schedule.OrderScheduleGateway;
-import com.ferry.order.core.order.schedule.OrderScheduleUseCase;
-import com.ferry.order.gateway.order.OrderScheduleJpaGateway;
 import com.ferry.order.core.analytics.AnalyticsEventPublisher;
-import com.ferry.order.core.analytics.backfill.AnalyticsBackfillGateway;
-import com.ferry.order.core.analytics.backfill.AnalyticsBackfillRequest;
-import com.ferry.order.core.analytics.backfill.AnalyticsBackfillResponse;
-import com.ferry.order.core.analytics.backfill.AnalyticsBackfillUseCase;
-import com.ferry.order.core.analytics.backfill.DefaultAnalyticsBackfillUseCase;
+import com.ferry.order.core.analytics.backfill.*;
 import com.ferry.order.core.analytics.sweep.AnalyticsOutboxSweepGateway;
 import com.ferry.order.core.analytics.sweep.AnalyticsOutboxSweepUseCase;
 import com.ferry.order.core.analytics.sweep.DefaultAnalyticsOutboxSweepUseCase;
-import com.ferry.order.gateway.analytics.AnalyticsBackfillJpaGateway;
-import com.ferry.order.gateway.analytics.AnalyticsOutboxSweepJpaGateway;
-import com.ferry.order.gateway.analytics.AnalyticsStreamWriter;
-import com.ferry.order.gateway.analytics.OrderAnalyticsRedisPublisher;
-import com.ferry.order.gateway.analytics.repository.AnalyticsAggregateJpaRepository;
-import com.ferry.order.gateway.analytics.repository.AnalyticsEventJpaRepository;
-import com.ferry.order.gateway.analytics.repository.AnalyticsEventStatusJpaRepository;
-import com.ferry.order.webservice.analytics.sweep.AnalyticsOutboxScheduler;
-import com.ferry.utils.json.DefaultJsonManager;
-import com.ferry.utils.json.JsonManager;
-import org.springframework.boot.ApplicationRunner;
-import org.springframework.context.annotation.Profile;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import tools.jackson.databind.ObjectMapper;
+import com.ferry.order.core.customer.totals.CustomerOrderTotalsGateway;
+import com.ferry.order.core.customer.totals.CustomerOrderTotalsUseCase;
+import com.ferry.order.core.customer.totals.DefaultCustomerOrderTotalsUseCase;
+import com.ferry.order.core.invoice.link.DefaultInvoiceLinkUseCase;
+import com.ferry.order.core.invoice.link.InvoiceLinkUseCase;
+import com.ferry.order.core.invoice.pdf.DefaultInvoicePdfUseCase;
+import com.ferry.order.core.invoice.pdf.InvoiceHtmlComposer;
+import com.ferry.order.core.invoice.pdf.InvoicePdfGateway;
+import com.ferry.order.core.invoice.pdf.InvoicePdfUseCase;
 import com.ferry.order.core.order.cancel.DefaultOrderCancelUseCase;
 import com.ferry.order.core.order.cancel.OrderCancelGateway;
 import com.ferry.order.core.order.cancel.OrderCancelUseCase;
@@ -36,30 +23,13 @@ import com.ferry.order.core.order.complete.OrderCompleteUseCase;
 import com.ferry.order.core.order.confirm.DefaultOrderConfirmUseCase;
 import com.ferry.order.core.order.confirm.OrderConfirmGateway;
 import com.ferry.order.core.order.confirm.OrderConfirmUseCase;
-import com.ferry.order.core.customer.totals.CustomerOrderTotalsGateway;
-import com.ferry.order.core.customer.totals.CustomerOrderTotalsUseCase;
-import com.ferry.order.core.customer.totals.DefaultCustomerOrderTotalsUseCase;
-import com.ferry.order.core.order.create.OrderCustomerGateway;
-import com.ferry.order.core.order.create.DefaultOrderCreateUseCase;
-import com.ferry.order.core.order.create.OrderCreateGateway;
-import com.ferry.order.core.order.create.OrderCreateUseCase;
-import com.ferry.order.core.order.create.OrderPromotionGateway;
-import com.ferry.order.core.order.create.OrderPromotionSagaGateway;
-import com.ferry.order.core.order.saga.DefaultOrderPromotionSagaSweepUseCase;
-import com.ferry.order.core.order.saga.OrderPromotionSagaSweepGateway;
-import com.ferry.order.core.order.saga.OrderPromotionSagaSweepUseCase;
+import com.ferry.order.core.order.create.*;
 import com.ferry.order.core.order.deliver.DefaultOrderDeliverUseCase;
 import com.ferry.order.core.order.deliver.OrderDeliverGateway;
 import com.ferry.order.core.order.deliver.OrderDeliverUseCase;
 import com.ferry.order.core.order.detail.DefaultOrderDetailUseCase;
 import com.ferry.order.core.order.detail.OrderDetailGateway;
 import com.ferry.order.core.order.detail.OrderDetailUseCase;
-import com.ferry.order.core.invoice.link.DefaultInvoiceLinkUseCase;
-import com.ferry.order.core.invoice.pdf.DefaultInvoicePdfUseCase;
-import com.ferry.order.core.invoice.pdf.InvoiceHtmlComposer;
-import com.ferry.order.core.invoice.pdf.InvoicePdfGateway;
-import com.ferry.order.core.invoice.link.InvoiceLinkUseCase;
-import com.ferry.order.core.invoice.pdf.InvoicePdfUseCase;
 import com.ferry.order.core.order.list.DefaultOrderListUseCase;
 import com.ferry.order.core.order.list.OrderListGateway;
 import com.ferry.order.core.order.list.OrderListUseCase;
@@ -75,6 +45,12 @@ import com.ferry.order.core.order.process.OrderProcessUseCase;
 import com.ferry.order.core.order.ready.DefaultOrderReadyUseCase;
 import com.ferry.order.core.order.ready.OrderReadyGateway;
 import com.ferry.order.core.order.ready.OrderReadyUseCase;
+import com.ferry.order.core.order.saga.DefaultOrderPromotionSagaSweepUseCase;
+import com.ferry.order.core.order.saga.OrderPromotionSagaSweepGateway;
+import com.ferry.order.core.order.saga.OrderPromotionSagaSweepUseCase;
+import com.ferry.order.core.order.schedule.DefaultOrderScheduleUseCase;
+import com.ferry.order.core.order.schedule.OrderScheduleGateway;
+import com.ferry.order.core.order.schedule.OrderScheduleUseCase;
 import com.ferry.order.core.service.create.DefaultLaundryServiceCreateUseCase;
 import com.ferry.order.core.service.create.LaundryServiceCreateGateway;
 import com.ferry.order.core.service.create.LaundryServiceCreateUseCase;
@@ -87,34 +63,17 @@ import com.ferry.order.core.service.list.LaundryServiceListUseCase;
 import com.ferry.order.core.service.update.DefaultLaundryServiceUpdateUseCase;
 import com.ferry.order.core.service.update.LaundryServiceUpdateGateway;
 import com.ferry.order.core.service.update.LaundryServiceUpdateUseCase;
+import com.ferry.order.gateway.analytics.*;
+import com.ferry.order.gateway.analytics.repository.AnalyticsAggregateJpaRepository;
+import com.ferry.order.gateway.analytics.repository.AnalyticsEventJpaRepository;
+import com.ferry.order.gateway.analytics.repository.AnalyticsEventStatusJpaRepository;
 import com.ferry.order.gateway.customer.CustomerOrderTotalsJpaGateway;
 import com.ferry.order.gateway.customer.OrderCustomerHttpGateway;
-import com.ferry.order.gateway.promotion.OrderPromotionHttpGateway;
 import com.ferry.order.gateway.invoice.DefaultInvoiceHtmlComposer;
-import com.ferry.order.gateway.order.OrderCancelJpaGateway;
-import com.ferry.order.gateway.order.OrderCompleteJpaGateway;
-import com.ferry.order.gateway.order.OrderConfirmJpaGateway;
-import com.ferry.order.gateway.order.OrderCreateJpaGateway;
-import com.ferry.order.gateway.order.OrderDeliverJpaGateway;
-import com.ferry.order.gateway.order.OrderDetailJpaGateway;
 import com.ferry.order.gateway.invoice.InvoiceJpaPdfGateway;
-import com.ferry.order.gateway.order.OrderListJpaGateway;
-import com.ferry.order.gateway.order.OrderPaymentJpaGateway;
-import com.ferry.order.gateway.order.OrderPickupJpaGateway;
-import com.ferry.order.gateway.order.OrderProcessJpaGateway;
-import com.ferry.order.gateway.order.OrderPromotionSagaJpaGateway;
-import com.ferry.order.gateway.order.OrderPromotionSagaSweepJpaGateway;
-import com.ferry.order.gateway.order.OrderReadyJpaGateway;
-import com.ferry.order.gateway.order.repository.ClothingTypeJpaRepository;
-import com.ferry.order.gateway.order.repository.OrderItemJpaRepository;
-import com.ferry.order.gateway.order.repository.OrderJpaRepository;
-import com.ferry.order.gateway.order.repository.OrderPriorityJpaRepository;
-import com.ferry.order.gateway.order.repository.OrderPromotionJpaRepository;
-import com.ferry.order.gateway.order.repository.OrderPromotionSagaJpaRepository;
-import com.ferry.order.gateway.order.repository.OrderPromotionSagaStatusJpaRepository;
-import com.ferry.order.gateway.order.repository.OrderStatusJpaRepository;
-import com.ferry.order.gateway.order.repository.PaymentMethodJpaRepository;
-import com.ferry.order.gateway.order.repository.PaymentStatusJpaRepository;
+import com.ferry.order.gateway.order.*;
+import com.ferry.order.gateway.order.repository.*;
+import com.ferry.order.gateway.promotion.OrderPromotionHttpGateway;
 import com.ferry.order.gateway.service.LaundryServiceCreateJpaGateway;
 import com.ferry.order.gateway.service.LaundryServiceDeleteJpaGateway;
 import com.ferry.order.gateway.service.LaundryServiceListJpaGateway;
@@ -122,6 +81,7 @@ import com.ferry.order.gateway.service.LaundryServiceUpdateJpaGateway;
 import com.ferry.order.gateway.service.repository.LaundryServiceJpaRepository;
 import com.ferry.order.gateway.service.repository.ServiceCategoryJpaRepository;
 import com.ferry.order.gateway.service.repository.ServiceUnitJpaRepository;
+import com.ferry.order.webservice.analytics.sweep.AnalyticsOutboxScheduler;
 import com.ferry.order.webservice.order.saga.OrderPromotionSagaScheduler;
 import com.ferry.promotion.client.DefaultPromotionServiceClient;
 import com.ferry.promotion.client.PromotionServiceClient;
@@ -134,19 +94,24 @@ import com.ferry.utils.crypto.CryptoKeyConfig;
 import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import com.ferry.utils.generator.UlidGenerator;
+import com.ferry.utils.json.DefaultJsonManager;
+import com.ferry.utils.json.JsonManager;
 import com.ferry.utils.linksigner.HmacLinkSigner;
 import com.ferry.utils.linksigner.LinkSigner;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import tools.jackson.databind.ObjectMapper;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -252,8 +217,12 @@ public class OrderWebConfig{
 	}
 
 	@Bean
-	OrderPromotionGateway orderPromotionGateway(PromotionServiceClient promotionServiceClient){
-		return new OrderPromotionHttpGateway(promotionServiceClient);
+	OrderPromotionGateway orderPromotionGateway(PromotionServiceClient promotionServiceClient,
+	                                            OrderPromotionSagaJpaRepository orderPromotionSagaJpaRepository,
+	                                            OrderPromotionSagaStatusJpaRepository orderPromotionSagaStatusJpaRepository,
+	                                            IdGenerator idGenerator,
+	                                            PlatformTransactionManager transactionManager){
+		return new OrderPromotionHttpGateway(promotionServiceClient, orderPromotionSagaJpaRepository, orderPromotionSagaStatusJpaRepository, idGenerator, transactionManager);
 	}
 
 	@Bean
@@ -278,22 +247,11 @@ public class OrderWebConfig{
 	}
 
 	@Bean
-	OrderPromotionSagaGateway orderPromotionSagaGateway(OrderPromotionSagaJpaRepository orderPromotionSagaJpaRepository,
-	                                                    OrderPromotionSagaStatusJpaRepository orderPromotionSagaStatusJpaRepository,
-	                                                    IdGenerator idGenerator,
-	                                                    PlatformTransactionManager transactionManager){
-		return new OrderPromotionSagaJpaGateway(orderPromotionSagaJpaRepository, orderPromotionSagaStatusJpaRepository,
-				idGenerator, transactionManager);
-	}
-
-	@Bean
 	OrderCreateUseCase orderCreateUseCase(OrderCreateGateway orderCreateGateway,
 	                                      OrderCustomerGateway customerGateway,
 	                                      OrderPromotionGateway promotionGateway,
-	                                      OrderPromotionSagaGateway orderPromotionSagaGateway,
 	                                      AnalyticsEventPublisher analyticsEventPublisher){
-		return new DefaultOrderCreateUseCase(orderCreateGateway, customerGateway, promotionGateway,
-				orderPromotionSagaGateway, analyticsEventPublisher);
+		return new DefaultOrderCreateUseCase(orderCreateGateway, customerGateway, promotionGateway, analyticsEventPublisher);
 	}
 
 	@Bean
@@ -309,8 +267,11 @@ public class OrderWebConfig{
 	@Bean
 	OrderPromotionSagaSweepUseCase orderPromotionSagaSweepUseCase(
 			OrderPromotionSagaSweepGateway orderPromotionSagaSweepGateway,
-			OrderPromotionGateway promotionGateway){
-		return new DefaultOrderPromotionSagaSweepUseCase(orderPromotionSagaSweepGateway, promotionGateway);
+			OrderPromotionGateway promotionGateway,
+			@Value("${app.promotion.saga.grace-period}") Duration gracePeriod,
+			@Value("${app.promotion.saga.sweep-batch-size}") int sweepBatchSize){
+		return new DefaultOrderPromotionSagaSweepUseCase(orderPromotionSagaSweepGateway, promotionGateway,
+				gracePeriod, sweepBatchSize);
 	}
 
 	@Bean
@@ -594,7 +555,7 @@ public class OrderWebConfig{
 	                                            AnalyticsEventStatusJpaRepository analyticsEventStatusJpaRepository,
 	                                            PlatformTransactionManager transactionManager,
 	                                            @Value("${app.analytics.stream.event.key}") String streamKeyPrefix){
-		return new AnalyticsStreamWriter(stringRedisTemplate, analyticsEventJpaRepository,
+		return new DefaultAnalyticsStreamWriter(stringRedisTemplate, analyticsEventJpaRepository,
 				analyticsEventStatusJpaRepository, transactionManager, streamKeyPrefix);
 	}
 
@@ -619,8 +580,10 @@ public class OrderWebConfig{
 	}
 
 	@Bean
-	AnalyticsOutboxSweepUseCase analyticsOutboxSweepUseCase(AnalyticsOutboxSweepGateway analyticsOutboxSweepGateway){
-		return new DefaultAnalyticsOutboxSweepUseCase(analyticsOutboxSweepGateway);
+	AnalyticsOutboxSweepUseCase analyticsOutboxSweepUseCase(AnalyticsOutboxSweepGateway analyticsOutboxSweepGateway,
+	                                                        @Value("${app.analytics.outbox.grace-period}") Duration gracePeriod,
+	                                                        @Value("${app.analytics.outbox.sweep-batch-size}") int sweepBatchSize){
+		return new DefaultAnalyticsOutboxSweepUseCase(analyticsOutboxSweepGateway, gracePeriod, sweepBatchSize);
 	}
 
 	@Bean
@@ -643,8 +606,9 @@ public class OrderWebConfig{
 
 	@Bean
 	AnalyticsBackfillUseCase analyticsBackfillUseCase(AnalyticsBackfillGateway analyticsBackfillGateway,
-	                                                  AnalyticsEventPublisher analyticsEventPublisher){
-		return new DefaultAnalyticsBackfillUseCase(analyticsBackfillGateway, analyticsEventPublisher);
+	                                                  AnalyticsEventPublisher analyticsEventPublisher,
+	                                                  @Value("${app.analytics.outbox.backfill-batch-size}") int backfillBatchSize){
+		return new DefaultAnalyticsBackfillUseCase(analyticsBackfillGateway, analyticsEventPublisher, backfillBatchSize);
 	}
 
 //	@Bean

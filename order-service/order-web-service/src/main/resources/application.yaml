@@ -31,11 +31,27 @@ logging:
     name: logs/order-web-service.log
 
 app:
+  promotion:
+    saga:
+      # how far past updated_at a PENDING saga row must be before the sweeper touches it — must stay well past
+      # every timeout on the create path, or an in-flight create gets swept
+      grace-period: 90m
+      sweep-batch-size: 100
+      # @Scheduled reads this as a plain number of hours (see OrderPromotionSagaScheduler)
+      sweep-interval-hours: 1
   analytics:
     stream:
       event:
         # must match analytics-service's app.analytics.stream.event.key; full stream name is key + AGGREGATE
         key: 'analytics:event:'
+    outbox:
+      # how long a CREATED (not-yet-published) analytics_events row sits before the sweeper republishes it —
+      # long enough that an in-flight afterCommit publish is never raced
+      grace-period: 2m
+      sweep-batch-size: 200
+      # @Scheduled reads this as a plain number of minutes (see AnalyticsOutboxScheduler)
+      sweep-interval-minutes: 5
+      backfill-batch-size: 500
     backfill:
       # only read by the analytics-backfill profile; blank means every tenant
       tenant-id: ''

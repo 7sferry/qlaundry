@@ -23,7 +23,7 @@ public class EmailStreamTrimScheduler{
 	private final List<String> streamKeys;
 	private final Duration retention;
 
-	@Scheduled(cron = "0 30 3 * * *")
+	@Scheduled(cron = "${app.notification.stream.email.trim-cron}")
 	public void trimOldEntries(){
 		String minId = (System.currentTimeMillis() - retention.toMillis()) + "-0";
 		streamKeys.forEach(streamKey -> trim(streamKey, minId));

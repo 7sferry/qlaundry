@@ -18,7 +18,8 @@ import java.util.concurrent.TimeUnit;
 public class AnalyticsOutboxScheduler{
 	private final AnalyticsOutboxSweepUseCase analyticsOutboxSweepUseCase;
 
-	@Scheduled(initialDelay = 5, fixedDelay = 5, timeUnit = TimeUnit.MINUTES)
+	@Scheduled(initialDelayString = "${app.analytics.outbox.sweep-interval-minutes}",
+			fixedDelayString = "${app.analytics.outbox.sweep-interval-minutes}", timeUnit = TimeUnit.MINUTES)
 	public void sweep(){
 		AnalyticsOutboxSweepResponse response = analyticsOutboxSweepUseCase.execute();
 		if(!response.isEmpty()){

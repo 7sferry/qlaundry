@@ -31,6 +31,14 @@ logging:
     name: logs/user-web-service.log
 
 app:
+  tenant:
+    expiration:
+      # how long a tenant may stay PENDING (never confirmed) before DefaultTenantExpirationUseCase reclaims its
+      # username; @Scheduled on TenantExpirationScheduler is currently commented out (see CLAUDE.md, "The
+      # scheduler bean is @Lazy(false)"), so this cron isn't read yet, but stays alongside pending-expiry for
+      # when it is re-enabled
+      pending-expiry: 30d
+      cron: '0 0 3 * * *'
   crypto:
     # dev-only keys — anything shared/production must come from the environment
     # (APP_CRYPTO_ACTIVE_KEY_ID, APP_CRYPTO_KEYS_V1, APP_CRYPTO_BLIND_INDEX_KEY, ...); generate with `openssl rand -base64 32`

@@ -9,6 +9,7 @@ import com.ferry.order.domain.tenant.TenantIdDomain;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
@@ -22,12 +23,13 @@ import java.util.List;
 public class DefaultOrderPromotionSagaSweepUseCase implements OrderPromotionSagaSweepUseCase{
 	private final OrderPromotionSagaSweepGateway gateway;
 	private final OrderPromotionGateway promotionGateway;
+	private final Duration gracePeriod;
+	private final int sweepBatchSize;
 
 	@Override
 	public OrderPromotionSagaSweepResponse execute(){
-		Instant cutoff = Instant.now().minus(OrderPromotionSagaConstant.GRACE_PERIOD);
-		List<OrderPromotionSagaDomain> pending = gateway.findPendingUntouchedSince(cutoff,
-				OrderPromotionSagaConstant.SWEEP_BATCH_SIZE);
+		Instant cutoff = Instant.now().minus(gracePeriod);
+		List<OrderPromotionSagaDomain> pending = gateway.findPendingUntouchedSince(cutoff, sweepBatchSize);
 		int committed = 0;
 		int released = 0;
 		int failed = 0;
