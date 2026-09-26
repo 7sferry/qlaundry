@@ -87,6 +87,7 @@ public class OrderPromotionHttpGateway implements OrderPromotionGateway{
 	private TransactionTemplate newTransaction(){
 		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 		transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+		transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
 		return transactionTemplate;
 	}
 

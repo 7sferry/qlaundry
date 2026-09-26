@@ -4,6 +4,7 @@ import com.ferry.user.core.staff.resetpassword.StaffResetPasswordRequest;
 import com.ferry.user.core.staff.resetpassword.StaffResetPasswordUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class StaffResetPasswordWebController{
 	private final StaffResetPasswordUseCase staffResetPasswordUseCase;
 
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@PostMapping("/auth/staff/resetPassword")
 	public ResponseEntity<?> resetPassword(@RequestBody StaffResetPasswordRequest request){
 		StaffResetPasswordWebPresenter presenter = new StaffResetPasswordWebPresenter();

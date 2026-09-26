@@ -7,6 +7,7 @@ import com.ferry.user.core.tools.TokenProcessor;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +24,7 @@ public class StaffRefreshTokenWebController{
 	private final StaffRefreshTokenUseCase staffRefreshTokenUseCase;
 	private final TokenProcessor tokenProcessor;
 
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@PostMapping("/auth/staff/refresh")
 	public ResponseEntity<?> staffRefreshToken(@CookieValue(value = TokenConstant.REFRESH_TOKEN_COOKIE, required = false) String refreshToken,
 	                                           HttpServletResponse response){

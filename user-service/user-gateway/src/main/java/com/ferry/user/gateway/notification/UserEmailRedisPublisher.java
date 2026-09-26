@@ -95,6 +95,7 @@ public class UserEmailRedisPublisher implements UserEmailPublisher{
 	private void markPublished(String triggerId){
 		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 		transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+		transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
 		transactionTemplate.executeWithoutResult(_ -> emailTriggerJpaRepository.findById(triggerId)
 				.ifPresent(entity -> {
 					entity.setStatus(emailTriggerStatusJpaRepository.getReferenceById(EmailTriggerStatus.PUBLISHED.getValue()));

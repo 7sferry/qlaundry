@@ -8,6 +8,7 @@ import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
@@ -35,6 +36,7 @@ public class TenantExpirationJpaGateway implements TenantExpirationGateway{
 	@Override
 	public void expire(TenantIdDomain tenantId){
 		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+		transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
 		transactionTemplate.executeWithoutResult(_ -> {
 			tenantJpaRepository.markDeleted(tenantId.value());
 			staffJpaRepository.clearUsernamesByTenantId(tenantId.value());

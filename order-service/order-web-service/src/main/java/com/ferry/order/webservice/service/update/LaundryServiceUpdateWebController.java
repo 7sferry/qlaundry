@@ -6,6 +6,7 @@ import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LaundryServiceUpdateWebController{
 	private final LaundryServiceUpdateUseCase laundryServiceUpdateUseCase;
 
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@PutMapping("/service/update")
 	public ResponseEntity<?> update(@RequestBody LaundryServiceUpdateRequest request,
 	                                @AuthenticationPrincipal OrderAuthPrincipal principal){

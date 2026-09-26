@@ -9,6 +9,7 @@ import com.ferry.order.gateway.analytics.repository.AnalyticsEventJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
@@ -42,7 +43,9 @@ public class AnalyticsOutboxSweepJpaGateway implements AnalyticsOutboxSweepGatew
 
 	@Override
 	public void recordFailure(AnalyticsEventDomain event){
-		new TransactionTemplate(transactionManager).executeWithoutResult(_ ->
+		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+		transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
+		transactionTemplate.executeWithoutResult(_ ->
 				analyticsEventJpaRepository.recordFailure(event.id(), AnalyticsEventStatus.CREATED.getValue(),
 						event.lastError(), event.updatedBy(), event.updatedAt()));
 	}

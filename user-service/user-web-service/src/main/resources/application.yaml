@@ -66,6 +66,6 @@ app:
   token:
     private-key: "MC4CAQAwBQYDK2VwBCIEIEo7KmfyKG/FJkXL0azelx1Oobn88YEdhyay6QQEeO78"
     public-key: "MCowBQYDK2VwAyEAewlqN7GKlxKGgyXUobhnMF+76ytxBpSKYX+r3bYMaVM="
-    refresh-duration-in-seconds: 2628000
-    rotation-duration-before-expire-in-seconds: 1314000
-    access-duration-in-seconds: 900
+    refresh-duration-in-seconds: 5184000 #60days
+    rotation-duration-before-expire-in-seconds: 1296000 #15days
+    access-duration-in-seconds: 900 #15minutes

@@ -6,6 +6,7 @@ import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderProcessWebController{
 	private final OrderProcessUseCase orderProcessUseCase;
 
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@PatchMapping("/order/process")
 	public ResponseEntity<?> process(@RequestBody OrderProcessRequest request,
 	                                 @AuthenticationPrincipal OrderAuthPrincipal principal){

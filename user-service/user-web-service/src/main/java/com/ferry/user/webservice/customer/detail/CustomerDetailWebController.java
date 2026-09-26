@@ -6,6 +6,7 @@ import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CustomerDetailWebController{
 	private final CustomerDetailUseCase customerDetailUseCase;
 
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 	@GetMapping("/customer/detail")
 	public ResponseEntity<?> getDetail(CustomerDetailRequest request, @AuthenticationPrincipal UserAuthPrincipal principal){
 		CustomerDetailWebPresenter presenter = new CustomerDetailWebPresenter();

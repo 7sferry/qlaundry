@@ -12,6 +12,7 @@ import com.ferry.order.gateway.order.repository.OrderPromotionSagaStatusJpaRepos
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
@@ -55,14 +56,18 @@ public class OrderPromotionSagaSweepJpaGateway implements OrderPromotionSagaSwee
 
 	@Override
 	public void recordFailure(OrderPromotionSagaDomain saga){
-		new TransactionTemplate(transactionManager).executeWithoutResult(_ ->
+		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+		transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
+		transactionTemplate.executeWithoutResult(_ ->
 				orderPromotionSagaJpaRepository.recordFailure(saga.tenantId(), saga.referenceId(),
 						OrderPromotionSagaStatus.PENDING.getValue(), saga.lastError(), saga.updatedBy(),
 						saga.updatedAt()));
 	}
 
 	private void transitionFromPending(OrderPromotionSagaDomain saga){
-		new TransactionTemplate(transactionManager).executeWithoutResult(_ ->
+		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+		transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
+		transactionTemplate.executeWithoutResult(_ ->
 				orderPromotionSagaJpaRepository.transition(saga.tenantId(), saga.referenceId(),
 						OrderPromotionSagaStatus.PENDING.getValue(),
 						orderPromotionSagaStatusJpaRepository.getReferenceById(saga.status().getValue()),

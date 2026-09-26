@@ -60,6 +60,7 @@ public class DefaultAnalyticsStreamWriter implements AnalyticsStreamWriter{
 	public void markPublished(AnalyticsEventDomain event, String updatedBy){
 		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 		transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+		transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
 		transactionTemplate.executeWithoutResult(_ -> analyticsEventJpaRepository.transition(event.id(),
 				AnalyticsEventStatus.CREATED.getValue(),
 				analyticsEventStatusJpaRepository.getReferenceById(AnalyticsEventStatus.PUBLISHED.getValue()),

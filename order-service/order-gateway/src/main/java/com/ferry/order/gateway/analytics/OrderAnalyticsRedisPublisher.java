@@ -14,6 +14,7 @@ import com.ferry.utils.json.JsonManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -40,7 +41,9 @@ public class OrderAnalyticsRedisPublisher implements AnalyticsEventPublisher{
 		AnalyticsEventDomain event = AnalyticsEventDomain.create(config.aggregate(), config.type(), config.tenantId(),
 				config.aggregateId(), config.aggregateVersion(), payload, config.actor());
 		String id = idGenerator.generateId();
-		return new TransactionTemplate(transactionManager).execute(_ -> {
+		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+		transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
+		return transactionTemplate.execute(_ -> {
 			AnalyticsAggregateJpaEntity aggregate = analyticsAggregateJpaRepository.getReferenceById(
 					event.aggregate().getValue());
 			AnalyticsEventStatusJpaEntity status = analyticsEventStatusJpaRepository.getReferenceById(

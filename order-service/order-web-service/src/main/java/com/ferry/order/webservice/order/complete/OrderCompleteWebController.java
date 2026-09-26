@@ -6,6 +6,7 @@ import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderCompleteWebController{
 	private final OrderCompleteUseCase orderCompleteUseCase;
 
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@PatchMapping("/order/complete")
 	public ResponseEntity<?> complete(@RequestBody OrderCompleteRequest request,
 	                                  @AuthenticationPrincipal OrderAuthPrincipal principal){

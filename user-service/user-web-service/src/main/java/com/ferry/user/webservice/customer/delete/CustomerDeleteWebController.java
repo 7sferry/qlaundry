@@ -6,6 +6,7 @@ import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CustomerDeleteWebController{
 	private final CustomerDeleteUseCase customerDeleteUseCase;
 
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@DeleteMapping("/customer/delete")
 	public ResponseEntity<?> delete(CustomerDeleteRequest request, @AuthenticationPrincipal UserAuthPrincipal principal){
 		CustomerDeleteWebPresenter presenter = new CustomerDeleteWebPresenter();

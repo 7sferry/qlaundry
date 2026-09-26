@@ -5,8 +5,8 @@ import com.ferry.promotion.core.promotion.redemption.PromotionRedemptionRequest;
 import com.ferry.promotion.core.promotion.redemption.PromotionRedemptionUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PromotionRedemptionWebController{
 	private final PromotionRedemptionUseCase promotionRedemptionUseCase;
 
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@PostMapping(InternalPromotionPaths.REDEMPTION_PATH)
 	public ResponseEntity<?> redeem(@RequestBody PromotionRedemptionRequest request){
 		PromotionRedemptionWebPresenter presenter = new PromotionRedemptionWebPresenter();

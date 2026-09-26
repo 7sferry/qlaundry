@@ -6,6 +6,7 @@ import com.ferry.promotion.domain.token.PromotionAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PromotionDetailWebController{
 	private final PromotionDetailUseCase promotionDetailUseCase;
 
-	@Transactional(readOnly = true)
+	@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 	@GetMapping("/promotion/detail")
 	public ResponseEntity<?> getDetail(PromotionDetailRequest request,
 	                                   @AuthenticationPrincipal PromotionAuthPrincipal principal){

@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,7 +25,7 @@ public class StaffLoginWebController{
 	private final StaffLoginUseCase staffLoginUseCase;
 	private final TokenProcessor tokenProcessor;
 
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@PostMapping("/auth/staff/login")
 	public ResponseEntity<?> staffLogin(@RequestBody StaffLoginRequest staffLoginRequest, HttpServletResponse servletResponse){
 		StaffLoginWebPresenter presenter = new StaffLoginWebPresenter(servletResponse, tokenProcessor);
