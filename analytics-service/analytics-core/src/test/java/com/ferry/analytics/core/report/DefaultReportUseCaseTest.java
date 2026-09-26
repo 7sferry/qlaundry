@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 
@@ -96,6 +97,9 @@ class DefaultReportUseCaseTest{
 		thenSoftly(softly -> {
 			softly.then(window.from()).isEqualTo(LocalDate.of(2026, 9, 8));
 			softly.then(window.toExclusive()).isEqualTo(LocalDate.of(2026, 9, 15));
+			softly.then(window.zone()).isEqualTo(ZoneId.of("Asia/Jakarta"));
+			softly.then(window.fromInstant()).isEqualTo(Instant.parse("2026-09-07T17:00:00Z"));
+			softly.then(window.toExclusiveInstant()).isEqualTo(Instant.parse("2026-09-14T17:00:00Z"));
 			softly.then(window.bucket()).isEqualTo(ReportBucket.DAY);
 			softly.then(trend).hasSize(7);
 			softly.then(trend.getFirst().label()).isEqualTo("Tue 08");
@@ -124,12 +128,18 @@ class DefaultReportUseCaseTest{
 
 		useCase.execute(new ReportRequest(ReportPeriod.YEAR, null), principal, presenter);
 
+		then(gateway).should()
+				.serviceBreakdown(eq(new TenantId(TENANT_ID)), windowCaptor.capture());
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
+		ReportWindow window = windowCaptor.getValue();
 		List<TrendPoint> trend = responseCaptor.getValue().revenueTrend();
 
 		thenSoftly(softly -> {
+			softly.then(window.zone()).isEqualTo(ZoneOffset.UTC);
+			softly.then(window.fromInstant()).isEqualTo(Instant.parse("2025-10-01T00:00:00Z"));
+			softly.then(window.toExclusiveInstant()).isEqualTo(Instant.parse("2026-10-01T00:00:00Z"));
 			softly.then(trend).hasSize(12);
 			softly.then(trend.getFirst().bucketStart()).isEqualTo(LocalDate.of(2025, 10, 1));
 			softly.then(trend.getFirst().label()).isEqualTo("Oct");

@@ -2,7 +2,9 @@ package com.ferry.analytics.domain.report;
 
 import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,10 +16,11 @@ import java.util.List;
 public record ReportWindow(
 	ReportPeriod period,
 	LocalDate from,
-	LocalDate toExclusive){
+	LocalDate toExclusive,
+	ZoneId zone){
 	public ReportWindow{
-		if(period == null || from == null || toExclusive == null){
-			throw new InvalidAnalyticStateException("Report period and bounds must not be null");
+		if(period == null || from == null || toExclusive == null || zone == null){
+			throw new InvalidAnalyticStateException("Report period, bounds and zone must not be null");
 		}
 		if(!from.isBefore(toExclusive)){
 			throw new InvalidAnalyticStateException("Report start must be before its end");
@@ -26,6 +29,14 @@ public record ReportWindow(
 
 	public ReportBucket bucket(){
 		return period.getBucket();
+	}
+
+	public Instant fromInstant(){
+		return from.atStartOfDay(zone).toInstant();
+	}
+
+	public Instant toExclusiveInstant(){
+		return toExclusive.atStartOfDay(zone).toInstant();
 	}
 
 	public List<LocalDate> bucketStarts(){

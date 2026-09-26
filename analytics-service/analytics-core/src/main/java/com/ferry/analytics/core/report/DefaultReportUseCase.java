@@ -34,7 +34,7 @@ public class DefaultReportUseCase implements ReportUseCase{
 		TenantId tenantId = new TenantId(principal.tenantId());
 		ZoneId zone = resolveZone(request.zone());
 		LocalDate today = LocalDate.ofInstant(clock.instant(), zone);
-		ReportWindow window = request.period().windowFor(today);
+		ReportWindow window = request.period().windowFor(today, zone);
 		List<TrendPoint> trend = fillBuckets(window, gateway.revenueTrend(tenantId, window));
 		List<ServiceShare> breakdown = shares(gateway.serviceBreakdown(tenantId, window));
 		presenter.present(new ReportResponse(request.period(), trend, breakdown));

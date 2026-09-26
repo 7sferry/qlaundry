@@ -3,6 +3,7 @@ package com.ferry.analytics.core.dashboard;
 import com.ferry.analytics.core.constant.AnalyticsConstant;
 import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
 import com.ferry.analytics.domain.dashboard.DashboardSummaryProjection;
+import com.ferry.analytics.domain.dashboard.DashboardWindow;
 import com.ferry.analytics.domain.dashboard.StatusCountProjection;
 import com.ferry.analytics.domain.tenant.TenantId;
 import com.ferry.analytics.domain.token.AnalyticsAuthPrincipal;
@@ -35,10 +36,9 @@ public class DefaultDashboardSummaryUseCase implements DashboardSummaryUseCase{
 		if(date.isAfter(today)){
 			throw new InvalidAnalyticStateException("Dashboard date must not be in the future");
 		}
-		LocalDate monthStart = date.withDayOfMonth(1);
-		DashboardSummaryProjection summary = gateway.summarize(tenantId, date, monthStart, monthStart.minusMonths(1));
-		List<StatusCountProjection> distribution = gateway.statusDistribution(tenantId, monthStart,
-				monthStart.plusMonths(1));
+		DashboardWindow window = new DashboardWindow(date, zone);
+		DashboardSummaryProjection summary = gateway.summarize(tenantId, window);
+		List<StatusCountProjection> distribution = gateway.statusDistribution(tenantId, window);
 		presenter.present(new DashboardSummaryResponse(summary.todayOrders(), orZero(summary.todayRevenue()),
 				summary.monthOrders(), orZero(summary.monthRevenue()), summary.pendingOrders(),
 				summary.inProgressOrders(), summary.readyOrders(),

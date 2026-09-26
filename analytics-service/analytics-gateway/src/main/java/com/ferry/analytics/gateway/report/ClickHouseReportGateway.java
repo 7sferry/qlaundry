@@ -28,10 +28,11 @@ public class ClickHouseReportGateway implements ReportGateway{
 			FROM orders_current FINAL
 			WHERE tenant_id = {tenantId:String}
 			  AND deleted = 0
-			  AND toDate(created_at, 'Asia/Jakarta') >= {from:Date}
-			  AND toDate(created_at, 'Asia/Jakarta') < {to:Date}
+			  AND created_at >= {from:DateTime64(3, 'UTC')}
+			  AND created_at < {to:DateTime64(3, 'UTC')}
 			GROUP BY bucket_start
 			ORDER BY bucket_start
+			SETTINGS do_not_merge_across_partitions_select_final = 1
 			""";
 
 	private static final String BREAKDOWN_QUERY = """
@@ -44,10 +45,11 @@ public class ClickHouseReportGateway implements ReportGateway{
 			WHERE tenant_id = {tenantId:String}
 			  AND deleted = 0
 			  AND status != 'CANCELLED'
-			  AND toDate(created_at, 'Asia/Jakarta') >= {from:Date}
-			  AND toDate(created_at, 'Asia/Jakarta') < {to:Date}
+			  AND created_at >= {from:DateTime64(3, 'UTC')}
+			  AND created_at < {to:DateTime64(3, 'UTC')}
 			GROUP BY service_id
 			ORDER BY revenue DESC, service_id
+			SETTINGS do_not_merge_across_partitions_select_final = 1
 			""";
 
 	private final AnalyticStore store;
@@ -55,30 +57,32 @@ public class ClickHouseReportGateway implements ReportGateway{
 	@Override
 	public List<RevenueBucketProjection> revenueTrend(TenantId tenantId, ReportWindow window){
 		String sql = TREND_QUERY.formatted(bucketExpression(window.bucket()));
-		return store.query(sql, params(tenantId, window),
+		Map<String, Object> params = Map.of(
+				"tenantId", tenantId.value(),
+				"from", store.dateTime(window.fromInstant()),
+				"to", store.dateTime(window.toExclusiveInstant()),
+				"zone", store.timeZone(window.zone()));
+		return store.query(sql, params,
 				reader -> new RevenueBucketProjection(LocalDate.parse(reader.getString("bucket_start")),
 						reader.getBigDecimal("revenue"), reader.getLong("orders")));
 	}
 
 	@Override
 	public List<ServiceBreakdownProjection> serviceBreakdown(TenantId tenantId, ReportWindow window){
-		return store.query(BREAKDOWN_QUERY, params(tenantId, window),
+		Map<String, Object> params = Map.of(
+				"tenantId", tenantId.value(),
+				"from", store.dateTime(window.fromInstant()),
+				"to", store.dateTime(window.toExclusiveInstant()));
+		return store.query(BREAKDOWN_QUERY, params,
 				reader -> new ServiceBreakdownProjection(reader.getString("service_id"),
 						reader.getString("snapshot_service_name"), reader.getLong("orders"), reader.getBigDecimal("revenue")));
 	}
 
-	private Map<String, Object> params(TenantId tenantId, ReportWindow window){
-		return Map.of(
-				"tenantId", tenantId.value(),
-				"from", window.from().toString(),
-				"to", window.toExclusive().toString());
-	}
-
 	private String bucketExpression(ReportBucket bucket){
 		return switch(bucket){
-			case DAY -> "toDate(created_at, 'Asia/Jakarta')";
-			case WEEK -> "toMonday(created_at, 'Asia/Jakarta')";
-			case MONTH -> "toStartOfMonth(created_at, 'Asia/Jakarta')";
+			case DAY -> "toDate(created_at, {zone:String})";
+			case WEEK -> "toMonday(created_at, {zone:String})";
+			case MONTH -> "toStartOfMonth(created_at, {zone:String})";
 		};
 	}
 

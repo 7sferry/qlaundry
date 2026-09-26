@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import java.util.function.Function;
 public class ClickHouseAnalyticStore implements AnalyticStore{
 	private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 			.withZone(ZoneOffset.UTC);
+	private static final String UTC_ZONE = "UTC";
 
 	private final Client client;
 	private final JsonManager jsonManager;
@@ -77,6 +79,11 @@ public class ClickHouseAnalyticStore implements AnalyticStore{
 	@Override
 	public String dateTime(Instant instant){
 		return instant == null ? null : DATE_TIME_FORMAT.format(instant);
+	}
+
+	@Override
+	public String timeZone(ZoneId zone){
+		return zone.normalized().equals(ZoneOffset.UTC) ? UTC_ZONE : zone.getId();
 	}
 
 	@Override

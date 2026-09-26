@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Locale;
@@ -26,14 +27,15 @@ public enum ReportPeriod{
 	private final ReportBucket bucket;
 	private final String labelPattern;
 
-	public ReportWindow windowFor(LocalDate today){
+	public ReportWindow windowFor(LocalDate today, ZoneId zone){
 		return switch(this){
-			case WEEK -> new ReportWindow(this, today.minusDays(6), today.plusDays(1));
-			case MONTH -> new ReportWindow(this, today.withDayOfMonth(1), today.withDayOfMonth(1).plusMonths(1));
+			case WEEK -> new ReportWindow(this, today.minusDays(6), today.plusDays(1), zone);
+			case MONTH -> new ReportWindow(this, today.withDayOfMonth(1), today.withDayOfMonth(1).plusMonths(1), zone);
 			case QUARTER -> new ReportWindow(this,
-					today.minusMonths(3).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)), today.plusDays(1));
+					today.minusMonths(3).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)), today.plusDays(1),
+					zone);
 			case YEAR -> new ReportWindow(this, today.withDayOfMonth(1).minusMonths(11),
-					today.withDayOfMonth(1).plusMonths(1));
+					today.withDayOfMonth(1).plusMonths(1), zone);
 		};
 	}
 

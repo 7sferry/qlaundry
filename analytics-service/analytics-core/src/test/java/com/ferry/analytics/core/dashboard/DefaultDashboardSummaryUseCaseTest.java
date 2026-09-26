@@ -2,6 +2,7 @@ package com.ferry.analytics.core.dashboard;
 
 import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
 import com.ferry.analytics.domain.dashboard.DashboardSummaryProjection;
+import com.ferry.analytics.domain.dashboard.DashboardWindow;
 import com.ferry.analytics.domain.dashboard.StatusCountProjection;
 import com.ferry.analytics.domain.staff.StaffRole;
 import com.ferry.analytics.domain.tenant.TenantId;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 
@@ -37,11 +39,14 @@ class DefaultDashboardSummaryUseCaseTest{
 
 	private static final String TENANT_ID = "01TENANTKENANGALAUNDRY000";
 	private static final String STAFF_ID = "01STAFFBAYUSAPUTRA0000000";
+	private static final String JAKARTA = "Asia/Jakarta";
 
 	@Mock
 	DashboardSummaryGateway gateway;
 	@Mock
 	DashboardSummaryPresenter presenter;
+	@Captor
+	ArgumentCaptor<DashboardWindow> windowCaptor;
 	@Captor
 	ArgumentCaptor<DashboardSummaryResponse> responseCaptor;
 
@@ -58,25 +63,30 @@ class DefaultDashboardSummaryUseCaseTest{
 				new StatusCountProjection("COMPLETED", 41L));
 		willReturn(new DashboardSummaryProjection(2L, BigDecimal.valueOf(96000), 55L, BigDecimal.valueOf(5500000),
 				50L, BigDecimal.valueOf(4400000), 3L, 6L, 1L)).given(gateway)
-				.summarize(any(TenantId.class), any(LocalDate.class), any(LocalDate.class),
-						any(LocalDate.class));
+				.summarize(any(TenantId.class), any(DashboardWindow.class));
 		willReturn(distribution).given(gateway)
-				.statusDistribution(any(TenantId.class), any(LocalDate.class), any(LocalDate.class));
+				.statusDistribution(any(TenantId.class), any(DashboardWindow.class));
 
-		useCase.execute(new DashboardSummaryRequest(null, "Asia/Jakarta"), principal, presenter);
+		useCase.execute(new DashboardSummaryRequest(null, JAKARTA), principal, presenter);
 
 		then(gateway).should()
-				.summarize(eq(new TenantId(TENANT_ID)), eq(LocalDate.of(2026, 10, 1)),
-						eq(LocalDate.of(2026, 10, 1)), eq(LocalDate.of(2026, 9, 1)));
+				.summarize(eq(new TenantId(TENANT_ID)), windowCaptor.capture());
 		then(gateway).should()
-				.statusDistribution(eq(new TenantId(TENANT_ID)), eq(LocalDate.of(2026, 10, 1)),
-						eq(LocalDate.of(2026, 11, 1)));
+				.statusDistribution(eq(new TenantId(TENANT_ID)),
+						eq(new DashboardWindow(LocalDate.of(2026, 10, 1), ZoneId.of(JAKARTA))));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
+		DashboardWindow window = windowCaptor.getValue();
 		DashboardSummaryResponse response = responseCaptor.getValue();
 
 		thenSoftly(softly -> {
+			softly.then(window.date()).isEqualTo(LocalDate.of(2026, 10, 1));
+			softly.then(window.dayFrom()).isEqualTo(Instant.parse("2026-09-30T17:00:00Z"));
+			softly.then(window.dayTo()).isEqualTo(Instant.parse("2026-10-01T17:00:00Z"));
+			softly.then(window.monthFrom()).isEqualTo(Instant.parse("2026-09-30T17:00:00Z"));
+			softly.then(window.monthTo()).isEqualTo(Instant.parse("2026-10-31T17:00:00Z"));
+			softly.then(window.lastMonthFrom()).isEqualTo(Instant.parse("2026-08-31T17:00:00Z"));
 			softly.then(response.revenueGrowth()).isEqualByComparingTo("25.00");
 			softly.then(response.ordersGrowth()).isEqualByComparingTo("10.00");
 			softly.then(response.todayOrders()).isEqualTo(2L);
@@ -97,10 +107,9 @@ class DefaultDashboardSummaryUseCaseTest{
 				.build();
 		willReturn(new DashboardSummaryProjection(1L, BigDecimal.valueOf(24000), 9L, BigDecimal.valueOf(310000),
 				0L, BigDecimal.ZERO, 0L, 2L, 0L)).given(gateway)
-				.summarize(any(TenantId.class), any(LocalDate.class), any(LocalDate.class),
-						any(LocalDate.class));
+				.summarize(any(TenantId.class), any(DashboardWindow.class));
 		willReturn(List.of()).given(gateway)
-				.statusDistribution(any(TenantId.class), any(LocalDate.class), any(LocalDate.class));
+				.statusDistribution(any(TenantId.class), any(DashboardWindow.class));
 
 		useCase.execute(new DashboardSummaryRequest(null, null), principal, presenter);
 
@@ -128,10 +137,9 @@ class DefaultDashboardSummaryUseCaseTest{
 				.build();
 		willReturn(new DashboardSummaryProjection(0L, BigDecimal.ZERO, 2L, BigDecimal.valueOf(100000), 3L,
 				BigDecimal.valueOf(300000), 1L, 0L, 0L)).given(gateway)
-				.summarize(any(TenantId.class), any(LocalDate.class), any(LocalDate.class),
-						any(LocalDate.class));
+				.summarize(any(TenantId.class), any(DashboardWindow.class));
 		willReturn(List.of()).given(gateway)
-				.statusDistribution(any(TenantId.class), any(LocalDate.class), any(LocalDate.class));
+				.statusDistribution(any(TenantId.class), any(DashboardWindow.class));
 
 		useCase.execute(new DashboardSummaryRequest(null, null), principal, presenter);
 
@@ -155,19 +163,26 @@ class DefaultDashboardSummaryUseCaseTest{
 				.build();
 		willReturn(new DashboardSummaryProjection(4L, BigDecimal.valueOf(150000), 20L, BigDecimal.valueOf(2000000),
 				5L, BigDecimal.valueOf(400000), 2L, 3L, 0L)).given(gateway)
-				.summarize(any(TenantId.class), any(LocalDate.class), any(LocalDate.class),
-						any(LocalDate.class));
+				.summarize(any(TenantId.class), any(DashboardWindow.class));
 		willReturn(List.of()).given(gateway)
-				.statusDistribution(any(TenantId.class), any(LocalDate.class), any(LocalDate.class));
+				.statusDistribution(any(TenantId.class), any(DashboardWindow.class));
 
 		useCase.execute(new DashboardSummaryRequest(LocalDate.of(2026, 7, 15), null), principal, presenter);
 
 		then(gateway).should()
-				.summarize(eq(new TenantId(TENANT_ID)), eq(LocalDate.of(2026, 7, 15)),
-						eq(LocalDate.of(2026, 7, 1)), eq(LocalDate.of(2026, 6, 1)));
+				.summarize(eq(new TenantId(TENANT_ID)), windowCaptor.capture());
 		then(gateway).should()
-				.statusDistribution(eq(new TenantId(TENANT_ID)), eq(LocalDate.of(2026, 7, 1)),
-						eq(LocalDate.of(2026, 8, 1)));
+				.statusDistribution(eq(new TenantId(TENANT_ID)),
+						eq(new DashboardWindow(LocalDate.of(2026, 7, 15), ZoneOffset.UTC)));
+
+		DashboardWindow window = windowCaptor.getValue();
+
+		thenSoftly(softly -> {
+			softly.then(window.monthStart()).isEqualTo(LocalDate.of(2026, 7, 1));
+			softly.then(window.dayFrom()).isEqualTo(Instant.parse("2026-07-15T00:00:00Z"));
+			softly.then(window.monthTo()).isEqualTo(Instant.parse("2026-08-01T00:00:00Z"));
+			softly.then(window.lastMonthFrom()).isEqualTo(Instant.parse("2026-06-01T00:00:00Z"));
+		});
 	}
 
 	@Test

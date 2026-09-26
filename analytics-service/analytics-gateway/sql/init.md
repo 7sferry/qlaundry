@@ -36,15 +36,28 @@ docker exec -it clickhouse clickhouse-client --user analytics --password 12345
 ## Query conventions
 
 - Every read is `... FROM <table> FINAL WHERE tenant_id = {tenantId:String} AND deleted = 0`. `FINAL` returns the
-  latest version before background merges run; on a tenant-sized slice it is cheap. Never `OPTIMIZE ... FINAL`
-  from application code.
-- Day/week/month bucketing is in `Asia/Jakarta`: `toDate(created_at, 'Asia/Jakarta')`,
-  `toMonday(created_at, 'Asia/Jakarta')`, `toStartOfMonth(created_at, 'Asia/Jakarta')`. Never compare against a UTC
-  midnight. Period bounds are passed as `{from:Date}` / `{to:Date}` (Jakarta-local dates).
+  latest version before background merges run. Never `OPTIMIZE ... FINAL` from application code.
+- **Bound every period query on the raw `created_at` column.** The zone-local period (a day, a month, a report
+  window) is turned into a UTC instant range in the domain (`DashboardWindow`, `ReportWindow.fromInstant()` /
+  `toExclusiveInstant()`) and passed as `{from:DateTime64(3, 'UTC')}` / `{to:DateTime64(3, 'UTC')}`, formatted by
+  `AnalyticStore.dateTime`. A bare `created_at >= / <` predicate is what lets ClickHouse prune the monthly
+  partitions; wrapping the column (`toDate(created_at, tz) >= ...`) is not guaranteed to, and without pruning a
+  query reads the tenant's entire history on every dashboard load. The `tenant_id` prefix of the sorting key keeps a
+  query off other tenants' rows, so cost grows with one tenant's history, never with the table's total.
+- The only query that legitimately reads all of a tenant's history is the dashboard's open-work count
+  (`PENDING`/`IN_PROGRESS`/`READY`) — an order from months ago can still be open. Keep it a separate, narrow query;
+  don't fold it back into the period query, or the period query loses its pruning.
+- Every `FINAL` read carries `SETTINGS do_not_merge_across_partitions_select_final = 1`, so `FINAL` merges each
+  partition on its own and in parallel. It is safe **only because `created_at` never changes** (see above): all
+  versions of an order sit in one partition. If the partition key ever moves to a mutable column, drop the setting.
+- Bucketing (`toDate` / `toMonday` / `toStartOfMonth`) takes the viewer's IANA zone as a `{zone:String}` parameter,
+  never a hardcoded zone. Pass it through `AnalyticStore.timeZone(ZoneId)`, which maps Java's `Z` (the UTC default)
+  to `UTC` — ClickHouse's tz database has no `Z`, and it doesn't know raw offsets like `+07:00` either.
 - Revenue = `sumIf(total_price, status != 'CANCELLED')`, orders = `countIf(status != 'CANCELLED')`. This differs
   from order-service's `GET /order/customer-totals`, which counts cancelled orders on purpose — don't align them.
 - Parameterised queries only (`{name:Type}` server-side parameters), never string concatenation of a value. The
-  only concatenated fragment is the bucket expression, chosen from a closed enum in the gateway.
+  only concatenated fragment is the bucket expression, chosen from a closed enum in the gateway (the zone inside it
+  is still a `{zone:String}` parameter).
 
 ## Verify the idempotency argument by hand
 

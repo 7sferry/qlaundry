@@ -3,6 +3,7 @@ package com.ferry.analytics.gateway.common;
 import com.clickhouse.client.api.data_formats.ClickHouseBinaryFormatReader;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -18,6 +19,8 @@ public interface AnalyticStore{
 	<T> List<T> query(String sql, Map<String, Object> params, Function<ClickHouseBinaryFormatReader, T> mapper);
 
 	String dateTime(Instant instant);
+
+	String timeZone(ZoneId zone);
 
 	int flag(boolean value);
 }
