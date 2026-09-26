@@ -8,5 +8,7 @@ import jakarta.validation.constraints.NotBlank;
  * on Agustus 2026      *
  ************************/
 
-public record TenantConfirmRegistrationRequest(@NotBlank String tenantId, @NotBlank String token) implements UserValidation{
+public record TenantConfirmRegistrationRequest(
+	@NotBlank String tenantId,
+	@NotBlank String token) implements UserValidation{
 }

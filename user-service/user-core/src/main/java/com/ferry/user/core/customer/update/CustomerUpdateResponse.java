@@ -12,6 +12,9 @@ import java.util.List;
  * on Agustus 2026      *
  ************************/
 
-public record CustomerUpdateResponse(CustomerDomain customer, List<CustomerEmailDomain> emails,
-                                     List<CustomerPhoneDomain> phones, List<CustomerAddressDomain> addresses){
+public record CustomerUpdateResponse(
+	CustomerDomain customer,
+	List<CustomerEmailDomain> emails,
+	List<CustomerPhoneDomain> phones,
+	List<CustomerAddressDomain> addresses){
 }

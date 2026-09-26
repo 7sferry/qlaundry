@@ -11,9 +11,14 @@ import java.time.Instant;
  * on Juli 2026         *
  ************************/
 
-public record TenantRegistrationEmailRequest(@NotBlank String triggerId, @NotBlank String recipient,
-                                             @NotBlank String staffFullName, @NotBlank String staffUsername,
-                                             @NotBlank String tenantId, @NotBlank String tenantName,
-                                             String tenantDescription, @NotNull Instant registeredAt,
-                                             @NotBlank String confirmationToken) implements NotificationValidation{
+public record TenantRegistrationEmailRequest(
+	@NotBlank String triggerId,
+	@NotBlank String recipient,
+	@NotBlank String staffFullName,
+	@NotBlank String staffUsername,
+	@NotBlank String tenantId,
+	@NotBlank String tenantName,
+	String tenantDescription,
+	@NotNull Instant registeredAt,
+	@NotBlank String confirmationToken) implements NotificationValidation{
 }

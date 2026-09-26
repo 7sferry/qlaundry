@@ -10,8 +10,19 @@ import java.math.BigDecimal;
  ************************/
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record LaundryServiceAnalyticsMessage(String tenantId, String serviceId, String name, String category,
-                                             String unit, BigDecimal pricePerUnit, int estimatedHours,
-                                             double expressMultiplier, boolean popular, boolean active,
-                                             boolean deleted, int version, Long createdAt, Long updatedAt){
+public record LaundryServiceAnalyticsMessage(
+	String tenantId,
+	String serviceId,
+	String name,
+	String category,
+	String unit,
+	BigDecimal pricePerUnit,
+	int estimatedHours,
+	double expressMultiplier,
+	boolean popular,
+	boolean active,
+	boolean deleted,
+	int version,
+	Long createdAt,
+	Long updatedAt){
 }

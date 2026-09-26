@@ -10,7 +10,12 @@ import java.util.List;
  * on Juli 2026         *
  ************************/
 
-public record StaffUpdateRequest(@NotBlank String fullName, String description, String currentPassword, String newPassword,
-                                 List<String> emails, List<String> phones,
-                                 List<String> addresses) implements UserValidation{
+public record StaffUpdateRequest(
+	@NotBlank String fullName,
+	String description,
+	String currentPassword,
+	String newPassword,
+	List<String> emails,
+	List<String> phones,
+	List<String> addresses) implements UserValidation{
 }

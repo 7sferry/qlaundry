@@ -12,10 +12,21 @@ import java.time.Instant;
  ************************/
 
 @Builder(toBuilder = true)
-public record LaundryServiceSnapshotDomain(String tenantId, String serviceId, String name, String category,
-                                           String unit, BigDecimal pricePerUnit, int estimatedHours,
-                                           double expressMultiplier, boolean popular, boolean active,
-                                           boolean deleted, int version, Instant createdAt, Instant updatedAt){
+public record LaundryServiceSnapshotDomain(
+	String tenantId,
+	String serviceId,
+	String name,
+	String category,
+	String unit,
+	BigDecimal pricePerUnit,
+	int estimatedHours,
+	double expressMultiplier,
+	boolean popular,
+	boolean active,
+	boolean deleted,
+	int version,
+	Instant createdAt,
+	Instant updatedAt){
 	public LaundryServiceSnapshotDomain{
 		if(tenantId == null || tenantId.isBlank()){
 			throw new InvalidAnalyticStateException("Tenant id must not be blank");

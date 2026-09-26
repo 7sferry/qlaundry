@@ -1165,12 +1165,12 @@ class DefaultOrderCreateUseCaseTest{
 				.isInstanceOf(PromotionUnavailableException.class)
 				.hasMessage("Promotion service is unavailable. Please try again."));
 
-		then(sagaGateway).should()
-				.open(sagaCaptor.capture());
-		then(sagaGateway).should(never())
-				.markReleased(any(OrderPromotionSagaDomain.class));
-		then(sagaGateway).should(never())
-				.markCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
+		then(promotionGateway).should()
+				.openSaga(sagaCaptor.capture());
+		then(promotionGateway).should(never())
+				.markSagaReleased(any(OrderPromotionSagaDomain.class));
+		then(promotionGateway).should(never())
+				.markSagaCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
 		then(promotionGateway).should(never())
 				.release(any(PromotionReleaseHttpRequest.class));
 		then(gateway).should(never())
@@ -1214,8 +1214,8 @@ class DefaultOrderCreateUseCaseTest{
 				.redeem(any(PromotionRedemptionHttpRequest.class));
 		willThrow(new IllegalStateException("orders insert failed")).given(gateway)
 				.save(any(OrderDomain.class));
-		willThrow(new IllegalStateException("saga row locked")).given(sagaGateway)
-				.markReleased(any(OrderPromotionSagaDomain.class));
+		willThrow(new IllegalStateException("saga row locked")).given(promotionGateway)
+				.markSagaReleased(any(OrderPromotionSagaDomain.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(IllegalStateException.class)

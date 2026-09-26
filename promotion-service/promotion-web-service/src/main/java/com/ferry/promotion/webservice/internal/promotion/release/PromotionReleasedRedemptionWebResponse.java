@@ -7,5 +7,8 @@ import java.math.BigDecimal;
  * on September 2026    *
  ************************/
 
-public record PromotionReleasedRedemptionWebResponse(String promotionId, String code, BigDecimal discountAmount){
+public record PromotionReleasedRedemptionWebResponse(
+	String promotionId,
+	String code,
+	BigDecimal discountAmount){
 }

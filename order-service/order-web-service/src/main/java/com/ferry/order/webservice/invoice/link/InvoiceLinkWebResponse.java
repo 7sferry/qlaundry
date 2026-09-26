@@ -5,5 +5,7 @@ package com.ferry.order.webservice.invoice.link;
  * on Agustus 2026      *
  ************************/
 
-public record InvoiceLinkWebResponse(String token, long expiresAt){
+public record InvoiceLinkWebResponse(
+	String token,
+	long expiresAt){
 }

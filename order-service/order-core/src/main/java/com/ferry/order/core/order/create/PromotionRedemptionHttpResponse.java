@@ -7,6 +7,10 @@ import java.math.BigDecimal;
  * on Agustus 2026      *
  ************************/
 
-public record PromotionRedemptionHttpResponse(boolean applied, String message, String promotionId, String code,
-                                              BigDecimal discountAmount){
+public record PromotionRedemptionHttpResponse(
+	boolean applied,
+	String message,
+	String promotionId,
+	String code,
+	BigDecimal discountAmount){
 }

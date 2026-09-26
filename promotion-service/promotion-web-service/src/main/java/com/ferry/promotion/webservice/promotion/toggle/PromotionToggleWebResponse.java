@@ -5,5 +5,9 @@ package com.ferry.promotion.webservice.promotion.toggle;
  * on Agustus 2026      *
  ************************/
 
-public record PromotionToggleWebResponse(String id, String code, String name, boolean active){
+public record PromotionToggleWebResponse(
+	String id,
+	String code,
+	String name,
+	boolean active){
 }

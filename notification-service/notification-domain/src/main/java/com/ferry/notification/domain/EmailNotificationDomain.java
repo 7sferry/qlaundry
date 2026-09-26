@@ -9,9 +9,15 @@ import java.time.Instant;
  * on Juli 2026         *
  ************************/
 
-public record EmailNotificationDomain(String id, String referenceId, EmailType type, EmailDomain recipient,
-                                      SubjectDomain subject, Instant createdAt, Integer version,
-                                      Instant sentAt){
+public record EmailNotificationDomain(
+	String id,
+	String referenceId,
+	EmailType type,
+	EmailDomain recipient,
+	SubjectDomain subject,
+	Instant createdAt,
+	Integer version,
+	Instant sentAt){
 	public EmailNotificationDomain{
 		if(type == null || recipient == null || subject == null){
 			throw new InvalidaNotificationStateException("Type, recipient, subject, and content must not be null");

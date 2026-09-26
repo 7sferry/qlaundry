@@ -19,20 +19,51 @@ import java.util.List;
  * on September 2026    *
  ************************/
 
-public record OrderAnalyticsMessage(String tenantId, String orderId, String orderNumber, String customerId,
-                                    String serviceId, String serviceName, ServiceUnit unit, BigDecimal unitPrice,
-                                    int quantity, Double weightKg, BigDecimal subtotal, BigDecimal discount,
-                                    BigDecimal totalPrice, OrderPriority priority, PaymentMethod paymentMethod,
-                                    PaymentStatus paymentStatus, OrderStatus status, Long pickupAt,
-                                    Long estimatedDeliveryAt, Long completedAt, Long createdAt, Long updatedAt,
-                                    boolean deleted, int version, List<Item> items, List<Promotion> promotions){
+public record OrderAnalyticsMessage(
+	String tenantId,
+	String orderId,
+	String orderNumber,
+	String customerId,
+	String serviceId,
+	String serviceName,
+	ServiceUnit unit,
+	BigDecimal unitPrice,
+	int quantity,
+	Double weightKg,
+	BigDecimal subtotal,
+	BigDecimal discount,
+	BigDecimal totalPrice,
+	OrderPriority priority,
+	PaymentMethod paymentMethod,
+	PaymentStatus paymentStatus,
+	OrderStatus status,
+	Long pickupAt,
+	Long estimatedDeliveryAt,
+	Long completedAt,
+	Long createdAt,
+	Long updatedAt,
+	boolean deleted,
+	int version,
+	List<Item> items,
+	List<Promotion> promotions){
 
-	public record Item(String itemId, ClothingType type, String label, int quantity, boolean deleted, int version,
-	                   Long createdAt){
+	public record Item(
+		String itemId,
+		ClothingType type,
+		String label,
+		int quantity,
+		boolean deleted,
+		int version,
+		Long createdAt){
 	}
 
-	public record Promotion(String promotionId, String code, BigDecimal discountAmount, boolean deleted, int version,
-	                        Long createdAt){
+	public record Promotion(
+		String promotionId,
+		String code,
+		BigDecimal discountAmount,
+		boolean deleted,
+		int version,
+		Long createdAt){
 	}
 
 	public static OrderAnalyticsMessage from(OrderDomain order, List<OrderItemDomain> items,

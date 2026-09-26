@@ -8,6 +8,8 @@ import jakarta.validation.constraints.NotBlank;
  * on September 2026    *
  ************************/
 
-public record PromotionReleaseRequest(@NotBlank String tenantId, @NotBlank String referenceId,
-                                      @NotBlank String releasedBy) implements PromotionValidation{
+public record PromotionReleaseRequest(
+	@NotBlank String tenantId,
+	@NotBlank String referenceId,
+	@NotBlank String releasedBy) implements PromotionValidation{
 }

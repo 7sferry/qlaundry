@@ -7,5 +7,10 @@ import java.time.Instant;
  * on Juli 2026         *
  ************************/
 
-public record StaffDetailProjection(String id, String description, String fullName, Instant createdAt, String username){
+public record StaffDetailProjection(
+	String id,
+	String description,
+	String fullName,
+	Instant createdAt,
+	String username){
 }

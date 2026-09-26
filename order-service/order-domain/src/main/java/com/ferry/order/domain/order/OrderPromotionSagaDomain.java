@@ -11,9 +11,19 @@ import java.time.Instant;
  ************************/
 
 @Builder(toBuilder = true)
-public record OrderPromotionSagaDomain(String id, String tenantId, String referenceId, OrderPromotionSagaStatus status,
-                                       int attempts, String lastError, Integer version, boolean deleted,
-                                       Instant createdAt, String createdBy, Instant updatedAt, String updatedBy){
+public record OrderPromotionSagaDomain(
+	String id,
+	String tenantId,
+	String referenceId,
+	OrderPromotionSagaStatus status,
+	int attempts,
+	String lastError,
+	Integer version,
+	boolean deleted,
+	Instant createdAt,
+	String createdBy,
+	Instant updatedAt,
+	String updatedBy){
 	public static final int LAST_ERROR_MAX_LENGTH = 1000;
 
 	public OrderPromotionSagaDomain{

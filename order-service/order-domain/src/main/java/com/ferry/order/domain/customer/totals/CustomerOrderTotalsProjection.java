@@ -8,6 +8,9 @@ import java.time.Instant;
  * on September 2026    *
  ************************/
 
-public record CustomerOrderTotalsProjection(String customerId, long totalOrders, BigDecimal totalSpend,
-                                             Instant lastOrderAt){
+public record CustomerOrderTotalsProjection(
+	String customerId,
+	long totalOrders,
+	BigDecimal totalSpend,
+	Instant lastOrderAt){
 }

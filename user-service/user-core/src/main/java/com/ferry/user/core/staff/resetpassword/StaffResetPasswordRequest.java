@@ -8,6 +8,8 @@ import jakarta.validation.constraints.NotBlank;
  * on Juli 2026         *
  ************************/
 
-public record StaffResetPasswordRequest(@NotBlank String username, @NotBlank String password,
-                                        @NotBlank String resetToken) implements UserValidation{
+public record StaffResetPasswordRequest(
+	@NotBlank String username,
+	@NotBlank String password,
+	@NotBlank String resetToken) implements UserValidation{
 }

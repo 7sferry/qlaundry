@@ -7,5 +7,7 @@ import com.ferry.user.domain.staff.StaffDomain;
  * on Juli 2026         *
  ************************/
 
-public record StaffLoginResponse(String accessToken, String refreshToken){
+public record StaffLoginResponse(
+	String accessToken,
+	String refreshToken){
 }

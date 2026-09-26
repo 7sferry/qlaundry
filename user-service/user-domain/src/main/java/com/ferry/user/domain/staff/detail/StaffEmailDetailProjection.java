@@ -5,5 +5,7 @@ package com.ferry.user.domain.staff.detail;
  * on Juli 2026         *
  ************************/
 
-public record StaffEmailDetailProjection(String email, String staffId){
+public record StaffEmailDetailProjection(
+	String email,
+	String staffId){
 }

@@ -107,10 +107,14 @@ public class DefaultInvoiceHtmlComposer implements InvoiceHtmlComposer{
 		return builder.toString();
 	}
 
-	public record InvoiceItem(String label, int quantity){
+	public record InvoiceItem(
+		String label,
+		int quantity){
 	}
 
-	public record InvoicePromotion(String code, String discountAmount){
+	public record InvoicePromotion(
+		String code,
+		String discountAmount){
 	}
 
 }

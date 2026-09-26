@@ -9,5 +9,7 @@ import java.util.List;
  * on September 2026    *
  ************************/
 
-public record PromotionReleaseResponse(String referenceId, List<PromotionRedemptionDomain> released){
+public record PromotionReleaseResponse(
+	String referenceId,
+	List<PromotionRedemptionDomain> released){
 }

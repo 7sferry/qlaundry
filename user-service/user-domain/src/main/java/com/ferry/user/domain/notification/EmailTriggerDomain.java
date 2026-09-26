@@ -10,9 +10,18 @@ import java.time.Instant;
  * on Juli 2026         *
  ************************/
 
-public record EmailTriggerDomain(String id, EmailTriggerType type, EmailDomain recipient, String payload,
-                                 EmailTriggerStatus status, Integer version, boolean deleted,
-                                 Instant createdAt, String createdBy, Instant updatedAt, String updatedBy){
+public record EmailTriggerDomain(
+	String id,
+	EmailTriggerType type,
+	EmailDomain recipient,
+	String payload,
+	EmailTriggerStatus status,
+	Integer version,
+	boolean deleted,
+	Instant createdAt,
+	String createdBy,
+	Instant updatedAt,
+	String updatedBy){
 
 	public EmailTriggerDomain{
 		if(type == null || recipient == null || payload == null){

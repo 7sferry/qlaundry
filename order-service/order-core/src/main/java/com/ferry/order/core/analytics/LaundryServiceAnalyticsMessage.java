@@ -11,10 +11,21 @@ import java.math.BigDecimal;
  * on September 2026    *
  ************************/
 
-public record LaundryServiceAnalyticsMessage(String tenantId, String serviceId, String name, ServiceCategory category,
-                                             ServiceUnit unit, BigDecimal pricePerUnit, int estimatedHours,
-                                             double expressMultiplier, boolean popular, boolean active,
-                                             boolean deleted, int version, Long createdAt, Long updatedAt){
+public record LaundryServiceAnalyticsMessage(
+	String tenantId,
+	String serviceId,
+	String name,
+	ServiceCategory category,
+	ServiceUnit unit,
+	BigDecimal pricePerUnit,
+	int estimatedHours,
+	double expressMultiplier,
+	boolean popular,
+	boolean active,
+	boolean deleted,
+	int version,
+	Long createdAt,
+	Long updatedAt){
 
 	public static LaundryServiceAnalyticsMessage from(LaundryServiceDomain service){
 		return new LaundryServiceAnalyticsMessage(service.tenantId(), service.id(), service.name(), service.category(),

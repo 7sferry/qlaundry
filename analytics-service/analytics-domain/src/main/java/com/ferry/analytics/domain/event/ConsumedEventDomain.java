@@ -9,8 +9,14 @@ import java.time.Instant;
  * on September 2026    *
  ************************/
 
-public record ConsumedEventDomain(String eventId, AnalyticsAggregate aggregate, String type, String tenantId,
-                                  String aggregateId, int version, Instant consumedAt){
+public record ConsumedEventDomain(
+	String eventId,
+	AnalyticsAggregate aggregate,
+	String type,
+	String tenantId,
+	String aggregateId,
+	int version,
+	Instant consumedAt){
 	public ConsumedEventDomain{
 		if(eventId == null || eventId.isBlank()){
 			throw new InvalidAnalyticStateException("Event id must not be blank");

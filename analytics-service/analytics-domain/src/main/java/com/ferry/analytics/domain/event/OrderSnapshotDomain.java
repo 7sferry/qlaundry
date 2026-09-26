@@ -12,12 +12,31 @@ import java.time.Instant;
  ************************/
 
 @Builder(toBuilder = true)
-public record OrderSnapshotDomain(String tenantId, String orderId, String orderNumber, String customerId,
-                                  String serviceId, String serviceName, String unit, BigDecimal unitPrice,
-                                  int quantity, Double weightKg, BigDecimal subtotal, BigDecimal discount,
-                                  BigDecimal totalPrice, String priority, String paymentMethod, String paymentStatus,
-                                  String status, Instant pickupAt, Instant estimatedDeliveryAt, Instant completedAt,
-                                  Instant createdAt, Instant updatedAt, boolean deleted, int version){
+public record OrderSnapshotDomain(
+	String tenantId,
+	String orderId,
+	String orderNumber,
+	String customerId,
+	String serviceId,
+	String serviceName,
+	String unit,
+	BigDecimal unitPrice,
+	int quantity,
+	Double weightKg,
+	BigDecimal subtotal,
+	BigDecimal discount,
+	BigDecimal totalPrice,
+	String priority,
+	String paymentMethod,
+	String paymentStatus,
+	String status,
+	Instant pickupAt,
+	Instant estimatedDeliveryAt,
+	Instant completedAt,
+	Instant createdAt,
+	Instant updatedAt,
+	boolean deleted,
+	int version){
 	public OrderSnapshotDomain{
 		if(tenantId == null || tenantId.isBlank()){
 			throw new InvalidAnalyticStateException("Tenant id must not be blank");

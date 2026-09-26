@@ -21,15 +21,39 @@ import java.time.Instant;
  ************************/
 
 @Builder(toBuilder = true)
-public record OrderDomain(String id, OrderNumberDomain orderNumber, String tenantId, String customerId,
-                          FullNameDomain customerName, PhoneDomain customerPhone, EmailDomain customerEmail,
-                          AddressLineDomain customerAddress, String serviceId, String serviceName, ServiceUnit unit,
-                          MoneyDomain unitPrice, int quantity, Double weightKg, MoneyDomain subtotal,
-                          MoneyDomain discount, MoneyDomain totalPrice, OrderPriority priority,
-                          PaymentMethod paymentMethod, PaymentStatus paymentStatus, OrderStatus status,
-                          NoteDomain notes, NoteDomain staffNotes, Instant pickupAt, Instant estimatedDeliveryAt,
-                          Instant completedAt, Integer version, boolean deleted, Instant createdAt, String createdBy,
-                          Instant updatedAt, String updatedBy){
+public record OrderDomain(
+	String id,
+	OrderNumberDomain orderNumber,
+	String tenantId,
+	String customerId,
+	FullNameDomain customerName,
+	PhoneDomain customerPhone,
+	EmailDomain customerEmail,
+	AddressLineDomain customerAddress,
+	String serviceId,
+	String serviceName,
+	ServiceUnit unit,
+	MoneyDomain unitPrice,
+	int quantity,
+	Double weightKg,
+	MoneyDomain subtotal,
+	MoneyDomain discount,
+	MoneyDomain totalPrice,
+	OrderPriority priority,
+	PaymentMethod paymentMethod,
+	PaymentStatus paymentStatus,
+	OrderStatus status,
+	NoteDomain notes,
+	NoteDomain staffNotes,
+	Instant pickupAt,
+	Instant estimatedDeliveryAt,
+	Instant completedAt,
+	Integer version,
+	boolean deleted,
+	Instant createdAt,
+	String createdBy,
+	Instant updatedAt,
+	String updatedBy){
 	public OrderDomain{
 		if(tenantId == null || tenantId.isBlank()){
 			throw new InvalidOrderStateException("Tenant id must not be blank");

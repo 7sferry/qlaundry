@@ -13,8 +13,11 @@ import java.util.Map;
  * on Juli 2026         *
  ************************/
 
-public record StaffListResponse(List<StaffListProjection> staffs, Map<String, List<StaffPhoneListProjection>> phonesByStaffId,
-                                Map<String, List<StaffEmailListProjection>> emailsByStaffId,
-                                Map<String, List<StaffAddressListProjection>> addressesByStaffId,
-                                String nextCursor, String prevCursor){
+public record StaffListResponse(
+	List<StaffListProjection> staffs,
+	Map<String, List<StaffPhoneListProjection>> phonesByStaffId,
+	Map<String, List<StaffEmailListProjection>> emailsByStaffId,
+	Map<String, List<StaffAddressListProjection>> addressesByStaffId,
+	String nextCursor,
+	String prevCursor){
 }

@@ -7,5 +7,7 @@ import java.util.Map;
  * on Agustus 2026      *
  ************************/
 
-public record SignedLinkPayload(Map<String, String> fields, long expiresAt){
+public record SignedLinkPayload(
+	Map<String, String> fields,
+	long expiresAt){
 }

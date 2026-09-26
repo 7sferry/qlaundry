@@ -10,8 +10,15 @@ import java.util.List;
  * on September 2026    *
  ************************/
 
-public record OrderScheduleWebResponse(String date, List<Item> items){
-	public record Item(String orderId, String orderNumber, String customerName, OrderScheduleType type,
-	                   long scheduledAt, OrderStatus status){
+public record OrderScheduleWebResponse(
+	String date,
+	List<Item> items){
+	public record Item(
+		String orderId,
+		String orderNumber,
+		String customerName,
+		OrderScheduleType type,
+		long scheduledAt,
+		OrderStatus status){
 	}
 }

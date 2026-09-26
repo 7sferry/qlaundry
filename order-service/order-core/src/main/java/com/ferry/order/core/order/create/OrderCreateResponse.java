@@ -11,6 +11,8 @@ import java.util.List;
  * on Agustus 2026      *
  ************************/
 
-public record OrderCreateResponse(OrderDomain order, List<OrderItemDomain> items,
-                                  List<OrderPromotionDomain> promotions){
+public record OrderCreateResponse(
+	OrderDomain order,
+	List<OrderItemDomain> items,
+	List<OrderPromotionDomain> promotions){
 }

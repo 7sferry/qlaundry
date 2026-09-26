@@ -9,8 +9,11 @@ import com.ferry.promotion.domain.promotion.PromotionRejection;
  * on Agustus 2026      *
  ************************/
 
-public record PromotionRedemptionResponse(String code, PromotionDomain promotion,
-                                          PromotionRedemptionDomain redemption, PromotionRejection rejection){
+public record PromotionRedemptionResponse(
+	String code,
+	PromotionDomain promotion,
+	PromotionRedemptionDomain redemption,
+	PromotionRejection rejection){
 
 	public boolean isApplied(){
 		return rejection == null;

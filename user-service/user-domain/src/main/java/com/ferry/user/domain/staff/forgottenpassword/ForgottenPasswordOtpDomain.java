@@ -5,5 +5,7 @@ package com.ferry.user.domain.staff.forgottenpassword;
  * on Juli 2026         *
  ************************/
 
-public record ForgottenPasswordOtpDomain(String username, String otp){
+public record ForgottenPasswordOtpDomain(
+	String username,
+	String otp){
 }

@@ -9,6 +9,10 @@ import java.util.List;
  ************************/
 
 public record CustomerOrderTotalsWebResponse(List<Item> totals){
-	public record Item(String customerId, long totalOrders, BigDecimal totalSpend, long lastOrderAt){
+	public record Item(
+		String customerId,
+		long totalOrders,
+		BigDecimal totalSpend,
+		long lastOrderAt){
 	}
 }

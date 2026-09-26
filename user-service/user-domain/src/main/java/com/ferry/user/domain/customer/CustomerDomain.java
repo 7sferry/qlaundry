@@ -13,9 +13,17 @@ import java.time.Instant;
  ************************/
 
 @Builder(toBuilder = true)
-public record CustomerDomain(String id, String tenantId, FullNameDomain fullName, DescriptionDomain notes,
-                             Integer version, boolean deleted, Instant createdAt, String createdBy,
-                             Instant updatedAt, String updatedBy){
+public record CustomerDomain(
+	String id,
+	String tenantId,
+	FullNameDomain fullName,
+	DescriptionDomain notes,
+	Integer version,
+	boolean deleted,
+	Instant createdAt,
+	String createdBy,
+	Instant updatedAt,
+	String updatedBy){
 	public CustomerDomain{
 		if(fullName == null){
 			throw new InvalidUserStateException("Full name must not be null");

@@ -10,5 +10,7 @@ import java.util.List;
  * on Juli 2026         *
  ************************/
 
-public record StaffLoginRequest(@NotBlank String username, @NotBlank String password) implements UserValidation{
+public record StaffLoginRequest(
+	@NotBlank String username,
+	@NotBlank String password) implements UserValidation{
 }

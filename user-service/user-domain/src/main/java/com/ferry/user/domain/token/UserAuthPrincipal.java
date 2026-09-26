@@ -10,7 +10,13 @@ import lombok.Builder;
  ************************/
 
 @Builder(toBuilder = true)
-public record UserAuthPrincipal(String userId, String username, String fullName, String tenantName,
-                                String tenantId, SessionType sessionType, StaffRole role){
+public record UserAuthPrincipal(
+	String userId,
+	String username,
+	String fullName,
+	String tenantName,
+	String tenantId,
+	SessionType sessionType,
+	StaffRole role){
 
 }

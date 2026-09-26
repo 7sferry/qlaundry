@@ -5,5 +5,8 @@ package com.ferry.user.core.customer.verification;
  * on Agustus 2026      *
  ************************/
 
-public record CustomerVerificationResponse(String customerId, String tenantId, boolean valid){
+public record CustomerVerificationResponse(
+	String customerId,
+	String tenantId,
+	boolean valid){
 }

@@ -5,7 +5,9 @@ package com.ferry.utils.pagination;
  * on Agustus 2026      *
  ************************/
 
-public record PageCursor(String sortValue, String id){
+public record PageCursor(
+	String sortValue,
+	String id){
 
 	public static PageCursor cursor(String after, String before){
 		String token = before != null ? before : after;

@@ -11,13 +11,24 @@ import java.util.List;
  * on September 2026    *
  ************************/
 
-public record ReportResponse(ReportPeriod period, List<TrendPoint> revenueTrend, List<ServiceShare> serviceBreakdown){
+public record ReportResponse(
+	ReportPeriod period,
+	List<TrendPoint> revenueTrend,
+	List<ServiceShare> serviceBreakdown){
 
-	public record TrendPoint(LocalDate bucketStart, String label, BigDecimal revenue, long orders){
+	public record TrendPoint(
+		LocalDate bucketStart,
+		String label,
+		BigDecimal revenue,
+		long orders){
 	}
 
-	public record ServiceShare(String serviceId, String serviceName, long count, BigDecimal revenue,
-	                           BigDecimal percentage){
+	public record ServiceShare(
+		String serviceId,
+		String serviceName,
+		long count,
+		BigDecimal revenue,
+		BigDecimal percentage){
 	}
 
 }

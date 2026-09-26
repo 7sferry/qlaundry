@@ -12,10 +12,21 @@ import java.time.Instant;
  ************************/
 
 @Builder(toBuilder = true)
-public record PromotionRedemptionDomain(String id, String promotionId, String tenantId, PromotionCodeDomain code,
-                                        String referenceId, String customerId, MoneyDomain subtotal,
-                                        MoneyDomain discountAmount, Integer version, boolean deleted,
-                                        Instant createdAt, String createdBy, Instant updatedAt, String updatedBy){
+public record PromotionRedemptionDomain(
+	String id,
+	String promotionId,
+	String tenantId,
+	PromotionCodeDomain code,
+	String referenceId,
+	String customerId,
+	MoneyDomain subtotal,
+	MoneyDomain discountAmount,
+	Integer version,
+	boolean deleted,
+	Instant createdAt,
+	String createdBy,
+	Instant updatedAt,
+	String updatedBy){
 	public PromotionRedemptionDomain{
 		if(promotionId == null || promotionId.isBlank()){
 			throw new InvalidPromotionStateException("Promotion id must not be blank");

@@ -8,6 +8,9 @@ import com.ferry.user.domain.notification.EmailTriggerType;
  * on Juli 2026         *
  ************************/
 
-public record EmailTriggerConfig(Object payload, String userId, EmailTriggerType triggerType,
-                                 EmailDomain recipient){
+public record EmailTriggerConfig(
+	Object payload,
+	String userId,
+	EmailTriggerType triggerType,
+	EmailDomain recipient){
 }

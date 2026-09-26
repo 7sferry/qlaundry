@@ -10,5 +10,7 @@ import java.util.Collection;
  ************************/
 
 @Builder(toBuilder = true)
-public record StaffAddressFilter(String staffId, Collection<String> staffIds){
+public record StaffAddressFilter(
+	String staffId,
+	Collection<String> staffIds){
 }

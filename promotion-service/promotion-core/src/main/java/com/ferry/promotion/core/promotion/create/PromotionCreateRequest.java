@@ -14,11 +14,19 @@ import java.math.BigDecimal;
  * on Agustus 2026      *
  ************************/
 
-public record PromotionCreateRequest(@NotBlank String code, @NotBlank String name, String description,
-                                     @NotNull PromotionType type, BigDecimal percentage, BigDecimal amount,
-                                     BigDecimal maxDiscountAmount, BigDecimal minSubtotal, Boolean combinable,
-                                     @Positive Integer usageLimit, @NotNull Long startAt,
-                                     @NotNull Long endAt) implements PromotionValidation{
+public record PromotionCreateRequest(
+	@NotBlank String code,
+	@NotBlank String name,
+	String description,
+	@NotNull PromotionType type,
+	BigDecimal percentage,
+	BigDecimal amount,
+	BigDecimal maxDiscountAmount,
+	BigDecimal minSubtotal,
+	Boolean combinable,
+	@Positive Integer usageLimit,
+	@NotNull Long startAt,
+	@NotNull Long endAt) implements PromotionValidation{
 	@AssertFalse
 	boolean validateDateRange() {
 		return endAt < startAt;

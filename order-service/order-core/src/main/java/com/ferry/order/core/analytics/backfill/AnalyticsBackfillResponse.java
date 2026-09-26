@@ -5,5 +5,7 @@ package com.ferry.order.core.analytics.backfill;
  * on September 2026    *
  ************************/
 
-public record AnalyticsBackfillResponse(int orders, int services){
+public record AnalyticsBackfillResponse(
+	int orders,
+	int services){
 }

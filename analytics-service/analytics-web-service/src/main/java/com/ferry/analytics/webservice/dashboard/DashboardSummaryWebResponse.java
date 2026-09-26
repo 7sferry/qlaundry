@@ -8,12 +8,21 @@ import java.util.List;
  * on September 2026    *
  ************************/
 
-public record DashboardSummaryWebResponse(long todayOrders, BigDecimal todayRevenue, long monthOrders,
-                                          BigDecimal monthRevenue, long pendingOrders, long inProgressOrders,
-                                          long readyOrders, BigDecimal revenueGrowth, BigDecimal ordersGrowth,
-                                          List<StatusCount> statusDistribution){
+public record DashboardSummaryWebResponse(
+	long todayOrders,
+	BigDecimal todayRevenue,
+	long monthOrders,
+	BigDecimal monthRevenue,
+	long pendingOrders,
+	long inProgressOrders,
+	long readyOrders,
+	BigDecimal revenueGrowth,
+	BigDecimal ordersGrowth,
+	List<StatusCount> statusDistribution){
 
-	public record StatusCount(String status, long count){
+	public record StatusCount(
+		String status,
+		long count){
 	}
 
 }

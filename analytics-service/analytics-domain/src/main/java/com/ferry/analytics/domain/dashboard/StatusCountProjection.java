@@ -5,5 +5,7 @@ package com.ferry.analytics.domain.dashboard;
  * on September 2026    *
  ************************/
 
-public record StatusCountProjection(String status, long count){
+public record StatusCountProjection(
+	String status,
+	long count){
 }

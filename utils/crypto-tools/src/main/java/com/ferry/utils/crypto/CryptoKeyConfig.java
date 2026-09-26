@@ -11,8 +11,11 @@ import java.util.Map;
  * on Agustus 2026      *
  ************************/
 
-public record CryptoKeyConfig(String activeKeyId, Map<String, Key> keys, Key blindIndexKey,
-                              boolean allowPlaintextRead){
+public record CryptoKeyConfig(
+	String activeKeyId,
+	Map<String, Key> keys,
+	Key blindIndexKey,
+	boolean allowPlaintextRead){
 	private static final int KEY_LENGTH = 32;
 	private static final String KEY_ALGORITHM = "AES";
 	private static final String HMAC_ALGORITHM = "HmacSHA256";

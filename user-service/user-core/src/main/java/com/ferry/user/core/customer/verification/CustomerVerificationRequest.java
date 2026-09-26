@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
  * on Agustus 2026      *
  ************************/
 
-public record CustomerVerificationRequest(@NotBlank String customerId,
-                                          @NotBlank String tenantId) implements UserValidation{
+public record CustomerVerificationRequest(
+	@NotBlank String customerId,
+	@NotBlank String tenantId) implements UserValidation{
 }

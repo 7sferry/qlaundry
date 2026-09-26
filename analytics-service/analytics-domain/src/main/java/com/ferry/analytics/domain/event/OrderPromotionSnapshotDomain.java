@@ -12,9 +12,15 @@ import java.time.Instant;
  ************************/
 
 @Builder(toBuilder = true)
-public record OrderPromotionSnapshotDomain(String tenantId, String orderId, String promotionId, String code,
-                                           BigDecimal discountAmount, boolean deleted, int version,
-                                           Instant createdAt){
+public record OrderPromotionSnapshotDomain(
+	String tenantId,
+	String orderId,
+	String promotionId,
+	String code,
+	BigDecimal discountAmount,
+	boolean deleted,
+	int version,
+	Instant createdAt){
 	public OrderPromotionSnapshotDomain{
 		if(tenantId == null || tenantId.isBlank() || orderId == null || orderId.isBlank()){
 			throw new InvalidAnalyticStateException("Promotion tenant id and order id must not be blank");

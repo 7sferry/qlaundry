@@ -14,6 +14,7 @@ import java.util.List;
  * on September 2026    *
  ************************/
 
-public record PromotionPreviewRequest(@NotEmpty List<@Valid PromotionSnapshot> promotions,
-                                      @NotNull @PositiveOrZero BigDecimal subtotal) implements PromotionValidation{
+public record PromotionPreviewRequest(
+	@NotEmpty List<@Valid PromotionSnapshot> promotions,
+	@NotNull @PositiveOrZero BigDecimal subtotal) implements PromotionValidation{
 }

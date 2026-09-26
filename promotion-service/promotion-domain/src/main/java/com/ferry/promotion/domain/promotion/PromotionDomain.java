@@ -16,12 +16,29 @@ import java.util.Optional;
  ************************/
 
 @Builder(toBuilder = true)
-public record PromotionDomain(String id, String tenantId, PromotionCodeDomain code, String name,
-                              NoteDomain description, PromotionType type, BigDecimal percentage, MoneyDomain amount,
-                              MoneyDomain maxDiscountAmount, MoneyDomain minSubtotal, boolean combinable,
-                              Integer usageLimit, int usedCount, Instant startAt, Instant endAt, boolean active,
-                              Integer version, boolean deleted, Instant createdAt, String createdBy,
-                              Instant updatedAt, String updatedBy){
+public record PromotionDomain(
+	String id,
+	String tenantId,
+	PromotionCodeDomain code,
+	String name,
+	NoteDomain description,
+	PromotionType type,
+	BigDecimal percentage,
+	MoneyDomain amount,
+	MoneyDomain maxDiscountAmount,
+	MoneyDomain minSubtotal,
+	boolean combinable,
+	Integer usageLimit,
+	int usedCount,
+	Instant startAt,
+	Instant endAt,
+	boolean active,
+	Integer version,
+	boolean deleted,
+	Instant createdAt,
+	String createdBy,
+	Instant updatedAt,
+	String updatedBy){
 	private static final BigDecimal MAX_PERCENTAGE = BigDecimal.valueOf(100L);
 	private static final BigDecimal HUNDRED = BigDecimal.valueOf(100L);
 	private static final int PERCENTAGE_FACTOR_SCALE = 6;

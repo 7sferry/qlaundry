@@ -10,6 +10,9 @@ import java.util.Map;
  ************************/
 
 @ConfigurationProperties("app.crypto")
-public record CryptoKeysProperties(String activeKeyId, String blindIndexKey, boolean allowPlaintextRead,
-                                   Map<String, String> keys){
+public record CryptoKeysProperties(
+	String activeKeyId,
+	String blindIndexKey,
+	boolean allowPlaintextRead,
+	Map<String, String> keys){
 }

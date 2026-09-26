@@ -12,10 +12,17 @@ import java.util.List;
  * on September 2026    *
  ************************/
 
-public record OrderScheduleResponse(LocalDate date, List<Item> items){
+public record OrderScheduleResponse(
+	LocalDate date,
+	List<Item> items){
 
-	public record Item(String orderId, String orderNumber, String customerName, OrderScheduleType type,
-	                   Instant scheduledAt, OrderStatus status){
+	public record Item(
+		String orderId,
+		String orderNumber,
+		String customerName,
+		OrderScheduleType type,
+		Instant scheduledAt,
+		OrderStatus status){
 	}
 
 }

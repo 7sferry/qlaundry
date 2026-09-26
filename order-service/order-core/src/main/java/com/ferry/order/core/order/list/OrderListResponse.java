@@ -12,7 +12,10 @@ import java.util.Map;
  * on Agustus 2026      *
  ************************/
 
-public record OrderListResponse(List<OrderDomain> orders, Map<String, List<OrderItemDomain>> itemsByOrderId,
-                                Map<String, List<OrderPromotionDomain>> promotionsByOrderId, String nextCursor,
-                                String prevCursor){
+public record OrderListResponse(
+	List<OrderDomain> orders,
+	Map<String, List<OrderItemDomain>> itemsByOrderId,
+	Map<String, List<OrderPromotionDomain>> promotionsByOrderId,
+	String nextCursor,
+	String prevCursor){
 }

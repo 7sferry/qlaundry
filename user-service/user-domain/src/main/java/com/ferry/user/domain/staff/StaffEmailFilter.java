@@ -11,5 +11,8 @@ import java.util.List;
  ************************/
 
 @Builder
-public record StaffEmailFilter(String staffId, Collection<String> staffIds) {
+public record StaffEmailFilter(
+	String staffId,
+	Collection<String> staffIds
+) {
 }

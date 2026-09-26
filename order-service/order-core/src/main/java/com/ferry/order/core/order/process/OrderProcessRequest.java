@@ -8,5 +8,7 @@ import jakarta.validation.constraints.NotBlank;
  * on Agustus 2026      *
  ************************/
 
-public record OrderProcessRequest(@NotBlank String orderId, String staffNotes) implements OrderValidation{
+public record OrderProcessRequest(
+	@NotBlank String orderId,
+	String staffNotes) implements OrderValidation{
 }

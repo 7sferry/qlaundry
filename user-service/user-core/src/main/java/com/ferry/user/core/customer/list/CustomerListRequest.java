@@ -9,7 +9,12 @@ import com.ferry.utils.pagination.SortDirection;
  * on Agustus 2026      *
  ************************/
 
-public record CustomerListRequest(String fullName, String phone, String after, String before,
-                                  CustomerListSortBy sortBy, SortDirection sortDir,
-                                  Integer pageSize) implements UserValidation{
+public record CustomerListRequest(
+	String fullName,
+	String phone,
+	String after,
+	String before,
+	CustomerListSortBy sortBy,
+	SortDirection sortDir,
+	Integer pageSize) implements UserValidation{
 }

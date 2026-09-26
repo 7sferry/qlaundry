@@ -11,7 +11,10 @@ import java.util.List;
  * on September 2026    *
  ************************/
 
-public record ReportWindow(ReportPeriod period, LocalDate from, LocalDate toExclusive){
+public record ReportWindow(
+	ReportPeriod period,
+	LocalDate from,
+	LocalDate toExclusive){
 	public ReportWindow{
 		if(period == null || from == null || toExclusive == null){
 			throw new InvalidAnalyticStateException("Report period and bounds must not be null");

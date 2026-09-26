@@ -11,8 +11,14 @@ import java.time.Instant;
  ************************/
 
 @Builder(toBuilder = true)
-public record UserSessionDomain(String id, Instant expirationTime, String userId, SessionType sessionType,
-                                Integer version, Instant createdAt, Instant updatedAt){
+public record UserSessionDomain(
+	String id,
+	Instant expirationTime,
+	String userId,
+	SessionType sessionType,
+	Integer version,
+	Instant createdAt,
+	Instant updatedAt){
 	public UserSessionDomain{
 		if(expirationTime == null){
 			throw new InvalidUserStateException("expirationTime cannot be null");

@@ -14,7 +14,10 @@ import java.util.List;
  * on September 2026    *
  ************************/
 
-public record OrderEventRequest(@NotBlank String eventId, @NotBlank String type, @NotNull OrderSnapshotDomain order,
-                                @NotNull List<OrderItemSnapshotDomain> items,
-                                @NotNull List<OrderPromotionSnapshotDomain> promotions) implements AnalyticsValidation{
+public record OrderEventRequest(
+	@NotBlank String eventId,
+	@NotBlank String type,
+	@NotNull OrderSnapshotDomain order,
+	@NotNull List<OrderItemSnapshotDomain> items,
+	@NotNull List<OrderPromotionSnapshotDomain> promotions) implements AnalyticsValidation{
 }

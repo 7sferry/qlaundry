@@ -5,5 +5,7 @@ package com.ferry.user.webservice.tenant.registration;
  * on Juli 2026         *
  ************************/
 
-public record TenantRegistrationWebResponse(String tenantName, String username){
+public record TenantRegistrationWebResponse(
+	String tenantName,
+	String username){
 }

@@ -10,9 +10,16 @@ import java.time.Instant;
  * on Agustus 2026      *
  ************************/
 
-public record StaffPasswordDomain(String id, String staffId, HashedPasswordDomain password,
-                                  Integer version, boolean deleted, Instant createdAt, String createdBy, Instant updatedAt,
-                                  String updatedBy){
+public record StaffPasswordDomain(
+	String id,
+	String staffId,
+	HashedPasswordDomain password,
+	Integer version,
+	boolean deleted,
+	Instant createdAt,
+	String createdBy,
+	Instant updatedAt,
+	String updatedBy){
 	public StaffPasswordDomain{
 		if(staffId == null || password == null){
 			throw new InvalidUserStateException("Staff id and password must not be null");

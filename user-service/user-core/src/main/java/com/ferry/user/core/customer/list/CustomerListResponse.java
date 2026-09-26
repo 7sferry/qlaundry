@@ -13,9 +13,11 @@ import java.util.Map;
  * on Agustus 2026      *
  ************************/
 
-public record CustomerListResponse(List<CustomerDomain> customers,
-                                   Map<String, List<CustomerEmailDomain>> emailsByCustomerId,
-                                   Map<String, List<CustomerPhoneDomain>> phonesByCustomerId,
-                                   Map<String, List<CustomerAddressDomain>> addressesByCustomerId,
-                                   String nextCursor, String prevCursor){
+public record CustomerListResponse(
+	List<CustomerDomain> customers,
+	Map<String, List<CustomerEmailDomain>> emailsByCustomerId,
+	Map<String, List<CustomerPhoneDomain>> phonesByCustomerId,
+	Map<String, List<CustomerAddressDomain>> addressesByCustomerId,
+	String nextCursor,
+	String prevCursor){
 }

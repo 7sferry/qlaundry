@@ -9,5 +9,7 @@ import jakarta.validation.constraints.NotBlank;
  * on Agustus 2026      *
  ************************/
 
-public record OrderPaymentRequest(@NotBlank String orderId, PaymentMethod paymentMethod) implements OrderValidation{
+public record OrderPaymentRequest(
+	@NotBlank String orderId,
+	PaymentMethod paymentMethod) implements OrderValidation{
 }

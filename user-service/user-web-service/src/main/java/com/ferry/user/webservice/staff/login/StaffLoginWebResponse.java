@@ -5,5 +5,7 @@ package com.ferry.user.webservice.staff.login;
  * on Juli 2026         *
  ************************/
 
-public record StaffLoginWebResponse(String accessToken, String refreshToken){
+public record StaffLoginWebResponse(
+	String accessToken,
+	String refreshToken){
 }

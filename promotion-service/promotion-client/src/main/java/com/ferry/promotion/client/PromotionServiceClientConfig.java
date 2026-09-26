@@ -7,5 +7,8 @@ import java.time.Duration;
  * on Agustus 2026      *
  ************************/
 
-public record PromotionServiceClientConfig(String baseUrl, String apiKey, Duration timeout){
+public record PromotionServiceClientConfig(
+	String baseUrl,
+	String apiKey,
+	Duration timeout){
 }

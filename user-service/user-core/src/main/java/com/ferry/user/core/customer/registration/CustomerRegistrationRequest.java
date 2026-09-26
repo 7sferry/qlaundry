@@ -8,6 +8,10 @@ import jakarta.validation.constraints.NotBlank;
  * on Agustus 2026      *
  ************************/
 
-public record CustomerRegistrationRequest(@NotBlank String fullName, @NotBlank String phone, String email,
-                                          String address, String notes) implements UserValidation{
+public record CustomerRegistrationRequest(
+	@NotBlank String fullName,
+	@NotBlank String phone,
+	String email,
+	String address,
+	String notes) implements UserValidation{
 }

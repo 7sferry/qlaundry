@@ -11,7 +11,16 @@ import com.ferry.order.domain.order.OrderStatus;
  * on Agustus 2026      *
  ************************/
 
-public record OrderListRequest(OrderStatus status, OrderPriority priority, String customerId, String orderNumber,
-                               Long from, Long to, String after, String before, OrderListSortBy sortBy,
-                               SortDirection sortDir, Integer pageSize) implements OrderValidation{
+public record OrderListRequest(
+	OrderStatus status,
+	OrderPriority priority,
+	String customerId,
+	String orderNumber,
+	Long from,
+	Long to,
+	String after,
+	String before,
+	OrderListSortBy sortBy,
+	SortDirection sortDir,
+	Integer pageSize) implements OrderValidation{
 }

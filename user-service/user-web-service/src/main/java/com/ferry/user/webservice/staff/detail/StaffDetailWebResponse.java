@@ -8,8 +8,14 @@ import java.util.List;
  * on Juli 2026         *
  ************************/
 
-public record StaffDetailWebResponse(String description, String fullName, long createdAt, String username,
-                                     List<Email> emails, List<Phone> phones, List<Address> addresses){
+public record StaffDetailWebResponse(
+	String description,
+	String fullName,
+	long createdAt,
+	String username,
+	List<Email> emails,
+	List<Phone> phones,
+	List<Address> addresses){
 
 	public record Email(String email){
 

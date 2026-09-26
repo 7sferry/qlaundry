@@ -9,7 +9,9 @@ import java.math.BigDecimal;
  * on September 2026    *
  ************************/
 
-public record AmountDiscount(BigDecimal discountValue, MoneyDomain maxDiscountAmount) implements DiscountStrategy{
+public record AmountDiscount(
+	BigDecimal discountValue,
+	MoneyDomain maxDiscountAmount) implements DiscountStrategy{
 
 	@Override
 	public MoneyDomain calculate(DiscountCalculator calculator){

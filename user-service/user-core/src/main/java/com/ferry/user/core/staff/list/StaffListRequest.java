@@ -9,6 +9,11 @@ import com.ferry.utils.pagination.SortDirection;
  * on Juli 2026         *
  ************************/
 
-public record StaffListRequest(String fullName, String after, String before, StaffListSortBy sortBy,
-                               SortDirection sortDir, Integer pageSize) implements UserValidation{
+public record StaffListRequest(
+	String fullName,
+	String after,
+	String before,
+	StaffListSortBy sortBy,
+	SortDirection sortDir,
+	Integer pageSize) implements UserValidation{
 }

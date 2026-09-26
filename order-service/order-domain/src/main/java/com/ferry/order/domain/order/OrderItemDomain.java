@@ -11,9 +11,18 @@ import java.time.Instant;
  ************************/
 
 @Builder(toBuilder = true)
-public record OrderItemDomain(String id, String orderId, ClothingType type, String label, int quantity,
-                              Integer version, boolean deleted, Instant createdAt, String createdBy,
-                              Instant updatedAt, String updatedBy){
+public record OrderItemDomain(
+	String id,
+	String orderId,
+	ClothingType type,
+	String label,
+	int quantity,
+	Integer version,
+	boolean deleted,
+	Instant createdAt,
+	String createdBy,
+	Instant updatedAt,
+	String updatedBy){
 	public OrderItemDomain{
 		if(orderId == null || orderId.isBlank()){
 			throw new InvalidOrderStateException("Order id must not be blank");

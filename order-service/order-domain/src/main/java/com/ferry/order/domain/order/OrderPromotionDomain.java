@@ -12,9 +12,18 @@ import java.time.Instant;
  ************************/
 
 @Builder(toBuilder = true)
-public record OrderPromotionDomain(String id, String orderId, String promotionId, String code,
-                                   MoneyDomain discountAmount, Integer version, boolean deleted, Instant createdAt,
-                                   String createdBy, Instant updatedAt, String updatedBy){
+public record OrderPromotionDomain(
+	String id,
+	String orderId,
+	String promotionId,
+	String code,
+	MoneyDomain discountAmount,
+	Integer version,
+	boolean deleted,
+	Instant createdAt,
+	String createdBy,
+	Instant updatedAt,
+	String updatedBy){
 	public OrderPromotionDomain{
 		if(orderId == null || orderId.isBlank()){
 			throw new InvalidOrderStateException("Order id must not be blank");

@@ -8,12 +8,29 @@ import java.util.List;
  * on Agustus 2026      *
  ************************/
 
-public record PromotionListWebResponse(List<Promotion> promotions, String nextCursor, String prevCursor){
+public record PromotionListWebResponse(
+	List<Promotion> promotions,
+	String nextCursor,
+	String prevCursor
+){
 
-	public record Promotion(String id, String code, String name, String description, String type, BigDecimal percentage,
-	                        BigDecimal amount, BigDecimal maxDiscountAmount, BigDecimal minSubtotal,
-	                        boolean combinable, Integer usageLimit, int usedCount, Integer remainingUsage,
-	                        Long startAt, Long endAt, boolean active){
+	public record Promotion(
+		String id,
+		String code,
+		String name,
+		String description,
+		String type,
+		BigDecimal percentage,
+		BigDecimal amount,
+		BigDecimal maxDiscountAmount,
+		BigDecimal minSubtotal,
+		boolean combinable,
+		Integer usageLimit,
+		int usedCount,
+		Integer remainingUsage,
+		Long startAt,
+		Long endAt,
+		boolean active){
 
 	}
 

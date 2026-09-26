@@ -10,6 +10,11 @@ import java.util.Set;
  * on Agustus 2026      *
  ************************/
 
-public record PromotionRedemptionParams(String tenantId, Collection<String> codes, BigDecimal subtotal, String referenceId,
-                                        String customerId, String redeemedBy){
+public record PromotionRedemptionParams(
+	String tenantId,
+	Collection<String> codes,
+	BigDecimal subtotal,
+	String referenceId,
+	String customerId,
+	String redeemedBy){
 }

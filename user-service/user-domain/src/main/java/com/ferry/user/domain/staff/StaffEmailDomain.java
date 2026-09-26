@@ -10,9 +10,16 @@ import java.time.Instant;
  * on Juli 2026         *
  ************************/
 
-public record StaffEmailDomain(String id, String staffId, EmailDomain email,
-                               Integer version, boolean deleted, Instant createdAt, String createdBy, Instant updatedAt,
-                               String updatedBy){
+public record StaffEmailDomain(
+	String id,
+	String staffId,
+	EmailDomain email,
+	Integer version,
+	boolean deleted,
+	Instant createdAt,
+	String createdBy,
+	Instant updatedAt,
+	String updatedBy){
 	public StaffEmailDomain{
 		if(staffId == null || email == null){
 			throw new InvalidUserStateException("User id and email must not be null");

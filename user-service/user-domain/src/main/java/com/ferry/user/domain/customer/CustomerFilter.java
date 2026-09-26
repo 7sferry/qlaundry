@@ -11,8 +11,15 @@ import lombok.Builder;
  ************************/
 
 @Builder(toBuilder = true)
-public record CustomerFilter(String fullName, String phone, String tenantId, CustomerListSortBy sortBy, SortDirection sortDir,
-                             PageDirection pageDirection, PageCursor cursor, int pageSize){
+public record CustomerFilter(
+	String fullName,
+	String phone,
+	String tenantId,
+	CustomerListSortBy sortBy,
+	SortDirection sortDir,
+	PageDirection pageDirection,
+	PageCursor cursor,
+	int pageSize){
 
 	public String fullNameStartsWith(){
 		if(fullName == null || fullName.isBlank()){

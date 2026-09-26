@@ -11,8 +11,14 @@ import java.util.List;
  * on Juli 2026         *
  ************************/
 
-public record TenantRegistrationRequest(@NotBlank String fullName, @NotBlank String tenantName, String description,
-                                        @NotBlank String username, @NotBlank String password,
-                                        @NotEmpty List<String> emails, List<String> phones, List<String> addresses,
-                                        @NotBlank String captchaToken) implements UserValidation{
+public record TenantRegistrationRequest(
+	@NotBlank String fullName,
+	@NotBlank String tenantName,
+	String description,
+	@NotBlank String username,
+	@NotBlank String password,
+	@NotEmpty List<String> emails,
+	List<String> phones,
+	List<String> addresses,
+	@NotBlank String captchaToken) implements UserValidation{
 }

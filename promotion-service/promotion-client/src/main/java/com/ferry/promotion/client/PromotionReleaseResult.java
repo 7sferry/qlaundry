@@ -7,5 +7,7 @@ import java.util.List;
  * on September 2026    *
  ************************/
 
-public record PromotionReleaseResult(String referenceId, List<PromotionReleasedRedemptionResult> released){
+public record PromotionReleaseResult(
+	String referenceId,
+	List<PromotionReleasedRedemptionResult> released){
 }

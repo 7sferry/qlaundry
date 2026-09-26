@@ -5,6 +5,11 @@ package com.ferry.order.webservice.order.process;
  * on Agustus 2026      *
  ************************/
 
-public record OrderProcessWebResponse(String id, String orderNumber, String status, String staffNotes,
-                                      Long completedAt, long updatedAt){
+public record OrderProcessWebResponse(
+	String id,
+	String orderNumber,
+	String status,
+	String staffNotes,
+	Long completedAt,
+	long updatedAt){
 }

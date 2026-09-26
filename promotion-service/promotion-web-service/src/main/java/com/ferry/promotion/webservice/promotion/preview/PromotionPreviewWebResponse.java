@@ -9,7 +9,14 @@ import java.util.List;
  ************************/
 
 public record PromotionPreviewWebResponse(List<Item> previews){
-	public record Item(boolean applied, String message, String promotionId, String code, String type,
-	                   BigDecimal discountAmount, Integer remainingUsage){
+	public record Item(
+		boolean applied,
+		String message,
+		String promotionId,
+		String code,
+		String type,
+		BigDecimal discountAmount,
+		Integer remainingUsage
+	){
 	}
 }

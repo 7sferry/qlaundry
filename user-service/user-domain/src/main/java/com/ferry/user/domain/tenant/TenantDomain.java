@@ -12,9 +12,18 @@ import java.time.Instant;
  * on Juli 2026         *
  ************************/
 
-public record TenantDomain(String id, UsernameDomain username, FullNameDomain fullName, DescriptionDomain description,
-                           TenantStatus status, Integer version, boolean deleted, Instant createdAt, String createdBy,
-                           Instant updatedAt, String updatedBy){
+public record TenantDomain(
+	String id,
+	UsernameDomain username,
+	FullNameDomain fullName,
+	DescriptionDomain description,
+	TenantStatus status,
+	Integer version,
+	boolean deleted,
+	Instant createdAt,
+	String createdBy,
+	Instant updatedAt,
+	String updatedBy){
 
 	public TenantDomain {
 		if(username == null || fullName == null){

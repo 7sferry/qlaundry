@@ -5,6 +5,11 @@ package com.ferry.order.webservice.order.confirm;
  * on Agustus 2026      *
  ************************/
 
-public record OrderConfirmWebResponse(String id, String orderNumber, String status, String staffNotes,
-                                      Long completedAt, long updatedAt){
+public record OrderConfirmWebResponse(
+	String id,
+	String orderNumber,
+	String status,
+	String staffNotes,
+	Long completedAt,
+	long updatedAt){
 }

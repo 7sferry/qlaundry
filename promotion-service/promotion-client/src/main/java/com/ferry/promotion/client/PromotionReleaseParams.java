@@ -5,5 +5,8 @@ package com.ferry.promotion.client;
  * on September 2026    *
  ************************/
 
-public record PromotionReleaseParams(String tenantId, String referenceId, String releasedBy){
+public record PromotionReleaseParams(
+	String tenantId,
+	String referenceId,
+	String releasedBy){
 }

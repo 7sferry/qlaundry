@@ -5,5 +5,7 @@ package com.ferry.order.core.order.create;
  * on Agustus 2026      *
  ************************/
 
-public record CustomerVerificationHttpRequest(String customerId, String tenantId){
+public record CustomerVerificationHttpRequest(
+	String customerId,
+	String tenantId){
 }

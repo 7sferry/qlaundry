@@ -9,8 +9,12 @@ import java.time.Instant;
  * on September 2026    *
  ************************/
 
-public record OrderScheduleProjection(String orderId, String orderNumber, String customerName, Instant scheduledAt,
-                                      short statusId){
+public record OrderScheduleProjection(
+	String orderId,
+	String orderNumber,
+	String customerName,
+	Instant scheduledAt,
+	short statusId){
 
 	public OrderStatus status(){
 		return OrderStatus.fromValue(statusId).orElseThrow();

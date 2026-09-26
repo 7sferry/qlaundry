@@ -8,8 +8,10 @@ import com.ferry.user.domain.tenant.TenantDomain;
  * on Juli 2026         *
  ************************/
 
-public record TenantRegistrationResponse(TenantDomain tenant,
-                                         StaffRegistrationResponse staff){
+public record TenantRegistrationResponse(
+	TenantDomain tenant,
+	StaffRegistrationResponse staff
+){
 	public String tenantName(){
 		return tenant.fullNameValue();
 	}

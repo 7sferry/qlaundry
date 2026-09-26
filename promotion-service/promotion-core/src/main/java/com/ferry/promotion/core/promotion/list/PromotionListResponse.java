@@ -9,5 +9,8 @@ import java.util.List;
  * on Agustus 2026      *
  ************************/
 
-public record PromotionListResponse(List<PromotionDomain> promotions, String nextCursor, String prevCursor){
+public record PromotionListResponse(
+	List<PromotionDomain> promotions,
+	String nextCursor,
+	String prevCursor){
 }

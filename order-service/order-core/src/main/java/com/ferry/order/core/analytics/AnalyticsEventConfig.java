@@ -8,8 +8,14 @@ import com.ferry.order.domain.analytics.AnalyticsEventType;
  * on September 2026    *
  ************************/
 
-public record AnalyticsEventConfig(AnalyticsAggregate aggregate, AnalyticsEventType type, String tenantId,
-                                   String aggregateId, int aggregateVersion, Object payload, String actor){
+public record AnalyticsEventConfig(
+	AnalyticsAggregate aggregate,
+	AnalyticsEventType type,
+	String tenantId,
+	String aggregateId,
+	int aggregateVersion,
+	Object payload,
+	String actor){
 
 	public static AnalyticsEventConfig order(AnalyticsEventType type, OrderAnalyticsMessage message, String actor){
 		return new AnalyticsEventConfig(AnalyticsAggregate.ORDER, type, message.tenantId(), message.orderId(),

@@ -8,5 +8,8 @@ import java.time.LocalDate;
  * on September 2026    *
  ************************/
 
-public record RevenueBucketProjection(LocalDate bucketStart, BigDecimal revenue, long orders){
+public record RevenueBucketProjection(
+	LocalDate bucketStart,
+	BigDecimal revenue,
+	long orders){
 }

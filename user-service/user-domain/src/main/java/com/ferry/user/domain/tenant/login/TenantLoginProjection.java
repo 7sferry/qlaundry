@@ -5,5 +5,7 @@ package com.ferry.user.domain.tenant.login;
  * on Juli 2026         *
  ************************/
 
-public record TenantLoginProjection(String fullName, short statusId){
+public record TenantLoginProjection(
+	String fullName,
+	short statusId){
 }

@@ -12,6 +12,9 @@ import java.util.List;
  * on Juli 2026         *
  ************************/
 
-public record StaffUpdateResponse(StaffDomain staff, List<StaffEmailDomain> emails, List<StaffPhoneDomain> phones,
-                                  List<StaffAddressDomain> addresses){
+public record StaffUpdateResponse(
+	StaffDomain staff,
+	List<StaffEmailDomain> emails,
+	List<StaffPhoneDomain> phones,
+	List<StaffAddressDomain> addresses){
 }

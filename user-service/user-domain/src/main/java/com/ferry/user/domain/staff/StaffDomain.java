@@ -14,10 +14,19 @@ import java.time.Instant;
  ************************/
 
 @Builder(toBuilder = true)
-public record StaffDomain(String id, UsernameDomain username, FullNameDomain fullName,
-                          DescriptionDomain description, String tenantId, StaffRole role,
-                          Integer version, boolean deleted, Instant createdAt, String createdBy, Instant updatedAt,
-                          String updatedBy){
+public record StaffDomain(
+	String id,
+	UsernameDomain username,
+	FullNameDomain fullName,
+	DescriptionDomain description,
+	String tenantId,
+	StaffRole role,
+	Integer version,
+	boolean deleted,
+	Instant createdAt,
+	String createdBy,
+	Instant updatedAt,
+	String updatedBy){
 	public StaffDomain{
 		if(username == null || fullName == null){
 			throw new InvalidUserStateException("Username and full fullName must not be null");

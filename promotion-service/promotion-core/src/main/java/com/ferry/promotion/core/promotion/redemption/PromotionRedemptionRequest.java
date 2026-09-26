@@ -16,8 +16,13 @@ import java.util.Set;
  * on Agustus 2026      *
  ************************/
 
-public record PromotionRedemptionRequest(@NotBlank String tenantId, @NotEmpty Collection<String> codes,
-                                         @NotNull @PositiveOrZero BigDecimal subtotal, @NotBlank String referenceId,
-                                         String customerId, @NotBlank String redeemedBy)
+public record PromotionRedemptionRequest(
+	@NotBlank String tenantId,
+	@NotEmpty Collection<String> codes,
+	@NotNull @PositiveOrZero BigDecimal subtotal,
+	@NotBlank String referenceId,
+	String customerId,
+	@NotBlank String redeemedBy
+)
 		implements PromotionValidation{
 }

@@ -7,5 +7,8 @@ import java.time.Duration;
  * on Agustus 2026      *
  ************************/
 
-public record UserServiceClientConfig(String baseUrl, String apiKey, Duration timeout){
+public record UserServiceClientConfig(
+	String baseUrl,
+	String apiKey,
+	Duration timeout){
 }

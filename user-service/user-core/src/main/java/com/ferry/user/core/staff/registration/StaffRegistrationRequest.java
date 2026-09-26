@@ -13,9 +13,13 @@ import java.util.List;
  * on Juli 2026         *
  ************************/
 
-public record StaffRegistrationRequest(@NotBlank @Pattern(regexp = "^[a-zA-Z0-9_]+$") String username,
-                                       @NotBlank String password, @NotBlank String fullName,
-                                       String description,
-                                       @NotNull StaffRole role, List<String> emails, List<String> phones,
-                                       List<String> addresses) implements UserValidation{
+public record StaffRegistrationRequest(
+	@NotBlank @Pattern(regexp = "^[a-zA-Z0-9_]+$") String username,
+	@NotBlank String password,
+	@NotBlank String fullName,
+	String description,
+	@NotNull StaffRole role,
+	List<String> emails,
+	List<String> phones,
+	List<String> addresses) implements UserValidation{
 }

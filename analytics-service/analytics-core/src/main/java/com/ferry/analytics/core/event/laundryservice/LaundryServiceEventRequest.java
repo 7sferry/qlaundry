@@ -10,6 +10,8 @@ import jakarta.validation.constraints.NotNull;
  * on September 2026    *
  ************************/
 
-public record LaundryServiceEventRequest(@NotBlank String eventId, @NotBlank String type,
-                                         @NotNull LaundryServiceSnapshotDomain service) implements AnalyticsValidation{
+public record LaundryServiceEventRequest(
+	@NotBlank String eventId,
+	@NotBlank String type,
+	@NotNull LaundryServiceSnapshotDomain service) implements AnalyticsValidation{
 }

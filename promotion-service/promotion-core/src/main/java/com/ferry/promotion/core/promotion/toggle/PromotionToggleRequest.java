@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
  * on Agustus 2026      *
  ************************/
 
-public record PromotionToggleRequest(@NotBlank String promotionId,
-                                     @NotNull Boolean active) implements PromotionValidation{
+public record PromotionToggleRequest(
+	@NotBlank String promotionId,
+	@NotNull Boolean active) implements PromotionValidation{
 }

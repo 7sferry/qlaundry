@@ -5,5 +5,7 @@ package com.ferry.order.core.invoice.link;
  * on Agustus 2026      *
  ************************/
 
-public record InvoiceLinkResponse(String token, long expiresAt){
+public record InvoiceLinkResponse(
+	String token,
+	long expiresAt){
 }

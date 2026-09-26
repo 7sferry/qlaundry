@@ -12,7 +12,9 @@ import java.util.List;
  * on Juli 2026         *
  ************************/
 
-public record StaffDetailResponse(StaffDetailProjection staff, List<StaffPhoneDetailProjection> phones,
-                                  List<StaffEmailDetailProjection> emails,
-                                  List<StaffAddressDetailProjection> addresses){
+public record StaffDetailResponse(
+	StaffDetailProjection staff,
+	List<StaffPhoneDetailProjection> phones,
+	List<StaffEmailDetailProjection> emails,
+	List<StaffAddressDetailProjection> addresses){
 }

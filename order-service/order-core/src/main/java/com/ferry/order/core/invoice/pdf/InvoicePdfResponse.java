@@ -7,5 +7,7 @@ import com.ferry.order.domain.order.OrderDomain;
  * on Agustus 2026      *
  ************************/
 
-public record InvoicePdfResponse(OrderDomain order, byte[] pdf){
+public record InvoicePdfResponse(
+	OrderDomain order,
+	byte[] pdf){
 }

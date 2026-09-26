@@ -5,5 +5,7 @@ package com.ferry.user.core.staff.refreshtoken;
  * on Juli 2026         *
  ************************/
 
-public record StaffRefreshTokenResponse(String accessToken, String refreshToken){
+public record StaffRefreshTokenResponse(
+	String accessToken,
+	String refreshToken){
 }

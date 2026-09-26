@@ -10,5 +10,7 @@ import java.util.Collection;
  ************************/
 
 @Builder
-public record CustomerEmailFilter(String customerId, Collection<String> customerIds){
+public record CustomerEmailFilter(
+	String customerId,
+	Collection<String> customerIds){
 }

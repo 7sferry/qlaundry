@@ -8,5 +8,7 @@ import jakarta.validation.constraints.NotBlank;
  * on Juli 2026         *
  ************************/
 
-public record StaffSubmitOtpRequest(@NotBlank String username, @NotBlank String otp) implements UserValidation{
+public record StaffSubmitOtpRequest(
+	@NotBlank String username,
+	@NotBlank String otp) implements UserValidation{
 }

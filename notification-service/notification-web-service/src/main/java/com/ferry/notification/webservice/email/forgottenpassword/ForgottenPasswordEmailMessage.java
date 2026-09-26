@@ -5,5 +5,7 @@ package com.ferry.notification.webservice.email.forgottenpassword;
  * on Juli 2026         *
  ************************/
 
-public record ForgottenPasswordEmailMessage(String username, String otp){
+public record ForgottenPasswordEmailMessage(
+	String username,
+	String otp){
 }

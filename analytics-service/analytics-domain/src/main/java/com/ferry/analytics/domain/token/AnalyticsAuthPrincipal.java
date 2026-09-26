@@ -10,7 +10,13 @@ import lombok.Builder;
  ************************/
 
 @Builder(toBuilder = true)
-public record AnalyticsAuthPrincipal(String userId, String username, String fullName, String tenantName,
-                                     String tenantId, SessionType sessionType, StaffRole role){
+public record AnalyticsAuthPrincipal(
+	String userId,
+	String username,
+	String fullName,
+	String tenantName,
+	String tenantId,
+	SessionType sessionType,
+	StaffRole role){
 
 }

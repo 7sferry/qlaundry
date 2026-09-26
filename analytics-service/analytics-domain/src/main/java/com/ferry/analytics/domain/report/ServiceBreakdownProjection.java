@@ -7,5 +7,9 @@ import java.math.BigDecimal;
  * on September 2026    *
  ************************/
 
-public record ServiceBreakdownProjection(String serviceId, String serviceName, long count, BigDecimal revenue){
+public record ServiceBreakdownProjection(
+	String serviceId,
+	String serviceName,
+	long count,
+	BigDecimal revenue){
 }

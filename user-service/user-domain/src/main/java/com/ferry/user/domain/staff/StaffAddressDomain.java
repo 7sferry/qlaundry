@@ -10,9 +10,16 @@ import java.time.Instant;
  * on Juli 2026         *
  ************************/
 
-public record StaffAddressDomain(String id, String staffId, AddressLineDomain addressLine,
-                                 Integer version, boolean deleted, Instant createdAt, String createdBy, Instant updatedAt,
-                                 String updatedBy){
+public record StaffAddressDomain(
+	String id,
+	String staffId,
+	AddressLineDomain addressLine,
+	Integer version,
+	boolean deleted,
+	Instant createdAt,
+	String createdBy,
+	Instant updatedAt,
+	String updatedBy){
 	public StaffAddressDomain{
 		if(staffId == null || addressLine == null){
 			throw new InvalidUserStateException("User id and full addressLine must not be null");

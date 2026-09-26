@@ -11,9 +11,19 @@ import java.math.BigDecimal;
  * on September 2026    *
  ************************/
 
-public record PromotionSnapshot(@NotBlank String id, @NotBlank String code, @NotBlank String name,
-                                @NotNull PromotionType type, BigDecimal percentage, BigDecimal amount,
-                                BigDecimal maxDiscountAmount, BigDecimal minSubtotal, boolean combinable,
-                                Integer usageLimit, int usedCount, boolean active, @NotNull Long startAt,
-                                @NotNull Long endAt){
+public record PromotionSnapshot(
+	@NotBlank String id,
+	@NotBlank String code,
+	@NotBlank String name,
+	@NotNull PromotionType type,
+	BigDecimal percentage,
+	BigDecimal amount,
+	BigDecimal maxDiscountAmount,
+	BigDecimal minSubtotal,
+	boolean combinable,
+	Integer usageLimit,
+	int usedCount,
+	boolean active,
+	@NotNull Long startAt,
+	@NotNull Long endAt){
 }

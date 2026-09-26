@@ -7,6 +7,11 @@ import java.math.BigDecimal;
  * on Agustus 2026      *
  ************************/
 
-public record OrderPaymentWebResponse(String id, String orderNumber, String paymentMethod, String paymentStatus,
-                                      BigDecimal totalPrice, long updatedAt){
+public record OrderPaymentWebResponse(
+	String id,
+	String orderNumber,
+	String paymentMethod,
+	String paymentStatus,
+	BigDecimal totalPrice,
+	long updatedAt){
 }

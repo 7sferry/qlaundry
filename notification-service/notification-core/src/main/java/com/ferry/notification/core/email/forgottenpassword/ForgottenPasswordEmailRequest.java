@@ -8,7 +8,9 @@ import jakarta.validation.constraints.NotBlank;
  * on Juli 2026         *
  ************************/
 
-public record ForgottenPasswordEmailRequest(@NotBlank String triggerId, @NotBlank String recipient,
-                                            @NotBlank String username,
-                                            @NotBlank String otp) implements NotificationValidation{
+public record ForgottenPasswordEmailRequest(
+	@NotBlank String triggerId,
+	@NotBlank String recipient,
+	@NotBlank String username,
+	@NotBlank String otp) implements NotificationValidation{
 }

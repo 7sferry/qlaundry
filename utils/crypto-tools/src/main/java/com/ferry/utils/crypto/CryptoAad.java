@@ -7,7 +7,10 @@ import java.nio.charset.StandardCharsets;
  * on Agustus 2026      *
  ************************/
 
-public record CryptoAad(String table, String column, String owner){
+public record CryptoAad(
+	String table,
+	String column,
+	String owner){
 	public CryptoAad{
 		if(table == null || table.isBlank() || column == null || column.isBlank()
 				|| owner == null || owner.isBlank()){
