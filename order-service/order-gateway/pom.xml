@@ -6,7 +6,7 @@
 		<groupId>com.ferry</groupId>
 		<artifactId>qlaundry</artifactId>
 		<version>1.0.0</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath>../../pom.xml</relativePath>
 	</parent>
 	<artifactId>order-gateway</artifactId>
 	<name>order-gateway</name>

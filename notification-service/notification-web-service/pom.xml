@@ -6,7 +6,7 @@
 		<groupId>com.ferry</groupId>
 		<artifactId>qlaundry</artifactId>
 		<version>1.0.0</version>
-		<relativePath/>
+		<relativePath>../../pom.xml</relativePath>
 	</parent>
 	<artifactId>notification-web-service</artifactId>
 	<name>notification-web-service</name>

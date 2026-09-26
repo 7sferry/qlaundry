@@ -11,7 +11,7 @@
 		<groupId>com.ferry</groupId>
 		<artifactId>qlaundry</artifactId>
 		<version>1.0.0</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath>../../pom.xml</relativePath>
 	</parent>
 	<artifactId>promotion-client</artifactId>
 	<name>promotion-client</name>
