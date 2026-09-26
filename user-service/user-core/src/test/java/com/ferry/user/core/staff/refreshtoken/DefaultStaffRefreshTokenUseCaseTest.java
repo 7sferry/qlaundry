@@ -130,7 +130,8 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN, StaffRefreshTokenResponse.class);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSessionDomain.class);
-		UserSessionDomain fetchedSession = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(7200), USER_ID, SessionType.STAFF);
+		UserSessionDomain fetchedSession = UserSessionDomain.create(HASHED_REFRESH_TOKEN,
+				Instant.now().plusSeconds(TokenConstant.REFRESH_CACHE_MAX_SECONDS + 3600), USER_ID, SessionType.STAFF);
 		willReturn(Optional.of(fetchedSession)).given(gateway).findSessionById(HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of("cached-access-token")).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 
@@ -174,7 +175,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
 		then(presenter).should().presentCachedToken(new StaffRefreshTokenResponse(NEW_ACCESS_TOKEN, null));
-		then(cacheManager).should().set(eq(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN), eq(NEW_ACCESS_TOKEN), eq(Duration.ofSeconds(840)));
+		then(cacheManager).should().set(eq(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN), eq(NEW_ACCESS_TOKEN), eq(Duration.ofSeconds(855)));
 		then(cacheManager).should(never()).set(eq(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN), any(), any());
 		then(gateway).should(never()).save(any());
 	}
@@ -277,7 +278,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		then(cacheManager).should().set(eq(TokenConstant.REFRESH_KEY + NEW_HASHED_REFRESH_TOKEN), any(UserSessionDomain.class),
 				eq(Duration.ofSeconds(TokenConstant.REFRESH_CACHE_MAX_SECONDS)));
 		then(cacheManager).should().set(eq(TokenConstant.ACCESS_KEY + NEW_HASHED_REFRESH_TOKEN), eq(NEW_ACCESS_TOKEN),
-				eq(Duration.ofSeconds(840)));
+				eq(Duration.ofSeconds(855)));
 		then(cacheManager).should().set(eq(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN), responseCaptor.capture(),
 				eq(Duration.ofSeconds(TokenConstant.ROTATION_GRACE_SECONDS)));
 		then(presenter).should().presentRotatedToken(responseCaptor.getValue());

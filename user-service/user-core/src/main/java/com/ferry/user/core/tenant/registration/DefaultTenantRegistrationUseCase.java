@@ -48,8 +48,8 @@ public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCa
 			presenter.present(new TenantRegistrationResponse(savedTenant, registeredAdmin));
 		} catch (InvalidUsernameException e){
 			log.warn("Failed to register tenant", e);
-			TenantDomain fakeTenant = TenantDomain.fake(new FullNameDomain(request.tenantName()));
-			StaffDomain fakeStaff = StaffDomain.fake(new FullNameDomain(request.fullName()));
+			TenantDomain fakeTenant = TenantDomain.fake(new FullNameDomain(request.tenantName()), new UsernameDomain(request.username()));
+			StaffDomain fakeStaff = StaffDomain.fake(new FullNameDomain(request.fullName()), new UsernameDomain(request.username()));
 			presenter.present(new TenantRegistrationResponse(fakeTenant, new StaffRegistrationResponse(fakeStaff)));
 		}
 	}

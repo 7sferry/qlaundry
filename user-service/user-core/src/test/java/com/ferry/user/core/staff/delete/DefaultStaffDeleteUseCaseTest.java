@@ -4,6 +4,7 @@ import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.FullNameDomain;
 import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.common.exception.ForbiddenActionException;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import com.ferry.user.domain.common.exception.InvalidUsernameException;
 import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.staff.StaffDomain;
@@ -121,12 +122,12 @@ class DefaultStaffDeleteUseCaseTest{
 	}
 
 	@Test
-	void givenPrincipalWithoutTenantId_thenThrowsIllegalArgumentException(){
+	void givenPrincipalWithoutTenantId_thenThrowsInvalidUserStateException(){
 		UserAuthPrincipal principal = superStaffPrincipal(null);
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new StaffDeleteRequest(USERNAME), principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class));
+				.isInstanceOf(InvalidUserStateException.class));
 
 		then(gateway).shouldHaveNoInteractions();
 		then(presenter).should(never())

@@ -2,6 +2,7 @@ package com.ferry.promotion.core.promotion.update;
 
 import com.ferry.promotion.domain.common.MoneyDomain;
 import com.ferry.promotion.domain.common.NoteDomain;
+import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
 import com.ferry.promotion.domain.common.exception.NotFoundException;
 import com.ferry.promotion.domain.common.exception.PromotionForbiddenActionException;
 import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
@@ -92,7 +93,7 @@ class DefaultPromotionUpdateUseCaseTest{
 	}
 
 	@Test
-	void givenACodeAlreadyTakenByAnotherPromotion_thenThrowsIllegalArgumentException(){
+	void givenACodeAlreadyTakenByAnotherPromotion_thenThrowsInvalidPromotionStateException(){
 		Instant now = Instant.now();
 		Instant startAt = Instant.parse("2026-09-01T00:00:00Z");
 		Instant endAt = Instant.parse("2026-09-30T00:00:00Z");
@@ -130,7 +131,7 @@ class DefaultPromotionUpdateUseCaseTest{
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class), any(PromotionIdDomain.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidPromotionStateException.class)
 				.hasMessage("Promotion code already exists"));
 
 		then(gateway).should(never())

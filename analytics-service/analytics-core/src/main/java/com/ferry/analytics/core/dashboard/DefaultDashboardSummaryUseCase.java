@@ -9,7 +9,6 @@ import com.ferry.analytics.domain.token.AnalyticsAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.Clock;
 import java.time.InstantSource;
 import java.time.LocalDate;
 import java.util.List;
@@ -31,7 +30,11 @@ public class DefaultDashboardSummaryUseCase implements DashboardSummaryUseCase{
 	                    DashboardSummaryPresenter presenter){
 		request.validate();
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		LocalDate date = resolveDate(request.date());
+		LocalDate today = LocalDate.ofInstant(clock.instant(), AnalyticsConstant.BUSINESS_ZONE);
+		LocalDate date = request.date() == null ? today : request.date();
+		if(date.isAfter(today)){
+			throw new InvalidAnalyticStateException("Dashboard date must not be in the future");
+		}
 		LocalDate monthStart = date.withDayOfMonth(1);
 		DashboardSummaryProjection summary = gateway.summarize(tenantId, date, monthStart, monthStart.minusMonths(1));
 		List<StatusCountProjection> distribution = gateway.statusDistribution(tenantId, monthStart,
@@ -42,13 +45,6 @@ public class DefaultDashboardSummaryUseCase implements DashboardSummaryUseCase{
 				growth(orZero(summary.monthRevenue()), orZero(summary.lastMonthRevenue())),
 				growth(BigDecimal.valueOf(summary.monthOrders()), BigDecimal.valueOf(summary.lastMonthOrders())),
 				distribution));
-	}
-
-	private LocalDate resolveDate(LocalDate date){
-		if(date == null){
-			return LocalDate.ofInstant(clock.instant(), AnalyticsConstant.BUSINESS_ZONE);
-		}
-		return date;
 	}
 
 	private BigDecimal growth(BigDecimal current, BigDecimal previous){

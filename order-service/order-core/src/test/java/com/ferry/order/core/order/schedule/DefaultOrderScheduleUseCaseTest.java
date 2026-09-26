@@ -6,7 +6,6 @@ import com.ferry.order.domain.order.schedule.OrderScheduleType;
 import com.ferry.order.domain.staff.StaffRole;
 import com.ferry.order.domain.tenant.TenantIdDomain;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
-import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -18,6 +17,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Set;
 
@@ -47,7 +47,7 @@ class DefaultOrderScheduleUseCaseTest{
 	ArgumentCaptor<OrderScheduleResponse> responseCaptor;
 
 	@Test
-	void givenImpossibleCalendarDate_thenThrowsIllegalArgumentException(){
+	void givenImpossibleCalendarDate_thenThrowsDateTimeParseException(){
 		DefaultOrderScheduleUseCase useCase = new DefaultOrderScheduleUseCase(gateway,
 				Clock.fixed(Instant.parse("2026-09-14T02:00:00Z"), ZoneOffset.UTC));
 		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
@@ -58,8 +58,7 @@ class DefaultOrderScheduleUseCaseTest{
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new OrderScheduleRequest(LocalDate.parse("2026-02-30")), principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("Schedule date must be a valid yyyy-MM-dd date"));
+				.isInstanceOf(DateTimeParseException.class));
 
 		then(gateway).shouldHaveNoInteractions();
 	}

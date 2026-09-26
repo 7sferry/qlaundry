@@ -31,8 +31,8 @@ public record TenantDomain(
 		}
 	}
 
-	public static TenantDomain fake(FullNameDomain name){
-		return new TenantDomain(null, new UsernameDomain(name.value()), name, null, TenantStatus.ACTIVE, null, false, null, null, null, null);
+	public static TenantDomain fake(FullNameDomain name, UsernameDomain username){
+		return new TenantDomain(null, username, name, null, TenantStatus.ACTIVE, null, false, null, null, null, null);
 	}
 
 	public static TenantDomain register(UsernameDomain username, FullNameDomain name, DescriptionDomain description){

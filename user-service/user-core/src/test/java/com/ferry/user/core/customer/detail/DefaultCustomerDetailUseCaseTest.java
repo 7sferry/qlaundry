@@ -5,6 +5,7 @@ import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.EmailDomain;
 import com.ferry.user.domain.common.FullNameDomain;
 import com.ferry.user.domain.common.PhoneDomain;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.customer.CustomerAddressDomain;
 import com.ferry.user.domain.customer.CustomerAddressFilter;
@@ -72,12 +73,12 @@ class DefaultCustomerDetailUseCaseTest{
 	}
 
 	@Test
-	void givenPrincipalWithoutTenantId_thenThrowsIllegalArgumentException(){
+	void givenPrincipalWithoutTenantId_thenThrowsInvalidUserStateException(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().build();
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new CustomerDetailRequest(CUSTOMER_ID), principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class));
+				.isInstanceOf(InvalidUserStateException.class));
 
 		then(gateway).shouldHaveNoInteractions();
 		then(presenter).should(never())

@@ -201,7 +201,7 @@ class DefaultStaffLoginUseCaseTest{
 		then(cacheManager).should().set(eq(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN), any(UserSessionDomain.class),
 				eq(Duration.ofSeconds(TokenConstant.REFRESH_CACHE_MAX_SECONDS)));
 		then(cacheManager).should().set(eq(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN), eq(ACCESS_TOKEN),
-				eq(Duration.ofSeconds(840)));
+				eq(Duration.ofSeconds(855)));
 		then(presenter).should().present(new StaffLoginResponse(ACCESS_TOKEN, REFRESH_TOKEN));
 	}
 

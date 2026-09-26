@@ -5,6 +5,7 @@ import com.ferry.notification.core.email.send.EmailSendGateway;
 import com.ferry.notification.domain.ContentDomain;
 import com.ferry.notification.domain.EmailNotificationDomain;
 import com.ferry.notification.domain.EmailType;
+import com.ferry.notification.domain.exception.InvalidaNotificationStateException;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -80,13 +81,13 @@ class DefaultTenantRegistrationEmailUseCaseTest{
 	}
 
 	@Test
-	void givenInvalidRecipientEmailFormat_thenThrowsIllegalArgumentException(){
+	void givenInvalidRecipientEmailFormat_thenThrowsInvalidaNotificationStateException(){
 		TenantRegistrationEmailRequest request = new TenantRegistrationEmailRequest(TRIGGER_ID, "not-an-email", STAFF_FULL_NAME,
 				STAFF_USERNAME, TENANT_ID, TENANT_NAME, "desc", Instant.now(), CONFIRMATION_TOKEN);
 		willReturn("<html>content</html>").given(composer).compose(request);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidaNotificationStateException.class)
 				.hasMessage("Invalid email format."));
 
 		then(emailSendGateway).shouldHaveNoInteractions();

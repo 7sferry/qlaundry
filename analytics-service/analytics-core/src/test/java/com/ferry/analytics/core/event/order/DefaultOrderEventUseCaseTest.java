@@ -1,5 +1,6 @@
 package com.ferry.analytics.core.event.order;
 
+import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
 import com.ferry.analytics.domain.event.AnalyticsAggregate;
 import com.ferry.analytics.domain.event.ConsumedEventDomain;
 import com.ferry.analytics.domain.event.OrderItemSnapshotDomain;
@@ -90,7 +91,7 @@ class DefaultOrderEventUseCaseTest{
 	}
 
 	@Test
-	void givenItemOfAnotherOrder_thenThrowsIllegalArgumentExceptionWithoutWriting(){
+	void givenItemOfAnotherOrder_thenThrowsInvalidAnalyticStateExceptionWithoutWriting(){
 		Instant now = Instant.now();
 		OrderSnapshotDomain order = OrderSnapshotDomain.builder()
 				.tenantId(TENANT_ID)
@@ -129,7 +130,7 @@ class DefaultOrderEventUseCaseTest{
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new OrderEventRequest(EVENT_ID, "ORDER_STATUS_CHANGED", order,
 								List.of(strayItem), List.of()), presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidAnalyticStateException.class)
 				.hasMessageContaining("01ITEMKEMEJABATIK00000000"));
 
 		then(gateway).should(never())

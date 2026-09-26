@@ -6,6 +6,7 @@ import com.ferry.user.domain.common.RawPasswordDomain;
 import com.ferry.user.domain.common.UsernameDomain;
 import com.ferry.user.domain.common.exception.ForbiddenActionException;
 import com.ferry.user.domain.common.exception.InvalidPasswordException;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import com.ferry.user.domain.common.exception.InvalidUsernameException;
 import com.ferry.user.domain.staff.StaffAddressDomain;
 import com.ferry.user.domain.staff.StaffDomain;
@@ -16,6 +17,8 @@ import com.ferry.user.domain.token.UserAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -60,9 +63,10 @@ class DefaultStaffRegistrationUseCaseTest{
 	@Captor
 	ArgumentCaptor<StaffDomain> staffCaptor;
 
-	@Test
-	void givenBlankUsername_thenThrowsConstraintViolationException(){
-		StaffRegistrationRequest request = new StaffRegistrationRequest(" ", PASSWORD, FULL_NAME,
+	@ParameterizedTest
+	@ValueSource(strings = {" ", "budi"})
+	void givenInvalidUsername_thenThrowsConstraintViolationException(String username){
+		StaffRegistrationRequest request = new StaffRegistrationRequest(username, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
@@ -131,20 +135,6 @@ class DefaultStaffRegistrationUseCaseTest{
 	}
 
 	@Test
-	void givenUsernameShorterThanMinimumLength_thenThrowsInvalidUsernameException(){
-		StaffRegistrationRequest request = new StaffRegistrationRequest("budi", PASSWORD, FULL_NAME,
-				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
-		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
-				.role(StaffRole.SUPER_STAFF).build();
-
-		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(InvalidUsernameException.class));
-
-		then(gateway).shouldHaveNoInteractions();
-		then(presenter).shouldHaveNoInteractions();
-	}
-
-	@Test
 	void givenUsernameAlreadyExists_thenThrowsInvalidUsernameExceptionAndNeverSaves(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
@@ -176,7 +166,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	}
 
 	@Test
-	void givenEmptyEmailsList_thenThrowsIllegalArgumentExceptionAfterStaffIsSaved(){
+	void givenEmptyEmailsList_thenThrowsInvalidUserStateExceptionAfterStaffIsSaved(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(), null, null);
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
@@ -189,7 +179,7 @@ class DefaultStaffRegistrationUseCaseTest{
 		}).given(gateway).save(any(StaffDomain.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidUserStateException.class)
 				.hasMessage("Emails cannot be empty"));
 
 		then(gateway).should().save(any(StaffDomain.class));
@@ -198,7 +188,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	}
 
 	@Test
-	void givenNullEmailsList_thenThrowsIllegalArgumentException(){
+	void givenNullEmailsList_thenThrowsInvalidUserStateException(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, null, null, null);
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
@@ -211,14 +201,14 @@ class DefaultStaffRegistrationUseCaseTest{
 		}).given(gateway).save(any(StaffDomain.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidUserStateException.class)
 				.hasMessage("Emails cannot be empty"));
 
 		then(presenter).shouldHaveNoInteractions();
 	}
 
 	@Test
-	void givenInvalidEmailFormat_thenThrowsIllegalArgumentException(){
+	void givenInvalidEmailFormat_thenThrowsInvalidUserStateException(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of("not-an-email"), null, null);
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
@@ -231,7 +221,7 @@ class DefaultStaffRegistrationUseCaseTest{
 		}).given(gateway).save(any(StaffDomain.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidUserStateException.class)
 				.hasMessage("Invalid email format."));
 
 		then(gateway).should(never()).save(any(StaffEmailDomain.class));
@@ -239,7 +229,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	}
 
 	@Test
-	void givenInvalidPhoneFormat_thenThrowsIllegalArgumentExceptionAfterEmailsSaved(){
+	void givenInvalidPhoneFormat_thenThrowsInvalidUserStateExceptionAfterEmailsSaved(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL), List.of("not-a-phone"), null);
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
@@ -252,7 +242,7 @@ class DefaultStaffRegistrationUseCaseTest{
 		}).given(gateway).save(any(StaffDomain.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidUserStateException.class)
 				.hasMessage("Phone must be in E.164 format, e.g. +6281234567890"));
 
 		then(gateway).should().save(any(StaffEmailDomain.class));
@@ -261,7 +251,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	}
 
 	@Test
-	void givenBlankAddressLine_thenThrowsIllegalArgumentException(){
+	void givenBlankAddressLine_thenThrowsInvalidUserStateException(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL), null, List.of(" "));
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
@@ -274,7 +264,7 @@ class DefaultStaffRegistrationUseCaseTest{
 		}).given(gateway).save(any(StaffDomain.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidUserStateException.class)
 				.hasMessage("Address must not be blank"));
 
 		then(gateway).should(never()).save(any(StaffAddressDomain.class));

@@ -70,7 +70,7 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 				pickupAt, estimatedDeliveryAt, new NoteDomain(request.notes()), principal.userId());
 		Set<String> codes = distinctCodes(request.promoCodes());
 		if(codes.isEmpty()){
-			presenter.present(persist(request, order, List.of(), principal));
+			presenter.present(persist(request, order, List.of(), List.of(), principal));
 			return;
 		}
 		OrderPromotionSagaDomain saga = OrderPromotionSagaDomain.open(tenantId.value(), order.orderNumberValue(),
@@ -78,8 +78,9 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		promotionGateway.openSaga(saga);
 		List<PromotionRedemptionHttpResponse> redemptions = redeemPromotions(order, codes, tenantId, principal, saga);
 		try{
-			OrderDomain running = applyPromotionsToOrder(order, redemptions);
-			OrderCreateResponse response = persist(request, running, redemptions, principal);
+			AppliedPromotions applied = applyPromotionsToOrder(order, redemptions);
+			OrderCreateResponse response = persist(request, applied.order(), redemptions, applied.granted(),
+					principal);
 			promotionGateway.markSagaCommittedAfterCommit(saga.commit(principal.userId()));
 			presenter.present(response);
 		}catch(RuntimeException e){
@@ -90,9 +91,10 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 
 	private OrderCreateResponse persist(OrderCreateRequest request, OrderDomain order,
 	                                    List<PromotionRedemptionHttpResponse> redemptions,
+	                                    List<MoneyDomain> grantedAmounts,
 	                                    OrderAuthPrincipal principal){
 		OrderDomain saved = gateway.save(order);
-		List<OrderPromotionDomain> promotions = savePromotions(saved, redemptions, principal);
+		List<OrderPromotionDomain> promotions = savePromotions(saved, redemptions, grantedAmounts, principal);
 		List<OrderItemDomain> items = saveItems(request, saved, principal);
 		OrderDomain current = Boolean.TRUE.equals(request.pickedUpImmediately())
 				? gateway.markPickedUp(saved, principal) : saved;
@@ -126,13 +128,15 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		}
 	}
 
-	private OrderDomain applyPromotionsToOrder(OrderDomain order, List<PromotionRedemptionHttpResponse> redemptions){
+	private AppliedPromotions applyPromotionsToOrder(OrderDomain order, List<PromotionRedemptionHttpResponse> redemptions){
 		OrderDomain running = order;
+		List<MoneyDomain> granted = new ArrayList<>(redemptions.size());
 		for(PromotionRedemptionHttpResponse response : redemptions){
-			MoneyDomain granted = new MoneyDomain(response.discountAmount()).min(running.discountRoom());
-			running = running.applyPromotionDiscount(granted);
+			MoneyDomain amount = new MoneyDomain(response.discountAmount()).min(running.discountRoom());
+			granted.add(amount);
+			running = running.applyPromotionDiscount(amount);
 		}
-		return running;
+		return new AppliedPromotions(running, granted);
 	}
 
 	private Set<String> distinctCodes(List<String> promoCodes){
@@ -175,11 +179,13 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 
 	private List<OrderPromotionDomain> savePromotions(OrderDomain order,
 	                                                  List<PromotionRedemptionHttpResponse> redemptions,
+	                                                  List<MoneyDomain> grantedAmounts,
 	                                                  OrderAuthPrincipal principal){
 		List<OrderPromotionDomain> saved = new ArrayList<>(redemptions.size());
-		for(PromotionRedemptionHttpResponse redeemed : redemptions){
+		for(int i = 0; i < redemptions.size(); i++){
+			PromotionRedemptionHttpResponse redeemed = redemptions.get(i);
 			saved.add(gateway.save(OrderPromotionDomain.register(order.id(), redeemed.promotionId(),
-					redeemed.code(), new MoneyDomain(redeemed.discountAmount()), principal.userId())));
+					redeemed.code(), grantedAmounts.get(i), principal.userId())));
 		}
 		return saved;
 	}
@@ -216,6 +222,9 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 					principal.userId())));
 		}
 		return items;
+	}
+
+	private record AppliedPromotions(OrderDomain order, List<MoneyDomain> granted){
 	}
 
 }

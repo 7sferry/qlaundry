@@ -33,8 +33,8 @@ public record StaffDomain(
 		}
 	}
 
-	public static StaffDomain fake(FullNameDomain name){
-		return new StaffDomain(null, new UsernameDomain(name.value()), name, null, null, StaffRole.STAFF, null, false, null, null, null, null);
+	public static StaffDomain fake(FullNameDomain name, UsernameDomain username){
+		return new StaffDomain(null, username, name, null, null, StaffRole.STAFF, null, false, null, null, null, null);
 	}
 
 	public static StaffDomain register(UsernameDomain username, FullNameDomain fullName,

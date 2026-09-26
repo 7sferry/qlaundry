@@ -1,5 +1,6 @@
 package com.ferry.user.core.customer.registration;
 
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import com.ferry.user.domain.customer.CustomerAddressDomain;
 import com.ferry.user.domain.customer.CustomerDomain;
 import com.ferry.user.domain.customer.CustomerEmailDomain;
@@ -72,7 +73,7 @@ class DefaultCustomerRegistrationUseCaseTest{
 	}
 
 	@Test
-	void givenPrincipalWithoutTenantId_thenThrowsIllegalArgumentException(){
+	void givenPrincipalWithoutTenantId_thenThrowsInvalidUserStateException(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.role(StaffRole.STAFF)
@@ -80,7 +81,7 @@ class DefaultCustomerRegistrationUseCaseTest{
 		CustomerRegistrationRequest request = new CustomerRegistrationRequest(FULL_NAME, PHONE, null, null, null);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class));
+				.isInstanceOf(InvalidUserStateException.class));
 
 		then(gateway).shouldHaveNoInteractions();
 	}

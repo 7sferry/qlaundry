@@ -1,22 +1,11 @@
 package com.ferry.user.core.staff.update;
 
 import com.ferry.user.core.tools.PasswordTool;
-import com.ferry.user.domain.common.AddressLineDomain;
-import com.ferry.user.domain.common.DescriptionDomain;
-import com.ferry.user.domain.common.EmailDomain;
-import com.ferry.user.domain.common.FullNameDomain;
-import com.ferry.user.domain.common.HashedPasswordDomain;
-import com.ferry.user.domain.common.PhoneDomain;
-import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.*;
 import com.ferry.user.domain.common.exception.InvalidPasswordException;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import com.ferry.user.domain.common.exception.NotFoundException;
-import com.ferry.user.domain.staff.StaffAddressDomain;
-import com.ferry.user.domain.staff.StaffDomain;
-import com.ferry.user.domain.staff.StaffEmailDomain;
-import com.ferry.user.domain.staff.StaffPasswordDomain;
-import com.ferry.user.domain.staff.StaffPasswordProjection;
-import com.ferry.user.domain.staff.StaffPhoneDomain;
-import com.ferry.user.domain.staff.StaffRole;
+import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -32,11 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willAnswer;
-import static org.mockito.BDDMockito.willDoNothing;
-import static org.mockito.BDDMockito.willReturn;
-import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.*;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -68,8 +53,6 @@ class DefaultStaffUpdateUseCaseTest{
 	ArgumentCaptor<StaffDomain> staffCaptor;
 	@Captor
 	ArgumentCaptor<StaffPasswordDomain> passwordCaptor;
-	@Captor
-	ArgumentCaptor<StaffUpdateResponse> responseCaptor;
 
 	@Test
 	void givenBlankFullName_thenThrowsConstraintViolationException(){
@@ -99,7 +82,7 @@ class DefaultStaffUpdateUseCaseTest{
 	}
 
 	@Test
-	void givenEmptyEmailsList_thenThrowsIllegalArgumentExceptionAfterProfileSaved(){
+	void givenEmptyEmailsList_thenThrowsInvalidUserStateExceptionAfterProfileSaved(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				List.of(), null, null);
@@ -110,7 +93,7 @@ class DefaultStaffUpdateUseCaseTest{
 		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(StaffDomain.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidUserStateException.class)
 				.hasMessage("Emails cannot be empty"));
 
 		then(gateway).should().save(any(StaffDomain.class));
@@ -120,7 +103,7 @@ class DefaultStaffUpdateUseCaseTest{
 	}
 
 	@Test
-	void givenNullEmailsList_thenThrowsIllegalArgumentException(){
+	void givenNullEmailsList_thenThrowsInvalidUserStateException(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				null, null, null);
@@ -131,7 +114,7 @@ class DefaultStaffUpdateUseCaseTest{
 		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(StaffDomain.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidUserStateException.class)
 				.hasMessage("Emails cannot be empty"));
 
 		then(presenter).shouldHaveNoInteractions();

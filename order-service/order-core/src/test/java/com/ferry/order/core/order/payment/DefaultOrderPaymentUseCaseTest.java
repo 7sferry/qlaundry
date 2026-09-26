@@ -89,7 +89,7 @@ class DefaultOrderPaymentUseCaseTest{
 	}
 
 	@Test
-	void givenAlreadyPaidOrder_thenThrowsIllegalArgumentException(){
+	void givenAlreadyPaidOrder_thenThrowsInvalidOrderStatusException(){
 		Instant now = Instant.now();
 		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
 				.userId(STAFF_ID)
@@ -127,7 +127,7 @@ class DefaultOrderPaymentUseCaseTest{
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new OrderPaymentRequest(ORDER_ID, PaymentMethod.CASH), principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidOrderStatusException.class)
 				.hasMessage("Order is already paid"));
 
 		then(gateway).should(never())

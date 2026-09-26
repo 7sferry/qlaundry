@@ -1,5 +1,6 @@
 package com.ferry.promotion.core.promotion.create;
 
+import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
 import com.ferry.promotion.domain.common.exception.PromotionForbiddenActionException;
 import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
 import com.ferry.promotion.domain.promotion.PromotionDomain;
@@ -81,7 +82,7 @@ class DefaultPromotionCreateUseCaseTest{
 	}
 
 	@Test
-	void givenDuplicateCode_thenThrowsIllegalArgumentException(){
+	void givenDuplicateCode_thenThrowsInvalidPromotionStateException(){
 		Instant startAt = Instant.parse("2026-09-01T00:00:00Z");
 		Instant endAt = Instant.parse("2026-09-30T00:00:00Z");
 		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
@@ -96,7 +97,7 @@ class DefaultPromotionCreateUseCaseTest{
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidPromotionStateException.class)
 				.hasMessage("Promotion code already exists"));
 
 		then(gateway).should(never())
@@ -104,7 +105,7 @@ class DefaultPromotionCreateUseCaseTest{
 	}
 
 	@Test
-	void givenPercentageOverOneHundred_thenThrowsIllegalArgumentException(){
+	void givenPercentageOverOneHundred_thenThrowsInvalidPromotionStateException(){
 		Instant startAt = Instant.parse("2026-09-01T00:00:00Z");
 		Instant endAt = Instant.parse("2026-09-30T00:00:00Z");
 		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
@@ -119,7 +120,7 @@ class DefaultPromotionCreateUseCaseTest{
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidPromotionStateException.class)
 				.hasMessage("Percentage must be greater than zero and at most 100"));
 
 		then(gateway).should(never())
@@ -127,7 +128,7 @@ class DefaultPromotionCreateUseCaseTest{
 	}
 
 	@Test
-	void givenNonPositiveMaxDiscountAmount_thenThrowsIllegalArgumentException(){
+	void givenNonPositiveMaxDiscountAmount_thenThrowsInvalidPromotionStateException(){
 		Instant startAt = Instant.parse("2026-09-01T00:00:00Z");
 		Instant endAt = Instant.parse("2026-09-30T00:00:00Z");
 		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
@@ -142,7 +143,7 @@ class DefaultPromotionCreateUseCaseTest{
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidPromotionStateException.class)
 				.hasMessage("Maximum discount amount must be greater than zero"));
 
 		then(gateway).should(never())
@@ -150,7 +151,7 @@ class DefaultPromotionCreateUseCaseTest{
 	}
 
 	@Test
-	void givenNonPositiveMinSubtotal_thenThrowsIllegalArgumentException(){
+	void givenNonPositiveMinSubtotal_thenThrowsInvalidPromotionStateException(){
 		Instant startAt = Instant.parse("2026-09-01T00:00:00Z");
 		Instant endAt = Instant.parse("2026-09-30T00:00:00Z");
 		PromotionAuthPrincipal principal = PromotionAuthPrincipal.builder()
@@ -165,7 +166,7 @@ class DefaultPromotionCreateUseCaseTest{
 				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidPromotionStateException.class)
 				.hasMessage("Amount must not be negative"));
 
 		then(gateway).should(never())

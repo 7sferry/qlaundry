@@ -6,6 +6,7 @@ import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
 import com.ferry.order.domain.analytics.AnalyticsAggregate;
 import com.ferry.order.domain.analytics.AnalyticsEventDomain;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
+import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 import com.ferry.order.domain.common.exception.OrderForbiddenActionException;
 import com.ferry.order.domain.service.LaundryServiceDomain;
 import com.ferry.order.domain.service.ServiceCategory;
@@ -92,7 +93,7 @@ class DefaultLaundryServiceCreateUseCaseTest{
 	}
 
 	@Test
-	void givenDuplicateServiceName_thenThrowsIllegalArgumentException(){
+	void givenDuplicateServiceName_thenThrowsInvalidOrderStateException(){
 		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
@@ -104,7 +105,7 @@ class DefaultLaundryServiceCreateUseCaseTest{
 				.existsByName(anyString(), any(TenantIdDomain.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(IllegalArgumentException.class)
+				.isInstanceOf(InvalidOrderStateException.class)
 				.hasMessage("Service name already exists"));
 
 		then(gateway).should(never())

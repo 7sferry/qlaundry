@@ -118,8 +118,8 @@ class DefaultTenantRegistrationUseCaseTest{
 
 		useCase.execute(request, presenter);
 
-		TenantDomain fakeTenant = TenantDomain.fake(new FullNameDomain(TENANT_NAME));
-		StaffDomain fakeStaff = StaffDomain.fake(new FullNameDomain(FULL_NAME));
+		TenantDomain fakeTenant = TenantDomain.fake(new FullNameDomain(TENANT_NAME), new UsernameDomain(USERNAME));
+		StaffDomain fakeStaff = StaffDomain.fake(new FullNameDomain(FULL_NAME), new UsernameDomain(USERNAME));
 		then(presenter).should().present(new TenantRegistrationResponse(fakeTenant, new StaffRegistrationResponse(fakeStaff)));
 		then(gateway).should(never()).save(any(TenantDomain.class));
 		then(gateway).should(never()).registerAdmin(any(StaffRegistrationRequest.class), any(TenantDomain.class));
