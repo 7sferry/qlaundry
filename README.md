@@ -26,7 +26,11 @@ Promo codes live in `promotion-service`: a promotion is `PERCENTAGE`, `FIXED_AMO
 
 An applied promotion is stored as a row in `order_promotions`, a child of `orders` — not as columns on the order. The API and the web UI are many-valued: `promoCodes` on the request, `promotions: [{promotionId, code, discountAmount}]` on the response. `orders.discount` remains the **total** discount (manual + every promo), so `total_price = subtotal − discount` holds; `order_promotions.discount_amount` says what each code granted.
 
-Phone numbers are normalised before validation, so `0812…`, `62812…` or `+62 812…` all store as `+62812…` (Indonesia is the default dial code). user-service's active encryption key id is read from Redis (`user:encrypt:version`) on every write, so a key rotation needs no restart — see `CLAUDE.md`, "PII encryption at rest".
+Phone numbers are normalised before validation, so `0812…`, `62812…` or `+62 812…` all store as `+62812…` (Indonesia is the default dial code). user-service's active encryption key id is read from Redis (`user:encrypt:version`) on every write, so a key rotation needs no restart — see `CLAUDE.md`, "PII encryption at rest". A fresh Redis has no entry, which just falls back to `app.crypto.active-key-id` in yaml (`v1`), so seeding it is optional — do it only when rolling onto a new key without a redeploy:
+
+```bash
+redis-cli -a 12345 SET user:encrypt:version v1
+```
 
 ## Repository layout
 
