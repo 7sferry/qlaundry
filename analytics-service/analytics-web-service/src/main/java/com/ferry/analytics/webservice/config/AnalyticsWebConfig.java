@@ -29,6 +29,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.time.InstantSource;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -45,7 +46,7 @@ public class AnalyticsWebConfig{
 	}
 
 	@Bean
-	Clock clock(){
+	InstantSource instantSource(){
 		return Clock.systemUTC();
 	}
 
@@ -94,8 +95,8 @@ public class AnalyticsWebConfig{
 	}
 
 	@Bean
-	DashboardSummaryUseCase dashboardSummaryUseCase(DashboardSummaryGateway dashboardSummaryGateway, Clock clock){
-		return new DefaultDashboardSummaryUseCase(dashboardSummaryGateway, clock);
+	DashboardSummaryUseCase dashboardSummaryUseCase(DashboardSummaryGateway dashboardSummaryGateway, InstantSource instantSource){
+		return new DefaultDashboardSummaryUseCase(dashboardSummaryGateway, instantSource);
 	}
 
 	@Bean
@@ -104,8 +105,8 @@ public class AnalyticsWebConfig{
 	}
 
 	@Bean
-	ReportUseCase reportUseCase(ReportGateway reportGateway, Clock clock){
-		return new DefaultReportUseCase(reportGateway, clock);
+	ReportUseCase reportUseCase(ReportGateway reportGateway, InstantSource instantSource){
+		return new DefaultReportUseCase(reportGateway, instantSource);
 	}
 
 }

@@ -1,6 +1,7 @@
 package com.ferry.analytics.core.dashboard;
 
 import com.ferry.analytics.core.constant.AnalyticsConstant;
+import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
 import com.ferry.analytics.domain.dashboard.DashboardSummaryProjection;
 import com.ferry.analytics.domain.dashboard.StatusCountProjection;
 import com.ferry.analytics.domain.tenant.TenantIdDomain;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.InstantSource;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -22,16 +24,16 @@ public class DefaultDashboardSummaryUseCase implements DashboardSummaryUseCase{
 	private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
 
 	private final DashboardSummaryGateway gateway;
-	private final Clock clock;
+	private final InstantSource clock;
 
 	@Override
 	public void execute(DashboardSummaryRequest request, AnalyticsAuthPrincipal principal,
 	                    DashboardSummaryPresenter presenter){
 		request.validate();
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		LocalDate today = LocalDate.ofInstant(clock.instant(), AnalyticsConstant.BUSINESS_ZONE);
-		LocalDate monthStart = today.withDayOfMonth(1);
-		DashboardSummaryProjection summary = gateway.summarize(tenantId, today, monthStart, monthStart.minusMonths(1));
+		LocalDate date = resolveDate(request.date());
+		LocalDate monthStart = date.withDayOfMonth(1);
+		DashboardSummaryProjection summary = gateway.summarize(tenantId, date, monthStart, monthStart.minusMonths(1));
 		List<StatusCountProjection> distribution = gateway.statusDistribution(tenantId, monthStart,
 				monthStart.plusMonths(1));
 		presenter.present(new DashboardSummaryResponse(summary.todayOrders(), orZero(summary.todayRevenue()),
@@ -40,6 +42,13 @@ public class DefaultDashboardSummaryUseCase implements DashboardSummaryUseCase{
 				growth(orZero(summary.monthRevenue()), orZero(summary.lastMonthRevenue())),
 				growth(BigDecimal.valueOf(summary.monthOrders()), BigDecimal.valueOf(summary.lastMonthOrders())),
 				distribution));
+	}
+
+	private LocalDate resolveDate(LocalDate date){
+		if(date == null){
+			return LocalDate.ofInstant(clock.instant(), AnalyticsConstant.BUSINESS_ZONE);
+		}
+		return date;
 	}
 
 	private BigDecimal growth(BigDecimal current, BigDecimal previous){

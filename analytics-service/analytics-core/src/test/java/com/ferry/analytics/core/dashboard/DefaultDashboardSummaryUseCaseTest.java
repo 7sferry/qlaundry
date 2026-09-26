@@ -1,5 +1,6 @@
 package com.ferry.analytics.core.dashboard;
 
+import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
 import com.ferry.analytics.domain.dashboard.DashboardSummaryProjection;
 import com.ferry.analytics.domain.dashboard.StatusCountProjection;
 import com.ferry.analytics.domain.staff.StaffRole;
@@ -19,6 +20,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.then;
@@ -61,7 +63,7 @@ class DefaultDashboardSummaryUseCaseTest{
 		willReturn(distribution).given(gateway)
 				.statusDistribution(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class));
 
-		useCase.execute(new DashboardSummaryRequest(), principal, presenter);
+		useCase.execute(new DashboardSummaryRequest(null), principal, presenter);
 
 		then(gateway).should()
 				.summarize(eq(new TenantIdDomain(TENANT_ID)), eq(LocalDate.of(2026, 10, 1)),
@@ -100,7 +102,7 @@ class DefaultDashboardSummaryUseCaseTest{
 		willReturn(List.of()).given(gateway)
 				.statusDistribution(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class));
 
-		useCase.execute(new DashboardSummaryRequest(), principal, presenter);
+		useCase.execute(new DashboardSummaryRequest(null), principal, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
@@ -131,7 +133,7 @@ class DefaultDashboardSummaryUseCaseTest{
 		willReturn(List.of()).given(gateway)
 				.statusDistribution(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class));
 
-		useCase.execute(new DashboardSummaryRequest(), principal, presenter);
+		useCase.execute(new DashboardSummaryRequest(null), principal, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
@@ -140,6 +142,50 @@ class DefaultDashboardSummaryUseCaseTest{
 			softly.then(responseCaptor.getValue().revenueGrowth()).isEqualByComparingTo("-66.67");
 			softly.then(responseCaptor.getValue().ordersGrowth()).isEqualByComparingTo("-33.33");
 		});
+	}
+
+	@Test
+	void givenAnExplicitPastDate_thenSummarizesAgainstItsOwnMonthInsteadOfToday(){
+		DefaultDashboardSummaryUseCase useCase = new DefaultDashboardSummaryUseCase(gateway,
+				Clock.fixed(Instant.parse("2026-09-26T02:00:00Z"), ZoneOffset.UTC));
+		AnalyticsAuthPrincipal principal = AnalyticsAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		willReturn(new DashboardSummaryProjection(4L, BigDecimal.valueOf(150000), 20L, BigDecimal.valueOf(2000000),
+				5L, BigDecimal.valueOf(400000), 2L, 3L, 0L)).given(gateway)
+				.summarize(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class),
+						any(LocalDate.class));
+		willReturn(List.of()).given(gateway)
+				.statusDistribution(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class));
+
+		useCase.execute(new DashboardSummaryRequest(LocalDate.of(2026, 7, 15)), principal, presenter);
+
+		then(gateway).should()
+				.summarize(eq(new TenantIdDomain(TENANT_ID)), eq(LocalDate.of(2026, 7, 15)),
+						eq(LocalDate.of(2026, 7, 1)), eq(LocalDate.of(2026, 6, 1)));
+		then(gateway).should()
+				.statusDistribution(eq(new TenantIdDomain(TENANT_ID)), eq(LocalDate.of(2026, 7, 1)),
+						eq(LocalDate.of(2026, 8, 1)));
+	}
+
+	@Test
+	void givenADateAfterToday_thenRejectsBeforeTouchingTheGateway(){
+		DefaultDashboardSummaryUseCase useCase = new DefaultDashboardSummaryUseCase(gateway,
+				Clock.fixed(Instant.parse("2026-09-26T02:00:00Z"), ZoneOffset.UTC));
+		AnalyticsAuthPrincipal principal = AnalyticsAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+
+		assertThatThrownBy(() -> useCase.execute(
+						new DashboardSummaryRequest(LocalDate.of(2026, 9, 27)), principal, presenter))
+				.isInstanceOf(InvalidAnalyticStateException.class)
+				.hasMessage("Dashboard date must not be in the future");
+
+		then(gateway).shouldHaveNoInteractions();
 	}
 
 }

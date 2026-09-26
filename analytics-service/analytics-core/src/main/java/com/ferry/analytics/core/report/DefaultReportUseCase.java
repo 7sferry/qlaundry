@@ -11,7 +11,7 @@ import com.ferry.analytics.domain.token.AnalyticsAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.Clock;
+import java.time.InstantSource;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -27,13 +27,13 @@ public class DefaultReportUseCase implements ReportUseCase{
 	private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
 
 	private final ReportGateway gateway;
-	private final Clock clock;
+	private final InstantSource instantSource;
 
 	@Override
 	public void execute(ReportRequest request, AnalyticsAuthPrincipal principal, ReportPresenter presenter){
 		request.validate();
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		LocalDate today = LocalDate.ofInstant(clock.instant(), AnalyticsConstant.BUSINESS_ZONE);
+		LocalDate today = LocalDate.ofInstant(instantSource.instant(), AnalyticsConstant.BUSINESS_ZONE);
 		ReportWindow window = request.period().windowFor(today);
 		List<TrendPoint> trend = fillBuckets(window, gateway.revenueTrend(tenantId, window));
 		List<ServiceShare> breakdown = shares(gateway.serviceBreakdown(tenantId, window));

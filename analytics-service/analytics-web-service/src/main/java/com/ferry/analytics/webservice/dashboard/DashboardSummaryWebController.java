@@ -20,9 +20,10 @@ public class DashboardSummaryWebController{
 	private final DashboardSummaryUseCase dashboardSummaryUseCase;
 
 	@GetMapping("/analytics/dashboard")
-	public ResponseEntity<?> getDashboard(@AuthenticationPrincipal AnalyticsAuthPrincipal principal){
+	public ResponseEntity<?> getDashboard(DashboardSummaryRequest request,
+	                                      @AuthenticationPrincipal AnalyticsAuthPrincipal principal){
 		DashboardSummaryWebPresenter presenter = new DashboardSummaryWebPresenter();
-		dashboardSummaryUseCase.execute(new DashboardSummaryRequest(), principal, presenter);
+		dashboardSummaryUseCase.execute(request, principal, presenter);
 		return presenter.getResponseEntity();
 	}
 

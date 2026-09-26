@@ -1,7 +1,6 @@
 package com.ferry.order.webservice.config;
 
 import com.ferry.order.domain.common.exception.*;
-import com.ferry.utils.crypto.InvalidCryptoException;
 import com.ferry.utils.httpclient.HttpClientException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
