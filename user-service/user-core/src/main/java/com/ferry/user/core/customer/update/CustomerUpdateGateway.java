@@ -1,11 +1,11 @@
 package com.ferry.user.core.customer.update;
 
-import com.ferry.user.domain.customer.CustomerAddressDomain;
-import com.ferry.user.domain.customer.CustomerDomain;
-import com.ferry.user.domain.customer.CustomerEmailDomain;
-import com.ferry.user.domain.customer.CustomerIdDomain;
-import com.ferry.user.domain.customer.CustomerPhoneDomain;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.customer.CustomerAddress;
+import com.ferry.user.domain.customer.Customer;
+import com.ferry.user.domain.customer.CustomerEmail;
+import com.ferry.user.domain.customer.CustomerId;
+import com.ferry.user.domain.customer.CustomerPhone;
+import com.ferry.user.domain.tenant.TenantId;
 
 import java.util.Optional;
 
@@ -15,15 +15,15 @@ import java.util.Optional;
  ************************/
 
 public interface CustomerUpdateGateway{
-	Optional<CustomerDomain> findById(CustomerIdDomain customerId, TenantIdDomain tenantId);
+	Optional<Customer> findById(CustomerId customerId, TenantId tenantId);
 
-	CustomerDomain save(CustomerDomain customer);
+	Customer save(Customer customer);
 
-	CustomerEmailDomain save(CustomerEmailDomain email);
+	CustomerEmail save(CustomerEmail email);
 
-	CustomerPhoneDomain save(CustomerPhoneDomain phone);
+	CustomerPhone save(CustomerPhone phone);
 
-	CustomerAddressDomain save(CustomerAddressDomain address);
+	CustomerAddress save(CustomerAddress address);
 
 	void deleteEmails(String customerId, String updatedBy);
 

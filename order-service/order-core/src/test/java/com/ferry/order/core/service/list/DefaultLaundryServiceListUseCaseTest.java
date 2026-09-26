@@ -1,7 +1,7 @@
 package com.ferry.order.core.service.list;
 
-import com.ferry.order.domain.common.MoneyDomain;
-import com.ferry.order.domain.common.NoteDomain;
+import com.ferry.order.domain.common.Money;
+import com.ferry.order.domain.common.Note;
 import com.ferry.order.domain.service.*;
 import com.ferry.order.domain.staff.StaffRole;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
@@ -55,7 +55,7 @@ class DefaultLaundryServiceListUseCaseTest{
 				.build();
 		LaundryServiceListRequest request = new LaundryServiceListRequest(null, null, null, null, null, null, null,
 				null);
-		willReturn(new CursorFetch<LaundryServiceDomain>(List.of(), false)).given(gateway)
+		willReturn(new CursorFetch<LaundryService>(List.of(), false)).given(gateway)
 				.findByFilter(any(LaundryServiceFilter.class));
 
 		useCase.execute(request, principal, presenter);
@@ -86,7 +86,7 @@ class DefaultLaundryServiceListUseCaseTest{
 				.build();
 		LaundryServiceListRequest request = new LaundryServiceListRequest("cuci", ServiceCategory.DRY_CLEAN, false,
 				null, null, null, null, null);
-		willReturn(new CursorFetch<LaundryServiceDomain>(List.of(), false)).given(gateway)
+		willReturn(new CursorFetch<LaundryService>(List.of(), false)).given(gateway)
 				.findByFilter(any(LaundryServiceFilter.class));
 
 		useCase.execute(request, principal, presenter);
@@ -113,7 +113,7 @@ class DefaultLaundryServiceListUseCaseTest{
 		String cursorToken = CursorCodec.encode("cuci kiloan", SERVICE_ID_1);
 		LaundryServiceListRequest request = new LaundryServiceListRequest(null, null, null, null,
 				cursorToken, ServiceListSortBy.NAME, SortDirection.ASC, null);
-		willReturn(new CursorFetch<LaundryServiceDomain>(List.of(), false)).given(gateway)
+		willReturn(new CursorFetch<LaundryService>(List.of(), false)).given(gateway)
 				.findByFilter(any(LaundryServiceFilter.class));
 
 		useCase.execute(request, principal, presenter);
@@ -139,12 +139,12 @@ class DefaultLaundryServiceListUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service1 = LaundryServiceDomain.builder()
+		LaundryService service1 = LaundryService.builder()
 				.id(SERVICE_ID_1)
 				.tenantId(TENANT_ID)
 				.name("Cuci Kiloan Reguler")
-				.description(new NoteDomain("regular wash"))
-				.pricePerUnit(MoneyDomain.of(7000L))
+				.description(new Note("regular wash"))
+				.pricePerUnit(Money.of(7000L))
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(24)
@@ -157,12 +157,12 @@ class DefaultLaundryServiceListUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		LaundryServiceDomain service2 = LaundryServiceDomain.builder()
+		LaundryService service2 = LaundryService.builder()
 				.id(SERVICE_ID_2)
 				.tenantId(TENANT_ID)
 				.name("Setrika Satuan")
-				.description(new NoteDomain("iron only"))
-				.pricePerUnit(MoneyDomain.of(5000L))
+				.description(new Note("iron only"))
+				.pricePerUnit(Money.of(5000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(12)

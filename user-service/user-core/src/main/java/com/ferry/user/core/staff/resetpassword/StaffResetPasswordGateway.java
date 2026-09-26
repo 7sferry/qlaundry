@@ -1,8 +1,8 @@
 package com.ferry.user.core.staff.resetpassword;
 
-import com.ferry.user.domain.common.UsernameDomain;
-import com.ferry.user.domain.staff.StaffDomain;
-import com.ferry.user.domain.staff.StaffPasswordDomain;
+import com.ferry.user.domain.common.Username;
+import com.ferry.user.domain.staff.Staff;
+import com.ferry.user.domain.staff.StaffPassword;
 import com.ferry.user.domain.staff.StaffPasswordProjection;
 
 import java.time.Instant;
@@ -15,11 +15,11 @@ import java.util.Optional;
  ************************/
 
 public interface StaffResetPasswordGateway{
-	Optional<StaffDomain> findByUsername(UsernameDomain username);
+	Optional<Staff> findByUsername(Username username);
 
 	Optional<StaffPasswordProjection> findCurrentPassword(String staffId);
 
 	List<StaffPasswordProjection> findRecentPasswords(String staffId, Instant since);
 
-	void save(StaffPasswordDomain password);
+	void save(StaffPassword password);
 }

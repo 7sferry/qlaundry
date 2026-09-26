@@ -1,6 +1,6 @@
 package com.ferry.promotion.core.promotion.list;
 
-import com.ferry.promotion.domain.promotion.PromotionDomain;
+import com.ferry.promotion.domain.promotion.Promotion;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ import java.util.List;
  ************************/
 
 public record PromotionListResponse(
-	List<PromotionDomain> promotions,
+	List<Promotion> promotions,
 	String nextCursor,
 	String prevCursor){
 }

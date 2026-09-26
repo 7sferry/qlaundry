@@ -1,6 +1,6 @@
 package com.ferry.order.core.customer.totals;
 
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
@@ -16,7 +16,7 @@ public class DefaultCustomerOrderTotalsUseCase implements CustomerOrderTotalsUse
 	@Override
 	public void execute(CustomerOrderTotalsRequest request, OrderAuthPrincipal principal, CustomerOrderTotalsPresenter presenter){
 		request.validate();
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
+		TenantId tenantId = new TenantId(principal.tenantId());
 		presenter.present(new CustomerOrderTotalsResponse(gateway.findTotals(request.customerIds(), tenantId)));
 	}
 

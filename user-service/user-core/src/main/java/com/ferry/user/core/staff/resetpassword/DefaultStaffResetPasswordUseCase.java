@@ -3,12 +3,12 @@ package com.ferry.user.core.staff.resetpassword;
 import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.common.HashedPasswordDomain;
-import com.ferry.user.domain.common.RawPasswordDomain;
-import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.HashedPassword;
+import com.ferry.user.domain.common.RawPassword;
+import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.common.exception.InvalidPasswordException;
-import com.ferry.user.domain.staff.StaffDomain;
-import com.ferry.user.domain.staff.StaffPasswordDomain;
+import com.ferry.user.domain.staff.Staff;
+import com.ferry.user.domain.staff.StaffPassword;
 import com.ferry.user.domain.staff.StaffPasswordProjection;
 import com.ferry.user.domain.staff.forgottenpassword.FailedToResetPasswordException;
 import lombok.RequiredArgsConstructor;
@@ -33,15 +33,15 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 	public void execute(StaffResetPasswordRequest request, StaffResetPasswordPresenter presenter){
 		try{
 			request.validate();
-			UsernameDomain username = new UsernameDomain(request.username());
-			RawPasswordDomain password = new RawPasswordDomain(request.password());
+			Username username = new Username(request.username());
+			RawPassword password = new RawPassword(request.password());
 			validateResetToken(username, request.resetToken());
-			StaffDomain staff = gateway.findByUsername(username)
+			Staff staff = gateway.findByUsername(username)
 					.orElseThrow(() -> new FailedToResetPasswordException("Invalid username"));
 			validateRecentPassword(staff, password);
 			validateLastUsedPasswords(staff, password);
-			HashedPasswordDomain hashedPassword = passwordTool.hash(password);
-			gateway.save(StaffPasswordDomain.register(staff.id(), hashedPassword, staff.id()));
+			HashedPassword hashedPassword = passwordTool.hash(password);
+			gateway.save(StaffPassword.register(staff.id(), hashedPassword, staff.id()));
 			presenter.present(new StaffResetPasswordResponse("password has been reset"));
 		} catch (FailedToResetPasswordException e){
 			throw e;
@@ -50,7 +50,7 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 		}
 	}
 
-	private void validateLastUsedPasswords(StaffDomain staff, RawPasswordDomain password){
+	private void validateLastUsedPasswords(Staff staff, RawPassword password){
 		List<StaffPasswordProjection> recentPasswords = gateway.findRecentPasswords(staff.id(),
 				Instant.now().minus(PasswordConstant.PASSWORD_REUSE_WINDOW));
 		boolean reused = recentPasswords.stream()
@@ -60,7 +60,7 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 		}
 	}
 
-	private void validateRecentPassword(StaffDomain staff, RawPasswordDomain password){
+	private void validateRecentPassword(Staff staff, RawPassword password){
 		gateway.findCurrentPassword(staff.id())
 				.ifPresent(current -> {
 					if(passwordTool.matches(password.value(), current.password())){
@@ -69,7 +69,7 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 				});
 	}
 
-	private void validateResetToken(UsernameDomain username, String resetToken){
+	private void validateResetToken(Username username, String resetToken){
 		String storedToken = cacheManager.getAndDelete(PasswordConstant.RESET_TOKEN_KEY + username.value())
 				.orElseThrow(() -> new FailedToResetPasswordException("Invalid reset token"));
 		if(resetToken == null

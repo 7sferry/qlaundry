@@ -6,10 +6,10 @@ import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.staff.refresh.ExpiredSessionException;
 import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.session.SessionType;
-import com.ferry.user.domain.session.UserSessionDomain;
+import com.ferry.user.domain.session.UserSession;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +43,7 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 			presenter.presentRotatedToken(rotatedResponse);
 			return;
 		}
-		UserSessionDomain currentSession = getCurrentSession(oldHashedRefreshToken);
+		UserSession currentSession = getCurrentSession(oldHashedRefreshToken);
 		if(currentSession.sessionType() != SessionType.STAFF){
 			presenter.presentUnauthorized();
 			return;
@@ -63,7 +63,7 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 		long rotationDurationBeforeExpireInSeconds = tokenProcessor.getRotationDurationBeforeExpireInSeconds();
 		Instant rotationTime = currentSession.expirationTime().minusSeconds(rotationDurationBeforeExpireInSeconds);
 		if(now.isAfter(rotationTime)){
-			UserSessionDomain gracedSession = graceCurrentSession(currentSession, now);
+			UserSession gracedSession = graceCurrentSession(currentSession, now);
 			String newRefreshToken = rotateToken(gracedSession, now, newAccessToken);
 			StaffRefreshTokenResponse response = new StaffRefreshTokenResponse(newAccessToken, newRefreshToken);
 			cacheManager.set(TokenConstant.ROTATED_KEY + oldHashedRefreshToken, response,
@@ -75,18 +75,18 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 		presenter.presentCachedToken(new StaffRefreshTokenResponse(newAccessToken, null));
 	}
 
-	private UserSessionDomain getCurrentSession(String hashedRefreshToken){
+	private UserSession getCurrentSession(String hashedRefreshToken){
 		String cacheKey = TokenConstant.REFRESH_KEY + hashedRefreshToken;
-		return cacheManager.get(cacheKey, UserSessionDomain.class)
+		return cacheManager.get(cacheKey, UserSession.class)
 				.orElseGet(() -> {
-					UserSessionDomain session = gateway.findSessionById(hashedRefreshToken)
+					UserSession session = gateway.findSessionById(hashedRefreshToken)
 							.orElseThrow(() -> new ExpiredSessionException("session expired"));
 					cacheSession(cacheKey, session);
 					return session;
 				});
 	}
 
-	private void cacheSession(String cacheKey, UserSessionDomain session){
+	private void cacheSession(String cacheKey, UserSession session){
 		long remainingSeconds = Duration.between(Instant.now(), session.expirationTime()).getSeconds();
 		if(remainingSeconds <= 0){
 			return;
@@ -95,11 +95,11 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 		cacheManager.set(cacheKey, session, duration);
 	}
 
-	private String rotateToken(UserSessionDomain currentSession, Instant now, String newAccessToken){
+	private String rotateToken(UserSession currentSession, Instant now, String newAccessToken){
 		String newRefreshToken = tokenProcessor.generateRefreshToken();
 		String newHashedRefreshToken = tokenProcessor.hashToken(newRefreshToken);
 		Instant expirationTime = now.plusSeconds(tokenProcessor.getRefreshDurationInSeconds());
-		UserSessionDomain newSession = gateway.save(UserSessionDomain.create(newHashedRefreshToken, expirationTime,
+		UserSession newSession = gateway.save(UserSession.create(newHashedRefreshToken, expirationTime,
 				currentSession.userId(), SessionType.STAFF));
 		Duration duration = Duration.ofSeconds(Math.min(tokenProcessor.getRefreshDurationInSeconds(),
 				TokenConstant.REFRESH_CACHE_MAX_SECONDS));
@@ -108,11 +108,11 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 		return newRefreshToken;
 	}
 
-	private UserSessionDomain graceCurrentSession(UserSessionDomain session, Instant now){
+	private UserSession graceCurrentSession(UserSession session, Instant now){
 		cacheManager.delete(TokenConstant.REFRESH_KEY + session.id());
-		UserSessionDomain freshSession = gateway.findSessionById(session.id())
+		UserSession freshSession = gateway.findSessionById(session.id())
 				.orElse(session);
-		UserSessionDomain userSession = freshSession.toBuilder()
+		UserSession userSession = freshSession.toBuilder()
 				.expirationTime(now.plusSeconds(TokenConstant.ROTATION_GRACE_SECONDS))
 				.build();
 		return gateway.save(userSession);
@@ -128,10 +128,10 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 				Duration.ofSeconds(cacheDurationInSeconds));
 	}
 
-	private String generateAccessToken(UserSessionDomain session){
+	private String generateAccessToken(UserSession session){
 		StaffLoginProjection staff = gateway.findById(session.userId())
 				.orElseThrow(() -> new NotFoundException("userId not found"));
-		TenantIdDomain tenantId = new TenantIdDomain(staff.tenantId());
+		TenantId tenantId = new TenantId(staff.tenantId());
 		TenantLoginProjection tenant = gateway.findTenantById(tenantId)
 				.orElseThrow(() -> new NotFoundException("tenant not found"));
 		StaffRole role = StaffRole.findByValue(staff.roleId())

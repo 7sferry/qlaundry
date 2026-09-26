@@ -1,6 +1,6 @@
 package com.ferry.user.gateway.staff.repository;
 
-import com.ferry.user.gateway.staff.entity.StaffRoleJpaEntity;
+import com.ferry.user.gateway.staff.entity.StaffRoleJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /************************
@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * on Juli 2026         *
  ************************/
 
-public interface StaffRoleJpaRepository extends JpaRepository<StaffRoleJpaEntity, Short>{
+public interface StaffRoleJpaRepository extends JpaRepository<StaffRoleJpa, Short>{
 }

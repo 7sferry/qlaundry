@@ -2,7 +2,7 @@ package com.ferry.analytics.core.dashboard;
 
 import com.ferry.analytics.domain.dashboard.DashboardSummaryProjection;
 import com.ferry.analytics.domain.dashboard.StatusCountProjection;
-import com.ferry.analytics.domain.tenant.TenantIdDomain;
+import com.ferry.analytics.domain.tenant.TenantId;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -13,9 +13,9 @@ import java.util.List;
  ************************/
 
 public interface DashboardSummaryGateway{
-	DashboardSummaryProjection summarize(TenantIdDomain tenantId, LocalDate today, LocalDate monthStart,
+	DashboardSummaryProjection summarize(TenantId tenantId, LocalDate today, LocalDate monthStart,
 	                                     LocalDate lastMonthStart);
 
-	List<StatusCountProjection> statusDistribution(TenantIdDomain tenantId, LocalDate monthStart,
+	List<StatusCountProjection> statusDistribution(TenantId tenantId, LocalDate monthStart,
 	                                               LocalDate nextMonthStart);
 }

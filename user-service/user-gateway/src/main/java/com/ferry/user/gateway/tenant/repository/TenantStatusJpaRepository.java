@@ -1,6 +1,6 @@
 package com.ferry.user.gateway.tenant.repository;
 
-import com.ferry.user.gateway.tenant.entity.TenantStatusJpaEntity;
+import com.ferry.user.gateway.tenant.entity.TenantStatusJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /************************
@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * on Agustus 2026      *
  ************************/
 
-public interface TenantStatusJpaRepository extends JpaRepository<TenantStatusJpaEntity, Short>{
+public interface TenantStatusJpaRepository extends JpaRepository<TenantStatusJpa, Short>{
 }

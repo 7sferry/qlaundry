@@ -1,6 +1,6 @@
 package com.ferry.order.gateway.analytics;
 
-import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEvent;
 import com.ferry.order.domain.analytics.AnalyticsEventStatus;
 import com.ferry.order.gateway.analytics.repository.AnalyticsEventJpaRepository;
 import com.ferry.order.gateway.analytics.repository.AnalyticsEventStatusJpaRepository;
@@ -38,12 +38,12 @@ public class DefaultAnalyticsStreamWriter implements AnalyticsStreamWriter{
 	private final String streamKeyPrefix;
 
 	@Override
-	public String streamOf(AnalyticsEventDomain event){
+	public String streamOf(AnalyticsEvent event){
 		return streamKeyPrefix + event.aggregate().name();
 	}
 
 	@Override
-	public void append(AnalyticsEventDomain event){
+	public void append(AnalyticsEvent event){
 		Map<String, String> fields = new LinkedHashMap<>();
 		fields.put(EVENT_ID_FIELD, event.id());
 		fields.put(AGGREGATE_FIELD, event.aggregate().name());
@@ -57,7 +57,7 @@ public class DefaultAnalyticsStreamWriter implements AnalyticsStreamWriter{
 	}
 
 	@Override
-	public void markPublished(AnalyticsEventDomain event, String updatedBy){
+	public void markPublished(AnalyticsEvent event, String updatedBy){
 		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 		transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 		transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);

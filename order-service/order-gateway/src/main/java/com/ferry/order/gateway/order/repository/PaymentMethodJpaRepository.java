@@ -1,6 +1,6 @@
 package com.ferry.order.gateway.order.repository;
 
-import com.ferry.order.gateway.order.entity.PaymentMethodJpaEntity;
+import com.ferry.order.gateway.order.entity.PaymentMethodJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /************************
@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * on Agustus 2026      *
  ************************/
 
-public interface PaymentMethodJpaRepository extends JpaRepository<PaymentMethodJpaEntity, Short>{
+public interface PaymentMethodJpaRepository extends JpaRepository<PaymentMethodJpa, Short>{
 }

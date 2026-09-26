@@ -1,7 +1,7 @@
 package com.ferry.order.core.analytics.sweep;
 
 import com.ferry.order.core.analytics.AnalyticsOutboxConstant;
-import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,10 +24,10 @@ public class DefaultAnalyticsOutboxSweepUseCase implements AnalyticsOutboxSweepU
 	@Override
 	public AnalyticsOutboxSweepResponse execute(){
 		Instant cutoff = Instant.now().minus(gracePeriod);
-		List<AnalyticsEventDomain> unpublished = gateway.findUnpublishedCreatedBefore(cutoff, sweepBatchSize);
+		List<AnalyticsEvent> unpublished = gateway.findUnpublishedCreatedBefore(cutoff, sweepBatchSize);
 		int republished = 0;
 		int failed = 0;
-		for(AnalyticsEventDomain event : unpublished){
+		for(AnalyticsEvent event : unpublished){
 			try{
 				gateway.republish(event);
 				republished++;

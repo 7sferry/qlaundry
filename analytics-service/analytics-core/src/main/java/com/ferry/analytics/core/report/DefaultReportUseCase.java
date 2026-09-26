@@ -6,7 +6,7 @@ import com.ferry.analytics.core.report.ReportResponse.TrendPoint;
 import com.ferry.analytics.domain.report.ReportWindow;
 import com.ferry.analytics.domain.report.RevenueBucketProjection;
 import com.ferry.analytics.domain.report.ServiceBreakdownProjection;
-import com.ferry.analytics.domain.tenant.TenantIdDomain;
+import com.ferry.analytics.domain.tenant.TenantId;
 import com.ferry.analytics.domain.token.AnalyticsAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
@@ -31,7 +31,7 @@ public class DefaultReportUseCase implements ReportUseCase{
 	@Override
 	public void execute(ReportRequest request, AnalyticsAuthPrincipal principal, ReportPresenter presenter){
 		request.validate();
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
+		TenantId tenantId = new TenantId(principal.tenantId());
 		ZoneId zone = resolveZone(request.zone());
 		LocalDate today = LocalDate.ofInstant(clock.instant(), zone);
 		ReportWindow window = request.period().windowFor(today);

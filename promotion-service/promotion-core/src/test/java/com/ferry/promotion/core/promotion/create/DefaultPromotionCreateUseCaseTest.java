@@ -2,11 +2,11 @@ package com.ferry.promotion.core.promotion.create;
 
 import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
 import com.ferry.promotion.domain.common.exception.PromotionForbiddenActionException;
-import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
-import com.ferry.promotion.domain.promotion.PromotionDomain;
+import com.ferry.promotion.domain.promotion.PromotionCode;
+import com.ferry.promotion.domain.promotion.Promotion;
 import com.ferry.promotion.domain.promotion.PromotionType;
 import com.ferry.promotion.domain.staff.StaffRole;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.tenant.TenantId;
 import com.ferry.promotion.domain.token.PromotionAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ class DefaultPromotionCreateUseCaseTest{
 	@Mock
 	PromotionCreatePresenter presenter;
 	@Captor
-	ArgumentCaptor<PromotionDomain> promotionCaptor;
+	ArgumentCaptor<Promotion> promotionCaptor;
 
 	@Test
 	void givenNonSuperStaffRole_thenThrowsForbiddenActionException(){
@@ -94,14 +94,14 @@ class DefaultPromotionCreateUseCaseTest{
 				PromotionType.CUMULATIVE_PERCENTAGE, new BigDecimal("25"), null, null, null, null, 100,
 				startAt.toEpochMilli(), endAt.toEpochMilli());
 		willReturn(true).given(gateway)
-				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
+				.existsByCode(any(PromotionCode.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidPromotionStateException.class)
 				.hasMessage("Promotion code already exists"));
 
 		then(gateway).should(never())
-				.save(any(PromotionDomain.class));
+				.save(any(Promotion.class));
 	}
 
 	@Test
@@ -117,14 +117,14 @@ class DefaultPromotionCreateUseCaseTest{
 				PromotionType.CUMULATIVE_PERCENTAGE, new BigDecimal("120"), null, null, null, null, 100,
 				startAt.toEpochMilli(), endAt.toEpochMilli());
 		willReturn(false).given(gateway)
-				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
+				.existsByCode(any(PromotionCode.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidPromotionStateException.class)
 				.hasMessage("Percentage must be greater than zero and at most 100"));
 
 		then(gateway).should(never())
-				.save(any(PromotionDomain.class));
+				.save(any(Promotion.class));
 	}
 
 	@Test
@@ -140,14 +140,14 @@ class DefaultPromotionCreateUseCaseTest{
 				PromotionType.CUMULATIVE_PERCENTAGE, new BigDecimal("15"), null, BigDecimal.ZERO, null, null, 50,
 				startAt.toEpochMilli(), endAt.toEpochMilli());
 		willReturn(false).given(gateway)
-				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
+				.existsByCode(any(PromotionCode.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidPromotionStateException.class)
 				.hasMessage("Maximum discount amount must be greater than zero"));
 
 		then(gateway).should(never())
-				.save(any(PromotionDomain.class));
+				.save(any(Promotion.class));
 	}
 
 	@Test
@@ -163,14 +163,14 @@ class DefaultPromotionCreateUseCaseTest{
 				PromotionType.CUMULATIVE_PERCENTAGE, new BigDecimal("10"), null, null, new BigDecimal("-1"), null, 50,
 				startAt.toEpochMilli(), endAt.toEpochMilli());
 		willReturn(false).given(gateway)
-				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
+				.existsByCode(any(PromotionCode.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidPromotionStateException.class)
 				.hasMessage("Amount must not be negative"));
 
 		then(gateway).should(never())
-				.save(any(PromotionDomain.class));
+				.save(any(Promotion.class));
 	}
 
 	@Test
@@ -186,9 +186,9 @@ class DefaultPromotionCreateUseCaseTest{
 				PromotionType.FIXED_AMOUNT, null, new BigDecimal("5000"), null, null, null, 30,
 				startAt.toEpochMilli(), endAt.toEpochMilli());
 		willReturn(false).given(gateway)
-				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<PromotionDomain>getArgument(0)).given(gateway)
-				.save(any(PromotionDomain.class));
+				.existsByCode(any(PromotionCode.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Promotion>getArgument(0)).given(gateway)
+				.save(any(Promotion.class));
 
 		useCase.execute(request, principal, presenter);
 
@@ -197,7 +197,7 @@ class DefaultPromotionCreateUseCaseTest{
 		then(presenter).should()
 				.present(any(PromotionCreateResponse.class));
 
-		PromotionDomain saved = promotionCaptor.getValue();
+		Promotion saved = promotionCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(saved.codeValue()).isEqualTo("POTONGAN5RB");
@@ -229,16 +229,16 @@ class DefaultPromotionCreateUseCaseTest{
 				PromotionType.NON_CUMULATIVE_PERCENTAGE, new BigDecimal("30"), null, new BigDecimal("75000"),
 				new BigDecimal("200000"), false, null, startAt.toEpochMilli(), endAt.toEpochMilli());
 		willReturn(false).given(gateway)
-				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<PromotionDomain>getArgument(0)).given(gateway)
-				.save(any(PromotionDomain.class));
+				.existsByCode(any(PromotionCode.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Promotion>getArgument(0)).given(gateway)
+				.save(any(Promotion.class));
 
 		useCase.execute(request, principal, presenter);
 
 		then(gateway).should()
 				.save(promotionCaptor.capture());
 
-		PromotionDomain saved = promotionCaptor.getValue();
+		Promotion saved = promotionCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(saved.type()).isEqualTo(PromotionType.NON_CUMULATIVE_PERCENTAGE);

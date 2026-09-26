@@ -1,0 +1,61 @@
+package com.ferry.promotion.domain.promotion;
+
+import com.ferry.promotion.domain.common.Money;
+import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
+import lombok.Builder;
+
+import java.time.Instant;
+
+/************************
+ * Made by [MR Ferry™]  *
+ * on Agustus 2026      *
+ ************************/
+
+@Builder(toBuilder = true)
+public record PromotionRedemption(
+	String id,
+	String promotionId,
+	String tenantId,
+	PromotionCode code,
+	String referenceId,
+	String customerId,
+	Money subtotal,
+	Money discountAmount,
+	Integer version,
+	boolean deleted,
+	Instant createdAt,
+	String createdBy,
+	Instant updatedAt,
+	String updatedBy){
+	public PromotionRedemption{
+		if(promotionId == null || promotionId.isBlank()){
+			throw new InvalidPromotionStateException("Promotion id must not be blank");
+		}
+		if(tenantId == null || tenantId.isBlank()){
+			throw new InvalidPromotionStateException("Tenant id must not be blank");
+		}
+		if(referenceId == null || referenceId.isBlank()){
+			throw new InvalidPromotionStateException("Reference id must not be blank");
+		}
+		if(code == null || subtotal == null || discountAmount == null){
+			throw new InvalidPromotionStateException("Code, subtotal and discount amount must not be null");
+		}
+	}
+
+	public static PromotionRedemption register(Promotion promotion, String referenceId, String customerId,
+	                                                 Money subtotal, Money discountAmount,
+	                                                 String createdBy){
+		Instant now = Instant.now();
+		return new PromotionRedemption(null, promotion.id(), promotion.tenantId(), promotion.code(),
+				referenceId, customerId, subtotal, discountAmount, null, false, now, createdBy, now, createdBy);
+	}
+
+	public PromotionRedemption release(String updatedBy){
+		return toBuilder().deleted(true).updatedBy(updatedBy).updatedAt(Instant.now()).build();
+	}
+
+	public String codeValue(){
+		return code.value();
+	}
+
+}

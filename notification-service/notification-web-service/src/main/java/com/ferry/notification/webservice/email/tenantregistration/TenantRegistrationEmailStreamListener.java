@@ -38,7 +38,7 @@ public class TenantRegistrationEmailStreamListener implements StreamListener<Str
 					message.recipient(), message.staffFullName(), message.staffUsername(), message.tenantId(),
 					message.tenantName(), message.tenantDescription(), message.registeredAt(),
 					message.confirmationToken());
-			TenantRegistrationEmailStreamPresenter presenter = new TenantRegistrationEmailStreamPresenter();
+			StreamTenantRegistrationEmailPresenter presenter = new StreamTenantRegistrationEmailPresenter();
 			tenantRegistrationEmailUseCase.execute(request, presenter);
 			stringRedisTemplate.opsForStream().acknowledge(streamKey, group, record.getId());
 			log.info("Tenant registration email sent for trigger {} and record {}",

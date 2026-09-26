@@ -1,11 +1,11 @@
 package com.ferry.order.core.order.detail;
 
 import com.ferry.order.domain.common.exception.NotFoundException;
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderIdDomain;
-import com.ferry.order.domain.order.OrderItemDomain;
-import com.ferry.order.domain.order.OrderPromotionDomain;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderId;
+import com.ferry.order.domain.order.OrderItem;
+import com.ferry.order.domain.order.OrderPromotion;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
@@ -23,12 +23,12 @@ public class DefaultOrderDetailUseCase implements OrderDetailUseCase{
 	@Override
 	public void execute(OrderDetailRequest request, OrderAuthPrincipal principal, OrderDetailPresenter presenter){
 		request.validate();
-		OrderIdDomain orderId = new OrderIdDomain(request.orderId());
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		OrderDomain order = gateway.findById(orderId, tenantId)
+		OrderId orderId = new OrderId(request.orderId());
+		TenantId tenantId = new TenantId(principal.tenantId());
+		Order order = gateway.findById(orderId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Order Not Found"));
-		List<OrderItemDomain> items = gateway.findItemsByOrderId(orderId);
-		List<OrderPromotionDomain> promotions = gateway.findPromotionsByOrderId(orderId);
+		List<OrderItem> items = gateway.findItemsByOrderId(orderId);
+		List<OrderPromotion> promotions = gateway.findPromotionsByOrderId(orderId);
 		presenter.present(new OrderDetailResponse(order, items, promotions));
 	}
 

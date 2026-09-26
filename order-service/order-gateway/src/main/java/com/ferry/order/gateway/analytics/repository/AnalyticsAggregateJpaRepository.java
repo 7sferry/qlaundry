@@ -1,6 +1,6 @@
 package com.ferry.order.gateway.analytics.repository;
 
-import com.ferry.order.gateway.analytics.entity.AnalyticsAggregateJpaEntity;
+import com.ferry.order.gateway.analytics.entity.AnalyticsAggregateJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /************************
@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * on September 2026    *
  ************************/
 
-public interface AnalyticsAggregateJpaRepository extends JpaRepository<AnalyticsAggregateJpaEntity, Short>{
+public interface AnalyticsAggregateJpaRepository extends JpaRepository<AnalyticsAggregateJpa, Short>{
 }

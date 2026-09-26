@@ -213,7 +213,7 @@ gateway, never DB-generated. Order numbers are separate and human-facing:
 
 ### Money vs measurements
 
-Money is `BigDecimal` behind a `MoneyDomain` value object, normalised to 2
+Money is `BigDecimal` behind a `Money` value object, normalised to 2
 decimals with `HALF_EVEN` (banker's rounding, so repeated roundings don't
 drift upward), stored as `NUMERIC(19,2)`. IDR has no minor unit today, but a
 percentage discount or a split bill produces fractions that must not be
@@ -241,7 +241,7 @@ the caller asked for `NEXT` or `PREV`.
 ## Auth model
 
 RS256 JWT access tokens, short-lived, cached in Redis. Opaque refresh tokens,
-hashed, session persisted in Postgres (`UserSessionDomain`) and mirrored in
+hashed, session persisted in Postgres (`UserSession`) and mirrored in
 Redis with a capped TTL. Passwords hashed with Argon2 (`password4j`) and kept
 in their own `staff_passwords` history table — `staffs` has no password
 column, and a 90-day reuse window is enforced on every change.
@@ -397,13 +397,13 @@ sequenceDiagram
 
 Pricing is computed server-side and never trusted from the client.
 
-1. `LaundryServiceDomain.priceFor(quantity, weightKg, priority)` multiplies
+1. `LaundryService.priceFor(quantity, weightKg, priority)` multiplies
    `pricePerUnit` by the weight (per-kg services) or the quantity, then by
    `expressMultiplier` for `EXPRESS` orders → **subtotal**.
 2. The manual `discount` a staff member grants is subtracted;
-   `MoneyDomain.minus` rejects a discount larger than the subtotal.
+   `Money.minus` rejects a discount larger than the subtotal.
 3. If `promoCodes` was supplied, each code is redeemed in turn against
-   `promotion-service` and `OrderDomain.applyPromotionDiscount(...)` folds its
+   `promotion-service` and `Order.applyPromotionDiscount(...)` folds its
    granted amount in *on top of* the manual discount and every code redeemed
    before it, before the next code is redeemed — so a later code's cap
    (`discountRoom()`) already reflects everything applied so far.
@@ -435,7 +435,7 @@ other services' schemas — never foreign keys.
 
 A promotion is one of `PERCENTAGE`, `FIXED_AMOUNT` or
 `NON_CUMULATIVE_PERCENTAGE`; the type decides which of `percentage` and
-`amount` are required, enforced in `PromotionDomain`'s compact constructor.
+`amount` are required, enforced in `Promotion`'s compact constructor.
 `maxDiscountAmount` (caps the grant) and `minSubtotal` (eligibility floor) are
 optional on every type now, and `combinable` (default `true`) gates whether a
 code can be stacked with others on the same order.
@@ -502,7 +502,7 @@ sequenceDiagram
   `/public/invoice/pdf`. Moving the mint endpoint under `/public/` would let
   anyone forge a link for any order id.
 - Rendering follows the same Composer-port pattern as the emails, one ring
-  over: core defines `InvoiceHtmlComposer`, and only the gateway ring imports
+  over: core defines `InvoiceComposer`, and only the gateway ring imports
   Thymeleaf, jsoup and openhtmltopdf.
 
 > **Dev-only gotcha, measured not guessed:** a download manager (IDM) with

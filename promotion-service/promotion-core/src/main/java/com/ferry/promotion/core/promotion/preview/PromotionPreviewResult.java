@@ -1,7 +1,7 @@
 package com.ferry.promotion.core.promotion.preview;
 
-import com.ferry.promotion.domain.common.MoneyDomain;
-import com.ferry.promotion.domain.promotion.PromotionDomain;
+import com.ferry.promotion.domain.common.Money;
+import com.ferry.promotion.domain.promotion.Promotion;
 import com.ferry.promotion.domain.promotion.PromotionRejection;
 
 /************************
@@ -11,8 +11,8 @@ import com.ferry.promotion.domain.promotion.PromotionRejection;
 
 public record PromotionPreviewResult(
 	String code,
-	PromotionDomain promotion,
-	MoneyDomain discountAmount,
+	Promotion promotion,
+	Money discountAmount,
 	PromotionRejection rejection){
 
 	public boolean isApplied(){

@@ -1,6 +1,6 @@
 package com.ferry.promotion.core.promotion.redemption;
 
-import com.ferry.promotion.domain.common.MoneyDomain;
+import com.ferry.promotion.domain.common.Money;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -8,5 +8,5 @@ import com.ferry.promotion.domain.common.MoneyDomain;
  ************************/
 
 public interface DiscountStrategy{
-	MoneyDomain calculate(DiscountCalculator calculator);
+	Money calculate(DiscountCalculator calculator);
 }

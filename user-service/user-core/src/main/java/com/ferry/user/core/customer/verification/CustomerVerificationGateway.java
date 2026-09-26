@@ -1,7 +1,7 @@
 package com.ferry.user.core.customer.verification;
 
-import com.ferry.user.domain.customer.CustomerIdDomain;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.customer.CustomerId;
+import com.ferry.user.domain.tenant.TenantId;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -9,5 +9,5 @@ import com.ferry.user.domain.tenant.TenantIdDomain;
  ************************/
 
 public interface CustomerVerificationGateway{
-	boolean existsByIdAndTenantId(CustomerIdDomain customerId, TenantIdDomain tenantId);
+	boolean existsByIdAndTenantId(CustomerId customerId, TenantId tenantId);
 }

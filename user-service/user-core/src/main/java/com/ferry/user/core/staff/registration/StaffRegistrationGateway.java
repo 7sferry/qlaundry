@@ -1,11 +1,11 @@
 package com.ferry.user.core.staff.registration;
 
-import com.ferry.user.domain.common.UsernameDomain;
-import com.ferry.user.domain.staff.StaffAddressDomain;
-import com.ferry.user.domain.staff.StaffDomain;
-import com.ferry.user.domain.staff.StaffEmailDomain;
-import com.ferry.user.domain.staff.StaffPasswordDomain;
-import com.ferry.user.domain.staff.StaffPhoneDomain;
+import com.ferry.user.domain.common.Username;
+import com.ferry.user.domain.staff.StaffAddress;
+import com.ferry.user.domain.staff.Staff;
+import com.ferry.user.domain.staff.StaffEmail;
+import com.ferry.user.domain.staff.StaffPassword;
+import com.ferry.user.domain.staff.StaffPhone;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -13,10 +13,10 @@ import com.ferry.user.domain.staff.StaffPhoneDomain;
  ************************/
 
 public interface StaffRegistrationGateway{
-	StaffDomain save(StaffDomain register);
-	StaffPasswordDomain save(StaffPasswordDomain register);
-	StaffEmailDomain save(StaffEmailDomain register);
-	StaffAddressDomain save(StaffAddressDomain register);
-	StaffPhoneDomain save(StaffPhoneDomain register);
-	boolean existsByUsername(UsernameDomain username);
+	Staff save(Staff register);
+	StaffPassword save(StaffPassword register);
+	StaffEmail save(StaffEmail register);
+	StaffAddress save(StaffAddress register);
+	StaffPhone save(StaffPhone register);
+	boolean existsByUsername(Username username);
 }

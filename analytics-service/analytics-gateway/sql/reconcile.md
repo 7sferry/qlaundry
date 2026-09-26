@@ -62,7 +62,7 @@ cd order-service/order-web-service
 ```
 
 It pages every `laundry_services` row, then every `orders` row (with items and promotions), 500 at a time by id, and
-pushes each through `AnalyticsEventPublisher` as `LAUNDRY_SERVICE_BACKFILLED` / `ORDER_BACKFILLED` carrying the row's
+pushes each through `OrderAnalyticsPublisher` as `LAUNDRY_SERVICE_BACKFILLED` / `ORDER_BACKFILLED` carrying the row's
 **current** `@Version`. It never writes ClickHouse directly. Rerunning it is harmless — the same versions arrive
 again and `ReplacingMergeTree` keeps one. Keep analytics-service running so the stream drains as it fills
 (`XLEN analytics:event:ORDER`).

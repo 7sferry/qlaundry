@@ -1,8 +1,8 @@
 package com.ferry.order.core.service.update;
 
-import com.ferry.order.domain.service.LaundryServiceDomain;
-import com.ferry.order.domain.service.LaundryServiceIdDomain;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.service.LaundryService;
+import com.ferry.order.domain.service.LaundryServiceId;
+import com.ferry.order.domain.tenant.TenantId;
 
 import java.util.Optional;
 
@@ -12,7 +12,7 @@ import java.util.Optional;
  ************************/
 
 public interface LaundryServiceUpdateGateway{
-	Optional<LaundryServiceDomain> findById(LaundryServiceIdDomain serviceId, TenantIdDomain tenantId);
+	Optional<LaundryService> findById(LaundryServiceId serviceId, TenantId tenantId);
 
-	LaundryServiceDomain save(LaundryServiceDomain service);
+	LaundryService save(LaundryService service);
 }

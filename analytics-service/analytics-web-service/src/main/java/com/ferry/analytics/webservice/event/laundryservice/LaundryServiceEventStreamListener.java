@@ -2,7 +2,7 @@ package com.ferry.analytics.webservice.event.laundryservice;
 
 import com.ferry.analytics.core.event.laundryservice.LaundryServiceEventRequest;
 import com.ferry.analytics.core.event.laundryservice.LaundryServiceEventUseCase;
-import com.ferry.analytics.domain.event.LaundryServiceSnapshotDomain;
+import com.ferry.analytics.domain.event.LaundryServiceSnapshot;
 import com.ferry.analytics.webservice.event.AnalyticsStreamConstant;
 import com.ferry.utils.json.JsonManager;
 import lombok.RequiredArgsConstructor;
@@ -36,11 +36,11 @@ public class LaundryServiceEventStreamListener implements StreamListener<String,
 		try{
 			LaundryServiceAnalyticsMessage message = jsonManager.readValue(
 					value.get(AnalyticsStreamConstant.PAYLOAD_FIELD), LaundryServiceAnalyticsMessage.class);
-			LaundryServiceSnapshotDomain service = new LaundryServiceSnapshotDomain(message.tenantId(),
+			LaundryServiceSnapshot service = new LaundryServiceSnapshot(message.tenantId(),
 					message.serviceId(), message.name(), message.category(), message.unit(), message.pricePerUnit(),
 					message.estimatedHours(), message.expressMultiplier(), message.popular(), message.active(),
 					message.deleted(), message.version(), instant(message.createdAt()), instant(message.updatedAt()));
-			LaundryServiceEventStreamPresenter presenter = new LaundryServiceEventStreamPresenter();
+			StreamLaundryServiceEventPresenter presenter = new StreamLaundryServiceEventPresenter();
 			laundryServiceEventUseCase.execute(new LaundryServiceEventRequest(eventId,
 					value.get(AnalyticsStreamConstant.TYPE_FIELD), service), presenter);
 			stringRedisTemplate.opsForStream().acknowledge(streamKey, group, record.getId());

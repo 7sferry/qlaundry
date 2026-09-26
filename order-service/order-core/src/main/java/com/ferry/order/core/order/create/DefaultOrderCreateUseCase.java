@@ -1,28 +1,28 @@
 package com.ferry.order.core.order.create;
 
 import com.ferry.order.core.analytics.AnalyticsEventConfig;
-import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
-import com.ferry.order.domain.common.AddressLineDomain;
-import com.ferry.order.domain.common.EmailDomain;
-import com.ferry.order.domain.common.FullNameDomain;
-import com.ferry.order.domain.common.MoneyDomain;
-import com.ferry.order.domain.common.NoteDomain;
-import com.ferry.order.domain.common.PhoneDomain;
+import com.ferry.order.domain.common.AddressLine;
+import com.ferry.order.domain.common.Email;
+import com.ferry.order.domain.common.FullName;
+import com.ferry.order.domain.common.Money;
+import com.ferry.order.domain.common.Note;
+import com.ferry.order.domain.common.Phone;
 import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.common.exception.UnsupportedPaymentMethodException;
-import com.ferry.order.domain.customer.CustomerIdDomain;
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderItemDomain;
+import com.ferry.order.domain.customer.CustomerId;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderItem;
 import com.ferry.order.domain.order.OrderPriority;
-import com.ferry.order.domain.order.OrderPromotionDomain;
-import com.ferry.order.domain.order.OrderPromotionSagaDomain;
+import com.ferry.order.domain.order.OrderPromotion;
+import com.ferry.order.domain.order.OrderPromotionSaga;
 import com.ferry.order.domain.order.PaymentMethod;
-import com.ferry.order.domain.service.LaundryServiceDomain;
-import com.ferry.order.domain.service.LaundryServiceIdDomain;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.service.LaundryService;
+import com.ferry.order.domain.service.LaundryServiceId;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,15 +41,15 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 	private final OrderCreateGateway gateway;
 	private final OrderCustomerGateway customerGateway;
 	private final OrderPromotionGateway promotionGateway;
-	private final AnalyticsEventPublisher publisher;
+	private final OrderAnalyticsPublisher publisher;
 
 	@Override
 	public void execute(OrderCreateRequest request, OrderAuthPrincipal principal, OrderCreatePresenter presenter){
 		request.validate();
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
+		TenantId tenantId = new TenantId(principal.tenantId());
 		String customerId = verifiedCustomerId(request.customerId(), tenantId);
-		LaundryServiceIdDomain serviceId = new LaundryServiceIdDomain(request.serviceId());
-		LaundryServiceDomain service = gateway.findServiceById(serviceId, tenantId)
+		LaundryServiceId serviceId = new LaundryServiceId(request.serviceId());
+		LaundryService service = gateway.findServiceById(serviceId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Service Not Found"));
 		if(!service.active()){
 			throw new InvalidOrderStateException("Service is no longer available");
@@ -59,26 +59,26 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		Instant pickupAt = request.pickupAt() == null ? Instant.now() : Instant.ofEpochMilli(request.pickupAt());
 		Instant estimatedDeliveryAt = request.estimatedDeliveryAt() == null
 				? null : Instant.ofEpochMilli(request.estimatedDeliveryAt());
-		EmailDomain customerEmail = request.customerEmail() == null || request.customerEmail().isBlank()
-				? null : new EmailDomain(request.customerEmail());
-		AddressLineDomain customerAddress = request.customerAddress() == null || request.customerAddress().isBlank()
-				? null : new AddressLineDomain(request.customerAddress());
-		MoneyDomain discount = request.discount() == null ? MoneyDomain.ZERO : new MoneyDomain(request.discount());
-		OrderDomain order = OrderDomain.create(tenantId.value(), customerId,
-				new FullNameDomain(request.customerName()), new PhoneDomain(request.customerPhone()), customerEmail,
+		Email customerEmail = request.customerEmail() == null || request.customerEmail().isBlank()
+				? null : new Email(request.customerEmail());
+		AddressLine customerAddress = request.customerAddress() == null || request.customerAddress().isBlank()
+				? null : new AddressLine(request.customerAddress());
+		Money discount = request.discount() == null ? Money.ZERO : new Money(request.discount());
+		Order order = Order.create(tenantId.value(), customerId,
+				new FullName(request.customerName()), new Phone(request.customerPhone()), customerEmail,
 				customerAddress, service, request.quantity(), request.weightKg(), discount, priority, paymentMethod,
-				pickupAt, estimatedDeliveryAt, new NoteDomain(request.notes()), principal.userId());
+				pickupAt, estimatedDeliveryAt, new Note(request.notes()), principal.userId());
 		Set<String> codes = distinctCodes(request.promoCodes());
 		if(codes.isEmpty()){
 			presenter.present(persist(request, order, List.of(), List.of(), principal));
 			return;
 		}
-		OrderPromotionSagaDomain saga = OrderPromotionSagaDomain.open(tenantId.value(), order.orderNumberValue(),
+		OrderPromotionSaga saga = OrderPromotionSaga.open(tenantId.value(), order.orderNumberValue(),
 				principal.userId());
 		promotionGateway.openSaga(saga);
 		List<PromotionRedemptionHttpResponse> redemptions = redeemPromotions(order, codes, tenantId, principal, saga);
 		try{
-			AppliedPromotions applied = applyPromotionsToOrder(order, redemptions);
+			AppliedPromotionList applied = applyPromotionsToOrder(order, redemptions);
 			OrderCreateResponse response = persist(request, applied.order(), redemptions, applied.granted(),
 					principal);
 			promotionGateway.markSagaCommittedAfterCommit(saga.commit(principal.userId()));
@@ -89,21 +89,21 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		}
 	}
 
-	private OrderCreateResponse persist(OrderCreateRequest request, OrderDomain order,
+	private OrderCreateResponse persist(OrderCreateRequest request, Order order,
 	                                    List<PromotionRedemptionHttpResponse> redemptions,
-	                                    List<MoneyDomain> grantedAmounts,
+	                                    List<Money> grantedAmounts,
 	                                    OrderAuthPrincipal principal){
-		OrderDomain saved = gateway.save(order);
-		List<OrderPromotionDomain> promotions = savePromotions(saved, redemptions, grantedAmounts, principal);
-		List<OrderItemDomain> items = saveItems(request, saved, principal);
-		OrderDomain current = Boolean.TRUE.equals(request.pickedUpImmediately())
+		Order saved = gateway.save(order);
+		List<OrderPromotion> promotions = savePromotions(saved, redemptions, grantedAmounts, principal);
+		List<OrderItem> items = saveItems(request, saved, principal);
+		Order current = Boolean.TRUE.equals(request.pickedUpImmediately())
 				? gateway.markPickedUp(saved, principal) : saved;
 		publisher.publish(publisher.save(AnalyticsEventConfig.order(AnalyticsEventType.ORDER_CREATED,
 				OrderAnalyticsMessage.from(current, items, promotions), principal.userId())));
 		return new OrderCreateResponse(current, items, promotions);
 	}
 
-	private void releasePromotions(OrderPromotionSagaDomain saga, OrderAuthPrincipal principal,
+	private void releasePromotions(OrderPromotionSaga saga, OrderAuthPrincipal principal,
 	                               RuntimeException cause){
 		PromotionReleaseHttpRequest release = new PromotionReleaseHttpRequest(saga.tenantId(), saga.referenceId(),
 				principal.userId());
@@ -117,7 +117,7 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		}
 	}
 
-	private void closeRejectedSaga(OrderPromotionSagaDomain saga, OrderAuthPrincipal principal,
+	private void closeRejectedSaga(OrderPromotionSaga saga, OrderAuthPrincipal principal,
 	                               RuntimeException cause){
 		try{
 			promotionGateway.markSagaReleased(saga.release(principal.userId()));
@@ -128,15 +128,15 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		}
 	}
 
-	private AppliedPromotions applyPromotionsToOrder(OrderDomain order, List<PromotionRedemptionHttpResponse> redemptions){
-		OrderDomain running = order;
-		List<MoneyDomain> granted = new ArrayList<>(redemptions.size());
+	private AppliedPromotionList applyPromotionsToOrder(Order order, List<PromotionRedemptionHttpResponse> redemptions){
+		Order running = order;
+		List<Money> granted = new ArrayList<>(redemptions.size());
 		for(PromotionRedemptionHttpResponse response : redemptions){
-			MoneyDomain amount = new MoneyDomain(response.discountAmount()).min(running.discountRoom());
+			Money amount = new Money(response.discountAmount()).min(running.discountRoom());
 			granted.add(amount);
 			running = running.applyPromotionDiscount(amount);
 		}
-		return new AppliedPromotions(running, granted);
+		return new AppliedPromotionList(running, granted);
 	}
 
 	private Set<String> distinctCodes(List<String> promoCodes){
@@ -156,10 +156,10 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		return codes;
 	}
 
-	private List<PromotionRedemptionHttpResponse> redeemPromotions(OrderDomain order, Collection<String> codes,
-	                                                                TenantIdDomain tenantId,
+	private List<PromotionRedemptionHttpResponse> redeemPromotions(Order order, Collection<String> codes,
+	                                                                TenantId tenantId,
 	                                                                OrderAuthPrincipal principal,
-	                                                                OrderPromotionSagaDomain saga){
+	                                                                OrderPromotionSaga saga){
 		PromotionRedemptionHttpRequest request = new PromotionRedemptionHttpRequest(tenantId.value(),
 				codes, order.subtotal().value(), order.orderNumberValue(), order.customerId(),
 				principal.userId());
@@ -177,24 +177,24 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		return responses;
 	}
 
-	private List<OrderPromotionDomain> savePromotions(OrderDomain order,
+	private List<OrderPromotion> savePromotions(Order order,
 	                                                  List<PromotionRedemptionHttpResponse> redemptions,
-	                                                  List<MoneyDomain> grantedAmounts,
+	                                                  List<Money> grantedAmounts,
 	                                                  OrderAuthPrincipal principal){
-		List<OrderPromotionDomain> saved = new ArrayList<>(redemptions.size());
+		List<OrderPromotion> saved = new ArrayList<>(redemptions.size());
 		for(int i = 0; i < redemptions.size(); i++){
 			PromotionRedemptionHttpResponse redeemed = redemptions.get(i);
-			saved.add(gateway.save(OrderPromotionDomain.register(order.id(), redeemed.promotionId(),
+			saved.add(gateway.save(OrderPromotion.register(order.id(), redeemed.promotionId(),
 					redeemed.code(), grantedAmounts.get(i), principal.userId())));
 		}
 		return saved;
 	}
 
-	private String verifiedCustomerId(String customerId, TenantIdDomain tenantId){
+	private String verifiedCustomerId(String customerId, TenantId tenantId){
 		if(customerId == null || customerId.isBlank()){
 			return null;
 		}
-		CustomerIdDomain customer = new CustomerIdDomain(customerId);
+		CustomerId customer = new CustomerId(customerId);
 		CustomerVerificationHttpRequest verification = new CustomerVerificationHttpRequest(customer.value(),
 				tenantId.value());
 		if(!customerGateway.belongsToTenant(verification)){
@@ -213,18 +213,18 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		return paymentMethod;
 	}
 
-	private List<OrderItemDomain> saveItems(OrderCreateRequest request, OrderDomain order,
+	private List<OrderItem> saveItems(OrderCreateRequest request, Order order,
 	                                        OrderAuthPrincipal principal){
 		List<OrderCreateRequest.Item> requestItems = request.items() == null ? List.of() : request.items();
-		List<OrderItemDomain> items = new ArrayList<>(requestItems.size());
+		List<OrderItem> items = new ArrayList<>(requestItems.size());
 		for(OrderCreateRequest.Item item : requestItems){
-			items.add(gateway.save(OrderItemDomain.register(order.id(), item.type(), item.label(), item.quantity(),
+			items.add(gateway.save(OrderItem.register(order.id(), item.type(), item.label(), item.quantity(),
 					principal.userId())));
 		}
 		return items;
 	}
 
-	private record AppliedPromotions(OrderDomain order, List<MoneyDomain> granted){
+	private record AppliedPromotionList(Order order, List<Money> granted){
 	}
 
 }

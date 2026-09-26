@@ -5,16 +5,17 @@ import com.ferry.user.core.staff.registration.StaffRegistrationRequest;
 import com.ferry.user.core.staff.registration.StaffRegistrationResponse;
 import com.ferry.user.core.tenant.constant.TenantConfirmationConstant;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.common.DescriptionDomain;
-import com.ferry.user.domain.common.EmailDomain;
-import com.ferry.user.domain.common.FullNameDomain;
-import com.ferry.user.domain.common.UsernameDomain;
-import com.ferry.user.domain.notification.EmailTriggerDomain;
+import com.ferry.user.core.tools.UserEmailPublisher;
+import com.ferry.user.domain.common.Description;
+import com.ferry.user.domain.common.Email;
+import com.ferry.user.domain.common.FullName;
+import com.ferry.user.domain.common.Username;
+import com.ferry.user.domain.notification.EmailTrigger;
 import com.ferry.user.domain.notification.EmailTriggerType;
-import com.ferry.user.domain.staff.StaffDomain;
+import com.ferry.user.domain.staff.Staff;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.registration.TurnstileVerificationException;
-import com.ferry.user.domain.tenant.TenantDomain;
+import com.ferry.user.domain.tenant.Tenant;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,7 +54,7 @@ class DefaultTenantRegistrationUseCaseTest{
 	@Mock
 	UserEmailPublisher emailPublisher;
 	@Mock
-	TurnstileVerificationGateway turnstileVerificationGateway;
+	VerificationGateway verificationGateway;
 	@Mock
 	UserCacheManager cacheManager;
 	@InjectMocks
@@ -76,7 +77,7 @@ class DefaultTenantRegistrationUseCaseTest{
 				.isInstanceOf(ConstraintViolationException.class));
 
 		then(gateway).shouldHaveNoInteractions();
-		then(turnstileVerificationGateway).shouldHaveNoInteractions();
+		then(verificationGateway).shouldHaveNoInteractions();
 		then(emailPublisher).shouldHaveNoInteractions();
 		then(presenter).shouldHaveNoInteractions();
 	}
@@ -90,7 +91,7 @@ class DefaultTenantRegistrationUseCaseTest{
 				.isInstanceOf(ConstraintViolationException.class));
 
 		then(gateway).shouldHaveNoInteractions();
-		then(turnstileVerificationGateway).shouldHaveNoInteractions();
+		then(verificationGateway).shouldHaveNoInteractions();
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -98,7 +99,7 @@ class DefaultTenantRegistrationUseCaseTest{
 	void givenCaptchaVerificationFails_thenThrowsTurnstileVerificationException(){
 		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME, "desc",
 				USERNAME, PASSWORD, List.of(EMAIL), null, null, CAPTCHA_TOKEN);
-		willReturn(false).given(turnstileVerificationGateway).verify(CAPTCHA_TOKEN);
+		willReturn(false).given(verificationGateway).verify(CAPTCHA_TOKEN);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, presenter))
 				.isInstanceOf(TurnstileVerificationException.class)
@@ -113,16 +114,16 @@ class DefaultTenantRegistrationUseCaseTest{
 	void givenUsernameAlreadyTaken_thenPresentsFakeResponseAndNeverSavesTenant(){
 		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME, "desc",
 				USERNAME, PASSWORD, List.of(EMAIL), null, null, CAPTCHA_TOKEN);
-		willReturn(true).given(turnstileVerificationGateway).verify(CAPTCHA_TOKEN);
-		willReturn(true).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
+		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
+		willReturn(true).given(gateway).existsByUsername(new Username(USERNAME));
 
 		useCase.execute(request, presenter);
 
-		TenantDomain fakeTenant = TenantDomain.fake(new FullNameDomain(TENANT_NAME), new UsernameDomain(USERNAME));
-		StaffDomain fakeStaff = StaffDomain.fake(new FullNameDomain(FULL_NAME), new UsernameDomain(USERNAME));
+		Tenant fakeTenant = Tenant.fake(new FullName(TENANT_NAME), new Username(USERNAME));
+		Staff fakeStaff = Staff.fake(new FullName(FULL_NAME), new Username(USERNAME));
 		then(presenter).should().present(new TenantRegistrationResponse(fakeTenant, new StaffRegistrationResponse(fakeStaff)));
-		then(gateway).should(never()).save(any(TenantDomain.class));
-		then(gateway).should(never()).registerAdmin(any(StaffRegistrationRequest.class), any(TenantDomain.class));
+		then(gateway).should(never()).save(any(Tenant.class));
+		then(gateway).should(never()).registerAdmin(any(StaffRegistrationRequest.class), any(Tenant.class));
 		then(emailPublisher).shouldHaveNoInteractions();
 	}
 
@@ -131,17 +132,17 @@ class DefaultTenantRegistrationUseCaseTest{
 		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME,
 				"A great laundry chain", USERNAME, PASSWORD, List.of(EMAIL), null, null,
 				CAPTCHA_TOKEN);
-		willReturn(true).given(turnstileVerificationGateway).verify(CAPTCHA_TOKEN);
+		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
 		willAnswer(invocation -> {
-			TenantDomain arg = invocation.getArgument(0);
-			return new TenantDomain(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
+			Tenant arg = invocation.getArgument(0);
+			return new Tenant(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
-		}).given(gateway).save(any(TenantDomain.class));
-		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME),
-				new FullNameDomain(FULL_NAME), new DescriptionDomain("Super Admin"), TENANT_ID, StaffRole.SUPER_STAFF, null);
-		willReturn(new StaffRegistrationResponse(admin)).given(gateway).registerAdmin(staffRequestCaptor.capture(), any(TenantDomain.class));
-		EmailTriggerDomain trigger = EmailTriggerDomain.create(EmailTriggerType.TENANT_REGISTRATION,
-				new EmailDomain(EMAIL), "{}", null);
+		}).given(gateway).save(any(Tenant.class));
+		Staff admin = Staff.register(new Username(USERNAME),
+				new FullName(FULL_NAME), new Description("Super Admin"), TENANT_ID, StaffRole.SUPER_STAFF, null);
+		willReturn(new StaffRegistrationResponse(admin)).given(gateway).registerAdmin(staffRequestCaptor.capture(), any(Tenant.class));
+		EmailTrigger trigger = EmailTrigger.create(EmailTriggerType.TENANT_REGISTRATION,
+				new Email(EMAIL), "{}", null);
 		willReturn(trigger).given(emailPublisher).save(any(EmailTriggerConfig.class));
 
 		useCase.execute(request, presenter);
@@ -159,17 +160,17 @@ class DefaultTenantRegistrationUseCaseTest{
 		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME,
 				null, USERNAME, PASSWORD, List.of(EMAIL), null, null,
 				CAPTCHA_TOKEN);
-		willReturn(true).given(turnstileVerificationGateway).verify(CAPTCHA_TOKEN);
+		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
 		willAnswer(invocation -> {
-			TenantDomain arg = invocation.getArgument(0);
-			return new TenantDomain(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
+			Tenant arg = invocation.getArgument(0);
+			return new Tenant(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
-		}).given(gateway).save(any(TenantDomain.class));
-		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME),
-				new FullNameDomain(FULL_NAME), new DescriptionDomain("Super Admin"), TENANT_ID, StaffRole.SUPER_STAFF, null);
-		willReturn(new StaffRegistrationResponse(admin)).given(gateway).registerAdmin(staffRequestCaptor.capture(), any(TenantDomain.class));
-		EmailTriggerDomain trigger = EmailTriggerDomain.create(EmailTriggerType.TENANT_REGISTRATION,
-				new EmailDomain(EMAIL), "{}", null);
+		}).given(gateway).save(any(Tenant.class));
+		Staff admin = Staff.register(new Username(USERNAME),
+				new FullName(FULL_NAME), new Description("Super Admin"), TENANT_ID, StaffRole.SUPER_STAFF, null);
+		willReturn(new StaffRegistrationResponse(admin)).given(gateway).registerAdmin(staffRequestCaptor.capture(), any(Tenant.class));
+		EmailTrigger trigger = EmailTrigger.create(EmailTriggerType.TENANT_REGISTRATION,
+				new Email(EMAIL), "{}", null);
 		willReturn(trigger).given(emailPublisher).save(any(EmailTriggerConfig.class));
 
 		useCase.execute(request, presenter);
@@ -183,17 +184,17 @@ class DefaultTenantRegistrationUseCaseTest{
 		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME,
 				"desc", USERNAME, PASSWORD, List.of(EMAIL), null, null,
 				CAPTCHA_TOKEN);
-		willReturn(true).given(turnstileVerificationGateway).verify(CAPTCHA_TOKEN);
+		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
 		willAnswer(invocation -> {
-			TenantDomain arg = invocation.getArgument(0);
-			return new TenantDomain(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
+			Tenant arg = invocation.getArgument(0);
+			return new Tenant(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
-		}).given(gateway).save(any(TenantDomain.class));
-		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME),
-				new FullNameDomain(FULL_NAME), new DescriptionDomain("Super Admin"), TENANT_ID, StaffRole.SUPER_STAFF, null);
-		willReturn(new StaffRegistrationResponse(admin)).given(gateway).registerAdmin(any(StaffRegistrationRequest.class), any(TenantDomain.class));
-		EmailTriggerDomain trigger = EmailTriggerDomain.create(EmailTriggerType.TENANT_REGISTRATION,
-				new EmailDomain(EMAIL), "{}", null);
+		}).given(gateway).save(any(Tenant.class));
+		Staff admin = Staff.register(new Username(USERNAME),
+				new FullName(FULL_NAME), new Description("Super Admin"), TENANT_ID, StaffRole.SUPER_STAFF, null);
+		willReturn(new StaffRegistrationResponse(admin)).given(gateway).registerAdmin(any(StaffRegistrationRequest.class), any(Tenant.class));
+		EmailTrigger trigger = EmailTrigger.create(EmailTriggerType.TENANT_REGISTRATION,
+				new Email(EMAIL), "{}", null);
 		willReturn(trigger).given(emailPublisher).save(emailConfigCaptor.capture());
 
 		useCase.execute(request, presenter);
@@ -219,17 +220,17 @@ class DefaultTenantRegistrationUseCaseTest{
 		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME,
 				"desc", USERNAME, PASSWORD, List.of(EMAIL), null, null,
 				CAPTCHA_TOKEN);
-		willReturn(true).given(turnstileVerificationGateway).verify(CAPTCHA_TOKEN);
+		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
 		willAnswer(invocation -> {
-			TenantDomain arg = invocation.getArgument(0);
-			return new TenantDomain(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
+			Tenant arg = invocation.getArgument(0);
+			return new Tenant(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
-		}).given(gateway).save(any(TenantDomain.class));
-		StaffDomain admin = StaffDomain.register(new UsernameDomain(USERNAME),
-				new FullNameDomain(FULL_NAME), new DescriptionDomain("Super Admin"), TENANT_ID, StaffRole.SUPER_STAFF, null);
-		willReturn(new StaffRegistrationResponse(admin)).given(gateway).registerAdmin(any(StaffRegistrationRequest.class), any(TenantDomain.class));
-		EmailTriggerDomain trigger = EmailTriggerDomain.create(EmailTriggerType.TENANT_REGISTRATION,
-				new EmailDomain(EMAIL), "{}", null);
+		}).given(gateway).save(any(Tenant.class));
+		Staff admin = Staff.register(new Username(USERNAME),
+				new FullName(FULL_NAME), new Description("Super Admin"), TENANT_ID, StaffRole.SUPER_STAFF, null);
+		willReturn(new StaffRegistrationResponse(admin)).given(gateway).registerAdmin(any(StaffRegistrationRequest.class), any(Tenant.class));
+		EmailTrigger trigger = EmailTrigger.create(EmailTriggerType.TENANT_REGISTRATION,
+				new Email(EMAIL), "{}", null);
 		willReturn(trigger).given(emailPublisher).save(any(EmailTriggerConfig.class));
 
 		useCase.execute(request, presenter);

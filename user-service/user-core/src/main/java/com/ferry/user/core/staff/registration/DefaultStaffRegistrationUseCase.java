@@ -27,50 +27,50 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 		if(principal.role() != StaffRole.SUPER_STAFF){
 			throw new ForbiddenActionException("Only super staff can register staff");
 		}
-		StaffDomain registeredUser = registerStaff(request, principal);
+		Staff registeredUser = registerStaff(request, principal);
 		saveEmail(request, registeredUser, principal);
 		saveAddress(request, registeredUser, principal);
 		savePhone(request, registeredUser, principal);
 		presenter.present(new StaffRegistrationResponse(registeredUser));
 	}
 
-	private StaffDomain registerStaff(StaffRegistrationRequest request, UserAuthPrincipal principal){
-		UsernameDomain username = new UsernameDomain(request.username());
+	private Staff registerStaff(StaffRegistrationRequest request, UserAuthPrincipal principal){
+		Username username = new Username(request.username());
 		if(gateway.existsByUsername(username)){
 			throw new InvalidUsernameException("Username already exists");
 		}
-		HashedPasswordDomain hashedPassword = passwordTool.hash(new RawPasswordDomain(request.password()));
-		FullNameDomain fullName = new FullNameDomain(request.fullName());
-		DescriptionDomain note = new DescriptionDomain(request.description());
-		StaffDomain registered = StaffDomain.register(username, fullName, note, principal.tenantId(),
+		HashedPassword hashedPassword = passwordTool.hash(new RawPassword(request.password()));
+		FullName fullName = new FullName(request.fullName());
+		Description note = new Description(request.description());
+		Staff registered = Staff.register(username, fullName, note, principal.tenantId(),
 				request.role(), principal.userId());
-		StaffDomain saved = gateway.save(registered);
-		gateway.save(StaffPasswordDomain.register(saved.id(), hashedPassword, principal.userId()));
+		Staff saved = gateway.save(registered);
+		gateway.save(StaffPassword.register(saved.id(), hashedPassword, principal.userId()));
 		return saved;
 	}
 
-	private void savePhone(StaffRegistrationRequest request, StaffDomain registeredUser, UserAuthPrincipal principal){
+	private void savePhone(StaffRegistrationRequest request, Staff registeredUser, UserAuthPrincipal principal){
 		List<String> phones = request.phones() == null ? List.of() : request.phones();
 		for(String phone : phones){
-			gateway.save(StaffPhoneDomain.register(registeredUser.id(), new PhoneDomain(phone), principal.userId()));
+			gateway.save(StaffPhone.register(registeredUser.id(), new Phone(phone), principal.userId()));
 		}
 	}
 
-	private void saveAddress(StaffRegistrationRequest request, StaffDomain registeredUser, UserAuthPrincipal principal){
+	private void saveAddress(StaffRegistrationRequest request, Staff registeredUser, UserAuthPrincipal principal){
 		List<String> addresses = request.addresses() == null ? List.of() : request.addresses();
 		for(String address : addresses){
-			gateway.save(StaffAddressDomain.register(registeredUser.id(), new AddressLineDomain(address),
+			gateway.save(StaffAddress.register(registeredUser.id(), new AddressLine(address),
 					principal.userId()));
 		}
 	}
 
-	private void saveEmail(StaffRegistrationRequest request, StaffDomain registeredUser, UserAuthPrincipal principal){
+	private void saveEmail(StaffRegistrationRequest request, Staff registeredUser, UserAuthPrincipal principal){
 		List<String> emails = request.emails() == null ? List.of() : request.emails();
 		if(emails.isEmpty()){
 			throw new InvalidUserStateException("Emails cannot be empty");
 		}
 		for(String email : emails){
-			gateway.save(StaffEmailDomain.register(registeredUser.id(), new EmailDomain(email), principal.userId()));
+			gateway.save(StaffEmail.register(registeredUser.id(), new Email(email), principal.userId()));
 		}
 	}
 

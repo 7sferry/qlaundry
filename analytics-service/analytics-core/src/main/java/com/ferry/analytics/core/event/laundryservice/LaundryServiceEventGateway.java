@@ -1,7 +1,7 @@
 package com.ferry.analytics.core.event.laundryservice;
 
-import com.ferry.analytics.domain.event.ConsumedEventDomain;
-import com.ferry.analytics.domain.event.LaundryServiceSnapshotDomain;
+import com.ferry.analytics.domain.event.ConsumedEvent;
+import com.ferry.analytics.domain.event.LaundryServiceSnapshot;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -9,7 +9,7 @@ import com.ferry.analytics.domain.event.LaundryServiceSnapshotDomain;
  ************************/
 
 public interface LaundryServiceEventGateway{
-	void upsert(LaundryServiceSnapshotDomain service);
+	void upsert(LaundryServiceSnapshot service);
 
-	void recordConsumed(ConsumedEventDomain event);
+	void recordConsumed(ConsumedEvent event);
 }

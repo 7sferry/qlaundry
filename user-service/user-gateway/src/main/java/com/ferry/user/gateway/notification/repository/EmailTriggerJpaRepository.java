@@ -1,6 +1,6 @@
 package com.ferry.user.gateway.notification.repository;
 
-import com.ferry.user.gateway.notification.entity.EmailTriggerJpaEntity;
+import com.ferry.user.gateway.notification.entity.EmailTriggerJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /************************
@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * on Juli 2026         *
  ************************/
 
-public interface EmailTriggerJpaRepository extends JpaRepository<EmailTriggerJpaEntity, String>{
+public interface EmailTriggerJpaRepository extends JpaRepository<EmailTriggerJpa, String>{
 }

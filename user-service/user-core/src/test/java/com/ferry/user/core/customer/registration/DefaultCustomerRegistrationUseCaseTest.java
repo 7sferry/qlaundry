@@ -1,10 +1,10 @@
 package com.ferry.user.core.customer.registration;
 
 import com.ferry.user.domain.common.exception.InvalidUserStateException;
-import com.ferry.user.domain.customer.CustomerAddressDomain;
-import com.ferry.user.domain.customer.CustomerDomain;
-import com.ferry.user.domain.customer.CustomerEmailDomain;
-import com.ferry.user.domain.customer.CustomerPhoneDomain;
+import com.ferry.user.domain.customer.CustomerAddress;
+import com.ferry.user.domain.customer.Customer;
+import com.ferry.user.domain.customer.CustomerEmail;
+import com.ferry.user.domain.customer.CustomerPhone;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
@@ -45,13 +45,13 @@ class DefaultCustomerRegistrationUseCaseTest{
 	@Mock
 	CustomerRegistrationPresenter presenter;
 	@Captor
-	ArgumentCaptor<CustomerDomain> customerCaptor;
+	ArgumentCaptor<Customer> customerCaptor;
 	@Captor
-	ArgumentCaptor<CustomerPhoneDomain> phoneCaptor;
+	ArgumentCaptor<CustomerPhone> phoneCaptor;
 	@Captor
-	ArgumentCaptor<CustomerEmailDomain> emailCaptor;
+	ArgumentCaptor<CustomerEmail> emailCaptor;
 	@Captor
-	ArgumentCaptor<CustomerAddressDomain> addressCaptor;
+	ArgumentCaptor<CustomerAddress> addressCaptor;
 	@Captor
 	ArgumentCaptor<CustomerRegistrationResponse> responseCaptor;
 
@@ -103,11 +103,11 @@ class DefaultCustomerRegistrationUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		CustomerRegistrationRequest request = new CustomerRegistrationRequest(FULL_NAME, typed, null, null, null);
-		willAnswer(invocation -> invocation.<CustomerDomain>getArgument(0).toBuilder().id(CUSTOMER_ID).build())
+		willAnswer(invocation -> invocation.<Customer>getArgument(0).toBuilder().id(CUSTOMER_ID).build())
 				.given(gateway)
-				.save(any(CustomerDomain.class));
-		willAnswer(invocation -> invocation.<CustomerPhoneDomain>getArgument(0)).given(gateway)
-				.save(any(CustomerPhoneDomain.class));
+				.save(any(Customer.class));
+		willAnswer(invocation -> invocation.<CustomerPhone>getArgument(0)).given(gateway)
+				.save(any(CustomerPhone.class));
 
 		useCase.execute(request, principal, presenter);
 
@@ -126,15 +126,15 @@ class DefaultCustomerRegistrationUseCaseTest{
 				.build();
 		CustomerRegistrationRequest request = new CustomerRegistrationRequest(FULL_NAME, PHONE,
 				"lestari@laundry.test", "Jl. Bougenville No. 21", "prefers evening pickup");
-		willAnswer(invocation -> invocation.<CustomerDomain>getArgument(0).toBuilder().id(CUSTOMER_ID).build())
+		willAnswer(invocation -> invocation.<Customer>getArgument(0).toBuilder().id(CUSTOMER_ID).build())
 				.given(gateway)
-				.save(any(CustomerDomain.class));
-		willAnswer(invocation -> invocation.<CustomerPhoneDomain>getArgument(0)).given(gateway)
-				.save(any(CustomerPhoneDomain.class));
-		willAnswer(invocation -> invocation.<CustomerEmailDomain>getArgument(0)).given(gateway)
-				.save(any(CustomerEmailDomain.class));
-		willAnswer(invocation -> invocation.<CustomerAddressDomain>getArgument(0)).given(gateway)
-				.save(any(CustomerAddressDomain.class));
+				.save(any(Customer.class));
+		willAnswer(invocation -> invocation.<CustomerPhone>getArgument(0)).given(gateway)
+				.save(any(CustomerPhone.class));
+		willAnswer(invocation -> invocation.<CustomerEmail>getArgument(0)).given(gateway)
+				.save(any(CustomerEmail.class));
+		willAnswer(invocation -> invocation.<CustomerAddress>getArgument(0)).given(gateway)
+				.save(any(CustomerAddress.class));
 
 		useCase.execute(request, principal, presenter);
 
@@ -149,7 +149,7 @@ class DefaultCustomerRegistrationUseCaseTest{
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
-		CustomerDomain saved = customerCaptor.getValue();
+		Customer saved = customerCaptor.getValue();
 		CustomerRegistrationResponse response = responseCaptor.getValue();
 
 		thenSoftly(softly -> {
@@ -177,18 +177,18 @@ class DefaultCustomerRegistrationUseCaseTest{
 				.build();
 		CustomerRegistrationRequest request = new CustomerRegistrationRequest("bagas nugroho", "+6287811223344", "",
 				"   ", null);
-		willAnswer(invocation -> invocation.<CustomerDomain>getArgument(0).toBuilder().id(CUSTOMER_ID).build())
+		willAnswer(invocation -> invocation.<Customer>getArgument(0).toBuilder().id(CUSTOMER_ID).build())
 				.given(gateway)
-				.save(any(CustomerDomain.class));
-		willAnswer(invocation -> invocation.<CustomerPhoneDomain>getArgument(0)).given(gateway)
-				.save(any(CustomerPhoneDomain.class));
+				.save(any(Customer.class));
+		willAnswer(invocation -> invocation.<CustomerPhone>getArgument(0)).given(gateway)
+				.save(any(CustomerPhone.class));
 
 		useCase.execute(request, principal, presenter);
 
 		then(gateway).should(never())
-				.save(any(CustomerEmailDomain.class));
+				.save(any(CustomerEmail.class));
 		then(gateway).should(never())
-				.save(any(CustomerAddressDomain.class));
+				.save(any(CustomerAddress.class));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
@@ -209,11 +209,11 @@ class DefaultCustomerRegistrationUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		CustomerRegistrationRequest request = new CustomerRegistrationRequest("ayu pratiwi", PHONE, null, null, null);
-		willAnswer(invocation -> invocation.<CustomerDomain>getArgument(0).toBuilder().id(CUSTOMER_ID).build())
+		willAnswer(invocation -> invocation.<Customer>getArgument(0).toBuilder().id(CUSTOMER_ID).build())
 				.given(gateway)
-				.save(any(CustomerDomain.class));
-		willAnswer(invocation -> invocation.<CustomerPhoneDomain>getArgument(0)).given(gateway)
-				.save(any(CustomerPhoneDomain.class));
+				.save(any(Customer.class));
+		willAnswer(invocation -> invocation.<CustomerPhone>getArgument(0)).given(gateway)
+				.save(any(CustomerPhone.class));
 
 		useCase.execute(request, principal, presenter);
 

@@ -1,7 +1,7 @@
 package com.ferry.notification.core.email.send;
 
-import com.ferry.notification.domain.ContentDomain;
-import com.ferry.notification.domain.EmailNotificationDomain;
+import com.ferry.notification.domain.Content;
+import com.ferry.notification.domain.EmailNotification;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -9,5 +9,5 @@ import com.ferry.notification.domain.EmailNotificationDomain;
  ************************/
 
 public interface EmailSendGateway{
-	void send(EmailNotificationDomain notification, ContentDomain content);
+	void send(EmailNotification notification, Content content);
 }

@@ -1,7 +1,7 @@
 package com.ferry.order.core.service.create;
 
-import com.ferry.order.domain.service.LaundryServiceDomain;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.service.LaundryService;
+import com.ferry.order.domain.tenant.TenantId;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -9,7 +9,7 @@ import com.ferry.order.domain.tenant.TenantIdDomain;
  ************************/
 
 public interface LaundryServiceCreateGateway{
-	boolean existsByName(String name, TenantIdDomain tenantId);
+	boolean existsByName(String name, TenantId tenantId);
 
-	LaundryServiceDomain save(LaundryServiceDomain service);
+	LaundryService save(LaundryService service);
 }

@@ -2,8 +2,8 @@ package com.ferry.order.core.invoice.link;
 
 import com.ferry.order.core.invoice.pdf.InvoicePdfGateway;
 import com.ferry.order.domain.common.exception.NotFoundException;
-import com.ferry.order.domain.order.OrderIdDomain;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.order.OrderId;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import com.ferry.utils.linksigner.LinkSigner;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +24,8 @@ public class DefaultInvoiceLinkUseCase implements InvoiceLinkUseCase{
 	@Override
 	public void execute(InvoiceLinkRequest request, OrderAuthPrincipal principal, InvoiceLinkPresenter presenter){
 		request.validate();
-		OrderIdDomain orderId = new OrderIdDomain(request.orderId());
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
+		OrderId orderId = new OrderId(request.orderId());
+		TenantId tenantId = new TenantId(principal.tenantId());
 		gateway.findById(orderId, tenantId).orElseThrow(() -> new NotFoundException("Order Not Found"));
 		long expiresAt = Instant.now().plus(InvoiceLinkConstant.LINK_TTL).toEpochMilli();
 		String token = signer.sign(expiresAt, Map.of(

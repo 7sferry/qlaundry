@@ -1,14 +1,14 @@
 package com.ferry.promotion.core.promotion.detail;
 
-import com.ferry.promotion.domain.common.MoneyDomain;
-import com.ferry.promotion.domain.common.NoteDomain;
+import com.ferry.promotion.domain.common.Money;
+import com.ferry.promotion.domain.common.Note;
 import com.ferry.promotion.domain.common.exception.NotFoundException;
-import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
-import com.ferry.promotion.domain.promotion.PromotionDomain;
-import com.ferry.promotion.domain.promotion.PromotionIdDomain;
+import com.ferry.promotion.domain.promotion.PromotionCode;
+import com.ferry.promotion.domain.promotion.Promotion;
+import com.ferry.promotion.domain.promotion.PromotionId;
 import com.ferry.promotion.domain.promotion.PromotionType;
 import com.ferry.promotion.domain.staff.StaffRole;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.tenant.TenantId;
 import com.ferry.promotion.domain.token.PromotionAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -74,7 +74,7 @@ class DefaultPromotionDetailUseCaseTest{
 				.build();
 		PromotionDetailRequest request = new PromotionDetailRequest(PROMOTION_ID);
 		willReturn(Optional.empty()).given(gateway)
-				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(PromotionId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(NotFoundException.class)
@@ -91,15 +91,15 @@ class DefaultPromotionDetailUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		PromotionDomain promotion = PromotionDomain.builder()
+		Promotion promotion = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("PELANGGANBARU"))
+				.code(new PromotionCode("PELANGGANBARU"))
 				.name("Diskon Pelanggan Baru")
-				.description(new NoteDomain("first order only"))
+				.description(new Note("first order only"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("40"))
-				.maxDiscountAmount(MoneyDomain.of(25000L))
+				.maxDiscountAmount(Money.of(25000L))
 				.combinable(true)
 				.usageLimit(500)
 				.usedCount(123)
@@ -114,21 +114,21 @@ class DefaultPromotionDetailUseCaseTest{
 				.build();
 		PromotionDetailRequest request = new PromotionDetailRequest(PROMOTION_ID);
 		willReturn(Optional.of(promotion)).given(gateway)
-				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(PromotionId.class), any(TenantId.class));
 
 		useCase.execute(request, principal, presenter);
 
 		then(gateway).should()
-				.findById(eq(new PromotionIdDomain(PROMOTION_ID)), eq(new TenantIdDomain(TENANT_ID)));
+				.findById(eq(new PromotionId(PROMOTION_ID)), eq(new TenantId(TENANT_ID)));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
-		PromotionDomain presented = responseCaptor.getValue().promotion();
+		Promotion presented = responseCaptor.getValue().promotion();
 
 		thenSoftly(softly -> {
 			softly.then(presented.codeValue()).isEqualTo("PELANGGANBARU");
 			softly.then(presented.remainingUsage()).isEqualTo(377);
-			softly.then(presented.discountFor(MoneyDomain.of(100000L), MoneyDomain.ZERO).value())
+			softly.then(presented.discountFor(Money.of(100000L), Money.ZERO).value())
 					.isEqualByComparingTo(new BigDecimal("25000.00"));
 		});
 	}

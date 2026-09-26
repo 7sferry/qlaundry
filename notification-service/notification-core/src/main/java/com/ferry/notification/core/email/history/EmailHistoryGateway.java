@@ -1,6 +1,6 @@
 package com.ferry.notification.core.email.history;
 
-import com.ferry.notification.domain.EmailNotificationDomain;
+import com.ferry.notification.domain.EmailNotification;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.Optional;
@@ -11,7 +11,7 @@ import java.util.Optional;
  ************************/
 
 public interface EmailHistoryGateway{
-	EmailNotificationDomain save(EmailNotificationDomain notification);
+	EmailNotification save(EmailNotification notification);
 
-	Optional<EmailNotificationDomain> findByReferenceId(String referenceId);
+	Optional<EmailNotification> findByReferenceId(String referenceId);
 }

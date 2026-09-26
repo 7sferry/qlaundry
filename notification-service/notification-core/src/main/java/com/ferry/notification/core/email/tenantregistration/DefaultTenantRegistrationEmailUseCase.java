@@ -3,11 +3,11 @@ package com.ferry.notification.core.email.tenantregistration;
 import com.ferry.notification.core.email.forgottenpassword.ForgottenPasswordEmailResponse;
 import com.ferry.notification.core.email.history.EmailHistoryGateway;
 import com.ferry.notification.core.email.send.EmailSendGateway;
-import com.ferry.notification.domain.ContentDomain;
-import com.ferry.notification.domain.EmailDomain;
-import com.ferry.notification.domain.EmailNotificationDomain;
+import com.ferry.notification.domain.Content;
+import com.ferry.notification.domain.Email;
+import com.ferry.notification.domain.EmailNotification;
 import com.ferry.notification.domain.EmailType;
-import com.ferry.notification.domain.SubjectDomain;
+import com.ferry.notification.domain.Subject;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
@@ -37,12 +37,12 @@ public class DefaultTenantRegistrationEmailUseCase implements TenantRegistration
 		if(emailSent.isPresent()){
 			return;
 		}
-		ContentDomain content = new ContentDomain(composer.compose(request));
-		EmailNotificationDomain notification = EmailNotificationDomain.compose(EmailType.TENANT_REGISTRATION,
-				request.triggerId(), new EmailDomain(request.recipient()),
-				new SubjectDomain(SUBJECT_PREFIX + request.tenantName()));
+		Content content = new Content(composer.compose(request));
+		EmailNotification notification = EmailNotification.compose(EmailType.TENANT_REGISTRATION,
+				request.triggerId(), new Email(request.recipient()),
+				new Subject(SUBJECT_PREFIX + request.tenantName()));
 		emailSendGateway.send(notification, content);
-		EmailNotificationDomain saved = emailHistoryGateway.save(notification.markSent());
+		EmailNotification saved = emailHistoryGateway.save(notification.markSent());
 		presenter.present(new TenantRegistrationEmailResponse(saved));
 	}
 

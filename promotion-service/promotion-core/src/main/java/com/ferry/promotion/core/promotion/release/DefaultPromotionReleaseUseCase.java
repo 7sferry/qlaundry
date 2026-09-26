@@ -1,8 +1,8 @@
 package com.ferry.promotion.core.promotion.release;
 
-import com.ferry.promotion.domain.promotion.PromotionIdDomain;
-import com.ferry.promotion.domain.promotion.PromotionRedemptionDomain;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.promotion.PromotionId;
+import com.ferry.promotion.domain.promotion.PromotionRedemption;
+import com.ferry.promotion.domain.tenant.TenantId;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
@@ -20,11 +20,11 @@ public class DefaultPromotionReleaseUseCase implements PromotionReleaseUseCase{
 	@Override
 	public void execute(PromotionReleaseRequest request, PromotionReleasePresenter presenter){
 		request.validate();
-		TenantIdDomain tenantId = new TenantIdDomain(request.tenantId());
-		List<PromotionRedemptionDomain> redemptions = gateway.findByReferenceId(request.referenceId(), tenantId);
-		List<PromotionRedemptionDomain> released = new ArrayList<>(redemptions.size());
-		for(PromotionRedemptionDomain redemption : redemptions){
-			gateway.releaseUsage(new PromotionIdDomain(redemption.promotionId()), tenantId, request.releasedBy());
+		TenantId tenantId = new TenantId(request.tenantId());
+		List<PromotionRedemption> redemptions = gateway.findByReferenceId(request.referenceId(), tenantId);
+		List<PromotionRedemption> released = new ArrayList<>(redemptions.size());
+		for(PromotionRedemption redemption : redemptions){
+			gateway.releaseUsage(new PromotionId(redemption.promotionId()), tenantId, request.releasedBy());
 			released.add(gateway.save(redemption.release(request.releasedBy())));
 		}
 		presenter.present(new PromotionReleaseResponse(request.referenceId(), released));

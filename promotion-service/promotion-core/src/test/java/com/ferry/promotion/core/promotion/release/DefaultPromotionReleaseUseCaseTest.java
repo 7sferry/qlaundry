@@ -1,10 +1,10 @@
 package com.ferry.promotion.core.promotion.release;
 
-import com.ferry.promotion.domain.common.MoneyDomain;
-import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
-import com.ferry.promotion.domain.promotion.PromotionIdDomain;
-import com.ferry.promotion.domain.promotion.PromotionRedemptionDomain;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.common.Money;
+import com.ferry.promotion.domain.promotion.PromotionCode;
+import com.ferry.promotion.domain.promotion.PromotionId;
+import com.ferry.promotion.domain.promotion.PromotionRedemption;
+import com.ferry.promotion.domain.tenant.TenantId;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,7 +46,7 @@ class DefaultPromotionReleaseUseCaseTest{
 	@Mock
 	PromotionReleasePresenter presenter;
 	@Captor
-	ArgumentCaptor<PromotionRedemptionDomain> redemptionCaptor;
+	ArgumentCaptor<PromotionRedemption> redemptionCaptor;
 	@Captor
 	ArgumentCaptor<PromotionReleaseResponse> responseCaptor;
 
@@ -64,16 +64,16 @@ class DefaultPromotionReleaseUseCaseTest{
 	void givenNoRedemptionForTheReference_thenPresentsAnEmptyReleaseAndTouchesNoUsage(){
 		PromotionReleaseRequest request = new PromotionReleaseRequest(TENANT_ID, ORDER_NUMBER, STAFF_ID);
 		willReturn(List.of()).given(gateway)
-				.findByReferenceId(anyString(), any(TenantIdDomain.class));
+				.findByReferenceId(anyString(), any(TenantId.class));
 
 		useCase.execute(request, presenter);
 
 		then(gateway).should()
-				.findByReferenceId(eq(ORDER_NUMBER), eq(new TenantIdDomain(TENANT_ID)));
+				.findByReferenceId(eq(ORDER_NUMBER), eq(new TenantId(TENANT_ID)));
 		then(gateway).should(never())
-				.releaseUsage(any(PromotionIdDomain.class), any(TenantIdDomain.class), anyString());
+				.releaseUsage(any(PromotionId.class), any(TenantId.class), anyString());
 		then(gateway).should(never())
-				.save(any(PromotionRedemptionDomain.class));
+				.save(any(PromotionRedemption.class));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
@@ -86,14 +86,14 @@ class DefaultPromotionReleaseUseCaseTest{
 	@Test
 	void givenTwoRedemptionsForTheReference_thenReleasesEachUsageAndSoftDeletesEachRow(){
 		Instant now = Instant.now();
-		PromotionRedemptionDomain first = PromotionRedemptionDomain.builder()
+		PromotionRedemption first = PromotionRedemption.builder()
 				.id("01REDEMPTIONGRATISONGKIR")
 				.promotionId("01PROMOGRATISONGKIR00000")
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("GRATISONGKIR"))
+				.code(new PromotionCode("GRATISONGKIR"))
 				.referenceId(ORDER_NUMBER)
-				.subtotal(MoneyDomain.of(60000L))
-				.discountAmount(MoneyDomain.of(10000L))
+				.subtotal(Money.of(60000L))
+				.discountAmount(Money.of(10000L))
 				.version(0)
 				.deleted(false)
 				.createdAt(now)
@@ -101,15 +101,15 @@ class DefaultPromotionReleaseUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionRedemptionDomain second = PromotionRedemptionDomain.builder()
+		PromotionRedemption second = PromotionRedemption.builder()
 				.id("01REDEMPTIONPELANGGANBARU")
 				.promotionId("01PROMOPELANGGANBARU0000")
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("PELANGGANBARU"))
+				.code(new PromotionCode("PELANGGANBARU"))
 				.referenceId(ORDER_NUMBER)
 				.customerId("01CUSTOMERNADIA000000000")
-				.subtotal(MoneyDomain.of(60000L))
-				.discountAmount(MoneyDomain.of(5000L))
+				.subtotal(Money.of(60000L))
+				.discountAmount(Money.of(5000L))
 				.version(0)
 				.deleted(false)
 				.createdAt(now)
@@ -120,33 +120,33 @@ class DefaultPromotionReleaseUseCaseTest{
 		PromotionReleaseRequest request = new PromotionReleaseRequest(TENANT_ID, ORDER_NUMBER,
 				"01STAFFRIZKYANANDA000000");
 		willReturn(List.of(first, second)).given(gateway)
-				.findByReferenceId(anyString(), any(TenantIdDomain.class));
+				.findByReferenceId(anyString(), any(TenantId.class));
 		willReturn(true).given(gateway)
-				.releaseUsage(any(PromotionIdDomain.class), any(TenantIdDomain.class), anyString());
-		willAnswer(invocation -> invocation.<PromotionRedemptionDomain>getArgument(0)).given(gateway)
-				.save(any(PromotionRedemptionDomain.class));
+				.releaseUsage(any(PromotionId.class), any(TenantId.class), anyString());
+		willAnswer(invocation -> invocation.<PromotionRedemption>getArgument(0)).given(gateway)
+				.save(any(PromotionRedemption.class));
 
 		useCase.execute(request, presenter);
 
 		then(gateway).should()
-				.releaseUsage(eq(new PromotionIdDomain("01PROMOGRATISONGKIR00000")), eq(new TenantIdDomain(TENANT_ID)),
+				.releaseUsage(eq(new PromotionId("01PROMOGRATISONGKIR00000")), eq(new TenantId(TENANT_ID)),
 						eq("01STAFFRIZKYANANDA000000"));
 		then(gateway).should()
-				.releaseUsage(eq(new PromotionIdDomain("01PROMOPELANGGANBARU0000")), eq(new TenantIdDomain(TENANT_ID)),
+				.releaseUsage(eq(new PromotionId("01PROMOPELANGGANBARU0000")), eq(new TenantId(TENANT_ID)),
 						eq("01STAFFRIZKYANANDA000000"));
 		then(gateway).should(times(2))
 				.save(redemptionCaptor.capture());
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
-		List<PromotionRedemptionDomain> saved = redemptionCaptor.getAllValues();
+		List<PromotionRedemption> saved = redemptionCaptor.getAllValues();
 
 		thenSoftly(softly -> {
 			softly.then(saved.getFirst().id()).isEqualTo("01REDEMPTIONGRATISONGKIR");
 			softly.then(saved.getFirst().deleted()).isTrue();
 			softly.then(saved.getFirst().updatedBy()).isEqualTo("01STAFFRIZKYANANDA000000");
 			softly.then(saved.getFirst().createdBy()).isEqualTo(STAFF_ID);
-			softly.then(saved.getFirst().discountAmount().value()).isEqualByComparingTo(MoneyDomain.of(10000L).value());
+			softly.then(saved.getFirst().discountAmount().value()).isEqualByComparingTo(Money.of(10000L).value());
 			softly.then(saved.getLast().id()).isEqualTo("01REDEMPTIONPELANGGANBARU");
 			softly.then(saved.getLast().deleted()).isTrue();
 			softly.then(saved.getLast().customerId()).isEqualTo("01CUSTOMERNADIA000000000");

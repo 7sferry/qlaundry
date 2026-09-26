@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.detail;
 
-import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.common.exception.InvalidUsernameException;
 import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.staff.StaffAddressFilter;
@@ -10,7 +10,7 @@ import com.ferry.user.domain.staff.detail.StaffAddressDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffEmailDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffPhoneDetailProjection;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -83,7 +83,7 @@ class DefaultStaffDetailUseCaseTest{
 	@Test
 	void givenStaffNotFound_thenThrowsNotFoundException(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
-		willReturn(Optional.empty()).given(gateway).findDetail(new UsernameDomain(USERNAME), new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.empty()).given(gateway).findDetail(new Username(USERNAME), new TenantId(TENANT_ID));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(new StaffDetailRequest(USERNAME), principal, presenter))
 				.isInstanceOf(NotFoundException.class)
@@ -97,7 +97,7 @@ class DefaultStaffDetailUseCaseTest{
 	void givenStaffFound_thenPresentsDetailWithPhonesEmailsAndAddresses(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
 		StaffDetailProjection detail = new StaffDetailProjection(STAFF_ID, "desc", FULL_NAME, Instant.now(), USERNAME);
-		willReturn(Optional.of(detail)).given(gateway).findDetail(new UsernameDomain(USERNAME), new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.of(detail)).given(gateway).findDetail(new Username(USERNAME), new TenantId(TENANT_ID));
 		List<StaffPhoneDetailProjection> phones = List.of(new StaffPhoneDetailProjection("081234567890", STAFF_ID));
 		List<StaffEmailDetailProjection> emails = List.of(new StaffEmailDetailProjection("gunawan@qlaundry.com", STAFF_ID));
 		List<StaffAddressDetailProjection> addresses = List.of(new StaffAddressDetailProjection("Jl. Pandanaran No. 8", STAFF_ID));
@@ -119,7 +119,7 @@ class DefaultStaffDetailUseCaseTest{
 	void givenStaffFoundWithNoContactInfo_thenPresentsDetailWithEmptyLists(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
 		StaffDetailProjection detail = new StaffDetailProjection(STAFF_ID, "desc", FULL_NAME, Instant.now(), USERNAME);
-		willReturn(Optional.of(detail)).given(gateway).findDetail(new UsernameDomain(USERNAME), new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.of(detail)).given(gateway).findDetail(new Username(USERNAME), new TenantId(TENANT_ID));
 		willReturn(List.of()).given(gateway).findByFilter(any(StaffPhoneFilter.class));
 		willReturn(List.of()).given(gateway).findByFilter(any(StaffEmailFilter.class));
 		willReturn(List.of()).given(gateway).findByFilter(any(StaffAddressFilter.class));

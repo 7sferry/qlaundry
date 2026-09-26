@@ -1,6 +1,6 @@
 package com.ferry.user.core.tenant.expiration;
 
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
@@ -20,7 +20,7 @@ public class DefaultTenantExpirationUseCase implements TenantExpirationUseCase{
 	@Override
 	public int execute(){
 		Instant cutoff = Instant.now().minus(pendingExpiryDuration);
-		List<TenantIdDomain> expired = gateway.findPendingOlderThan(cutoff);
+		List<TenantId> expired = gateway.findPendingOlderThan(cutoff);
 		expired.forEach(gateway::expire);
 		return expired.size();
 	}

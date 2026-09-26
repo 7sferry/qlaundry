@@ -2,8 +2,8 @@ package com.ferry.user.core.tenant.confirmregistration;
 
 import com.ferry.user.core.tenant.constant.TenantConfirmationConstant;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.tenant.TenantDomain;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.Tenant;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.tenant.confirmregistration.FailedToConfirmTenantException;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +25,9 @@ public class DefaultTenantConfirmRegistrationUseCase implements TenantConfirmReg
 	public void execute(TenantConfirmRegistrationRequest request, TenantConfirmRegistrationPresenter presenter){
 		try{
 			request.validate();
-			TenantIdDomain tenantId = new TenantIdDomain(request.tenantId());
+			TenantId tenantId = new TenantId(request.tenantId());
 			validateConfirmationToken(tenantId, request.token());
-			TenantDomain tenant = gateway.findById(tenantId)
+			Tenant tenant = gateway.findById(tenantId)
 					.orElseThrow(() -> new FailedToConfirmTenantException("Invalid confirmation link"));
 			if(tenant.status() == TenantStatus.ACTIVE){
 				throw new FailedToConfirmTenantException("Tenant already confirmed");
@@ -41,7 +41,7 @@ public class DefaultTenantConfirmRegistrationUseCase implements TenantConfirmReg
 		}
 	}
 
-	private void validateConfirmationToken(TenantIdDomain tenantId, String token){
+	private void validateConfirmationToken(TenantId tenantId, String token){
 		String storedToken = cacheManager.get(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + tenantId.value())
 				.orElseThrow(() -> new FailedToConfirmTenantException("Invalid or expired confirmation link"));
 		if(!MessageDigest.isEqual(storedToken.getBytes(StandardCharsets.UTF_8), token.getBytes(StandardCharsets.UTF_8))){

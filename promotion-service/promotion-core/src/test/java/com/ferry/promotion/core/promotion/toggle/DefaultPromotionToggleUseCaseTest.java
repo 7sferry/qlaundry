@@ -1,16 +1,16 @@
 package com.ferry.promotion.core.promotion.toggle;
 
-import com.ferry.promotion.domain.common.MoneyDomain;
-import com.ferry.promotion.domain.common.NoteDomain;
+import com.ferry.promotion.domain.common.Money;
+import com.ferry.promotion.domain.common.Note;
 import com.ferry.promotion.domain.common.exception.NotFoundException;
 import com.ferry.promotion.domain.common.exception.PromotionForbiddenActionException;
-import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
-import com.ferry.promotion.domain.promotion.PromotionDomain;
-import com.ferry.promotion.domain.promotion.PromotionIdDomain;
+import com.ferry.promotion.domain.promotion.PromotionCode;
+import com.ferry.promotion.domain.promotion.Promotion;
+import com.ferry.promotion.domain.promotion.PromotionId;
 import com.ferry.promotion.domain.promotion.PromotionRejection;
 import com.ferry.promotion.domain.promotion.PromotionType;
 import com.ferry.promotion.domain.staff.StaffRole;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.tenant.TenantId;
 import com.ferry.promotion.domain.token.PromotionAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ class DefaultPromotionToggleUseCaseTest{
 	@Mock
 	PromotionTogglePresenter presenter;
 	@Captor
-	ArgumentCaptor<PromotionDomain> promotionCaptor;
+	ArgumentCaptor<Promotion> promotionCaptor;
 
 	@Test
 	void givenNonSuperStaffRole_thenThrowsForbiddenActionException(){
@@ -92,14 +92,14 @@ class DefaultPromotionToggleUseCaseTest{
 				.build();
 		PromotionToggleRequest request = new PromotionToggleRequest(PROMOTION_ID, false);
 		willReturn(Optional.empty()).given(gateway)
-				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(PromotionId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(NotFoundException.class)
 				.hasMessage("Promotion Not Found"));
 
 		then(gateway).should(never())
-				.save(any(PromotionDomain.class));
+				.save(any(Promotion.class));
 	}
 
 	@Test
@@ -110,14 +110,14 @@ class DefaultPromotionToggleUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		PromotionDomain promotion = PromotionDomain.builder()
+		Promotion promotion = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("CASHBACKSABTU"))
+				.code(new PromotionCode("CASHBACKSABTU"))
 				.name("Cashback Sabtu")
-				.description(new NoteDomain("saturday only"))
+				.description(new Note("saturday only"))
 				.type(PromotionType.FIXED_AMOUNT)
-				.amount(MoneyDomain.of(7500L))
+				.amount(Money.of(7500L))
 				.usageLimit(60)
 				.usedCount(19)
 				.startAt(now.minusSeconds(864000L))
@@ -131,9 +131,9 @@ class DefaultPromotionToggleUseCaseTest{
 				.build();
 		PromotionToggleRequest request = new PromotionToggleRequest(PROMOTION_ID, false);
 		willReturn(Optional.of(promotion)).given(gateway)
-				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<PromotionDomain>getArgument(0)).given(gateway)
-				.save(any(PromotionDomain.class));
+				.findById(any(PromotionId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Promotion>getArgument(0)).given(gateway)
+				.save(any(Promotion.class));
 
 		useCase.execute(request, principal, presenter);
 
@@ -142,7 +142,7 @@ class DefaultPromotionToggleUseCaseTest{
 		then(presenter).should()
 				.present(any(PromotionToggleResponse.class));
 
-		PromotionDomain saved = promotionCaptor.getValue();
+		Promotion saved = promotionCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(saved.active()).isFalse();
@@ -161,14 +161,14 @@ class DefaultPromotionToggleUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		PromotionDomain promotion = PromotionDomain.builder()
+		Promotion promotion = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("CASHBACKSABTU"))
+				.code(new PromotionCode("CASHBACKSABTU"))
 				.name("Cashback Sabtu")
-				.description(new NoteDomain("saturday only"))
+				.description(new Note("saturday only"))
 				.type(PromotionType.FIXED_AMOUNT)
-				.amount(MoneyDomain.of(7500L))
+				.amount(Money.of(7500L))
 				.usageLimit(60)
 				.usedCount(19)
 				.startAt(now.minusSeconds(864000L))
@@ -182,16 +182,16 @@ class DefaultPromotionToggleUseCaseTest{
 				.build();
 		PromotionToggleRequest request = new PromotionToggleRequest(PROMOTION_ID, true);
 		willReturn(Optional.of(promotion)).given(gateway)
-				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<PromotionDomain>getArgument(0)).given(gateway)
-				.save(any(PromotionDomain.class));
+				.findById(any(PromotionId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Promotion>getArgument(0)).given(gateway)
+				.save(any(Promotion.class));
 
 		useCase.execute(request, principal, presenter);
 
 		then(gateway).should()
 				.save(promotionCaptor.capture());
 
-		PromotionDomain saved = promotionCaptor.getValue();
+		Promotion saved = promotionCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(saved.active()).isTrue();

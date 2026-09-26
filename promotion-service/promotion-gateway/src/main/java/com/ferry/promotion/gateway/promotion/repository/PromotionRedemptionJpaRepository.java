@@ -1,6 +1,6 @@
 package com.ferry.promotion.gateway.promotion.repository;
 
-import com.ferry.promotion.gateway.promotion.entity.PromotionRedemptionJpaEntity;
+import com.ferry.promotion.gateway.promotion.entity.PromotionRedemptionJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,13 +11,13 @@ import java.util.Optional;
  * on Agustus 2026      *
  ************************/
 
-public interface PromotionRedemptionJpaRepository extends JpaRepository<PromotionRedemptionJpaEntity, String>{
+public interface PromotionRedemptionJpaRepository extends JpaRepository<PromotionRedemptionJpa, String>{
 
-	Optional<PromotionRedemptionJpaEntity> findByReferenceIdAndCodeAndTenantIdAndDeletedIsFalse(String referenceId,
+	Optional<PromotionRedemptionJpa> findByReferenceIdAndCodeAndTenantIdAndDeletedIsFalse(String referenceId,
 	                                                                                            String code,
 	                                                                                            String tenantId);
 
-	List<PromotionRedemptionJpaEntity> findAllByReferenceIdAndTenantIdAndDeletedIsFalse(String referenceId,
+	List<PromotionRedemptionJpa> findAllByReferenceIdAndTenantIdAndDeletedIsFalse(String referenceId,
 	                                                                                    String tenantId);
 
 }

@@ -1,6 +1,6 @@
 package com.ferry.order.gateway.order.repository;
 
-import com.ferry.order.gateway.order.entity.OrderStatusJpaEntity;
+import com.ferry.order.gateway.order.entity.OrderStatusJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /************************
@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * on Agustus 2026      *
  ************************/
 
-public interface OrderStatusJpaRepository extends JpaRepository<OrderStatusJpaEntity, Short>{
+public interface OrderStatusJpaRepository extends JpaRepository<OrderStatusJpa, Short>{
 }

@@ -1,12 +1,12 @@
 package com.ferry.promotion.core.promotion.redemption;
 
-import com.ferry.promotion.domain.common.MoneyDomain;
-import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
-import com.ferry.promotion.domain.promotion.PromotionDomain;
-import com.ferry.promotion.domain.promotion.PromotionIdDomain;
-import com.ferry.promotion.domain.promotion.PromotionRedemptionDomain;
+import com.ferry.promotion.domain.common.Money;
+import com.ferry.promotion.domain.promotion.PromotionCode;
+import com.ferry.promotion.domain.promotion.Promotion;
+import com.ferry.promotion.domain.promotion.PromotionId;
+import com.ferry.promotion.domain.promotion.PromotionRedemption;
 import com.ferry.promotion.domain.promotion.PromotionRejection;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.tenant.TenantId;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
@@ -25,8 +25,8 @@ public class DefaultPromotionRedemptionUseCase implements PromotionRedemptionUse
 	@Override
 	public void execute(PromotionRedemptionRequest request, PromotionRedemptionPresenter presenter){
 		request.validate();
-		TenantIdDomain tenantId = new TenantIdDomain(request.tenantId());
-		MoneyDomain subtotal = new MoneyDomain(request.subtotal());
+		TenantId tenantId = new TenantId(request.tenantId());
+		Money subtotal = new Money(request.subtotal());
 		boolean multipleCodes = request.codes().size() > 1;
 		List<PromotionRedemptionResponse> responses = new ArrayList<>(request.codes().size());
 		DiscountCalculator calculator = new DiscountCalculator(subtotal);
@@ -42,18 +42,18 @@ public class DefaultPromotionRedemptionUseCase implements PromotionRedemptionUse
 		presenter.present(responses);
 	}
 
-	private PromotionRedemptionResponse redeem(String code, TenantIdDomain tenantId, MoneyDomain subtotal,
+	private PromotionRedemptionResponse redeem(String code, TenantId tenantId, Money subtotal,
 	                                           boolean multipleCodes,
 	                                           PromotionRedemptionRequest request, DiscountCalculator calculator){
-		PromotionRedemptionDomain replayed = gateway.findByReferenceId(request.referenceId(), code, tenantId)
+		PromotionRedemption replayed = gateway.findByReferenceId(request.referenceId(), code, tenantId)
 				.orElse(null);
 		if(replayed != null){
-			PromotionDomain promotion = gateway.findById(new PromotionIdDomain(replayed.promotionId()), tenantId)
+			Promotion promotion = gateway.findById(new PromotionId(replayed.promotionId()), tenantId)
 					.orElse(null);
 			return new PromotionRedemptionResponse(code, promotion, replayed, null);
 		}
-		PromotionCodeDomain promotionCode = new PromotionCodeDomain(code);
-		PromotionDomain promotion = gateway.findByCode(promotionCode, tenantId).orElse(null);
+		PromotionCode promotionCode = new PromotionCode(code);
+		Promotion promotion = gateway.findByCode(promotionCode, tenantId).orElse(null);
 		if(promotion == null){
 			return new PromotionRedemptionResponse(code, null, null, PromotionRejection.NOT_FOUND);
 		}
@@ -61,16 +61,16 @@ public class DefaultPromotionRedemptionUseCase implements PromotionRedemptionUse
 		if(rejection != null){
 			return new PromotionRedemptionResponse(code, promotion, null, rejection);
 		}
-		PromotionDomain redeemed = promotion.redeem(request.redeemedBy());
+		Promotion redeemed = promotion.redeem(request.redeemedBy());
 		if(!gateway.claimUsage(redeemed)){
 			return new PromotionRedemptionResponse(code, promotion, null, PromotionRejection.EXHAUSTED);
 		}
 		DiscountStrategy discountStrategy = DiscountStrategyFactory.from(promotion);
-		MoneyDomain discount = discountStrategy.calculate(calculator);
+		Money discount = discountStrategy.calculate(calculator);
 		if(!discount.isPositive()){
 			return new PromotionRedemptionResponse(code, promotion, null, PromotionRejection.NO_DISCOUNT);
 		}
-		PromotionRedemptionDomain redemption = gateway.save(PromotionRedemptionDomain.register(redeemed,
+		PromotionRedemption redemption = gateway.save(PromotionRedemption.register(redeemed,
 				request.referenceId(), request.customerId(), subtotal, discount, request.redeemedBy()));
 		return new PromotionRedemptionResponse(code, redeemed, redemption, null);
 	}

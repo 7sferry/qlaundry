@@ -1,7 +1,7 @@
 package com.ferry.user.core.tenant.confirmregistration;
 
-import com.ferry.user.domain.tenant.TenantDomain;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.Tenant;
+import com.ferry.user.domain.tenant.TenantId;
 
 import java.util.Optional;
 
@@ -11,7 +11,7 @@ import java.util.Optional;
  ************************/
 
 public interface TenantConfirmRegistrationGateway{
-	Optional<TenantDomain> findById(TenantIdDomain tenantId);
+	Optional<Tenant> findById(TenantId tenantId);
 
-	TenantDomain save(TenantDomain tenant);
+	Tenant save(Tenant tenant);
 }

@@ -1,6 +1,6 @@
 package com.ferry.notification.gateway.email.repository;
 
-import com.ferry.notification.gateway.email.entity.EmailNotificationJpaEntity;
+import com.ferry.notification.gateway.email.entity.EmailNotificationJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -10,6 +10,6 @@ import java.util.Optional;
  * on Juli 2026         *
  ************************/
 
-public interface EmailNotificationJpaRepository extends JpaRepository<EmailNotificationJpaEntity, String>{
-	Optional<EmailNotificationJpaEntity> findByReferenceId(String referenceId);
+public interface EmailNotificationJpaRepository extends JpaRepository<EmailNotificationJpa, String>{
+	Optional<EmailNotificationJpa> findByReferenceId(String referenceId);
 }

@@ -1,7 +1,7 @@
 package com.ferry.promotion.core.promotion.list;
 
-import com.ferry.promotion.domain.common.MoneyDomain;
-import com.ferry.promotion.domain.common.NoteDomain;
+import com.ferry.promotion.domain.common.Money;
+import com.ferry.promotion.domain.common.Note;
 import com.ferry.promotion.domain.promotion.*;
 import com.ferry.promotion.domain.staff.StaffRole;
 import com.ferry.promotion.domain.token.PromotionAuthPrincipal;
@@ -56,7 +56,7 @@ class DefaultPromotionListUseCaseTest{
 				.build();
 		PromotionListRequest request = new PromotionListRequest(null, null, null, null, null, null, null, null, null,
 				null);
-		willReturn(new CursorFetch<PromotionDomain>(List.of(), false)).given(gateway)
+		willReturn(new CursorFetch<Promotion>(List.of(), false)).given(gateway)
 				.findByFilter(any(PromotionFilter.class));
 
 		useCase.execute(request, principal, presenter);
@@ -89,7 +89,7 @@ class DefaultPromotionListUseCaseTest{
 				.build();
 		PromotionListRequest request = new PromotionListRequest("merdeka", "diskon", PromotionType.FIXED_AMOUNT,
 				false, null, null, null, null, null, null);
-		willReturn(new CursorFetch<PromotionDomain>(List.of(), false)).given(gateway)
+		willReturn(new CursorFetch<Promotion>(List.of(), false)).given(gateway)
 				.findByFilter(any(PromotionFilter.class));
 
 		useCase.execute(request, principal, presenter);
@@ -119,7 +119,7 @@ class DefaultPromotionListUseCaseTest{
 				.build();
 		PromotionListRequest request = new PromotionListRequest(null, null, null, null, true, null, null, null, null,
 				null);
-		willReturn(new CursorFetch<PromotionDomain>(List.of(), false)).given(gateway)
+		willReturn(new CursorFetch<Promotion>(List.of(), false)).given(gateway)
 				.findByFilter(any(PromotionFilter.class));
 
 		useCase.execute(request, principal, presenter);
@@ -140,7 +140,7 @@ class DefaultPromotionListUseCaseTest{
 		String cursorToken = CursorCodec.encode("Diskon Kemerdekaan", PROMOTION_ID_1);
 		PromotionListRequest request = new PromotionListRequest(null, null, null, null, null, null,
 				cursorToken, PromotionListSortBy.NAME, SortDirection.ASC, null);
-		willReturn(new CursorFetch<PromotionDomain>(List.of(), false)).given(gateway)
+		willReturn(new CursorFetch<Promotion>(List.of(), false)).given(gateway)
 				.findByFilter(any(PromotionFilter.class));
 
 		useCase.execute(request, principal, presenter);
@@ -166,12 +166,12 @@ class DefaultPromotionListUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		PromotionDomain promotion1 = PromotionDomain.builder()
+		Promotion promotion1 = Promotion.builder()
 				.id(PROMOTION_ID_1)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("MERDEKA17"))
+				.code(new PromotionCode("MERDEKA17"))
 				.name("Diskon Kemerdekaan")
-				.description(new NoteDomain("august only"))
+				.description(new Note("august only"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("17"))
 				.usageLimit(170)
@@ -185,14 +185,14 @@ class DefaultPromotionListUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionDomain promotion2 = PromotionDomain.builder()
+		Promotion promotion2 = Promotion.builder()
 				.id(PROMOTION_ID_2)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("TAHUNBARU"))
+				.code(new PromotionCode("TAHUNBARU"))
 				.name("Diskon Tahun Baru")
-				.description(new NoteDomain("new year"))
+				.description(new Note("new year"))
 				.type(PromotionType.FIXED_AMOUNT)
-				.amount(MoneyDomain.of(10000L))
+				.amount(Money.of(10000L))
 				.usedCount(2)
 				.startAt(now.minusSeconds(864000L))
 				.endAt(now.plusSeconds(864000L))
@@ -233,12 +233,12 @@ class DefaultPromotionListUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		PromotionDomain promotion1 = PromotionDomain.builder()
+		Promotion promotion1 = Promotion.builder()
 				.id(PROMOTION_ID_1)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("GAJIAN30"))
+				.code(new PromotionCode("GAJIAN30"))
 				.name("Diskon Gajian")
-				.description(new NoteDomain("payday sale"))
+				.description(new Note("payday sale"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("30"))
 				.usageLimit(200)
@@ -252,12 +252,12 @@ class DefaultPromotionListUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionDomain promotion2 = PromotionDomain.builder()
+		Promotion promotion2 = Promotion.builder()
 				.id(PROMOTION_ID_2)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("LEBARAN25"))
+				.code(new PromotionCode("LEBARAN25"))
 				.name("Diskon Lebaran")
-				.description(new NoteDomain("seasonal"))
+				.description(new Note("seasonal"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("25"))
 				.usedCount(3)

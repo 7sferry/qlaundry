@@ -2,11 +2,11 @@ package com.ferry.order.core.invoice.pdf;
 
 import com.ferry.order.core.invoice.link.InvoiceLinkConstant;
 import com.ferry.order.domain.common.exception.NotFoundException;
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderIdDomain;
-import com.ferry.order.domain.order.OrderItemDomain;
-import com.ferry.order.domain.order.OrderPromotionDomain;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderId;
+import com.ferry.order.domain.order.OrderItem;
+import com.ferry.order.domain.order.OrderPromotion;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.utils.linksigner.LinkSigner;
 import com.ferry.utils.linksigner.SignedLinkPayload;
 import lombok.RequiredArgsConstructor;
@@ -21,19 +21,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DefaultInvoicePdfUseCase implements InvoicePdfUseCase{
 	private final InvoicePdfGateway gateway;
-	private final InvoiceHtmlComposer composer;
+	private final InvoiceComposer composer;
 	private final LinkSigner linkSigner;
 
 	@Override
 	public void execute(InvoicePdfRequest request, InvoicePdfPresenter presenter){
 		request.validate();
 		SignedLinkPayload payload = verifyToken(request);
-		OrderIdDomain orderId = new OrderIdDomain(payload.fields().get(InvoiceLinkConstant.ORDER_ID_FIELD));
-		TenantIdDomain tenantId = new TenantIdDomain(payload.fields().get(InvoiceLinkConstant.TENANT_ID_FIELD));
-		OrderDomain order = gateway.findById(orderId, tenantId)
+		OrderId orderId = new OrderId(payload.fields().get(InvoiceLinkConstant.ORDER_ID_FIELD));
+		TenantId tenantId = new TenantId(payload.fields().get(InvoiceLinkConstant.TENANT_ID_FIELD));
+		Order order = gateway.findById(orderId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Order Not Found"));
-		List<OrderItemDomain> items = gateway.findItemsByOrderId(orderId);
-		List<OrderPromotionDomain> promotions = gateway.findPromotionsByOrderId(orderId);
+		List<OrderItem> items = gateway.findItemsByOrderId(orderId);
+		List<OrderPromotion> promotions = gateway.findPromotionsByOrderId(orderId);
 		byte[] pdf = composer.compose(order, items, promotions);
 		presenter.present(new InvoicePdfResponse(order, pdf));
 	}

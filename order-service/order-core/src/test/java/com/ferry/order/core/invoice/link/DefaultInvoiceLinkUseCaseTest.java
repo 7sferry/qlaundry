@@ -1,20 +1,20 @@
 package com.ferry.order.core.invoice.link;
 
 import com.ferry.order.core.invoice.pdf.InvoicePdfGateway;
-import com.ferry.order.domain.common.FullNameDomain;
-import com.ferry.order.domain.common.MoneyDomain;
-import com.ferry.order.domain.common.PhoneDomain;
+import com.ferry.order.domain.common.FullName;
+import com.ferry.order.domain.common.Money;
+import com.ferry.order.domain.common.Phone;
 import com.ferry.order.domain.common.exception.NotFoundException;
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderIdDomain;
-import com.ferry.order.domain.order.OrderNumberDomain;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderId;
+import com.ferry.order.domain.order.OrderNumber;
 import com.ferry.order.domain.order.OrderPriority;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.order.PaymentMethod;
 import com.ferry.order.domain.order.PaymentStatus;
 import com.ferry.order.domain.service.ServiceUnit;
 import com.ferry.order.domain.staff.StaffRole;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import com.ferry.utils.linksigner.LinkSigner;
 import jakarta.validation.ConstraintViolationException;
@@ -92,7 +92,7 @@ class DefaultInvoiceLinkUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		willReturn(Optional.empty()).given(gateway)
-				.findById(any(OrderIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(OrderId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new InvoiceLinkRequest(ORDER_ID), principal, presenter))
@@ -112,20 +112,20 @@ class DefaultInvoiceLinkUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		OrderDomain order = OrderDomain.builder()
+		Order order = Order.builder()
 				.id(ORDER_ID)
-				.orderNumber(new OrderNumberDomain(ORDER_NUMBER))
+				.orderNumber(new OrderNumber(ORDER_NUMBER))
 				.tenantId(TENANT_ID)
-				.customerName(new FullNameDomain(CUSTOMER_NAME))
-				.customerPhone(new PhoneDomain(CUSTOMER_PHONE))
+				.customerName(new FullName(CUSTOMER_NAME))
+				.customerPhone(new Phone(CUSTOMER_PHONE))
 				.serviceId("01SERVICEGORDEN00000000000")
 				.serviceName("Cuci Gorden")
 				.unit(ServiceUnit.SET)
-				.unitPrice(MoneyDomain.of(45000L))
+				.unitPrice(Money.of(45000L))
 				.quantity(2)
-				.subtotal(MoneyDomain.of(90000L))
-				.discount(MoneyDomain.ZERO)
-				.totalPrice(MoneyDomain.of(90000L))
+				.subtotal(Money.of(90000L))
+				.discount(Money.ZERO)
+				.totalPrice(Money.of(90000L))
 				.priority(OrderPriority.NORMAL)
 				.paymentMethod(PaymentMethod.CASH)
 				.paymentStatus(PaymentStatus.UNPAID)
@@ -139,7 +139,7 @@ class DefaultInvoiceLinkUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(OrderId.class), any(TenantId.class));
 		willReturn(TOKEN).given(signer)
 				.sign(anyLong(), anyMap());
 
@@ -148,7 +148,7 @@ class DefaultInvoiceLinkUseCaseTest{
 		Instant after = Instant.now();
 
 		then(gateway).should()
-				.findById(eq(new OrderIdDomain(ORDER_ID)), eq(new TenantIdDomain(TENANT_ID)));
+				.findById(eq(new OrderId(ORDER_ID)), eq(new TenantId(TENANT_ID)));
 		then(signer).should()
 				.sign(expiresAtCaptor.capture(),
 						eq(Map.of(InvoiceLinkConstant.ORDER_ID_FIELD, ORDER_ID, InvoiceLinkConstant.TENANT_ID_FIELD, TENANT_ID)));

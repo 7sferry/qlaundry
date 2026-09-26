@@ -1,6 +1,6 @@
 package com.ferry.order.gateway.service.repository;
 
-import com.ferry.order.gateway.service.entity.ServiceUnitJpaEntity;
+import com.ferry.order.gateway.service.entity.ServiceUnitJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /************************
@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * on Agustus 2026      *
  ************************/
 
-public interface ServiceUnitJpaRepository extends JpaRepository<ServiceUnitJpaEntity, Short>{
+public interface ServiceUnitJpaRepository extends JpaRepository<ServiceUnitJpa, Short>{
 }

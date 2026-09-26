@@ -3,7 +3,7 @@ package com.ferry.user.gateway.staff.repository;
 import com.ferry.user.domain.staff.StaffAddressFilter;
 import com.ferry.user.domain.staff.detail.StaffAddressDetailProjection;
 import com.ferry.user.domain.staff.list.StaffAddressListProjection;
-import com.ferry.user.gateway.staff.entity.StaffAddressJpaEntity;
+import com.ferry.user.gateway.staff.entity.StaffAddressJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,10 +16,10 @@ import java.util.List;
  * on Juli 2026         *
  ************************/
 
-public interface StaffAddressJpaRepository extends JpaRepository<StaffAddressJpaEntity, String>{
+public interface StaffAddressJpaRepository extends JpaRepository<StaffAddressJpa, String>{
 
 	@Query("select s " +
-			"from StaffAddressJpaEntity s " +
+			"from StaffAddressJpa s " +
 			"where " +
 			"(:#{#filter?.staffId} is null or s.staff.id = :#{#filter?.staffId}) AND " +
 			"(coalesce(:#{#filter?.staffIds}, null) is null or s.staff.id IN :#{#filter?.staffIds}) AND " +
@@ -27,7 +27,7 @@ public interface StaffAddressJpaRepository extends JpaRepository<StaffAddressJpa
 	<T> List<T> findAllWithFilter(@Param("filter") StaffAddressFilter filter, Class<T> tClass);
 
 	@Query("select new com.ferry.user.domain.staff.detail.StaffAddressDetailProjection(s.addressLineCipher, s.staffId) " +
-			"from StaffAddressJpaEntity s " +
+			"from StaffAddressJpa s " +
 			"where " +
 			"(:#{#filter?.staffId} is null or s.staff.id = :#{#filter?.staffId}) AND " +
 			"(coalesce(:#{#filter?.staffIds}, null) is null or s.staff.id IN :#{#filter?.staffIds}) AND " +
@@ -35,7 +35,7 @@ public interface StaffAddressJpaRepository extends JpaRepository<StaffAddressJpa
 	List<StaffAddressDetailProjection> findDetailCipherRowsWithFilter(@Param("filter") StaffAddressFilter filter);
 
 	@Query("select new com.ferry.user.domain.staff.list.StaffAddressListProjection(s.staffId, s.addressLineCipher) " +
-			"from StaffAddressJpaEntity s " +
+			"from StaffAddressJpa s " +
 			"where " +
 			"(:#{#filter?.staffId} is null or s.staff.id = :#{#filter?.staffId}) AND " +
 			"(coalesce(:#{#filter?.staffIds}, null) is null or s.staff.id IN :#{#filter?.staffIds}) AND " +
@@ -43,7 +43,7 @@ public interface StaffAddressJpaRepository extends JpaRepository<StaffAddressJpa
 	List<StaffAddressListProjection> findListCipherRowsWithFilter(@Param("filter") StaffAddressFilter filter);
 
 	@Modifying
-	@Query("update StaffAddressJpaEntity e set e.deleted = true, e.updatedBy = :updatedBy, e.updatedAt = CURRENT_TIMESTAMP " +
+	@Query("update StaffAddressJpa e set e.deleted = true, e.updatedBy = :updatedBy, e.updatedAt = CURRENT_TIMESTAMP " +
 			"where e.staffId = :staffId and e.deleted is false")
 	void softDeleteByStaffId(@Param("staffId") String staffId, @Param("updatedBy") String updatedBy);
 

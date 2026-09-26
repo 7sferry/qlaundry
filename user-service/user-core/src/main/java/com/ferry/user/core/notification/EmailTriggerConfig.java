@@ -1,6 +1,6 @@
 package com.ferry.user.core.notification;
 
-import com.ferry.user.domain.common.EmailDomain;
+import com.ferry.user.domain.common.Email;
 import com.ferry.user.domain.notification.EmailTriggerType;
 
 /************************
@@ -12,5 +12,5 @@ public record EmailTriggerConfig(
 	Object payload,
 	String userId,
 	EmailTriggerType triggerType,
-	EmailDomain recipient){
+	Email recipient){
 }

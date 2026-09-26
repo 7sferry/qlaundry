@@ -2,7 +2,7 @@ package com.ferry.user.core.staff.submitotp;
 
 import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.staff.submitotp.FailedToSubmitOtpException;
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +25,7 @@ public class DefaultStaffSubmitOtpUseCase implements StaffSubmitOtpUseCase {
 	public void execute(StaffSubmitOtpRequest request, StaffSubmitOtpPresenter presenter){
 		try{
 			request.validate();
-			UsernameDomain username = new UsernameDomain(request.username());
+			Username username = new Username(request.username());
 			String otpKey = PasswordConstant.OTP_KEY + username.value();
 			String otp = cacheManager.get(otpKey)
 					.orElseThrow(() -> new FailedToSubmitOtpException("Invalid otp"));

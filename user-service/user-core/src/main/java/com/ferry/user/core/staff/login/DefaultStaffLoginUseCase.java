@@ -4,15 +4,15 @@ import com.ferry.user.core.staff.constant.TokenConstant;
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.staff.login.FailedToLoginException;
 import com.ferry.user.domain.session.SessionType;
-import com.ferry.user.domain.session.UserSessionDomain;
+import com.ferry.user.domain.session.UserSession;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.common.exception.InvalidPasswordException;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
 import com.ferry.user.domain.token.UserAuthPrincipal;
@@ -37,12 +37,12 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 	public void execute(StaffLoginRequest request, StaffLoginPresenter presenter){
 		try{
 			request.validate();
-			StaffLoginProjection staff = gateway.findByUsername(new UsernameDomain(request.username()))
+			StaffLoginProjection staff = gateway.findByUsername(new Username(request.username()))
 					.orElseThrow(() -> new InvalidPasswordException("userId not found"));
 			if(!passwordTool.matches(request.password(), staff.password())){
 				throw new InvalidPasswordException("password not match");
 			}
-			TenantLoginProjection tenant = gateway.findTenantById(new TenantIdDomain(staff.tenantId()))
+			TenantLoginProjection tenant = gateway.findTenantById(new TenantId(staff.tenantId()))
 					.orElseThrow(() -> new NotFoundException("tenant not found"));
 			if(TenantStatus.findByValue(tenant.statusId()).orElse(null) != TenantStatus.ACTIVE){
 				throw new FailedToLoginException("tenant not confirmed");
@@ -76,7 +76,7 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 
 	private void storeSession(String hashedRefreshToken, StaffLoginProjection staff){
 		Instant expirationTime = Instant.now().plusSeconds(tokenProcessor.getRefreshDurationInSeconds());
-		UserSessionDomain userSession = gateway.save(UserSessionDomain.create(hashedRefreshToken, expirationTime,
+		UserSession userSession = gateway.save(UserSession.create(hashedRefreshToken, expirationTime,
 				staff.id(), SessionType.STAFF));
 		Duration duration = Duration.ofSeconds(Math.min(tokenProcessor.getRefreshDurationInSeconds(),
 				TokenConstant.REFRESH_CACHE_MAX_SECONDS));

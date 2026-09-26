@@ -5,7 +5,7 @@ import com.ferry.user.domain.staff.list.StaffAddressListProjection;
 import com.ferry.user.domain.staff.list.StaffEmailListProjection;
 import com.ferry.user.domain.staff.list.StaffListProjection;
 import com.ferry.user.domain.staff.list.StaffPhoneListProjection;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import com.ferry.utils.pagination.*;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class DefaultStaffListUseCase implements StaffListUseCase{
 	@Override
 	public void execute(StaffListRequest request, UserAuthPrincipal principal, StaffListPresenter presenter){
 		request.validate();
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
+		TenantId tenantId = new TenantId(principal.tenantId());
 		StaffListSortBy sortBy = request.sortBy() == null ? StaffListSortBy.ID : request.sortBy();
 		SortDirection sortDir = request.sortDir() == null ? SortDirection.DESC : request.sortDir();
 		PageDirection pageDir = PageDirection.direction(request.before());

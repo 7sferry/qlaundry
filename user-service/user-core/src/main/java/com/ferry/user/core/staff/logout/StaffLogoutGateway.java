@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.logout;
 
-import com.ferry.user.domain.session.UserSessionDomain;
+import com.ferry.user.domain.session.UserSession;
 
 import java.util.Optional;
 
@@ -10,6 +10,6 @@ import java.util.Optional;
  ************************/
 
 public interface StaffLogoutGateway{
-	Optional<UserSessionDomain> findSessionById(String id);
-	UserSessionDomain save(UserSessionDomain userSession);
+	Optional<UserSession> findSessionById(String id);
+	UserSession save(UserSession userSession);
 }

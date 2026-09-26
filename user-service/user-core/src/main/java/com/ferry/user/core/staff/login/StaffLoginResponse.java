@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.login;
 
-import com.ferry.user.domain.staff.StaffDomain;
+import com.ferry.user.domain.staff.Staff;
 
 /************************
  * Made by [MR Ferry™]  *

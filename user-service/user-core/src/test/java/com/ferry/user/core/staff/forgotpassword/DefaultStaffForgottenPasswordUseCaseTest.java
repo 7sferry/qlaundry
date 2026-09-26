@@ -2,13 +2,13 @@ package com.ferry.user.core.staff.forgotpassword;
 
 import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.constant.PasswordConstant;
-import com.ferry.user.core.tenant.registration.UserEmailPublisher;
+import com.ferry.user.core.tools.UserEmailPublisher;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.common.EmailDomain;
-import com.ferry.user.domain.common.UsernameDomain;
-import com.ferry.user.domain.notification.EmailTriggerDomain;
+import com.ferry.user.domain.common.Email;
+import com.ferry.user.domain.common.Username;
+import com.ferry.user.domain.notification.EmailTrigger;
 import com.ferry.user.domain.notification.EmailTriggerType;
-import com.ferry.user.domain.staff.forgottenpassword.ForgottenPasswordOtpDomain;
+import com.ferry.user.domain.staff.forgottenpassword.ForgottenPasswordOtp;
 import com.ferry.user.domain.staff.forgottenpassword.StaffEmailForgottenPasswordProjection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -69,7 +69,7 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 
 	@Test
 	void givenUsernameNotFound_thenPresentsMaskedFakeEmailDeterministically(){
-		willReturn(Optional.empty()).given(gateway).findEmailWithUsername(new UsernameDomain(USERNAME));
+		willReturn(Optional.empty()).given(gateway).findEmailWithUsername(new Username(USERNAME));
 
 		useCase.execute(new StaffForgottenPasswordRequest(USERNAME), presenter);
 
@@ -80,7 +80,7 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 		thenSoftly(softly -> softly.then(notFoundMaskedEmail).matches(FAKE_EMAIL_PATTERN));
 
 		reset(gateway, presenter);
-		willThrow(new RuntimeException("boom")).given(gateway).findEmailWithUsername(new UsernameDomain(USERNAME));
+		willThrow(new RuntimeException("boom")).given(gateway).findEmailWithUsername(new Username(USERNAME));
 
 		useCase.execute(new StaffForgottenPasswordRequest(USERNAME), presenter);
 
@@ -92,9 +92,9 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 	@Test
 	void givenValidUsernameWithEmailFound_thenGeneratesOtpPublishesEmailAndPresentsMaskedRealEmail(){
 		willReturn(Optional.of(new StaffEmailForgottenPasswordProjection(EMAIL, STAFF_ID)))
-				.given(gateway).findEmailWithUsername(new UsernameDomain(USERNAME));
-		EmailTriggerDomain trigger = EmailTriggerDomain.create(EmailTriggerType.FORGOTTEN_PASSWORD,
-				new EmailDomain(EMAIL), "{}", STAFF_ID);
+				.given(gateway).findEmailWithUsername(new Username(USERNAME));
+		EmailTrigger trigger = EmailTrigger.create(EmailTriggerType.FORGOTTEN_PASSWORD,
+				new Email(EMAIL), "{}", STAFF_ID);
 		willReturn(trigger).given(emailPublisher).save(configCaptor.capture());
 
 		useCase.execute(new StaffForgottenPasswordRequest(USERNAME), presenter);
@@ -104,7 +104,7 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 		then(presenter).should().present(responseCaptor.capture());
 
 		EmailTriggerConfig config = configCaptor.getValue();
-		ForgottenPasswordOtpDomain payload = (ForgottenPasswordOtpDomain) config.payload();
+		ForgottenPasswordOtp payload = (ForgottenPasswordOtp) config.payload();
 		String otp = otpCaptor.getValue();
 		thenSoftly(softly -> {
 			softly.then(otp).matches("^\\d{6}$");
@@ -119,7 +119,7 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 
 	@Test
 	void givenGatewayThrowsUnexpectedException_thenPresentsMaskedFakeEmailWithoutPropagating(){
-		willThrow(new RuntimeException("boom")).given(gateway).findEmailWithUsername(new UsernameDomain(USERNAME));
+		willThrow(new RuntimeException("boom")).given(gateway).findEmailWithUsername(new Username(USERNAME));
 
 		useCase.execute(new StaffForgottenPasswordRequest(USERNAME), presenter);
 

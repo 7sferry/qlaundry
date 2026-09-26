@@ -1,9 +1,9 @@
 package com.ferry.promotion.core.promotion.list;
 
-import com.ferry.promotion.domain.promotion.PromotionDomain;
+import com.ferry.promotion.domain.promotion.Promotion;
 import com.ferry.promotion.domain.promotion.PromotionFilter;
 import com.ferry.promotion.domain.promotion.PromotionListSortBy;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.tenant.TenantId;
 import com.ferry.promotion.domain.token.PromotionAuthPrincipal;
 import com.ferry.utils.pagination.*;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ public class DefaultPromotionListUseCase implements PromotionListUseCase{
 	public void execute(PromotionListRequest request, PromotionAuthPrincipal principal,
 	                    PromotionListPresenter presenter){
 		request.validate();
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
+		TenantId tenantId = new TenantId(principal.tenantId());
 		PromotionListSortBy sortBy = request.sortBy() == null ? PromotionListSortBy.ID : request.sortBy();
 		SortDirection sortDir = request.sortDir() == null ? SortDirection.DESC : request.sortDir();
 		PageDirection direction = PageDirection.direction(request.before());
@@ -42,8 +42,8 @@ public class DefaultPromotionListUseCase implements PromotionListUseCase{
 				.cursor(cursor)
 				.pageSize(pageSize)
 				.build();
-		CursorFetch<PromotionDomain> fetch = gateway.findByFilter(filter);
-		CursorPage<PromotionDomain> page = CursorPaginator.paginate(fetch, direction, cursor != null,
+		CursorFetch<Promotion> fetch = gateway.findByFilter(filter);
+		CursorPage<Promotion> page = CursorPaginator.paginate(fetch, direction, cursor != null,
 				row -> switch(sortBy){
 					case NAME -> List.of(row.name(), row.id());
 					case END_AT -> List.of(String.valueOf(row.endAt().toEpochMilli()), row.id());

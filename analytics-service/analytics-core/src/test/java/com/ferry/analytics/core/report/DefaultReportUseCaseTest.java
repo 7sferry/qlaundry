@@ -8,7 +8,7 @@ import com.ferry.analytics.domain.report.ReportWindow;
 import com.ferry.analytics.domain.report.RevenueBucketProjection;
 import com.ferry.analytics.domain.report.ServiceBreakdownProjection;
 import com.ferry.analytics.domain.staff.StaffRole;
-import com.ferry.analytics.domain.tenant.TenantIdDomain;
+import com.ferry.analytics.domain.tenant.TenantId;
 import com.ferry.analytics.domain.token.AnalyticsAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -79,14 +79,14 @@ class DefaultReportUseCaseTest{
 				.build();
 		willReturn(List.of(new RevenueBucketProjection(LocalDate.of(2026, 9, 9), BigDecimal.valueOf(120000), 3L),
 				new RevenueBucketProjection(LocalDate.of(2026, 9, 14), BigDecimal.valueOf(45000), 1L))).given(gateway)
-				.revenueTrend(any(TenantIdDomain.class), any(ReportWindow.class));
+				.revenueTrend(any(TenantId.class), any(ReportWindow.class));
 		willReturn(List.of()).given(gateway)
-				.serviceBreakdown(any(TenantIdDomain.class), any(ReportWindow.class));
+				.serviceBreakdown(any(TenantId.class), any(ReportWindow.class));
 
 		useCase.execute(new ReportRequest(ReportPeriod.WEEK, "Asia/Jakarta"), principal, presenter);
 
 		then(gateway).should()
-				.revenueTrend(eq(new TenantIdDomain(TENANT_ID)), windowCaptor.capture());
+				.revenueTrend(eq(new TenantId(TENANT_ID)), windowCaptor.capture());
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
@@ -118,9 +118,9 @@ class DefaultReportUseCaseTest{
 				.build();
 		willReturn(List.of(new RevenueBucketProjection(LocalDate.of(2026, 9, 1), BigDecimal.valueOf(8740000), 93L)))
 				.given(gateway)
-				.revenueTrend(any(TenantIdDomain.class), any(ReportWindow.class));
+				.revenueTrend(any(TenantId.class), any(ReportWindow.class));
 		willReturn(List.of()).given(gateway)
-				.serviceBreakdown(any(TenantIdDomain.class), any(ReportWindow.class));
+				.serviceBreakdown(any(TenantId.class), any(ReportWindow.class));
 
 		useCase.execute(new ReportRequest(ReportPeriod.YEAR, null), principal, presenter);
 
@@ -148,9 +148,9 @@ class DefaultReportUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		willReturn(List.of()).given(gateway)
-				.revenueTrend(any(TenantIdDomain.class), any(ReportWindow.class));
+				.revenueTrend(any(TenantId.class), any(ReportWindow.class));
 		willReturn(List.of()).given(gateway)
-				.serviceBreakdown(any(TenantIdDomain.class), any(ReportWindow.class));
+				.serviceBreakdown(any(TenantId.class), any(ReportWindow.class));
 
 		useCase.execute(new ReportRequest(ReportPeriod.QUARTER, null), principal, presenter);
 
@@ -177,13 +177,13 @@ class DefaultReportUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		willReturn(List.of()).given(gateway)
-				.revenueTrend(any(TenantIdDomain.class), any(ReportWindow.class));
+				.revenueTrend(any(TenantId.class), any(ReportWindow.class));
 		willReturn(List.of(
 				new ServiceBreakdownProjection("01SERVICECUCIKERING000000", "Cuci Kering", 12L,
 						BigDecimal.valueOf(200000)),
 				new ServiceBreakdownProjection("01SERVICECUCISETRIKA00000", "Cuci Setrika", 5L,
 						BigDecimal.valueOf(100000)))).given(gateway)
-				.serviceBreakdown(any(TenantIdDomain.class), any(ReportWindow.class));
+				.serviceBreakdown(any(TenantId.class), any(ReportWindow.class));
 
 		useCase.execute(new ReportRequest(ReportPeriod.MONTH, null), principal, presenter);
 

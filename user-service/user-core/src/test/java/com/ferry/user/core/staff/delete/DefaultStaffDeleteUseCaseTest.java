@@ -1,15 +1,15 @@
 package com.ferry.user.core.staff.delete;
 
-import com.ferry.user.domain.common.DescriptionDomain;
-import com.ferry.user.domain.common.FullNameDomain;
-import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.Description;
+import com.ferry.user.domain.common.FullName;
+import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.common.exception.ForbiddenActionException;
 import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import com.ferry.user.domain.common.exception.InvalidUsernameException;
 import com.ferry.user.domain.common.exception.NotFoundException;
-import com.ferry.user.domain.staff.StaffDomain;
+import com.ferry.user.domain.staff.Staff;
 import com.ferry.user.domain.staff.StaffRole;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -52,7 +52,7 @@ class DefaultStaffDeleteUseCaseTest{
 	@Captor
 	ArgumentCaptor<StaffDeleteResponse> responseCaptor;
 	@Captor
-	ArgumentCaptor<StaffDomain> staffCaptor;
+	ArgumentCaptor<Staff> staffCaptor;
 
 	private UserAuthPrincipal superStaffPrincipal(String tenantId){
 		return UserAuthPrincipal.builder()
@@ -62,13 +62,13 @@ class DefaultStaffDeleteUseCaseTest{
 				.build();
 	}
 
-	private StaffDomain staff(String id){
+	private Staff staff(String id){
 		Instant now = Instant.now();
-		return StaffDomain.builder()
+		return Staff.builder()
 				.id(id)
-				.username(new UsernameDomain(USERNAME))
-				.fullName(new FullNameDomain("Full Name"))
-				.description(new DescriptionDomain("desc"))
+				.username(new Username(USERNAME))
+				.fullName(new FullName("Full Name"))
+				.description(new Description("desc"))
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.deleted(false)
@@ -138,7 +138,7 @@ class DefaultStaffDeleteUseCaseTest{
 	void givenStaffNotFound_thenThrowsNotFoundException(){
 		UserAuthPrincipal principal = superStaffPrincipal(TENANT_ID);
 		willReturn(Optional.empty()).given(gateway)
-				.findByUsername(any(UsernameDomain.class), any(TenantIdDomain.class));
+				.findByUsername(any(Username.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new StaffDeleteRequest(USERNAME), principal, presenter))
@@ -146,7 +146,7 @@ class DefaultStaffDeleteUseCaseTest{
 				.hasMessage("Staff Not Found"));
 
 		then(gateway).should(never())
-				.save(any(StaffDomain.class));
+				.save(any(Staff.class));
 		then(presenter).should(never())
 				.present(any(StaffDeleteResponse.class));
 	}
@@ -154,9 +154,9 @@ class DefaultStaffDeleteUseCaseTest{
 	@Test
 	void givenTargetIsSameAsPrincipal_thenThrowsForbiddenActionException(){
 		UserAuthPrincipal principal = superStaffPrincipal(TENANT_ID);
-		StaffDomain self = staff(PRINCIPAL_ID);
+		Staff self = staff(PRINCIPAL_ID);
 		willReturn(Optional.of(self)).given(gateway)
-				.findByUsername(any(UsernameDomain.class), any(TenantIdDomain.class));
+				.findByUsername(any(Username.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new StaffDeleteRequest(USERNAME), principal, presenter))
@@ -164,7 +164,7 @@ class DefaultStaffDeleteUseCaseTest{
 				.hasMessage("Cannot delete your own account"));
 
 		then(gateway).should(never())
-				.save(any(StaffDomain.class));
+				.save(any(Staff.class));
 		then(presenter).should(never())
 				.present(any(StaffDeleteResponse.class));
 	}
@@ -172,20 +172,20 @@ class DefaultStaffDeleteUseCaseTest{
 	@Test
 	void givenValidSuperStaffDeletingAnotherStaff_thenDeletesSuccessfully(){
 		UserAuthPrincipal principal = superStaffPrincipal(TENANT_ID);
-		StaffDomain target = staff(TARGET_ID);
+		Staff target = staff(TARGET_ID);
 		willReturn(Optional.of(target)).given(gateway)
-				.findByUsername(any(UsernameDomain.class), any(TenantIdDomain.class));
+				.findByUsername(any(Username.class), any(TenantId.class));
 
 		useCase.execute(new StaffDeleteRequest(USERNAME), principal, presenter);
 
 		then(gateway).should()
-				.findByUsername(eq(new UsernameDomain(USERNAME)), eq(new TenantIdDomain(TENANT_ID)));
+				.findByUsername(eq(new Username(USERNAME)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
 				.save(staffCaptor.capture());
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
-		StaffDomain saved = staffCaptor.getValue();
+		Staff saved = staffCaptor.getValue();
 		StaffDeleteResponse response = responseCaptor.getValue();
 
 		thenSoftly(softly -> {
@@ -199,14 +199,14 @@ class DefaultStaffDeleteUseCaseTest{
 	@Test
 	void givenUsernameWithMixedCaseAndWhitespace_thenGatewayIsQueriedWithNormalizedUsername(){
 		UserAuthPrincipal principal = superStaffPrincipal(TENANT_ID);
-		StaffDomain target = staff(TARGET_ID);
+		Staff target = staff(TARGET_ID);
 		willReturn(Optional.of(target)).given(gateway)
-				.findByUsername(any(UsernameDomain.class), any(TenantIdDomain.class));
+				.findByUsername(any(Username.class), any(TenantId.class));
 
 		useCase.execute(new StaffDeleteRequest("  DaDaNg  "), principal, presenter);
 
 		then(gateway).should()
-				.findByUsername(eq(new UsernameDomain(USERNAME)), eq(new TenantIdDomain(TENANT_ID)));
+				.findByUsername(eq(new Username(USERNAME)), eq(new TenantId(TENANT_ID)));
 	}
 
 }

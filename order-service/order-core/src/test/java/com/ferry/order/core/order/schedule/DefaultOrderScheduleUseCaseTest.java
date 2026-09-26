@@ -4,7 +4,7 @@ import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.order.schedule.OrderScheduleProjection;
 import com.ferry.order.domain.order.schedule.OrderScheduleType;
 import com.ferry.order.domain.staff.StaffRole;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -97,20 +97,20 @@ class DefaultOrderScheduleUseCaseTest{
 				"INV-20260912-D7Q2MX", "reza firmansyah", Instant.parse("2026-09-14T01:30:00Z"),
 				OrderStatus.OUT_FOR_DELIVERY.getValue());
 		willReturn(List.of(pickup)).given(gateway)
-				.findPickupsBetween(any(TenantIdDomain.class), any(Instant.class), any(Instant.class),
+				.findPickupsBetween(any(TenantId.class), any(Instant.class), any(Instant.class),
 						anyCollection());
 		willReturn(List.of(delivery)).given(gateway)
-				.findDeliveriesBetween(any(TenantIdDomain.class), any(Instant.class), any(Instant.class),
+				.findDeliveriesBetween(any(TenantId.class), any(Instant.class), any(Instant.class),
 						anyCollection());
 
 		useCase.execute(new OrderScheduleRequest(null, null), principal, presenter);
 
 		then(gateway).should()
-				.findPickupsBetween(eq(new TenantIdDomain(TENANT_ID)), eq(Instant.parse("2026-09-13T00:00:00Z")),
+				.findPickupsBetween(eq(new TenantId(TENANT_ID)), eq(Instant.parse("2026-09-13T00:00:00Z")),
 						eq(Instant.parse("2026-09-14T00:00:00Z")),
 						eq(Set.of(OrderStatus.PENDING, OrderStatus.CONFIRMED)));
 		then(gateway).should()
-				.findDeliveriesBetween(eq(new TenantIdDomain(TENANT_ID)), eq(Instant.parse("2026-09-13T00:00:00Z")),
+				.findDeliveriesBetween(eq(new TenantId(TENANT_ID)), eq(Instant.parse("2026-09-13T00:00:00Z")),
 						eq(Instant.parse("2026-09-14T00:00:00Z")),
 						eq(Set.of(OrderStatus.READY, OrderStatus.OUT_FOR_DELIVERY)));
 		then(presenter).should()
@@ -138,16 +138,16 @@ class DefaultOrderScheduleUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		willReturn(List.of()).given(gateway)
-				.findPickupsBetween(any(TenantIdDomain.class), any(Instant.class), any(Instant.class),
+				.findPickupsBetween(any(TenantId.class), any(Instant.class), any(Instant.class),
 						anyCollection());
 		willReturn(List.of()).given(gateway)
-				.findDeliveriesBetween(any(TenantIdDomain.class), any(Instant.class), any(Instant.class),
+				.findDeliveriesBetween(any(TenantId.class), any(Instant.class), any(Instant.class),
 						anyCollection());
 
 		useCase.execute(new OrderScheduleRequest(null, "Asia/Jakarta"), principal, presenter);
 
 		then(gateway).should()
-				.findPickupsBetween(eq(new TenantIdDomain(TENANT_ID)), eq(Instant.parse("2026-09-13T17:00:00Z")),
+				.findPickupsBetween(eq(new TenantId(TENANT_ID)), eq(Instant.parse("2026-09-13T17:00:00Z")),
 						eq(Instant.parse("2026-09-14T17:00:00Z")),
 						eq(Set.of(OrderStatus.PENDING, OrderStatus.CONFIRMED)));
 		then(presenter).should()
@@ -166,16 +166,16 @@ class DefaultOrderScheduleUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		willReturn(List.of()).given(gateway)
-				.findPickupsBetween(any(TenantIdDomain.class), any(Instant.class), any(Instant.class),
+				.findPickupsBetween(any(TenantId.class), any(Instant.class), any(Instant.class),
 						anyCollection());
 		willReturn(List.of()).given(gateway)
-				.findDeliveriesBetween(any(TenantIdDomain.class), any(Instant.class), any(Instant.class),
+				.findDeliveriesBetween(any(TenantId.class), any(Instant.class), any(Instant.class),
 						anyCollection());
 
 		useCase.execute(new OrderScheduleRequest(LocalDate.parse("2026-12-31"), null), principal, presenter);
 
 		then(gateway).should()
-				.findPickupsBetween(eq(new TenantIdDomain(TENANT_ID)), eq(Instant.parse("2026-12-31T00:00:00Z")),
+				.findPickupsBetween(eq(new TenantId(TENANT_ID)), eq(Instant.parse("2026-12-31T00:00:00Z")),
 						eq(Instant.parse("2027-01-01T00:00:00Z")), anyCollection());
 		then(presenter).should()
 				.present(responseCaptor.capture());
@@ -196,16 +196,16 @@ class DefaultOrderScheduleUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		willReturn(List.of()).given(gateway)
-				.findPickupsBetween(any(TenantIdDomain.class), any(Instant.class), any(Instant.class),
+				.findPickupsBetween(any(TenantId.class), any(Instant.class), any(Instant.class),
 						anyCollection());
 		willReturn(List.of()).given(gateway)
-				.findDeliveriesBetween(any(TenantIdDomain.class), any(Instant.class), any(Instant.class),
+				.findDeliveriesBetween(any(TenantId.class), any(Instant.class), any(Instant.class),
 						anyCollection());
 
 		useCase.execute(new OrderScheduleRequest(LocalDate.parse("2026-12-31"), "Asia/Jakarta"), principal, presenter);
 
 		then(gateway).should()
-				.findPickupsBetween(eq(new TenantIdDomain(TENANT_ID)), eq(Instant.parse("2026-12-30T17:00:00Z")),
+				.findPickupsBetween(eq(new TenantId(TENANT_ID)), eq(Instant.parse("2026-12-30T17:00:00Z")),
 						eq(Instant.parse("2026-12-31T17:00:00Z")), anyCollection());
 		then(presenter).should()
 				.present(responseCaptor.capture());

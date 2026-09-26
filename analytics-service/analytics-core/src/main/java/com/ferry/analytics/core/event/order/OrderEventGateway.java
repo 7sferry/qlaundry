@@ -1,9 +1,9 @@
 package com.ferry.analytics.core.event.order;
 
-import com.ferry.analytics.domain.event.ConsumedEventDomain;
-import com.ferry.analytics.domain.event.OrderItemSnapshotDomain;
-import com.ferry.analytics.domain.event.OrderPromotionSnapshotDomain;
-import com.ferry.analytics.domain.event.OrderSnapshotDomain;
+import com.ferry.analytics.domain.event.ConsumedEvent;
+import com.ferry.analytics.domain.event.OrderItemSnapshot;
+import com.ferry.analytics.domain.event.OrderPromotionSnapshot;
+import com.ferry.analytics.domain.event.OrderSnapshot;
 
 import java.util.List;
 
@@ -13,8 +13,8 @@ import java.util.List;
  ************************/
 
 public interface OrderEventGateway{
-	void upsert(OrderSnapshotDomain order, List<OrderItemSnapshotDomain> items,
-	            List<OrderPromotionSnapshotDomain> promotions);
+	void upsert(OrderSnapshot order, List<OrderItemSnapshot> items,
+	            List<OrderPromotionSnapshot> promotions);
 
-	void recordConsumed(ConsumedEventDomain event);
+	void recordConsumed(ConsumedEvent event);
 }

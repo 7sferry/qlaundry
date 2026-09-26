@@ -1,8 +1,8 @@
 package com.ferry.user.core.staff.delete;
 
-import com.ferry.user.domain.common.UsernameDomain;
-import com.ferry.user.domain.staff.StaffDomain;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.common.Username;
+import com.ferry.user.domain.staff.Staff;
+import com.ferry.user.domain.tenant.TenantId;
 
 import java.util.Optional;
 
@@ -12,6 +12,6 @@ import java.util.Optional;
  ************************/
 
 public interface StaffDeleteGateway{
-	Optional<StaffDomain> findByUsername(UsernameDomain username, TenantIdDomain tenantId);
-	void save(StaffDomain staff);
+	Optional<Staff> findByUsername(Username username, TenantId tenantId);
+	void save(Staff staff);
 }

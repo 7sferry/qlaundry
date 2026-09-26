@@ -1,10 +1,10 @@
 package com.ferry.order.core.analytics.backfill;
 
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderIdDomain;
-import com.ferry.order.domain.order.OrderItemDomain;
-import com.ferry.order.domain.order.OrderPromotionDomain;
-import com.ferry.order.domain.service.LaundryServiceDomain;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderId;
+import com.ferry.order.domain.order.OrderItem;
+import com.ferry.order.domain.order.OrderPromotion;
+import com.ferry.order.domain.service.LaundryService;
 
 import java.util.List;
 
@@ -14,11 +14,11 @@ import java.util.List;
  ************************/
 
 public interface AnalyticsBackfillGateway{
-	List<OrderDomain> findOrdersAfter(String tenantId, String afterId, int limit);
+	List<Order> findOrdersAfter(String tenantId, String afterId, int limit);
 
-	List<OrderItemDomain> findItemsByOrderId(OrderIdDomain orderId);
+	List<OrderItem> findItemsByOrderId(OrderId orderId);
 
-	List<OrderPromotionDomain> findPromotionsByOrderId(OrderIdDomain orderId);
+	List<OrderPromotion> findPromotionsByOrderId(OrderId orderId);
 
-	List<LaundryServiceDomain> findServicesAfter(String tenantId, String afterId, int limit);
+	List<LaundryService> findServicesAfter(String tenantId, String afterId, int limit);
 }

@@ -1,17 +1,17 @@
 package com.ferry.user.core.staff.registration;
 
 import com.ferry.user.core.tools.PasswordTool;
-import com.ferry.user.domain.common.HashedPasswordDomain;
-import com.ferry.user.domain.common.RawPasswordDomain;
-import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.HashedPassword;
+import com.ferry.user.domain.common.RawPassword;
+import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.common.exception.ForbiddenActionException;
 import com.ferry.user.domain.common.exception.InvalidPasswordException;
 import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import com.ferry.user.domain.common.exception.InvalidUsernameException;
-import com.ferry.user.domain.staff.StaffAddressDomain;
-import com.ferry.user.domain.staff.StaffDomain;
-import com.ferry.user.domain.staff.StaffEmailDomain;
-import com.ferry.user.domain.staff.StaffPhoneDomain;
+import com.ferry.user.domain.staff.StaffAddress;
+import com.ferry.user.domain.staff.Staff;
+import com.ferry.user.domain.staff.StaffEmail;
+import com.ferry.user.domain.staff.StaffPhone;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
@@ -62,7 +62,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	@Captor
 	ArgumentCaptor<StaffRegistrationResponse> responseCaptor;
 	@Captor
-	ArgumentCaptor<StaffDomain> staffCaptor;
+	ArgumentCaptor<Staff> staffCaptor;
 
 	@ParameterizedTest
 	@NullAndEmptySource
@@ -142,13 +142,13 @@ class DefaultStaffRegistrationUseCaseTest{
 				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
-		willReturn(true).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
+		willReturn(true).given(gateway).existsByUsername(new Username(USERNAME));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidUsernameException.class)
 				.hasMessage("Username already exists"));
 
-		then(gateway).should(never()).save(any(StaffDomain.class));
+		then(gateway).should(never()).save(any(Staff.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -158,12 +158,12 @@ class DefaultStaffRegistrationUseCaseTest{
 				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
-		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
+		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidPasswordException.class));
 
-		then(gateway).should(never()).save(any(StaffDomain.class));
+		then(gateway).should(never()).save(any(Staff.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -173,19 +173,19 @@ class DefaultStaffRegistrationUseCaseTest{
 				"note", StaffRole.STAFF, List.of(), null, null);
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
-		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
-		willReturn(new HashedPasswordDomain(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPasswordDomain.class));
+		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(new HashedPassword(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPassword.class));
 		willAnswer(invocation -> {
-			StaffDomain arg = invocation.getArgument(0);
+			Staff arg = invocation.getArgument(0);
 			return arg.toBuilder().id(GENERATED_ID).build();
-		}).given(gateway).save(any(StaffDomain.class));
+		}).given(gateway).save(any(Staff.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidUserStateException.class)
 				.hasMessage("Emails cannot be empty"));
 
-		then(gateway).should().save(any(StaffDomain.class));
-		then(gateway).should(never()).save(any(StaffEmailDomain.class));
+		then(gateway).should().save(any(Staff.class));
+		then(gateway).should(never()).save(any(StaffEmail.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -195,12 +195,12 @@ class DefaultStaffRegistrationUseCaseTest{
 				"note", StaffRole.STAFF, null, null, null);
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
-		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
-		willReturn(new HashedPasswordDomain(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPasswordDomain.class));
+		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(new HashedPassword(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPassword.class));
 		willAnswer(invocation -> {
-			StaffDomain arg = invocation.getArgument(0);
+			Staff arg = invocation.getArgument(0);
 			return arg.toBuilder().id(GENERATED_ID).build();
-		}).given(gateway).save(any(StaffDomain.class));
+		}).given(gateway).save(any(Staff.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidUserStateException.class)
@@ -215,18 +215,18 @@ class DefaultStaffRegistrationUseCaseTest{
 				"note", StaffRole.STAFF, List.of("not-an-email"), null, null);
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
-		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
-		willReturn(new HashedPasswordDomain(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPasswordDomain.class));
+		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(new HashedPassword(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPassword.class));
 		willAnswer(invocation -> {
-			StaffDomain arg = invocation.getArgument(0);
+			Staff arg = invocation.getArgument(0);
 			return arg.toBuilder().id(GENERATED_ID).build();
-		}).given(gateway).save(any(StaffDomain.class));
+		}).given(gateway).save(any(Staff.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidUserStateException.class)
 				.hasMessage("Invalid email format."));
 
-		then(gateway).should(never()).save(any(StaffEmailDomain.class));
+		then(gateway).should(never()).save(any(StaffEmail.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -236,19 +236,19 @@ class DefaultStaffRegistrationUseCaseTest{
 				"note", StaffRole.STAFF, List.of(EMAIL), List.of("not-a-phone"), null);
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
-		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
-		willReturn(new HashedPasswordDomain(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPasswordDomain.class));
+		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(new HashedPassword(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPassword.class));
 		willAnswer(invocation -> {
-			StaffDomain arg = invocation.getArgument(0);
+			Staff arg = invocation.getArgument(0);
 			return arg.toBuilder().id(GENERATED_ID).build();
-		}).given(gateway).save(any(StaffDomain.class));
+		}).given(gateway).save(any(Staff.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidUserStateException.class)
 				.hasMessage("Phone must be in E.164 format, e.g. +6281234567890"));
 
-		then(gateway).should().save(any(StaffEmailDomain.class));
-		then(gateway).should(never()).save(any(StaffPhoneDomain.class));
+		then(gateway).should().save(any(StaffEmail.class));
+		then(gateway).should(never()).save(any(StaffPhone.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -258,18 +258,18 @@ class DefaultStaffRegistrationUseCaseTest{
 				"note", StaffRole.STAFF, List.of(EMAIL), null, List.of(" "));
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
-		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
-		willReturn(new HashedPasswordDomain(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPasswordDomain.class));
+		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(new HashedPassword(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPassword.class));
 		willAnswer(invocation -> {
-			StaffDomain arg = invocation.getArgument(0);
+			Staff arg = invocation.getArgument(0);
 			return arg.toBuilder().id(GENERATED_ID).build();
-		}).given(gateway).save(any(StaffDomain.class));
+		}).given(gateway).save(any(Staff.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidUserStateException.class)
 				.hasMessage("Address must not be blank"));
 
-		then(gateway).should(never()).save(any(StaffAddressDomain.class));
+		then(gateway).should(never()).save(any(StaffAddress.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -280,22 +280,22 @@ class DefaultStaffRegistrationUseCaseTest{
 				List.of("+6281234567890"), List.of("Jl. Sudirman No. 10"));
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
-		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
-		willReturn(new HashedPasswordDomain(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPasswordDomain.class));
+		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(new HashedPassword(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPassword.class));
 		willAnswer(invocation -> {
-			StaffDomain arg = invocation.getArgument(0);
+			Staff arg = invocation.getArgument(0);
 			return arg.toBuilder().id(GENERATED_ID).build();
-		}).given(gateway).save(any(StaffDomain.class));
+		}).given(gateway).save(any(Staff.class));
 
 		useCase.execute(request, principal, presenter);
 
 		then(gateway).should().save(staffCaptor.capture());
-		then(gateway).should(times(2)).save(any(StaffEmailDomain.class));
-		then(gateway).should(times(1)).save(any(StaffPhoneDomain.class));
-		then(gateway).should(times(1)).save(any(StaffAddressDomain.class));
+		then(gateway).should(times(2)).save(any(StaffEmail.class));
+		then(gateway).should(times(1)).save(any(StaffPhone.class));
+		then(gateway).should(times(1)).save(any(StaffAddress.class));
 		then(presenter).should().present(responseCaptor.capture());
 
-		StaffDomain saved = staffCaptor.getValue();
+		Staff saved = staffCaptor.getValue();
 		StaffRegistrationResponse response = responseCaptor.getValue();
 
 		thenSoftly(softly -> {
@@ -312,19 +312,19 @@ class DefaultStaffRegistrationUseCaseTest{
 				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
-		willReturn(false).given(gateway).existsByUsername(new UsernameDomain(USERNAME));
-		willReturn(new HashedPasswordDomain(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPasswordDomain.class));
+		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(new HashedPassword(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPassword.class));
 		willAnswer(invocation -> {
-			StaffDomain arg = invocation.getArgument(0);
+			Staff arg = invocation.getArgument(0);
 			return arg.toBuilder().id(GENERATED_ID).build();
-		}).given(gateway).save(any(StaffDomain.class));
+		}).given(gateway).save(any(Staff.class));
 
 		useCase.execute(request, principal, presenter);
 
-		then(gateway).should().save(any(StaffDomain.class));
-		then(gateway).should(times(1)).save(any(StaffEmailDomain.class));
-		then(gateway).should(never()).save(any(StaffPhoneDomain.class));
-		then(gateway).should(never()).save(any(StaffAddressDomain.class));
+		then(gateway).should().save(any(Staff.class));
+		then(gateway).should(times(1)).save(any(StaffEmail.class));
+		then(gateway).should(never()).save(any(StaffPhone.class));
+		then(gateway).should(never()).save(any(StaffAddress.class));
 		then(presenter).should().present(any(StaffRegistrationResponse.class));
 	}
 

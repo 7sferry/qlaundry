@@ -1,7 +1,7 @@
 package com.ferry.promotion.gateway.promotion.repository;
 
 import com.ferry.promotion.domain.promotion.PromotionFilter;
-import com.ferry.promotion.gateway.promotion.entity.PromotionJpaEntity;
+import com.ferry.promotion.gateway.promotion.entity.PromotionJpa;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -17,20 +17,20 @@ import java.util.Optional;
  * on Agustus 2026      *
  ************************/
 
-public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity, String>{
+public interface PromotionJpaRepository extends JpaRepository<PromotionJpa, String>{
 
-	Optional<PromotionJpaEntity> findByIdAndTenantIdAndDeletedIsFalse(String id, String tenantId);
+	Optional<PromotionJpa> findByIdAndTenantIdAndDeletedIsFalse(String id, String tenantId);
 
-	Optional<PromotionJpaEntity> findByIdAndTenantId(String id, String tenantId);
+	Optional<PromotionJpa> findByIdAndTenantId(String id, String tenantId);
 
-	Optional<PromotionJpaEntity> findByCodeAndTenantId(String code, String tenantId);
+	Optional<PromotionJpa> findByCodeAndTenantId(String code, String tenantId);
 
 	boolean existsByCodeAndTenantId(String code, String tenantId);
 
 	boolean existsByCodeAndTenantIdAndIdNot(String code, String tenantId, String id);
 
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
-	@Query("update PromotionJpaEntity p " +
+	@Query("update PromotionJpa p " +
 			"set p.usedCount = p.usedCount + 1, p.updatedBy = :updatedBy, p.updatedAt = :updatedAt " +
 			"where " +
 			"p.id = :id AND " +
@@ -42,7 +42,7 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 	               @Param("updatedAt") Instant updatedAt);
 
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
-	@Query("update PromotionJpaEntity p " +
+	@Query("update PromotionJpa p " +
 			"set p.usedCount = p.usedCount - 1, p.updatedBy = :updatedBy, p.updatedAt = :updatedAt " +
 			"where " +
 			"p.id = :id AND " +
@@ -52,7 +52,7 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 	                 @Param("updatedBy") String updatedBy, @Param("updatedAt") Instant updatedAt);
 
 	@Query("select p " +
-			"from PromotionJpaEntity p " +
+			"from PromotionJpa p " +
 			"where " +
 			"(:#{#filter?.codeStartsWith()} is null or p.code like :#{#filter?.codeStartsWith()}) AND " +
 			"(:#{#filter?.nameStartsWith()} is null or lower(p.name) like :#{#filter?.nameStartsWith()}) AND " +
@@ -63,10 +63,10 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 			"(:#{#filter?.cursor?.id} is null or p.id > :#{#filter?.cursor?.id}) AND " +
 			"p.deleted IS FALSE " +
 			"order by p.id asc")
-	List<PromotionJpaEntity> findAfterById(@Param("filter") PromotionFilter filter, Pageable pageable);
+	List<PromotionJpa> findAfterById(@Param("filter") PromotionFilter filter, Pageable pageable);
 
 	@Query("select p " +
-			"from PromotionJpaEntity p " +
+			"from PromotionJpa p " +
 			"where " +
 			"(:#{#filter?.codeStartsWith()} is null or p.code like :#{#filter?.codeStartsWith()}) AND " +
 			"(:#{#filter?.nameStartsWith()} is null or lower(p.name) like :#{#filter?.nameStartsWith()}) AND " +
@@ -77,10 +77,10 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 			"(:#{#filter?.cursor?.id} is null or p.id < :#{#filter?.cursor?.id}) AND " +
 			"p.deleted IS FALSE " +
 			"order by p.id desc")
-	List<PromotionJpaEntity> findBeforeById(@Param("filter") PromotionFilter filter, Pageable pageable);
+	List<PromotionJpa> findBeforeById(@Param("filter") PromotionFilter filter, Pageable pageable);
 
 	@Query("select p " +
-			"from PromotionJpaEntity p " +
+			"from PromotionJpa p " +
 			"where " +
 			"(:#{#filter?.codeStartsWith()} is null or p.code like :#{#filter?.codeStartsWith()}) AND " +
 			"(:#{#filter?.nameStartsWith()} is null or lower(p.name) like :#{#filter?.nameStartsWith()}) AND " +
@@ -92,10 +92,10 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 			"  (p.name = :#{#filter?.cursor?.sortValue} and p.id > :#{#filter?.cursor?.id})) AND " +
 			"p.deleted IS FALSE " +
 			"order by p.name asc, p.id asc")
-	List<PromotionJpaEntity> findAfterByName(@Param("filter") PromotionFilter filter, Pageable pageable);
+	List<PromotionJpa> findAfterByName(@Param("filter") PromotionFilter filter, Pageable pageable);
 
 	@Query("select p " +
-			"from PromotionJpaEntity p " +
+			"from PromotionJpa p " +
 			"where " +
 			"(:#{#filter?.codeStartsWith()} is null or p.code like :#{#filter?.codeStartsWith()}) AND " +
 			"(:#{#filter?.nameStartsWith()} is null or lower(p.name) like :#{#filter?.nameStartsWith()}) AND " +
@@ -107,10 +107,10 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 			"  (p.name = :#{#filter?.cursor?.sortValue} and p.id < :#{#filter?.cursor?.id})) AND " +
 			"p.deleted IS FALSE " +
 			"order by p.name desc, p.id desc")
-	List<PromotionJpaEntity> findBeforeByName(@Param("filter") PromotionFilter filter, Pageable pageable);
+	List<PromotionJpa> findBeforeByName(@Param("filter") PromotionFilter filter, Pageable pageable);
 
 	@Query("select p " +
-			"from PromotionJpaEntity p " +
+			"from PromotionJpa p " +
 			"where " +
 			"(:#{#filter?.codeStartsWith()} is null or p.code like :#{#filter?.codeStartsWith()}) AND " +
 			"(:#{#filter?.nameStartsWith()} is null or lower(p.name) like :#{#filter?.nameStartsWith()}) AND " +
@@ -122,10 +122,10 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 			"  (p.code = :#{#filter?.cursor?.sortValue} and p.id > :#{#filter?.cursor?.id})) AND " +
 			"p.deleted IS FALSE " +
 			"order by p.code asc, p.id asc")
-	List<PromotionJpaEntity> findAfterByCode(@Param("filter") PromotionFilter filter, Pageable pageable);
+	List<PromotionJpa> findAfterByCode(@Param("filter") PromotionFilter filter, Pageable pageable);
 
 	@Query("select p " +
-			"from PromotionJpaEntity p " +
+			"from PromotionJpa p " +
 			"where " +
 			"(:#{#filter?.codeStartsWith()} is null or p.code like :#{#filter?.codeStartsWith()}) AND " +
 			"(:#{#filter?.nameStartsWith()} is null or lower(p.name) like :#{#filter?.nameStartsWith()}) AND " +
@@ -137,10 +137,10 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 			"  (p.code = :#{#filter?.cursor?.sortValue} and p.id < :#{#filter?.cursor?.id})) AND " +
 			"p.deleted IS FALSE " +
 			"order by p.code desc, p.id desc")
-	List<PromotionJpaEntity> findBeforeByCode(@Param("filter") PromotionFilter filter, Pageable pageable);
+	List<PromotionJpa> findBeforeByCode(@Param("filter") PromotionFilter filter, Pageable pageable);
 
 	@Query("select p " +
-			"from PromotionJpaEntity p " +
+			"from PromotionJpa p " +
 			"where " +
 			"(:#{#filter?.codeStartsWith()} is null or p.code like :#{#filter?.codeStartsWith()}) AND " +
 			"(:#{#filter?.nameStartsWith()} is null or lower(p.name) like :#{#filter?.nameStartsWith()}) AND " +
@@ -152,10 +152,10 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 			"  (p.endAt = :#{#filter?.cursorEndAt()} and p.id > :#{#filter?.cursor?.id})) AND " +
 			"p.deleted IS FALSE " +
 			"order by p.endAt asc, p.id asc")
-	List<PromotionJpaEntity> findAfterByEndAt(@Param("filter") PromotionFilter filter, Pageable pageable);
+	List<PromotionJpa> findAfterByEndAt(@Param("filter") PromotionFilter filter, Pageable pageable);
 
 	@Query("select p " +
-			"from PromotionJpaEntity p " +
+			"from PromotionJpa p " +
 			"where " +
 			"(:#{#filter?.codeStartsWith()} is null or p.code like :#{#filter?.codeStartsWith()}) AND " +
 			"(:#{#filter?.nameStartsWith()} is null or lower(p.name) like :#{#filter?.nameStartsWith()}) AND " +
@@ -167,6 +167,6 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpaEntity
 			"  (p.endAt = :#{#filter?.cursorEndAt()} and p.id < :#{#filter?.cursor?.id})) AND " +
 			"p.deleted IS FALSE " +
 			"order by p.endAt desc, p.id desc")
-	List<PromotionJpaEntity> findBeforeByEndAt(@Param("filter") PromotionFilter filter, Pageable pageable);
+	List<PromotionJpa> findBeforeByEndAt(@Param("filter") PromotionFilter filter, Pageable pageable);
 
 }

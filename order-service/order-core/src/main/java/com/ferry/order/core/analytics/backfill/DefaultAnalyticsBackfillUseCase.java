@@ -1,14 +1,14 @@
 package com.ferry.order.core.analytics.backfill;
 
 import com.ferry.order.core.analytics.AnalyticsEventConfig;
-import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.AnalyticsOutboxConstant;
 import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderIdDomain;
-import com.ferry.order.domain.service.LaundryServiceDomain;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderId;
+import com.ferry.order.domain.service.LaundryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,7 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DefaultAnalyticsBackfillUseCase implements AnalyticsBackfillUseCase{
 	private final AnalyticsBackfillGateway gateway;
-	private final AnalyticsEventPublisher publisher;
+	private final OrderAnalyticsPublisher publisher;
 	private final int batchSize;
 
 	@Override
@@ -31,10 +31,10 @@ public class DefaultAnalyticsBackfillUseCase implements AnalyticsBackfillUseCase
 		String tenantId = request.tenantIdOrNull();
 		int services = 0;
 		String afterServiceId = null;
-		List<LaundryServiceDomain> servicePage;
+		List<LaundryService> servicePage;
 		do{
 			servicePage = gateway.findServicesAfter(tenantId, afterServiceId, batchSize);
-			for(LaundryServiceDomain service : servicePage){
+			for(LaundryService service : servicePage){
 				publisher.publish(publisher.save(AnalyticsEventConfig.laundryService(
 						AnalyticsEventType.LAUNDRY_SERVICE_BACKFILLED, LaundryServiceAnalyticsMessage.from(service),
 						AnalyticsOutboxConstant.BACKFILL_ACTOR)));
@@ -44,11 +44,11 @@ public class DefaultAnalyticsBackfillUseCase implements AnalyticsBackfillUseCase
 		}while(servicePage.size() == batchSize);
 		int orders = 0;
 		String afterOrderId = null;
-		List<OrderDomain> orderPage;
+		List<Order> orderPage;
 		do{
 			orderPage = gateway.findOrdersAfter(tenantId, afterOrderId, batchSize);
-			for(OrderDomain order : orderPage){
-				OrderIdDomain orderId = new OrderIdDomain(order.id());
+			for(Order order : orderPage){
+				OrderId orderId = new OrderId(order.id());
 				publisher.publish(publisher.save(AnalyticsEventConfig.order(AnalyticsEventType.ORDER_BACKFILLED,
 						OrderAnalyticsMessage.from(order, gateway.findItemsByOrderId(orderId),
 								gateway.findPromotionsByOrderId(orderId)), AnalyticsOutboxConstant.BACKFILL_ACTOR)));

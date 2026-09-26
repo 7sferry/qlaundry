@@ -8,11 +8,11 @@ import com.ferry.notification.core.email.send.EmailSendGateway;
 import com.ferry.notification.core.email.tenantregistration.DefaultTenantRegistrationEmailUseCase;
 import com.ferry.notification.core.email.tenantregistration.TenantRegistrationEmailComposer;
 import com.ferry.notification.core.email.tenantregistration.TenantRegistrationEmailUseCase;
-import com.ferry.notification.gateway.email.EmailHistoryJpaGateway;
-import com.ferry.notification.gateway.email.EmailSendSmtpGateway;
-import com.ferry.notification.gateway.email.ForgottenPasswordEmailThymeleafComposer;
-import com.ferry.notification.gateway.email.TenantRegistrationEmailThymeleafComposer;
-import com.ferry.notification.gateway.email.entity.EmailNotificationJpaEntity;
+import com.ferry.notification.gateway.email.JpaEmailHistoryGateway;
+import com.ferry.notification.gateway.email.SmtpEmailSendGateway;
+import com.ferry.notification.gateway.email.ThymeleafForgottenPasswordEmailComposer;
+import com.ferry.notification.gateway.email.ThymeleafTenantRegistrationEmailComposer;
+import com.ferry.notification.gateway.email.entity.EmailNotificationJpa;
 import com.ferry.notification.gateway.email.repository.EmailNotificationJpaRepository;
 import com.ferry.notification.gateway.email.repository.EmailTypeJpaRepository;
 import com.ferry.utils.crypto.AesGcmCryptoTool;
@@ -66,7 +66,7 @@ public class NotificationWebConfig{
 	ApplicationRunner cryptoBackfillRunner(EmailNotificationJpaRepository emailNotificationJpaRepository,
 	                                       CryptoTool cryptoTool){
 		return _ -> {
-			List<EmailNotificationJpaEntity> notifications = emailNotificationJpaRepository.findAll();
+			List<EmailNotificationJpa> notifications = emailNotificationJpaRepository.findAll();
 			notifications.forEach(entity -> entity.backfill(cryptoTool));
 			emailNotificationJpaRepository.saveAll(notifications);
 			log.info("Crypto backfill done: {} email notifications", notifications.size());
@@ -94,13 +94,13 @@ public class NotificationWebConfig{
 	@Bean
 	TenantRegistrationEmailComposer tenantRegistrationEmailComposer(ITemplateEngine emailTemplateEngine,
 	                                                                @Value("${app.notification.confirmation.base-url}") String confirmationBaseUrl){
-		return new TenantRegistrationEmailThymeleafComposer(emailTemplateEngine, confirmationBaseUrl);
+		return new ThymeleafTenantRegistrationEmailComposer(emailTemplateEngine, confirmationBaseUrl);
 	}
 
 	@Bean
 	EmailSendGateway emailSendGateway(JavaMailSender javaMailSender,
 	                                  @Value("${app.mail.sender}") String senderAddress){
-		return new EmailSendSmtpGateway(javaMailSender, senderAddress);
+		return new SmtpEmailSendGateway(javaMailSender, senderAddress);
 	}
 
 	@Bean
@@ -108,7 +108,7 @@ public class NotificationWebConfig{
 	                                        EmailTypeJpaRepository emailTypeJpaRepository,
 	                                        IdGenerator idGenerator,
 	                                        CryptoTool cryptoTool){
-		return new EmailHistoryJpaGateway(emailNotificationJpaRepository, emailTypeJpaRepository, idGenerator, cryptoTool);
+		return new JpaEmailHistoryGateway(emailNotificationJpaRepository, emailTypeJpaRepository, idGenerator, cryptoTool);
 	}
 
 	@Bean
@@ -120,7 +120,7 @@ public class NotificationWebConfig{
 
 	@Bean
 	ForgottenPasswordEmailComposer forgottenPasswordEmailComposer(ITemplateEngine emailTemplateEngine){
-		return new ForgottenPasswordEmailThymeleafComposer(emailTemplateEngine);
+		return new ThymeleafForgottenPasswordEmailComposer(emailTemplateEngine);
 	}
 
 	@Bean

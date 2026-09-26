@@ -1,7 +1,7 @@
 package com.ferry.user.core.customer.verification;
 
-import com.ferry.user.domain.customer.CustomerIdDomain;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.customer.CustomerId;
+import com.ferry.user.domain.tenant.TenantId;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,12 +49,12 @@ class DefaultCustomerVerificationUseCaseTest{
 	@Test
 	void givenCustomerOwnedByTheTenant_thenAnswersValid(){
 		willReturn(true).given(gateway)
-				.existsByIdAndTenantId(any(CustomerIdDomain.class), any(TenantIdDomain.class));
+				.existsByIdAndTenantId(any(CustomerId.class), any(TenantId.class));
 
 		useCase.execute(new CustomerVerificationRequest(CUSTOMER_ID, TENANT_ID), presenter);
 
 		then(gateway).should()
-				.existsByIdAndTenantId(eq(new CustomerIdDomain(CUSTOMER_ID)), eq(new TenantIdDomain(TENANT_ID)));
+				.existsByIdAndTenantId(eq(new CustomerId(CUSTOMER_ID)), eq(new TenantId(TENANT_ID)));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
@@ -70,7 +70,7 @@ class DefaultCustomerVerificationUseCaseTest{
 	@Test
 	void givenCustomerOfAnotherTenant_thenAnswersInvalid(){
 		willReturn(false).given(gateway)
-				.existsByIdAndTenantId(any(CustomerIdDomain.class), any(TenantIdDomain.class));
+				.existsByIdAndTenantId(any(CustomerId.class), any(TenantId.class));
 
 		useCase.execute(new CustomerVerificationRequest(CUSTOMER_ID, "01TENANTBOUGENVILLE000000"), presenter);
 

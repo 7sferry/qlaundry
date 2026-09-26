@@ -37,7 +37,7 @@ public class ForgottenPasswordEmailStreamListener implements StreamListener<Stri
 			ForgottenPasswordEmailMessage message = jsonManager.readValue(value.get(PAYLOAD_FIELD), ForgottenPasswordEmailMessage.class);
 			ForgottenPasswordEmailRequest request = new ForgottenPasswordEmailRequest(value.get(TRIGGER_ID_FIELD),
 					value.get(RECIPIENT_FIELD), message.username(), message.otp());
-			ForgottenPasswordEmailStreamPresenter presenter = new ForgottenPasswordEmailStreamPresenter();
+			StreamForgottenPasswordEmailPresenter presenter = new StreamForgottenPasswordEmailPresenter();
 			forgottenPasswordEmailUseCase.execute(request, presenter);
 			stringRedisTemplate.opsForStream().acknowledge(streamKey, group, record.getId());
 			log.info("Forgotten password email sent for trigger {} and record {}",

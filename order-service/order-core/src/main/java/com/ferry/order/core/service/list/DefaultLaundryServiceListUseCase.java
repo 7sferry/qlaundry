@@ -1,9 +1,9 @@
 package com.ferry.order.core.service.list;
 
-import com.ferry.order.domain.service.LaundryServiceDomain;
+import com.ferry.order.domain.service.LaundryService;
 import com.ferry.order.domain.service.LaundryServiceFilter;
 import com.ferry.order.domain.service.ServiceListSortBy;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import com.ferry.utils.pagination.*;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ public class DefaultLaundryServiceListUseCase implements LaundryServiceListUseCa
 	public void execute(LaundryServiceListRequest request, OrderAuthPrincipal principal,
 	                    LaundryServiceListPresenter presenter){
 		request.validate();
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
+		TenantId tenantId = new TenantId(principal.tenantId());
 		ServiceListSortBy sortBy = request.sortBy() == null ? ServiceListSortBy.ID : request.sortBy();
 		SortDirection sortDir = request.sortDir() == null ? SortDirection.DESC : request.sortDir();
 		PageDirection direction = PageDirection.direction(request.before());
@@ -40,8 +40,8 @@ public class DefaultLaundryServiceListUseCase implements LaundryServiceListUseCa
 				.cursor(cursor)
 				.pageSize(pageSize)
 				.build();
-		CursorFetch<LaundryServiceDomain> fetch = gateway.findByFilter(filter);
-		CursorPage<LaundryServiceDomain> page = CursorPaginator.paginate(fetch, direction, cursor != null,
+		CursorFetch<LaundryService> fetch = gateway.findByFilter(filter);
+		CursorPage<LaundryService> page = CursorPaginator.paginate(fetch, direction, cursor != null,
 				row -> List.of(sortBy == ServiceListSortBy.NAME ? row.name() : row.id(), row.id()));
 		presenter.present(new LaundryServiceListResponse(page.items(), page.nextCursor(), page.prevCursor()));
 	}

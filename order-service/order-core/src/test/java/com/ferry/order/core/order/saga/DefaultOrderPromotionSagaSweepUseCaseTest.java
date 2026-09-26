@@ -4,10 +4,10 @@ import com.ferry.order.core.order.constant.OrderPromotionSagaConstant;
 import com.ferry.order.core.order.create.OrderPromotionGateway;
 import com.ferry.order.core.order.create.PromotionReleaseHttpRequest;
 import com.ferry.order.domain.common.exception.PromotionUnavailableException;
-import com.ferry.order.domain.order.OrderNumberDomain;
-import com.ferry.order.domain.order.OrderPromotionSagaDomain;
+import com.ferry.order.domain.order.OrderNumber;
+import com.ferry.order.domain.order.OrderPromotionSaga;
 import com.ferry.order.domain.order.OrderPromotionSagaStatus;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -50,7 +50,7 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 	@Captor
 	ArgumentCaptor<Instant> cutoffCaptor;
 	@Captor
-	ArgumentCaptor<OrderPromotionSagaDomain> sagaCaptor;
+	ArgumentCaptor<OrderPromotionSaga> sagaCaptor;
 	@Captor
 	ArgumentCaptor<PromotionReleaseHttpRequest> releaseCaptor;
 
@@ -79,7 +79,7 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 	@Test
 	void givenPendingSagaWhoseOrderCommitted_thenMarksItCommittedWithoutReleasing(){
 		Instant createdAt = Instant.now().minusSeconds(900L);
-		OrderPromotionSagaDomain saga = OrderPromotionSagaDomain.builder()
+		OrderPromotionSaga saga = OrderPromotionSaga.builder()
 				.id("01SAGAKOMITTERLAMBAT00000")
 				.tenantId(TENANT_ID)
 				.referenceId(ORDER_NUMBER)
@@ -95,18 +95,18 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 		willReturn(List.of(saga)).given(gateway)
 				.findPendingUntouchedSince(any(Instant.class), anyInt());
 		willReturn(true).given(gateway)
-				.orderExists(any(OrderNumberDomain.class), any(TenantIdDomain.class));
+				.orderExists(any(OrderNumber.class), any(TenantId.class));
 		DefaultOrderPromotionSagaSweepUseCase useCase = new DefaultOrderPromotionSagaSweepUseCase(gateway,
 				promotionGateway, GRACE_PERIOD, SWEEP_BATCH_SIZE);
 
 		OrderPromotionSagaSweepResponse response = useCase.execute();
 
 		then(gateway).should()
-				.orderExists(eq(new OrderNumberDomain(ORDER_NUMBER)), eq(new TenantIdDomain(TENANT_ID)));
+				.orderExists(eq(new OrderNumber(ORDER_NUMBER)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
 				.markCommitted(sagaCaptor.capture());
 		then(gateway).should(never())
-				.markReleased(any(OrderPromotionSagaDomain.class));
+				.markReleased(any(OrderPromotionSaga.class));
 		then(promotionGateway).shouldHaveNoInteractions();
 
 		thenSoftly(softly -> {
@@ -121,7 +121,7 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 	@Test
 	void givenPendingSagaWithoutAnOrder_thenReleasesTheClaimAndMarksItReleased(){
 		Instant createdAt = Instant.now().minusSeconds(1800L);
-		OrderPromotionSagaDomain saga = OrderPromotionSagaDomain.builder()
+		OrderPromotionSaga saga = OrderPromotionSaga.builder()
 				.id("01SAGAYATIMPIATUDIPROSES")
 				.tenantId(TENANT_ID)
 				.referenceId(ORDER_NUMBER)
@@ -137,7 +137,7 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 		willReturn(List.of(saga)).given(gateway)
 				.findPendingUntouchedSince(any(Instant.class), anyInt());
 		willReturn(false).given(gateway)
-				.orderExists(any(OrderNumberDomain.class), any(TenantIdDomain.class));
+				.orderExists(any(OrderNumber.class), any(TenantId.class));
 		DefaultOrderPromotionSagaSweepUseCase useCase = new DefaultOrderPromotionSagaSweepUseCase(gateway,
 				promotionGateway, GRACE_PERIOD, SWEEP_BATCH_SIZE);
 
@@ -148,9 +148,9 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 		then(gateway).should()
 				.markReleased(sagaCaptor.capture());
 		then(gateway).should(never())
-				.markCommitted(any(OrderPromotionSagaDomain.class));
+				.markCommitted(any(OrderPromotionSaga.class));
 		then(gateway).should(never())
-				.recordFailure(any(OrderPromotionSagaDomain.class));
+				.recordFailure(any(OrderPromotionSaga.class));
 
 		PromotionReleaseHttpRequest release = releaseCaptor.getValue();
 
@@ -167,7 +167,7 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 	@Test
 	void givenReleaseFails_thenRecordsTheFailureAndLeavesTheSagaPending(){
 		Instant createdAt = Instant.now().minusSeconds(3600L);
-		OrderPromotionSagaDomain saga = OrderPromotionSagaDomain.builder()
+		OrderPromotionSaga saga = OrderPromotionSaga.builder()
 				.id("01SAGAPROMOSERVICEMATI00")
 				.tenantId(TENANT_ID)
 				.referenceId(ORDER_NUMBER)
@@ -184,7 +184,7 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 		willReturn(List.of(saga)).given(gateway)
 				.findPendingUntouchedSince(any(Instant.class), anyInt());
 		willReturn(false).given(gateway)
-				.orderExists(any(OrderNumberDomain.class), any(TenantIdDomain.class));
+				.orderExists(any(OrderNumber.class), any(TenantId.class));
 		willThrow(new PromotionUnavailableException("Promotion service is unavailable. Please try again.",
 				new RuntimeException("connect timed out"))).given(promotionGateway)
 				.release(any(PromotionReleaseHttpRequest.class));
@@ -196,9 +196,9 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 		then(gateway).should()
 				.recordFailure(sagaCaptor.capture());
 		then(gateway).should(never())
-				.markReleased(any(OrderPromotionSagaDomain.class));
+				.markReleased(any(OrderPromotionSaga.class));
 
-		OrderPromotionSagaDomain failed = sagaCaptor.getValue();
+		OrderPromotionSaga failed = sagaCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(failed.status()).isEqualTo(OrderPromotionSagaStatus.PENDING);
@@ -214,7 +214,7 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 	@Test
 	void givenOneReleaseFailsInABatch_thenTheRestOfTheBatchIsStillSwept(){
 		Instant createdAt = Instant.now().minusSeconds(1200L);
-		OrderPromotionSagaDomain first = OrderPromotionSagaDomain.builder()
+		OrderPromotionSaga first = OrderPromotionSaga.builder()
 				.id("01SAGAPERTAMAGAGAL000000")
 				.tenantId(TENANT_ID)
 				.referenceId("INV-20260913-3PX9WQ0M1TB4E")
@@ -227,7 +227,7 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 				.updatedAt(createdAt)
 				.updatedBy(STAFF_ID)
 				.build();
-		OrderPromotionSagaDomain second = OrderPromotionSagaDomain.builder()
+		OrderPromotionSaga second = OrderPromotionSaga.builder()
 				.id("01SAGAKEDUABERHASIL00000")
 				.tenantId("01TENANTKAMBOJA000000000")
 				.referenceId("INV-20260913-6RJ2NF8V0HC5K")
@@ -243,7 +243,7 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 		willReturn(List.of(first, second)).given(gateway)
 				.findPendingUntouchedSince(any(Instant.class), anyInt());
 		willReturn(false).given(gateway)
-				.orderExists(any(OrderNumberDomain.class), any(TenantIdDomain.class));
+				.orderExists(any(OrderNumber.class), any(TenantId.class));
 		willThrow(new IllegalStateException("promotion-service returned 502")).willDoNothing().given(promotionGateway)
 				.release(any(PromotionReleaseHttpRequest.class));
 		DefaultOrderPromotionSagaSweepUseCase useCase = new DefaultOrderPromotionSagaSweepUseCase(gateway,
@@ -254,7 +254,7 @@ class DefaultOrderPromotionSagaSweepUseCaseTest{
 		then(promotionGateway).should(times(2))
 				.release(releaseCaptor.capture());
 		then(gateway).should()
-				.recordFailure(any(OrderPromotionSagaDomain.class));
+				.recordFailure(any(OrderPromotionSaga.class));
 		then(gateway).should()
 				.markReleased(sagaCaptor.capture());
 

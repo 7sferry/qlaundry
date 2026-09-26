@@ -1,32 +1,32 @@
 package com.ferry.order.core.order.create;
 
 import com.ferry.order.core.analytics.AnalyticsEventConfig;
-import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.AnalyticsAggregate;
-import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEvent;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
-import com.ferry.order.domain.common.MoneyDomain;
-import com.ferry.order.domain.common.NoteDomain;
+import com.ferry.order.domain.common.Money;
+import com.ferry.order.domain.common.Note;
 import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.common.exception.PromotionUnavailableException;
 import com.ferry.order.domain.order.ClothingType;
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderItemDomain;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderItem;
 import com.ferry.order.domain.order.OrderPriority;
-import com.ferry.order.domain.order.OrderPromotionDomain;
-import com.ferry.order.domain.order.OrderPromotionSagaDomain;
+import com.ferry.order.domain.order.OrderPromotion;
+import com.ferry.order.domain.order.OrderPromotionSaga;
 import com.ferry.order.domain.order.OrderPromotionSagaStatus;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.order.PaymentMethod;
 import com.ferry.order.domain.order.PaymentStatus;
-import com.ferry.order.domain.service.LaundryServiceDomain;
-import com.ferry.order.domain.service.LaundryServiceIdDomain;
+import com.ferry.order.domain.service.LaundryService;
+import com.ferry.order.domain.service.LaundryServiceId;
 import com.ferry.order.domain.service.ServiceCategory;
 import com.ferry.order.domain.service.ServiceUnit;
 import com.ferry.order.domain.staff.StaffRole;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -72,27 +72,27 @@ class DefaultOrderCreateUseCaseTest{
 	@Mock
 	OrderPromotionGateway promotionGateway;
 	@Mock
-	AnalyticsEventPublisher publisher;
+	OrderAnalyticsPublisher publisher;
 	@InjectMocks
 	DefaultOrderCreateUseCase useCase;
 	@Mock
 	OrderCreatePresenter presenter;
 	@Captor
-	ArgumentCaptor<OrderDomain> orderCaptor;
+	ArgumentCaptor<Order> orderCaptor;
 	@Captor
 	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
 	@Captor
-	ArgumentCaptor<OrderItemDomain> itemCaptor;
+	ArgumentCaptor<OrderItem> itemCaptor;
 	@Captor
 	ArgumentCaptor<OrderCreateResponse> responseCaptor;
 	@Captor
 	ArgumentCaptor<PromotionRedemptionHttpRequest> redemptionCaptor;
 	@Captor
-	ArgumentCaptor<OrderPromotionDomain> orderPromotionCaptor;
+	ArgumentCaptor<OrderPromotion> orderPromotionCaptor;
 	@Captor
 	ArgumentCaptor<PromotionReleaseHttpRequest> releaseCaptor;
 	@Captor
-	ArgumentCaptor<OrderPromotionSagaDomain> sagaCaptor;
+	ArgumentCaptor<OrderPromotionSaga> sagaCaptor;
 
 	@Test
 	void givenBlankCustomerName_thenThrowsConstraintViolationException(){
@@ -122,14 +122,14 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 2, null, null, null, null, null, null, null, null, null);
 		willReturn(Optional.empty()).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(NotFoundException.class)
 				.hasMessage("Service Not Found"));
 
 		then(gateway).should(never())
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 		then(presenter).should(never())
 				.present(any(OrderCreateResponse.class));
 	}
@@ -142,12 +142,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Setrika Satuan")
-				.description(new NoteDomain("iron only"))
-				.pricePerUnit(MoneyDomain.of(5000L))
+				.description(new Note("iron only"))
+				.pricePerUnit(Money.of(5000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
@@ -163,14 +163,14 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 4, null, null, null, null, null, null, null, null, null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidOrderStateException.class)
 				.hasMessage("Service is no longer available"));
 
 		then(gateway).should(never())
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 	}
 
 	@Test
@@ -181,12 +181,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Kiloan Reguler")
-				.description(new NoteDomain("regular wash"))
-				.pricePerUnit(MoneyDomain.of(7000L))
+				.description(new Note("regular wash"))
+				.pricePerUnit(Money.of(7000L))
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(48)
@@ -202,14 +202,14 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 1, null, null, null, null, null, null, null, null, null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidOrderStateException.class)
 				.hasMessage("Weight in kg is required for a per-kg service"));
 
 		then(gateway).should(never())
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 	}
 
 	@Test
@@ -220,12 +220,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Kiloan Reguler")
-				.description(new NoteDomain("regular wash"))
-				.pricePerUnit(MoneyDomain.of(7000L))
+				.description(new Note("regular wash"))
+				.pricePerUnit(Money.of(7000L))
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(48)
@@ -241,14 +241,14 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 1, 2.0d, new BigDecimal("99000"), null, null, null, null, null, null, null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidOrderStateException.class)
 				.hasMessage("Discount must not exceed the subtotal"));
 
 		then(gateway).should(never())
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 	}
 
 	@Test
@@ -283,12 +283,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Sepatu")
-				.description(new NoteDomain("shoe wash"))
-				.pricePerUnit(MoneyDomain.of(25000L))
+				.description(new Note("shoe wash"))
+				.pricePerUnit(Money.of(25000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(36)
@@ -304,12 +304,12 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest("   ", CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 2, null, null, null, null, null, null, null, null, null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Order>getArgument(0).toBuilder().id(ORDER_ID).build())
 				.given(gateway)
-				.save(any(OrderDomain.class));
-		willAnswer(invocation -> invocation.<OrderItemDomain>getArgument(0)).given(gateway)
-				.save(any(OrderItemDomain.class));
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<OrderItem>getArgument(0)).given(gateway)
+				.save(any(OrderItem.class));
 
 		useCase.execute(request, principal, presenter);
 
@@ -328,12 +328,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Kiloan Reguler")
-				.description(new NoteDomain("regular wash"))
-				.pricePerUnit(MoneyDomain.of(7000L))
+				.description(new Note("regular wash"))
+				.pricePerUnit(Money.of(7000L))
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(48)
@@ -350,23 +350,23 @@ class DefaultOrderCreateUseCaseTest{
 				"intan@laundry.test", "Jl. Melati No. 9", SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 1, 3.5d, new BigDecimal("750"),
 				OrderPriority.EXPRESS, PaymentMethod.CASH, null, null, "please separate the whites", null, null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Order>getArgument(0).toBuilder().id(ORDER_ID).build())
 				.given(gateway)
-				.save(any(OrderDomain.class));
-		willAnswer(invocation -> invocation.<OrderItemDomain>getArgument(0)).given(gateway)
-				.save(any(OrderItemDomain.class));
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<OrderItem>getArgument(0)).given(gateway)
+				.save(any(OrderItem.class));
 
 		useCase.execute(request, principal, presenter);
 
 		then(gateway).should()
-				.findServiceById(eq(new LaundryServiceIdDomain(SERVICE_ID)), eq(new TenantIdDomain(TENANT_ID)));
+				.findServiceById(eq(new LaundryServiceId(SERVICE_ID)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
 				.save(orderCaptor.capture());
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
-		OrderDomain saved = orderCaptor.getValue();
+		Order saved = orderCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(saved.subtotal().value()).isEqualByComparingTo(new BigDecimal("36750.00"));
@@ -394,12 +394,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Kiloan Reguler")
-				.description(new NoteDomain("regular wash"))
-				.pricePerUnit(MoneyDomain.of(7000L))
+				.description(new Note("regular wash"))
+				.pricePerUnit(Money.of(7000L))
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(48)
@@ -415,7 +415,7 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 1, 2.0d, null, null, null, null, null, null, List.of("HEMAT10"), null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 		willReturn(List.of(new PromotionRedemptionHttpResponse(false, "Promotion has reached its usage limit", null,
 				null, null))).given(promotionGateway)
 				.redeem(any(PromotionRedemptionHttpRequest.class));
@@ -425,15 +425,15 @@ class DefaultOrderCreateUseCaseTest{
 				.hasMessage("Promotion has reached its usage limit"));
 
 		then(gateway).should(never())
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 		then(promotionGateway).should(never())
 				.release(any(PromotionReleaseHttpRequest.class));
 		then(promotionGateway).should()
-				.openSaga(any(OrderPromotionSagaDomain.class));
+				.openSaga(any(OrderPromotionSaga.class));
 		then(promotionGateway).should()
 				.markSagaReleased(sagaCaptor.capture());
 		then(promotionGateway).should(never())
-				.markSagaCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
+				.markSagaCommittedAfterCommit(any(OrderPromotionSaga.class));
 
 		thenSoftly(softly -> {
 			softly.then(sagaCaptor.getValue().status()).isEqualTo(OrderPromotionSagaStatus.RELEASED);
@@ -450,12 +450,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Kiloan Reguler")
-				.description(new NoteDomain("regular wash"))
-				.pricePerUnit(MoneyDomain.of(7000L))
+				.description(new Note("regular wash"))
+				.pricePerUnit(Money.of(7000L))
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(48)
@@ -472,17 +472,17 @@ class DefaultOrderCreateUseCaseTest{
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 1, 2.0d, new BigDecimal("1000"), null, null, null, null, null,
 				List.of(" hemat10 "), null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID, "HEMAT10",
 				new BigDecimal("2000")))).given(promotionGateway)
 				.redeem(any(PromotionRedemptionHttpRequest.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+		willAnswer(invocation -> invocation.<Order>getArgument(0).toBuilder().id(ORDER_ID).build())
 				.given(gateway)
-				.save(any(OrderDomain.class));
-		willAnswer(invocation -> invocation.<OrderItemDomain>getArgument(0)).given(gateway)
-				.save(any(OrderItemDomain.class));
-		willAnswer(invocation -> invocation.<OrderPromotionDomain>getArgument(0)).given(gateway)
-				.save(any(OrderPromotionDomain.class));
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<OrderItem>getArgument(0)).given(gateway)
+				.save(any(OrderItem.class));
+		willAnswer(invocation -> invocation.<OrderPromotion>getArgument(0)).given(gateway)
+				.save(any(OrderPromotion.class));
 
 		useCase.execute(request, principal, presenter);
 
@@ -495,9 +495,9 @@ class DefaultOrderCreateUseCaseTest{
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
-		OrderDomain saved = orderCaptor.getValue();
+		Order saved = orderCaptor.getValue();
 		PromotionRedemptionHttpRequest redemption = redemptionCaptor.getValue();
-		OrderPromotionDomain orderPromotion = orderPromotionCaptor.getValue();
+		OrderPromotion orderPromotion = orderPromotionCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(redemption.codes()).containsExactly("hemat10");
@@ -524,12 +524,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Setrika Satuan")
-				.description(new NoteDomain("iron only"))
-				.pricePerUnit(MoneyDomain.of(5000L))
+				.description(new Note("iron only"))
+				.pricePerUnit(Money.of(5000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
@@ -546,17 +546,17 @@ class DefaultOrderCreateUseCaseTest{
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 2, null, new BigDecimal("8000"), null, null, null, null, null,
 				List.of("HEMAT10"), null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID, "HEMAT10",
 				new BigDecimal("5000")))).given(promotionGateway)
 				.redeem(any(PromotionRedemptionHttpRequest.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+		willAnswer(invocation -> invocation.<Order>getArgument(0).toBuilder().id(ORDER_ID).build())
 				.given(gateway)
-				.save(any(OrderDomain.class));
-		willAnswer(invocation -> invocation.<OrderItemDomain>getArgument(0)).given(gateway)
-				.save(any(OrderItemDomain.class));
-		willAnswer(invocation -> invocation.<OrderPromotionDomain>getArgument(0)).given(gateway)
-				.save(any(OrderPromotionDomain.class));
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<OrderItem>getArgument(0)).given(gateway)
+				.save(any(OrderItem.class));
+		willAnswer(invocation -> invocation.<OrderPromotion>getArgument(0)).given(gateway)
+				.save(any(OrderPromotion.class));
 
 		useCase.execute(request, principal, presenter);
 
@@ -565,7 +565,7 @@ class DefaultOrderCreateUseCaseTest{
 		then(gateway).should()
 				.save(orderPromotionCaptor.capture());
 
-		OrderDomain saved = orderCaptor.getValue();
+		Order saved = orderCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(saved.subtotal().value()).isEqualByComparingTo(new BigDecimal("10000.00"));
@@ -584,12 +584,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Setrika Satuan")
-				.description(new NoteDomain("iron only"))
-				.pricePerUnit(MoneyDomain.of(5000L))
+				.description(new Note("iron only"))
+				.pricePerUnit(Money.of(5000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
@@ -605,12 +605,12 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, "0813 5550 1234", null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 3, null, null, null, null, null, null, null, null, null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Order>getArgument(0).toBuilder().id(ORDER_ID).build())
 				.given(gateway)
-				.save(any(OrderDomain.class));
-		willAnswer(invocation -> invocation.<OrderItemDomain>getArgument(0)).given(gateway)
-				.save(any(OrderItemDomain.class));
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<OrderItem>getArgument(0)).given(gateway)
+				.save(any(OrderItem.class));
 
 		useCase.execute(request, principal, presenter);
 
@@ -628,12 +628,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Dry Clean Jas")
-				.description(new NoteDomain("dry clean"))
-				.pricePerUnit(MoneyDomain.of(35000L))
+				.description(new Note("dry clean"))
+				.pricePerUnit(Money.of(35000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.DRY_CLEAN)
 				.estimatedHours(72)
@@ -654,12 +654,12 @@ class DefaultOrderCreateUseCaseTest{
 		willReturn(true).given(customerGateway)
 				.belongsToTenant(any(CustomerVerificationHttpRequest.class));
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Order>getArgument(0).toBuilder().id(ORDER_ID).build())
 				.given(gateway)
-				.save(any(OrderDomain.class));
-		willAnswer(invocation -> invocation.<OrderItemDomain>getArgument(0)).given(gateway)
-				.save(any(OrderItemDomain.class));
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<OrderItem>getArgument(0)).given(gateway)
+				.save(any(OrderItem.class));
 
 		useCase.execute(request, principal, presenter);
 
@@ -668,7 +668,7 @@ class DefaultOrderCreateUseCaseTest{
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
-		List<OrderItemDomain> items = itemCaptor.getAllValues();
+		List<OrderItem> items = itemCaptor.getAllValues();
 		OrderCreateResponse response = responseCaptor.getValue();
 
 		thenSoftly(softly -> {
@@ -690,12 +690,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Sepatu")
-				.description(new NoteDomain("shoe wash"))
-				.pricePerUnit(MoneyDomain.of(50000L))
+				.description(new Note("shoe wash"))
+				.pricePerUnit(Money.of(50000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(36)
@@ -711,7 +711,7 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 2, null, null, null, null, null, null, null, List.of("AAA", "BBB"), null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 		willReturn(List.of(
 				new PromotionRedemptionHttpResponse(true, "Promotion applied", "01PROMOAAA0000000000000000", "AAA",
 						new BigDecimal("10000")),
@@ -719,13 +719,13 @@ class DefaultOrderCreateUseCaseTest{
 						new BigDecimal("8000"))))
 				.given(promotionGateway)
 				.redeem(any(PromotionRedemptionHttpRequest.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+		willAnswer(invocation -> invocation.<Order>getArgument(0).toBuilder().id(ORDER_ID).build())
 				.given(gateway)
-				.save(any(OrderDomain.class));
-		willAnswer(invocation -> invocation.<OrderItemDomain>getArgument(0)).given(gateway)
-				.save(any(OrderItemDomain.class));
-		willAnswer(invocation -> invocation.<OrderPromotionDomain>getArgument(0)).given(gateway)
-				.save(any(OrderPromotionDomain.class));
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<OrderItem>getArgument(0)).given(gateway)
+				.save(any(OrderItem.class));
+		willAnswer(invocation -> invocation.<OrderPromotion>getArgument(0)).given(gateway)
+				.save(any(OrderPromotion.class));
 
 		useCase.execute(request, principal, presenter);
 
@@ -754,12 +754,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Sepatu")
-				.description(new NoteDomain("shoe wash"))
-				.pricePerUnit(MoneyDomain.of(50000L))
+				.description(new Note("shoe wash"))
+				.pricePerUnit(Money.of(50000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(36)
@@ -776,7 +776,7 @@ class DefaultOrderCreateUseCaseTest{
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 1, null, null, null, null, null, null, null,
 				List.of("HEMAT10", " HEMAT10 "), null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidOrderStateException.class)
@@ -784,7 +784,7 @@ class DefaultOrderCreateUseCaseTest{
 
 		then(promotionGateway).shouldHaveNoInteractions();
 		then(gateway).should(never())
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 	}
 
 	@Test
@@ -795,12 +795,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Kiloan Reguler")
-				.description(new NoteDomain("regular wash"))
-				.pricePerUnit(MoneyDomain.of(7000L))
+				.description(new Note("regular wash"))
+				.pricePerUnit(Money.of(7000L))
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(48)
@@ -816,12 +816,12 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 1, 2.0d, null, null, null, null, null, null, List.of("HEMAT10"), null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID, "HEMAT10",
 				new BigDecimal("2000")))).given(promotionGateway)
 				.redeem(any(PromotionRedemptionHttpRequest.class));
 		willThrow(new IllegalStateException("connection reset")).given(gateway)
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(IllegalStateException.class)
@@ -837,10 +837,10 @@ class DefaultOrderCreateUseCaseTest{
 		then(promotionGateway).should()
 				.markSagaReleased(sagaCaptor.capture());
 		then(promotionGateway).should(never())
-				.markSagaCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
+				.markSagaCommittedAfterCommit(any(OrderPromotionSaga.class));
 
 		PromotionReleaseHttpRequest release = releaseCaptor.getValue();
-		OrderPromotionSagaDomain released = sagaCaptor.getValue();
+		OrderPromotionSaga released = sagaCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(release.tenantId()).isEqualTo(TENANT_ID);
@@ -859,12 +859,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Karpet")
-				.description(new NoteDomain("carpet wash"))
-				.pricePerUnit(MoneyDomain.of(15000L))
+				.description(new Note("carpet wash"))
+				.pricePerUnit(Money.of(15000L))
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.SPECIALTY)
 				.estimatedHours(72)
@@ -880,17 +880,17 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 1, 4.0d, null, null, null, null, null, null, List.of("KARPETBERSIH"), null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID,
 				"KARPETBERSIH", new BigDecimal("6000")))).given(promotionGateway)
 				.redeem(any(PromotionRedemptionHttpRequest.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+		willAnswer(invocation -> invocation.<Order>getArgument(0).toBuilder().id(ORDER_ID).build())
 				.given(gateway)
-				.save(any(OrderDomain.class));
-		willAnswer(invocation -> invocation.<OrderItemDomain>getArgument(0)).given(gateway)
-				.save(any(OrderItemDomain.class));
-		willAnswer(invocation -> invocation.<OrderPromotionDomain>getArgument(0)).given(gateway)
-				.save(any(OrderPromotionDomain.class));
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<OrderItem>getArgument(0)).given(gateway)
+				.save(any(OrderItem.class));
+		willAnswer(invocation -> invocation.<OrderPromotion>getArgument(0)).given(gateway)
+				.save(any(OrderPromotion.class));
 		willThrow(new IllegalStateException("analytics_events insert failed")).given(publisher)
 				.save(any(AnalyticsEventConfig.class));
 
@@ -903,9 +903,9 @@ class DefaultOrderCreateUseCaseTest{
 		then(promotionGateway).should()
 				.markSagaReleased(sagaCaptor.capture());
 		then(promotionGateway).should(never())
-				.markSagaCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
+				.markSagaCommittedAfterCommit(any(OrderPromotionSaga.class));
 		then(publisher).should(never())
-				.publish(any(AnalyticsEventDomain.class));
+				.publish(any(AnalyticsEvent.class));
 		then(presenter).should(never())
 				.present(any(OrderCreateResponse.class));
 
@@ -923,12 +923,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Sepatu")
-				.description(new NoteDomain("shoe wash"))
-				.pricePerUnit(MoneyDomain.of(50000L))
+				.description(new Note("shoe wash"))
+				.pricePerUnit(Money.of(50000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(36)
@@ -944,7 +944,7 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 1, null, null, null, null, null, null, null, List.of("AAA", "BBB"), true);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 		willReturn(List.of(
 				new PromotionRedemptionHttpResponse(true, "Promotion applied", "01PROMOAAA0000000000000000", "AAA",
 						new BigDecimal("10000")),
@@ -952,13 +952,13 @@ class DefaultOrderCreateUseCaseTest{
 						new BigDecimal("8000"))))
 				.given(promotionGateway)
 				.redeem(any(PromotionRedemptionHttpRequest.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+		willAnswer(invocation -> invocation.<Order>getArgument(0).toBuilder().id(ORDER_ID).build())
 				.given(gateway)
-				.save(any(OrderDomain.class));
-		willAnswer(invocation -> invocation.<OrderPromotionDomain>getArgument(0)).given(gateway)
-				.save(any(OrderPromotionDomain.class));
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<OrderPromotion>getArgument(0)).given(gateway)
+				.save(any(OrderPromotion.class));
 		willThrow(new IllegalStateException("status transition failed")).given(gateway)
-				.markPickedUp(any(OrderDomain.class), any(OrderAuthPrincipal.class));
+				.markPickedUp(any(Order.class), any(OrderAuthPrincipal.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(IllegalStateException.class)
@@ -980,12 +980,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Setrika Satuan")
-				.description(new NoteDomain("iron only"))
-				.pricePerUnit(MoneyDomain.of(5000L))
+				.description(new Note("iron only"))
+				.pricePerUnit(Money.of(5000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
@@ -1001,12 +1001,12 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 2, null, null, null, null, null, null, null, List.of("HEMAT10"), null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID, "HEMAT10",
 				new BigDecimal("1500")))).given(promotionGateway)
 				.redeem(any(PromotionRedemptionHttpRequest.class));
 		willThrow(new IllegalStateException("insert failed")).given(gateway)
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 		willThrow(new IllegalStateException("promotion service down")).given(promotionGateway)
 				.release(any(PromotionReleaseHttpRequest.class));
 
@@ -1018,7 +1018,7 @@ class DefaultOrderCreateUseCaseTest{
 		then(promotionGateway).should()
 				.release(any(PromotionReleaseHttpRequest.class));
 		then(promotionGateway).should(never())
-				.markSagaReleased(any(OrderPromotionSagaDomain.class));
+				.markSagaReleased(any(OrderPromotionSaga.class));
 		then(presenter).should(never())
 				.present(any(OrderCreateResponse.class));
 	}
@@ -1031,12 +1031,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Setrika Satuan")
-				.description(new NoteDomain("iron only"))
-				.pricePerUnit(MoneyDomain.of(5000L))
+				.description(new Note("iron only"))
+				.pricePerUnit(Money.of(5000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
@@ -1052,9 +1052,9 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 2, null, null, null, null, null, null, null, null, null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 		willThrow(new IllegalStateException("insert failed")).given(gateway)
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(IllegalStateException.class)
@@ -1072,12 +1072,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Kiloan Reguler")
-				.description(new NoteDomain("regular wash"))
-				.pricePerUnit(MoneyDomain.of(7000L))
+				.description(new Note("regular wash"))
+				.pricePerUnit(Money.of(7000L))
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(48)
@@ -1093,17 +1093,17 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 1, 3.0d, null, null, null, null, null, null, List.of("GAJIAN25"), null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID, "GAJIAN25",
 				new BigDecimal("2500")))).given(promotionGateway)
 				.redeem(any(PromotionRedemptionHttpRequest.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+		willAnswer(invocation -> invocation.<Order>getArgument(0).toBuilder().id(ORDER_ID).build())
 				.given(gateway)
-				.save(any(OrderDomain.class));
-		willAnswer(invocation -> invocation.<OrderItemDomain>getArgument(0)).given(gateway)
-				.save(any(OrderItemDomain.class));
-		willAnswer(invocation -> invocation.<OrderPromotionDomain>getArgument(0)).given(gateway)
-				.save(any(OrderPromotionDomain.class));
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<OrderItem>getArgument(0)).given(gateway)
+				.save(any(OrderItem.class));
+		willAnswer(invocation -> invocation.<OrderPromotion>getArgument(0)).given(gateway)
+				.save(any(OrderPromotion.class));
 
 		useCase.execute(request, principal, presenter);
 
@@ -1113,18 +1113,18 @@ class DefaultOrderCreateUseCaseTest{
 		then(promotionGateway).should(inOrder)
 				.redeem(redemptionCaptor.capture());
 		then(gateway).should(inOrder)
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 		then(promotionGateway).should(inOrder)
 				.markSagaCommittedAfterCommit(sagaCaptor.capture());
 		then(presenter).should(inOrder)
 				.present(any(OrderCreateResponse.class));
 		then(promotionGateway).should(never())
-				.markSagaReleased(any(OrderPromotionSagaDomain.class));
+				.markSagaReleased(any(OrderPromotionSaga.class));
 		then(promotionGateway).should(never())
 				.release(any(PromotionReleaseHttpRequest.class));
 
-		OrderPromotionSagaDomain opened = sagaCaptor.getAllValues().getFirst();
-		OrderPromotionSagaDomain committed = sagaCaptor.getAllValues().getLast();
+		OrderPromotionSaga opened = sagaCaptor.getAllValues().getFirst();
+		OrderPromotionSaga committed = sagaCaptor.getAllValues().getLast();
 
 		thenSoftly(softly -> {
 			softly.then(opened.status()).isEqualTo(OrderPromotionSagaStatus.PENDING);
@@ -1145,12 +1145,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Setrika Satuan")
-				.description(new NoteDomain("iron only"))
-				.pricePerUnit(MoneyDomain.of(5000L))
+				.description(new Note("iron only"))
+				.pricePerUnit(Money.of(5000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
@@ -1166,7 +1166,7 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 4, null, null, null, null, null, null, null, List.of("MERDEKA17"), null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 		willThrow(new PromotionUnavailableException("Promotion service is unavailable. Please try again.",
 				new RuntimeException("read timed out"))).given(promotionGateway)
 				.redeem(any(PromotionRedemptionHttpRequest.class));
@@ -1178,13 +1178,13 @@ class DefaultOrderCreateUseCaseTest{
 		then(promotionGateway).should()
 				.openSaga(sagaCaptor.capture());
 		then(promotionGateway).should(never())
-				.markSagaReleased(any(OrderPromotionSagaDomain.class));
+				.markSagaReleased(any(OrderPromotionSaga.class));
 		then(promotionGateway).should(never())
-				.markSagaCommittedAfterCommit(any(OrderPromotionSagaDomain.class));
+				.markSagaCommittedAfterCommit(any(OrderPromotionSaga.class));
 		then(promotionGateway).should(never())
 				.release(any(PromotionReleaseHttpRequest.class));
 		then(gateway).should(never())
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 
 		thenSoftly(softly -> softly.then(sagaCaptor.getValue().status()).isEqualTo(OrderPromotionSagaStatus.PENDING));
 	}
@@ -1197,12 +1197,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Karpet")
-				.description(new NoteDomain("carpet deep clean"))
-				.pricePerUnit(MoneyDomain.of(30000L))
+				.description(new Note("carpet deep clean"))
+				.pricePerUnit(Money.of(30000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.SPECIALTY)
 				.estimatedHours(96)
@@ -1218,14 +1218,14 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 1, null, null, null, null, null, null, null, List.of("RAMADHAN"), null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
 		willReturn(List.of(new PromotionRedemptionHttpResponse(true, "Promotion applied", PROMOTION_ID, "RAMADHAN",
 				new BigDecimal("3000")))).given(promotionGateway)
 				.redeem(any(PromotionRedemptionHttpRequest.class));
 		willThrow(new IllegalStateException("orders insert failed")).given(gateway)
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 		willThrow(new IllegalStateException("saga row locked")).given(promotionGateway)
-				.markSagaReleased(any(OrderPromotionSagaDomain.class));
+				.markSagaReleased(any(OrderPromotionSaga.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(IllegalStateException.class)
@@ -1246,12 +1246,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Sepatu")
-				.description(new NoteDomain("shoe wash"))
-				.pricePerUnit(MoneyDomain.of(25000L))
+				.description(new Note("shoe wash"))
+				.pricePerUnit(Money.of(25000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(36)
@@ -1267,18 +1267,18 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 2, null, null, null, null, null, null, null, null, true);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Order>getArgument(0).toBuilder().id(ORDER_ID).build())
 				.given(gateway)
-				.save(any(OrderDomain.class));
-		willAnswer(invocation -> invocation.<OrderItemDomain>getArgument(0)).given(gateway)
-				.save(any(OrderItemDomain.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder()
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<OrderItem>getArgument(0)).given(gateway)
+				.save(any(OrderItem.class));
+		willAnswer(invocation -> invocation.<Order>getArgument(0).toBuilder()
 						.status(OrderStatus.PICKED_UP)
 						.build())
 				.given(gateway)
-				.markPickedUp(any(OrderDomain.class), any(OrderAuthPrincipal.class));
-		willReturn(AnalyticsEventDomain.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_CREATED,
+				.markPickedUp(any(Order.class), any(OrderAuthPrincipal.class));
+		willReturn(AnalyticsEvent.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_CREATED,
 				TENANT_ID, ORDER_ID, 0, "{}", STAFF_ID)).given(publisher)
 				.save(any(AnalyticsEventConfig.class));
 
@@ -1289,7 +1289,7 @@ class DefaultOrderCreateUseCaseTest{
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(AnalyticsEventDomain.class));
+				.publish(any(AnalyticsEvent.class));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
@@ -1312,12 +1312,12 @@ class DefaultOrderCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Sepatu")
-				.description(new NoteDomain("shoe wash"))
-				.pricePerUnit(MoneyDomain.of(25000L))
+				.description(new Note("shoe wash"))
+				.pricePerUnit(Money.of(25000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(36)
@@ -1333,17 +1333,17 @@ class DefaultOrderCreateUseCaseTest{
 		OrderCreateRequest request = new OrderCreateRequest(null, CUSTOMER_NAME, CUSTOMER_PHONE, null, null,
 				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.SHIRT, "Kemeja", 1)), 2, null, null, null, null, null, null, null, null, null);
 		willReturn(Optional.of(service)).given(gateway)
-				.findServiceById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0).toBuilder().id(ORDER_ID).build())
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Order>getArgument(0).toBuilder().id(ORDER_ID).build())
 				.given(gateway)
-				.save(any(OrderDomain.class));
-		willAnswer(invocation -> invocation.<OrderItemDomain>getArgument(0)).given(gateway)
-				.save(any(OrderItemDomain.class));
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<OrderItem>getArgument(0)).given(gateway)
+				.save(any(OrderItem.class));
 
 		useCase.execute(request, principal, presenter);
 
 		then(gateway).should(never())
-				.markPickedUp(any(OrderDomain.class), any(OrderAuthPrincipal.class));
+				.markPickedUp(any(Order.class), any(OrderAuthPrincipal.class));
 	}
 
 }

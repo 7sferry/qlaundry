@@ -1,9 +1,9 @@
 package com.ferry.user.core.customer.registration;
 
-import com.ferry.user.domain.customer.CustomerAddressDomain;
-import com.ferry.user.domain.customer.CustomerDomain;
-import com.ferry.user.domain.customer.CustomerEmailDomain;
-import com.ferry.user.domain.customer.CustomerPhoneDomain;
+import com.ferry.user.domain.customer.CustomerAddress;
+import com.ferry.user.domain.customer.Customer;
+import com.ferry.user.domain.customer.CustomerEmail;
+import com.ferry.user.domain.customer.CustomerPhone;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -11,11 +11,11 @@ import com.ferry.user.domain.customer.CustomerPhoneDomain;
  ************************/
 
 public interface CustomerRegistrationGateway{
-	CustomerDomain save(CustomerDomain register);
+	Customer save(Customer register);
 
-	CustomerEmailDomain save(CustomerEmailDomain register);
+	CustomerEmail save(CustomerEmail register);
 
-	CustomerPhoneDomain save(CustomerPhoneDomain register);
+	CustomerPhone save(CustomerPhone register);
 
-	CustomerAddressDomain save(CustomerAddressDomain register);
+	CustomerAddress save(CustomerAddress register);
 }

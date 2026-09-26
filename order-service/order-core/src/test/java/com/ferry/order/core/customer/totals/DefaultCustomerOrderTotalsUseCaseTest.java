@@ -2,7 +2,7 @@ package com.ferry.order.core.customer.totals;
 
 import com.ferry.order.domain.customer.totals.CustomerOrderTotalsProjection;
 import com.ferry.order.domain.staff.StaffRole;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -75,12 +75,12 @@ class DefaultCustomerOrderTotalsUseCaseTest{
 		List<CustomerOrderTotalsProjection> totals = List.of(
 				new CustomerOrderTotalsProjection(CUSTOMER_ID, 4L, BigDecimal.valueOf(128000L), lastOrderAt));
 		willReturn(totals).given(gateway)
-				.findTotals(anySet(), any(TenantIdDomain.class));
+				.findTotals(anySet(), any(TenantId.class));
 
 		useCase.execute(new CustomerOrderTotalsRequest(Set.of(CUSTOMER_ID)), principal, presenter);
 
 		then(gateway).should()
-				.findTotals(eq(Set.of(CUSTOMER_ID)), eq(new TenantIdDomain(TENANT_ID)));
+				.findTotals(eq(Set.of(CUSTOMER_ID)), eq(new TenantId(TENANT_ID)));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 

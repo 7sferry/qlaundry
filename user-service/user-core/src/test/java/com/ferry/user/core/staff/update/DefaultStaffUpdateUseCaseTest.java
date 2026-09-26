@@ -50,9 +50,9 @@ class DefaultStaffUpdateUseCaseTest{
 	@Mock
 	StaffUpdatePresenter presenter;
 	@Captor
-	ArgumentCaptor<StaffDomain> staffCaptor;
+	ArgumentCaptor<Staff> staffCaptor;
 	@Captor
-	ArgumentCaptor<StaffPasswordDomain> passwordCaptor;
+	ArgumentCaptor<StaffPassword> passwordCaptor;
 
 	@Test
 	void givenBlankFullName_thenThrowsConstraintViolationException(){
@@ -77,7 +77,7 @@ class DefaultStaffUpdateUseCaseTest{
 				.isInstanceOf(NotFoundException.class)
 				.hasMessage("Staff Not Found"));
 
-		then(gateway).should(never()).save(any(StaffDomain.class));
+		then(gateway).should(never()).save(any(Staff.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -86,17 +86,17 @@ class DefaultStaffUpdateUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				List.of(), null, null);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
-				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
-		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(StaffDomain.class));
+		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(Staff.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidUserStateException.class)
 				.hasMessage("Emails cannot be empty"));
 
-		then(gateway).should().save(any(StaffDomain.class));
+		then(gateway).should().save(any(Staff.class));
 		then(gateway).should(never()).deleteEmails(any(), any());
 		then(gateway).should(never()).deletePhones(any(), any());
 		then(presenter).shouldHaveNoInteractions();
@@ -107,11 +107,11 @@ class DefaultStaffUpdateUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				null, null, null);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
-				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
-		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(StaffDomain.class));
+		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(Staff.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidUserStateException.class)
@@ -125,8 +125,8 @@ class DefaultStaffUpdateUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, "NewSecret2026",
 				List.of(EMAIL), null, null);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
-				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
 
@@ -135,7 +135,7 @@ class DefaultStaffUpdateUseCaseTest{
 				.hasMessage("Current password is incorrect"));
 
 		then(gateway).should(never()).findCurrentPassword(anyString());
-		then(gateway).should(never()).save(any(StaffDomain.class));
+		then(gateway).should(never()).save(any(Staff.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -144,8 +144,8 @@ class DefaultStaffUpdateUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "wrong-current-password",
 				"NewSecret2026", List.of(EMAIL), null, null);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
-				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
 		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
@@ -156,7 +156,7 @@ class DefaultStaffUpdateUseCaseTest{
 				.isInstanceOf(InvalidPasswordException.class)
 				.hasMessage("Current password is incorrect"));
 
-		then(gateway).should(never()).save(any(StaffDomain.class));
+		then(gateway).should(never()).save(any(Staff.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -165,8 +165,8 @@ class DefaultStaffUpdateUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
 				"current-password", List.of(EMAIL), null, null);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
-				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
 		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
@@ -177,8 +177,8 @@ class DefaultStaffUpdateUseCaseTest{
 				.isInstanceOf(InvalidPasswordException.class)
 				.hasMessage("New password must be different from your current password"));
 
-		then(gateway).should(never()).save(any(StaffDomain.class));
-		then(gateway).should(never()).save(any(StaffPasswordDomain.class));
+		then(gateway).should(never()).save(any(Staff.class));
+		then(gateway).should(never()).save(any(StaffPassword.class));
 		then(gateway).should(never()).findRecentPasswords(anyString(), any(Instant.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
@@ -188,8 +188,8 @@ class DefaultStaffUpdateUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
 				"OldSecret2025", List.of(EMAIL), null, null);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
-				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
 		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
@@ -203,8 +203,8 @@ class DefaultStaffUpdateUseCaseTest{
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidPasswordException.class));
 
-		then(gateway).should(never()).save(any(StaffDomain.class));
-		then(gateway).should(never()).save(any(StaffPasswordDomain.class));
+		then(gateway).should(never()).save(any(Staff.class));
+		then(gateway).should(never()).save(any(StaffPassword.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -213,11 +213,11 @@ class DefaultStaffUpdateUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				List.of(EMAIL), null, null);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
-				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
-		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(StaffDomain.class));
+		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(Staff.class));
 		willReturn(List.of()).given(gateway).findEmailsByStaffId(USER_ID);
 		willReturn(List.of()).given(gateway).findPhonesByStaffId(USER_ID);
 		willReturn(List.of()).given(gateway).findAddressesByStaffId(USER_ID);
@@ -226,8 +226,8 @@ class DefaultStaffUpdateUseCaseTest{
 
 		then(passwordTool).shouldHaveNoInteractions();
 		then(gateway).should(never()).findCurrentPassword(anyString());
-		then(gateway).should(never()).save(any(StaffPasswordDomain.class));
-		then(gateway).should().save(any(StaffDomain.class));
+		then(gateway).should(never()).save(any(StaffPassword.class));
+		then(gateway).should().save(any(Staff.class));
 	}
 
 	@Test
@@ -235,17 +235,17 @@ class DefaultStaffUpdateUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
 				"NewSecret2026", List.of(EMAIL), null, null);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
-				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
 		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
 				.given(gateway).findCurrentPassword(USER_ID);
 		willReturn(true).given(passwordTool).matches("current-password", OLD_HASHED_PASSWORD);
 		willReturn(List.of()).given(gateway).findRecentPasswords(eq(USER_ID), any(Instant.class));
-		willReturn(new HashedPasswordDomain("new-hash-xyz789")).given(passwordTool).hash(any());
-		willDoNothing().given(gateway).save(any(StaffPasswordDomain.class));
-		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(StaffDomain.class));
+		willReturn(new HashedPassword("new-hash-xyz789")).given(passwordTool).hash(any());
+		willDoNothing().given(gateway).save(any(StaffPassword.class));
+		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(Staff.class));
 		willReturn(List.of()).given(gateway).findEmailsByStaffId(USER_ID);
 		willReturn(List.of()).given(gateway).findPhonesByStaffId(USER_ID);
 		willReturn(List.of()).given(gateway).findAddressesByStaffId(USER_ID);
@@ -264,14 +264,14 @@ class DefaultStaffUpdateUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				List.of(EMAIL), List.of(PHONE), List.of(ADDRESS_LINE));
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
-				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
-		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(StaffDomain.class));
-		List<StaffEmailDomain> emails = List.of(StaffEmailDomain.register(USER_ID, new EmailDomain(EMAIL), USER_ID));
-		List<StaffPhoneDomain> phones = List.of(StaffPhoneDomain.register(USER_ID, new PhoneDomain(PHONE), USER_ID));
-		List<StaffAddressDomain> addresses = List.of(StaffAddressDomain.register(USER_ID, new AddressLineDomain(ADDRESS_LINE), USER_ID));
+		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(Staff.class));
+		List<StaffEmail> emails = List.of(StaffEmail.register(USER_ID, new Email(EMAIL), USER_ID));
+		List<StaffPhone> phones = List.of(StaffPhone.register(USER_ID, new Phone(PHONE), USER_ID));
+		List<StaffAddress> addresses = List.of(StaffAddress.register(USER_ID, new AddressLine(ADDRESS_LINE), USER_ID));
 		willReturn(emails).given(gateway).findEmailsByStaffId(USER_ID);
 		willReturn(phones).given(gateway).findPhonesByStaffId(USER_ID);
 		willReturn(addresses).given(gateway).findAddressesByStaffId(USER_ID);
@@ -282,9 +282,9 @@ class DefaultStaffUpdateUseCaseTest{
 		then(gateway).should().deleteEmails(USER_ID, USER_ID);
 		then(gateway).should().deletePhones(USER_ID, USER_ID);
 		then(gateway).should().deleteAddresses(USER_ID, USER_ID);
-		then(gateway).should(times(1)).save(any(StaffEmailDomain.class));
-		then(gateway).should(times(1)).save(any(StaffPhoneDomain.class));
-		then(gateway).should(times(1)).save(any(StaffAddressDomain.class));
+		then(gateway).should(times(1)).save(any(StaffEmail.class));
+		then(gateway).should(times(1)).save(any(StaffPhone.class));
+		then(gateway).should(times(1)).save(any(StaffAddress.class));
 		then(presenter).should().present(new StaffUpdateResponse(staffCaptor.getValue(), emails, phones, addresses));
 	}
 
@@ -293,11 +293,11 @@ class DefaultStaffUpdateUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, null, null,
 				List.of(EMAIL), List.of(), List.of());
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME),
-				new FullNameDomain("Old Name"), new DescriptionDomain("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
-		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(StaffDomain.class));
+		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(Staff.class));
 		willReturn(List.of()).given(gateway).findEmailsByStaffId(USER_ID);
 		willReturn(List.of()).given(gateway).findPhonesByStaffId(USER_ID);
 		willReturn(List.of()).given(gateway).findAddressesByStaffId(USER_ID);
@@ -306,8 +306,8 @@ class DefaultStaffUpdateUseCaseTest{
 
 		then(gateway).should().deletePhones(USER_ID, USER_ID);
 		then(gateway).should().deleteAddresses(USER_ID, USER_ID);
-		then(gateway).should(never()).save(any(StaffPhoneDomain.class));
-		then(gateway).should(never()).save(any(StaffAddressDomain.class));
+		then(gateway).should(never()).save(any(StaffPhone.class));
+		then(gateway).should(never()).save(any(StaffAddress.class));
 	}
 
 }

@@ -1,26 +1,26 @@
 package com.ferry.order.core.order.ready;
 
 import com.ferry.order.core.analytics.AnalyticsEventConfig;
-import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.AnalyticsAggregate;
-import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEvent;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
-import com.ferry.order.domain.common.FullNameDomain;
-import com.ferry.order.domain.common.MoneyDomain;
-import com.ferry.order.domain.common.PhoneDomain;
+import com.ferry.order.domain.common.FullName;
+import com.ferry.order.domain.common.Money;
+import com.ferry.order.domain.common.Phone;
 import com.ferry.order.domain.common.exception.InvalidOrderStatusException;
 import com.ferry.order.domain.common.exception.NotFoundException;
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderIdDomain;
-import com.ferry.order.domain.order.OrderNumberDomain;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderId;
+import com.ferry.order.domain.order.OrderNumber;
 import com.ferry.order.domain.order.OrderPriority;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.order.PaymentMethod;
 import com.ferry.order.domain.order.PaymentStatus;
 import com.ferry.order.domain.service.ServiceUnit;
 import com.ferry.order.domain.staff.StaffRole;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -58,7 +58,7 @@ class DefaultOrderReadyUseCaseTest{
 	@Mock
 	OrderReadyGateway gateway;
 	@Mock
-	AnalyticsEventPublisher publisher;
+	OrderAnalyticsPublisher publisher;
 	@Captor
 	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
 	@InjectMocks
@@ -66,7 +66,7 @@ class DefaultOrderReadyUseCaseTest{
 	@Mock
 	OrderReadyPresenter presenter;
 	@Captor
-	ArgumentCaptor<OrderDomain> orderCaptor;
+	ArgumentCaptor<Order> orderCaptor;
 	@Captor
 	ArgumentCaptor<OrderReadyResponse> responseCaptor;
 
@@ -93,7 +93,7 @@ class DefaultOrderReadyUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		willReturn(Optional.empty()).given(gateway)
-				.findById(any(OrderIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(OrderId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new OrderReadyRequest(ORDER_ID, null), principal, presenter))
@@ -101,7 +101,7 @@ class DefaultOrderReadyUseCaseTest{
 				.hasMessage("Order Not Found"));
 
 		then(gateway).should(never())
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 		then(presenter).should(never())
 				.present(any(OrderReadyResponse.class));
 	}
@@ -114,20 +114,20 @@ class DefaultOrderReadyUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		OrderDomain order = OrderDomain.builder()
+		Order order = Order.builder()
 				.id(ORDER_ID)
-				.orderNumber(new OrderNumberDomain(ORDER_NUMBER))
+				.orderNumber(new OrderNumber(ORDER_NUMBER))
 				.tenantId(TENANT_ID)
-				.customerName(new FullNameDomain("nurul aini"))
-				.customerPhone(new PhoneDomain("+6281388990011"))
+				.customerName(new FullName("nurul aini"))
+				.customerPhone(new Phone("+6281388990011"))
 				.serviceId("01SERVICEBANTAL000000000")
 				.serviceName("Cuci Bantal")
 				.unit(ServiceUnit.ITEM)
-				.unitPrice(MoneyDomain.of(10000L))
+				.unitPrice(Money.of(10000L))
 				.quantity(2)
-				.subtotal(MoneyDomain.of(20000L))
-				.discount(MoneyDomain.ZERO)
-				.totalPrice(MoneyDomain.of(20000L))
+				.subtotal(Money.of(20000L))
+				.discount(Money.ZERO)
+				.totalPrice(Money.of(20000L))
 				.priority(OrderPriority.NORMAL)
 				.paymentMethod(PaymentMethod.CASH)
 				.paymentStatus(PaymentStatus.UNPAID)
@@ -141,7 +141,7 @@ class DefaultOrderReadyUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(OrderId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new OrderReadyRequest(ORDER_ID, "not washed yet"), principal, presenter))
@@ -149,7 +149,7 @@ class DefaultOrderReadyUseCaseTest{
 				.hasMessage("Cannot change order status from PICKED_UP to READY"));
 
 		then(gateway).should(never())
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 	}
 
 	@Test
@@ -160,20 +160,20 @@ class DefaultOrderReadyUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		OrderDomain order = OrderDomain.builder()
+		Order order = Order.builder()
 				.id(ORDER_ID)
-				.orderNumber(new OrderNumberDomain(ORDER_NUMBER))
+				.orderNumber(new OrderNumber(ORDER_NUMBER))
 				.tenantId(TENANT_ID)
-				.customerName(new FullNameDomain("nurul aini"))
-				.customerPhone(new PhoneDomain("+6281388990011"))
+				.customerName(new FullName("nurul aini"))
+				.customerPhone(new Phone("+6281388990011"))
 				.serviceId("01SERVICEBANTAL000000000")
 				.serviceName("Cuci Bantal")
 				.unit(ServiceUnit.ITEM)
-				.unitPrice(MoneyDomain.of(10000L))
+				.unitPrice(Money.of(10000L))
 				.quantity(2)
-				.subtotal(MoneyDomain.of(20000L))
-				.discount(MoneyDomain.ZERO)
-				.totalPrice(MoneyDomain.of(20000L))
+				.subtotal(Money.of(20000L))
+				.discount(Money.ZERO)
+				.totalPrice(Money.of(20000L))
 				.priority(OrderPriority.NORMAL)
 				.paymentMethod(PaymentMethod.CASH)
 				.paymentStatus(PaymentStatus.UNPAID)
@@ -187,10 +187,10 @@ class DefaultOrderReadyUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0)).given(gateway)
-				.save(any(OrderDomain.class));
-		willReturn(AnalyticsEventDomain.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_STATUS_CHANGED,
+				.findById(any(OrderId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
+				.save(any(Order.class));
+		willReturn(AnalyticsEvent.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_STATUS_CHANGED,
 				TENANT_ID, ORDER_ID, 1, "{}", STAFF_ID)).given(publisher)
 				.save(any(AnalyticsEventConfig.class));
 
@@ -199,15 +199,15 @@ class DefaultOrderReadyUseCaseTest{
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(AnalyticsEventDomain.class));
+				.publish(any(AnalyticsEvent.class));
 		then(gateway).should()
-				.findById(eq(new OrderIdDomain(ORDER_ID)), eq(new TenantIdDomain(TENANT_ID)));
+				.findById(eq(new OrderId(ORDER_ID)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
 				.save(orderCaptor.capture());
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
-		OrderDomain saved = orderCaptor.getValue();
+		Order saved = orderCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(analyticsCaptor.getValue().type()).isEqualTo(AnalyticsEventType.ORDER_STATUS_CHANGED);

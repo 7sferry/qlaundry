@@ -1,6 +1,6 @@
 package com.ferry.user.core.tenant.expiration;
 
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 
 import java.time.Instant;
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.List;
  ************************/
 
 public interface TenantExpirationGateway{
-	List<TenantIdDomain> findPendingOlderThan(Instant cutoff);
+	List<TenantId> findPendingOlderThan(Instant cutoff);
 
-	void expire(TenantIdDomain tenantId);
+	void expire(TenantId tenantId);
 }

@@ -4,7 +4,7 @@ import com.ferry.order.core.order.schedule.OrderScheduleResponse.Item;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.order.schedule.OrderScheduleProjection;
 import com.ferry.order.domain.order.schedule.OrderScheduleType;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
@@ -34,7 +34,7 @@ public class DefaultOrderScheduleUseCase implements OrderScheduleUseCase{
 	@Override
 	public void execute(OrderScheduleRequest request, OrderAuthPrincipal principal, OrderSchedulePresenter presenter){
 		request.validate();
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
+		TenantId tenantId = new TenantId(principal.tenantId());
 		ZoneId zone = resolveZone(request.zone());
 		LocalDate date = resolveDate(request.date(), zone);
 		Instant from = date.atStartOfDay(zone).toInstant();

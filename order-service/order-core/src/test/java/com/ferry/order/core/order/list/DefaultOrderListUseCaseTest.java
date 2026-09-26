@@ -1,8 +1,8 @@
 package com.ferry.order.core.order.list;
 
-import com.ferry.order.domain.common.FullNameDomain;
-import com.ferry.order.domain.common.MoneyDomain;
-import com.ferry.order.domain.common.PhoneDomain;
+import com.ferry.order.domain.common.FullName;
+import com.ferry.order.domain.common.Money;
+import com.ferry.order.domain.common.Phone;
 import com.ferry.order.domain.order.*;
 import com.ferry.order.domain.service.ServiceUnit;
 import com.ferry.order.domain.staff.StaffRole;
@@ -59,7 +59,7 @@ class DefaultOrderListUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		OrderListRequest request = new OrderListRequest(null, null, null, null, null, null, null, null, null, null, null);
-		willReturn(new CursorFetch<OrderDomain>(List.of(), false)).given(gateway)
+		willReturn(new CursorFetch<Order>(List.of(), false)).given(gateway)
 				.findByFilter(any(OrderFilter.class));
 
 		useCase.execute(request, principal, presenter);
@@ -97,7 +97,7 @@ class DefaultOrderListUseCaseTest{
 		long to = 1755129600000L;
 		OrderListRequest request = new OrderListRequest(OrderStatus.IN_PROGRESS, OrderPriority.EXPRESS,
 				"01CUSTOMERRATNA00000000000", "inv-20260813", from, to, null, null, null, null, null);
-		willReturn(new CursorFetch<OrderDomain>(List.of(), false)).given(gateway)
+		willReturn(new CursorFetch<Order>(List.of(), false)).given(gateway)
 				.findByFilter(any(OrderFilter.class));
 
 		useCase.execute(request, principal, presenter);
@@ -127,7 +127,7 @@ class DefaultOrderListUseCaseTest{
 		String cursorToken = CursorCodec.encode("budi santoso", ORDER_ID_1);
 		OrderListRequest request = new OrderListRequest(null, null, null, null, null, null, null,
 				cursorToken, OrderListSortBy.CUSTOMER_NAME, SortDirection.ASC, null);
-		willReturn(new CursorFetch<OrderDomain>(List.of(), false)).given(gateway)
+		willReturn(new CursorFetch<Order>(List.of(), false)).given(gateway)
 				.findByFilter(any(OrderFilter.class));
 
 		useCase.execute(request, principal, presenter);
@@ -153,20 +153,20 @@ class DefaultOrderListUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		OrderDomain order1 = OrderDomain.builder()
+		Order order1 = Order.builder()
 				.id(ORDER_ID_1)
-				.orderNumber(new OrderNumberDomain("INV-20260813-AB12CD"))
+				.orderNumber(new OrderNumber("INV-20260813-AB12CD"))
 				.tenantId(TENANT_ID)
-				.customerName(new FullNameDomain("rina kusuma"))
-				.customerPhone(new PhoneDomain("+6281255512345"))
+				.customerName(new FullName("rina kusuma"))
+				.customerPhone(new Phone("+6281255512345"))
 				.serviceId("01SERVICEKAOS0000000000000")
 				.serviceName("Cuci Kaos")
 				.unit(ServiceUnit.ITEM)
-				.unitPrice(MoneyDomain.of(6000L))
+				.unitPrice(Money.of(6000L))
 				.quantity(3)
-				.subtotal(MoneyDomain.of(18000L))
-				.discount(MoneyDomain.ZERO)
-				.totalPrice(MoneyDomain.of(18000L))
+				.subtotal(Money.of(18000L))
+				.discount(Money.ZERO)
+				.totalPrice(Money.of(18000L))
 				.priority(OrderPriority.NORMAL)
 				.paymentMethod(PaymentMethod.CASH)
 				.paymentStatus(PaymentStatus.UNPAID)
@@ -179,20 +179,20 @@ class DefaultOrderListUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		OrderDomain order2 = OrderDomain.builder()
+		Order order2 = Order.builder()
 				.id(ORDER_ID_2)
-				.orderNumber(new OrderNumberDomain("INV-20260813-EF34GH"))
+				.orderNumber(new OrderNumber("INV-20260813-EF34GH"))
 				.tenantId(TENANT_ID)
-				.customerName(new FullNameDomain("dedi kurniawan"))
-				.customerPhone(new PhoneDomain("+6281266623456"))
+				.customerName(new FullName("dedi kurniawan"))
+				.customerPhone(new Phone("+6281266623456"))
 				.serviceId("01SERVICEJAKET00000000000")
 				.serviceName("Dry Clean Jaket")
 				.unit(ServiceUnit.ITEM)
-				.unitPrice(MoneyDomain.of(30000L))
+				.unitPrice(Money.of(30000L))
 				.quantity(1)
-				.subtotal(MoneyDomain.of(30000L))
-				.discount(MoneyDomain.ZERO)
-				.totalPrice(MoneyDomain.of(30000L))
+				.subtotal(Money.of(30000L))
+				.discount(Money.ZERO)
+				.totalPrice(Money.of(30000L))
 				.priority(OrderPriority.EXPRESS)
 				.paymentMethod(PaymentMethod.CASH)
 				.paymentStatus(PaymentStatus.UNPAID)
@@ -205,7 +205,7 @@ class DefaultOrderListUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		OrderItemDomain item1a = OrderItemDomain.builder()
+		OrderItem item1a = OrderItem.builder()
 				.id("01ITEMSATU0000000000000000")
 				.orderId(ORDER_ID_1)
 				.type(ClothingType.SHIRT)
@@ -217,7 +217,7 @@ class DefaultOrderListUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		OrderItemDomain item2a = OrderItemDomain.builder()
+		OrderItem item2a = OrderItem.builder()
 				.id("01ITEMDUA0000000000000000A")
 				.orderId(ORDER_ID_2)
 				.type(ClothingType.JACKET)
@@ -229,12 +229,12 @@ class DefaultOrderListUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		OrderPromotionDomain promotion2a = OrderPromotionDomain.builder()
+		OrderPromotion promotion2a = OrderPromotion.builder()
 				.id("01ORDERPROMOKEDUA000000000")
 				.orderId(ORDER_ID_2)
 				.promotionId("01PROMOAKHIRPEKAN00000000")
 				.code("AKHIRPEKAN")
-				.discountAmount(MoneyDomain.of(4000L))
+				.discountAmount(Money.of(4000L))
 				.deleted(false)
 				.createdAt(now)
 				.createdBy(STAFF_ID)
@@ -275,7 +275,7 @@ class DefaultOrderListUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		OrderListRequest request = new OrderListRequest(null, null, null, null, null, null, null, null, null, null, null);
-		willReturn(new CursorFetch<OrderDomain>(List.of(), false)).given(gateway)
+		willReturn(new CursorFetch<Order>(List.of(), false)).given(gateway)
 				.findByFilter(any(OrderFilter.class));
 
 		useCase.execute(request, principal, presenter);

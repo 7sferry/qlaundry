@@ -1,15 +1,15 @@
 package com.ferry.order.core.order.payment;
 
 import com.ferry.order.core.analytics.AnalyticsEventConfig;
-import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
 import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.common.exception.UnsupportedPaymentMethodException;
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderIdDomain;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderId;
 import com.ferry.order.domain.order.PaymentMethod;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
@@ -21,17 +21,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DefaultOrderPaymentUseCase implements OrderPaymentUseCase{
 	private final OrderPaymentGateway gateway;
-	private final AnalyticsEventPublisher publisher;
+	private final OrderAnalyticsPublisher publisher;
 
 	@Override
 	public void execute(OrderPaymentRequest request, OrderAuthPrincipal principal, OrderPaymentPresenter presenter){
 		request.validate();
-		OrderIdDomain orderId = new OrderIdDomain(request.orderId());
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
+		OrderId orderId = new OrderId(request.orderId());
+		TenantId tenantId = new TenantId(principal.tenantId());
 		validatePaymentMethod(request.paymentMethod());
-		OrderDomain order = gateway.findById(orderId, tenantId)
+		Order order = gateway.findById(orderId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Order Not Found"));
-		OrderDomain saved = gateway.save(order.markPaid(principal.userId()));
+		Order saved = gateway.save(order.markPaid(principal.userId()));
 		publisher.publish(publisher.save(AnalyticsEventConfig.order(AnalyticsEventType.ORDER_PAID,
 				OrderAnalyticsMessage.from(saved, gateway.findItemsByOrderId(orderId),
 						gateway.findPromotionsByOrderId(orderId)), principal.userId())));

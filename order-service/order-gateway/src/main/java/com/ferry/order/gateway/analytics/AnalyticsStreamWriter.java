@@ -1,6 +1,6 @@
 package com.ferry.order.gateway.analytics;
 
-import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEvent;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -8,9 +8,9 @@ import com.ferry.order.domain.analytics.AnalyticsEventDomain;
  ************************/
 
 public interface AnalyticsStreamWriter{
-	void append(AnalyticsEventDomain event);
+	void append(AnalyticsEvent event);
 
-	void markPublished(AnalyticsEventDomain event, String sweeperActor);
+	void markPublished(AnalyticsEvent event, String sweeperActor);
 
-	String streamOf(AnalyticsEventDomain event);
+	String streamOf(AnalyticsEvent event);
 }

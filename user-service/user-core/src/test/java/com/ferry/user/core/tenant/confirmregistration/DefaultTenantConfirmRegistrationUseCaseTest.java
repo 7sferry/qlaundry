@@ -2,11 +2,11 @@ package com.ferry.user.core.tenant.confirmregistration;
 
 import com.ferry.user.core.tenant.constant.TenantConfirmationConstant;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.common.DescriptionDomain;
-import com.ferry.user.domain.common.FullNameDomain;
-import com.ferry.user.domain.common.UsernameDomain;
-import com.ferry.user.domain.tenant.TenantDomain;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.common.Description;
+import com.ferry.user.domain.common.FullName;
+import com.ferry.user.domain.common.Username;
+import com.ferry.user.domain.tenant.Tenant;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.tenant.confirmregistration.FailedToConfirmTenantException;
 import jakarta.validation.ConstraintViolationException;
@@ -48,7 +48,7 @@ class DefaultTenantConfirmRegistrationUseCaseTest{
 	@Mock
 	TenantConfirmRegistrationPresenter presenter;
 	@Captor
-	ArgumentCaptor<TenantDomain> tenantCaptor;
+	ArgumentCaptor<Tenant> tenantCaptor;
 
 	@Test
 	void givenBlankTenantId_thenThrowsFailedToConfirmTenantExceptionWithConstraintViolationCause(){
@@ -93,7 +93,7 @@ class DefaultTenantConfirmRegistrationUseCaseTest{
 				.get(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + TENANT_ID);
 		willReturn(true).given(cacheManager)
 				.delete(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + TENANT_ID);
-		willReturn(Optional.empty()).given(gateway).findById(new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.empty()).given(gateway).findById(new TenantId(TENANT_ID));
 
 		FailedToConfirmTenantException thrown = catchThrowableOfType(FailedToConfirmTenantException.class,
 				() -> useCase.execute(new TenantConfirmRegistrationRequest(TENANT_ID, TOKEN), presenter));
@@ -109,9 +109,9 @@ class DefaultTenantConfirmRegistrationUseCaseTest{
 				.get(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + TENANT_ID);
 		willReturn(true).given(cacheManager)
 				.delete(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + TENANT_ID);
-		TenantDomain tenant = new TenantDomain(TENANT_ID, new UsernameDomain(TENANT_USERNAME), new FullNameDomain("Bandung Fresh Laundry"),
-				new DescriptionDomain("desc"), TenantStatus.ACTIVE, null, false, Instant.now(), null, Instant.now(), null);
-		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantIdDomain(TENANT_ID));
+		Tenant tenant = new Tenant(TENANT_ID, new Username(TENANT_USERNAME), new FullName("Bandung Fresh Laundry"),
+				new Description("desc"), TenantStatus.ACTIVE, null, false, Instant.now(), null, Instant.now(), null);
+		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantId(TENANT_ID));
 
 		FailedToConfirmTenantException thrown = catchThrowableOfType(FailedToConfirmTenantException.class,
 				() -> useCase.execute(new TenantConfirmRegistrationRequest(TENANT_ID, TOKEN), presenter));
@@ -127,10 +127,10 @@ class DefaultTenantConfirmRegistrationUseCaseTest{
 				.get(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + TENANT_ID);
 		willReturn(true).given(cacheManager)
 				.delete(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + TENANT_ID);
-		TenantDomain tenant = new TenantDomain(TENANT_ID, new UsernameDomain(TENANT_USERNAME), new FullNameDomain("Bandung Fresh Laundry"),
-				new DescriptionDomain("desc"), TenantStatus.PENDING, null, false, Instant.now(), null, Instant.now(), null);
-		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantIdDomain(TENANT_ID));
-		willReturn(tenant.activate()).given(gateway).save(any(TenantDomain.class));
+		Tenant tenant = new Tenant(TENANT_ID, new Username(TENANT_USERNAME), new FullName("Bandung Fresh Laundry"),
+				new Description("desc"), TenantStatus.PENDING, null, false, Instant.now(), null, Instant.now(), null);
+		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantId(TENANT_ID));
+		willReturn(tenant.activate()).given(gateway).save(any(Tenant.class));
 
 		useCase.execute(new TenantConfirmRegistrationRequest(TENANT_ID, TOKEN), presenter);
 

@@ -1,7 +1,7 @@
 package com.ferry.promotion.core.promotion.redemption;
 
-import com.ferry.promotion.domain.promotion.PromotionDomain;
-import com.ferry.promotion.domain.promotion.PromotionRedemptionDomain;
+import com.ferry.promotion.domain.promotion.Promotion;
+import com.ferry.promotion.domain.promotion.PromotionRedemption;
 import com.ferry.promotion.domain.promotion.PromotionRejection;
 
 /************************
@@ -11,8 +11,8 @@ import com.ferry.promotion.domain.promotion.PromotionRejection;
 
 public record PromotionRedemptionResponse(
 	String code,
-	PromotionDomain promotion,
-	PromotionRedemptionDomain redemption,
+	Promotion promotion,
+	PromotionRedemption redemption,
 	PromotionRejection rejection){
 
 	public boolean isApplied(){

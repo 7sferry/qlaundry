@@ -1,6 +1,6 @@
 package com.ferry.order.webservice.config;
 
-import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.backfill.*;
 import com.ferry.order.core.analytics.sweep.AnalyticsOutboxSweepGateway;
 import com.ferry.order.core.analytics.sweep.AnalyticsOutboxSweepUseCase;
@@ -11,7 +11,7 @@ import com.ferry.order.core.customer.totals.DefaultCustomerOrderTotalsUseCase;
 import com.ferry.order.core.invoice.link.DefaultInvoiceLinkUseCase;
 import com.ferry.order.core.invoice.link.InvoiceLinkUseCase;
 import com.ferry.order.core.invoice.pdf.DefaultInvoicePdfUseCase;
-import com.ferry.order.core.invoice.pdf.InvoiceHtmlComposer;
+import com.ferry.order.core.invoice.pdf.InvoiceComposer;
 import com.ferry.order.core.invoice.pdf.InvoicePdfGateway;
 import com.ferry.order.core.invoice.pdf.InvoicePdfUseCase;
 import com.ferry.order.core.order.cancel.DefaultOrderCancelUseCase;
@@ -67,17 +67,17 @@ import com.ferry.order.gateway.analytics.*;
 import com.ferry.order.gateway.analytics.repository.AnalyticsAggregateJpaRepository;
 import com.ferry.order.gateway.analytics.repository.AnalyticsEventJpaRepository;
 import com.ferry.order.gateway.analytics.repository.AnalyticsEventStatusJpaRepository;
-import com.ferry.order.gateway.customer.CustomerOrderTotalsJpaGateway;
-import com.ferry.order.gateway.customer.OrderCustomerHttpGateway;
-import com.ferry.order.gateway.invoice.DefaultInvoiceHtmlComposer;
-import com.ferry.order.gateway.invoice.InvoiceJpaPdfGateway;
+import com.ferry.order.gateway.customer.JpaCustomerOrderTotalsGateway;
+import com.ferry.order.gateway.customer.HttpOrderCustomerGateway;
+import com.ferry.order.gateway.invoice.HtmlInvoiceComposer;
+import com.ferry.order.gateway.invoice.JpaInvoicePdfGateway;
 import com.ferry.order.gateway.order.*;
 import com.ferry.order.gateway.order.repository.*;
-import com.ferry.order.gateway.promotion.OrderPromotionHttpGateway;
-import com.ferry.order.gateway.service.LaundryServiceCreateJpaGateway;
-import com.ferry.order.gateway.service.LaundryServiceDeleteJpaGateway;
-import com.ferry.order.gateway.service.LaundryServiceListJpaGateway;
-import com.ferry.order.gateway.service.LaundryServiceUpdateJpaGateway;
+import com.ferry.order.gateway.promotion.HttpOrderPromotionGateway;
+import com.ferry.order.gateway.service.JpaLaundryServiceCreateGateway;
+import com.ferry.order.gateway.service.JpaLaundryServiceDeleteGateway;
+import com.ferry.order.gateway.service.JpaLaundryServiceListGateway;
+import com.ferry.order.gateway.service.JpaLaundryServiceUpdateGateway;
 import com.ferry.order.gateway.service.repository.LaundryServiceJpaRepository;
 import com.ferry.order.gateway.service.repository.ServiceCategoryJpaRepository;
 import com.ferry.order.gateway.service.repository.ServiceUnitJpaRepository;
@@ -148,19 +148,19 @@ public class OrderWebConfig{
 	                                                        ServiceUnitJpaRepository serviceUnitJpaRepository,
 	                                                        ServiceCategoryJpaRepository serviceCategoryJpaRepository,
 	                                                        IdGenerator idGenerator){
-		return new LaundryServiceCreateJpaGateway(laundryServiceJpaRepository, serviceUnitJpaRepository,
+		return new JpaLaundryServiceCreateGateway(laundryServiceJpaRepository, serviceUnitJpaRepository,
 				serviceCategoryJpaRepository, idGenerator);
 	}
 
 	@Bean
 	LaundryServiceCreateUseCase laundryServiceCreateUseCase(LaundryServiceCreateGateway laundryServiceCreateGateway,
-	                                                        AnalyticsEventPublisher analyticsEventPublisher){
+	                                                        OrderAnalyticsPublisher analyticsEventPublisher){
 		return new DefaultLaundryServiceCreateUseCase(laundryServiceCreateGateway, analyticsEventPublisher);
 	}
 
 	@Bean
 	LaundryServiceListGateway laundryServiceListGateway(LaundryServiceJpaRepository laundryServiceJpaRepository){
-		return new LaundryServiceListJpaGateway(laundryServiceJpaRepository);
+		return new JpaLaundryServiceListGateway(laundryServiceJpaRepository);
 	}
 
 	@Bean
@@ -172,13 +172,13 @@ public class OrderWebConfig{
 	LaundryServiceUpdateGateway laundryServiceUpdateGateway(LaundryServiceJpaRepository laundryServiceJpaRepository,
 	                                                        ServiceUnitJpaRepository serviceUnitJpaRepository,
 	                                                        ServiceCategoryJpaRepository serviceCategoryJpaRepository){
-		return new LaundryServiceUpdateJpaGateway(laundryServiceJpaRepository, serviceUnitJpaRepository,
+		return new JpaLaundryServiceUpdateGateway(laundryServiceJpaRepository, serviceUnitJpaRepository,
 				serviceCategoryJpaRepository);
 	}
 
 	@Bean
 	LaundryServiceUpdateUseCase laundryServiceUpdateUseCase(LaundryServiceUpdateGateway laundryServiceUpdateGateway,
-	                                                        AnalyticsEventPublisher analyticsEventPublisher){
+	                                                        OrderAnalyticsPublisher analyticsEventPublisher){
 		return new DefaultLaundryServiceUpdateUseCase(laundryServiceUpdateGateway, analyticsEventPublisher);
 	}
 
@@ -187,13 +187,13 @@ public class OrderWebConfig{
 	                                                        ServiceUnitJpaRepository serviceUnitJpaRepository,
 	                                                        ServiceCategoryJpaRepository serviceCategoryJpaRepository,
 	                                                        OrderJpaRepository orderJpaRepository){
-		return new LaundryServiceDeleteJpaGateway(laundryServiceJpaRepository, serviceUnitJpaRepository,
+		return new JpaLaundryServiceDeleteGateway(laundryServiceJpaRepository, serviceUnitJpaRepository,
 				serviceCategoryJpaRepository, orderJpaRepository);
 	}
 
 	@Bean
 	LaundryServiceDeleteUseCase laundryServiceDeleteUseCase(LaundryServiceDeleteGateway laundryServiceDeleteGateway,
-	                                                        AnalyticsEventPublisher analyticsEventPublisher){
+	                                                        OrderAnalyticsPublisher analyticsEventPublisher){
 		return new DefaultLaundryServiceDeleteUseCase(laundryServiceDeleteGateway, analyticsEventPublisher);
 	}
 
@@ -206,7 +206,7 @@ public class OrderWebConfig{
 
 	@Bean
 	OrderCustomerGateway customerVerificationGateway(UserServiceClient userServiceClient){
-		return new OrderCustomerHttpGateway(userServiceClient);
+		return new HttpOrderCustomerGateway(userServiceClient);
 	}
 
 	@Bean
@@ -222,7 +222,7 @@ public class OrderWebConfig{
 	                                            OrderPromotionSagaStatusJpaRepository orderPromotionSagaStatusJpaRepository,
 	                                            IdGenerator idGenerator,
 	                                            PlatformTransactionManager transactionManager){
-		return new OrderPromotionHttpGateway(promotionServiceClient, orderPromotionSagaJpaRepository, orderPromotionSagaStatusJpaRepository, idGenerator, transactionManager);
+		return new HttpOrderPromotionGateway(promotionServiceClient, orderPromotionSagaJpaRepository, orderPromotionSagaStatusJpaRepository, idGenerator, transactionManager);
 	}
 
 	@Bean
@@ -240,7 +240,7 @@ public class OrderWebConfig{
 	                                      CryptoTool cryptoTool,
 	                                      OrderConfirmUseCase orderConfirmUseCase,
 	                                      OrderPickupUseCase orderPickupUseCase){
-		return new OrderCreateJpaGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+		return new JpaOrderCreateGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
 				laundryServiceJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
 				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
 				clothingTypeJpaRepository, idGenerator, cryptoTool, orderConfirmUseCase, orderPickupUseCase);
@@ -250,7 +250,7 @@ public class OrderWebConfig{
 	OrderCreateUseCase orderCreateUseCase(OrderCreateGateway orderCreateGateway,
 	                                      OrderCustomerGateway customerGateway,
 	                                      OrderPromotionGateway promotionGateway,
-	                                      AnalyticsEventPublisher analyticsEventPublisher){
+	                                      OrderAnalyticsPublisher analyticsEventPublisher){
 		return new DefaultOrderCreateUseCase(orderCreateGateway, customerGateway, promotionGateway, analyticsEventPublisher);
 	}
 
@@ -260,7 +260,7 @@ public class OrderWebConfig{
 			OrderPromotionSagaStatusJpaRepository orderPromotionSagaStatusJpaRepository,
 			OrderJpaRepository orderJpaRepository,
 			PlatformTransactionManager transactionManager){
-		return new OrderPromotionSagaSweepJpaGateway(orderPromotionSagaJpaRepository,
+		return new JpaOrderPromotionSagaSweepGateway(orderPromotionSagaJpaRepository,
 				orderPromotionSagaStatusJpaRepository, orderJpaRepository, transactionManager);
 	}
 
@@ -287,7 +287,7 @@ public class OrderWebConfig{
 	                                  OrderItemJpaRepository orderItemJpaRepository,
 	                                  OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                  CryptoTool cryptoTool){
-		return new OrderListJpaGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+		return new JpaOrderListGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
 				cryptoTool);
 	}
 
@@ -301,7 +301,7 @@ public class OrderWebConfig{
 	                                      OrderItemJpaRepository orderItemJpaRepository,
 	                                      OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                      CryptoTool cryptoTool){
-		return new OrderDetailJpaGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+		return new JpaOrderDetailGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
 				cryptoTool);
 	}
 
@@ -312,7 +312,7 @@ public class OrderWebConfig{
 
 	@Bean
 	OrderScheduleGateway orderScheduleGateway(OrderJpaRepository orderJpaRepository){
-		return new OrderScheduleJpaGateway(orderJpaRepository);
+		return new JpaOrderScheduleGateway(orderJpaRepository);
 	}
 
 	@Bean
@@ -327,7 +327,7 @@ public class OrderWebConfig{
 
 	@Bean
 	CustomerOrderTotalsGateway customerOrderTotalsGateway(OrderJpaRepository orderJpaRepository){
-		return new CustomerOrderTotalsJpaGateway(orderJpaRepository);
+		return new JpaCustomerOrderTotalsGateway(orderJpaRepository);
 	}
 
 	@Bean
@@ -353,18 +353,18 @@ public class OrderWebConfig{
 	                                      OrderItemJpaRepository orderItemJpaRepository,
 	                                      OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                      CryptoTool cryptoTool){
-		return new InvoiceJpaPdfGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+		return new JpaInvoicePdfGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
 				cryptoTool);
 	}
 
 	@Bean
-	InvoiceHtmlComposer orderInvoiceComposer(ITemplateEngine invoiceTemplateEngine){
-		return new DefaultInvoiceHtmlComposer(invoiceTemplateEngine);
+	InvoiceComposer orderInvoiceComposer(ITemplateEngine invoiceTemplateEngine){
+		return new HtmlInvoiceComposer(invoiceTemplateEngine);
 	}
 
 	@Bean
 	InvoicePdfUseCase orderInvoiceUseCase(InvoicePdfGateway invoicePdfGateway,
-	                                      InvoiceHtmlComposer invoiceHtmlComposer,
+	                                      InvoiceComposer invoiceHtmlComposer,
 	                                      LinkSigner linkSigner){
 		return new DefaultInvoicePdfUseCase(invoicePdfGateway, invoiceHtmlComposer, linkSigner);
 	}
@@ -391,14 +391,14 @@ public class OrderWebConfig{
 	                                        OrderItemJpaRepository orderItemJpaRepository,
 	                                        OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                        CryptoTool cryptoTool){
-		return new OrderConfirmJpaGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
+		return new JpaOrderConfirmGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
 				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
 				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
 	}
 
 	@Bean
 	OrderConfirmUseCase orderConfirmUseCase(OrderConfirmGateway orderConfirmGateway,
-	                                        AnalyticsEventPublisher analyticsEventPublisher){
+	                                        OrderAnalyticsPublisher analyticsEventPublisher){
 		return new DefaultOrderConfirmUseCase(orderConfirmGateway, analyticsEventPublisher);
 	}
 
@@ -412,14 +412,14 @@ public class OrderWebConfig{
 	                                      OrderItemJpaRepository orderItemJpaRepository,
 	                                      OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                      CryptoTool cryptoTool){
-		return new OrderPickupJpaGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
+		return new JpaOrderPickupGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
 				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
 				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
 	}
 
 	@Bean
 	OrderPickupUseCase orderPickupUseCase(OrderPickupGateway orderPickupGateway,
-	                                      AnalyticsEventPublisher analyticsEventPublisher){
+	                                      OrderAnalyticsPublisher analyticsEventPublisher){
 		return new DefaultOrderPickupUseCase(orderPickupGateway, analyticsEventPublisher);
 	}
 
@@ -433,14 +433,14 @@ public class OrderWebConfig{
 	                                        OrderItemJpaRepository orderItemJpaRepository,
 	                                        OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                        CryptoTool cryptoTool){
-		return new OrderProcessJpaGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
+		return new JpaOrderProcessGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
 				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
 				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
 	}
 
 	@Bean
 	OrderProcessUseCase orderProcessUseCase(OrderProcessGateway orderProcessGateway,
-	                                        AnalyticsEventPublisher analyticsEventPublisher){
+	                                        OrderAnalyticsPublisher analyticsEventPublisher){
 		return new DefaultOrderProcessUseCase(orderProcessGateway, analyticsEventPublisher);
 	}
 
@@ -454,14 +454,14 @@ public class OrderWebConfig{
 	                                    OrderItemJpaRepository orderItemJpaRepository,
 	                                    OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                    CryptoTool cryptoTool){
-		return new OrderReadyJpaGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
+		return new JpaOrderReadyGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
 				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
 				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
 	}
 
 	@Bean
 	OrderReadyUseCase orderReadyUseCase(OrderReadyGateway orderReadyGateway,
-	                                    AnalyticsEventPublisher analyticsEventPublisher){
+	                                    OrderAnalyticsPublisher analyticsEventPublisher){
 		return new DefaultOrderReadyUseCase(orderReadyGateway, analyticsEventPublisher);
 	}
 
@@ -475,14 +475,14 @@ public class OrderWebConfig{
 	                                        OrderItemJpaRepository orderItemJpaRepository,
 	                                        OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                        CryptoTool cryptoTool){
-		return new OrderDeliverJpaGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
+		return new JpaOrderDeliverGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
 				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
 				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
 	}
 
 	@Bean
 	OrderDeliverUseCase orderDeliverUseCase(OrderDeliverGateway orderDeliverGateway,
-	                                        AnalyticsEventPublisher analyticsEventPublisher){
+	                                        OrderAnalyticsPublisher analyticsEventPublisher){
 		return new DefaultOrderDeliverUseCase(orderDeliverGateway, analyticsEventPublisher);
 	}
 
@@ -496,14 +496,14 @@ public class OrderWebConfig{
 	                                          OrderItemJpaRepository orderItemJpaRepository,
 	                                          OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                          CryptoTool cryptoTool){
-		return new OrderCompleteJpaGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
+		return new JpaOrderCompleteGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
 				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
 				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
 	}
 
 	@Bean
 	OrderCompleteUseCase orderCompleteUseCase(OrderCompleteGateway orderCompleteGateway,
-	                                          AnalyticsEventPublisher analyticsEventPublisher){
+	                                          OrderAnalyticsPublisher analyticsEventPublisher){
 		return new DefaultOrderCompleteUseCase(orderCompleteGateway, analyticsEventPublisher);
 	}
 
@@ -517,14 +517,14 @@ public class OrderWebConfig{
 	                                      OrderItemJpaRepository orderItemJpaRepository,
 	                                      OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                      CryptoTool cryptoTool){
-		return new OrderCancelJpaGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
+		return new JpaOrderCancelGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
 				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
 				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
 	}
 
 	@Bean
 	OrderCancelUseCase orderCancelUseCase(OrderCancelGateway orderCancelGateway,
-	                                      AnalyticsEventPublisher analyticsEventPublisher){
+	                                      OrderAnalyticsPublisher analyticsEventPublisher){
 		return new DefaultOrderCancelUseCase(orderCancelGateway, analyticsEventPublisher);
 	}
 
@@ -538,14 +538,14 @@ public class OrderWebConfig{
 	                                        OrderItemJpaRepository orderItemJpaRepository,
 	                                        OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                        CryptoTool cryptoTool){
-		return new OrderPaymentJpaGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
+		return new JpaOrderPaymentGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
 				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
 				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
 	}
 
 	@Bean
 	OrderPaymentUseCase orderPaymentUseCase(OrderPaymentGateway orderPaymentGateway,
-	                                        AnalyticsEventPublisher analyticsEventPublisher){
+	                                        OrderAnalyticsPublisher analyticsEventPublisher){
 		return new DefaultOrderPaymentUseCase(orderPaymentGateway, analyticsEventPublisher);
 	}
 
@@ -565,14 +565,14 @@ public class OrderWebConfig{
 	}
 
 	@Bean
-	AnalyticsEventPublisher analyticsEventPublisher(AnalyticsEventJpaRepository analyticsEventJpaRepository,
+	OrderAnalyticsPublisher analyticsEventPublisher(AnalyticsEventJpaRepository analyticsEventJpaRepository,
 	                                                AnalyticsAggregateJpaRepository analyticsAggregateJpaRepository,
 	                                                AnalyticsEventStatusJpaRepository analyticsEventStatusJpaRepository,
 	                                                AnalyticsStreamWriter analyticsStreamWriter,
 	                                                IdGenerator idGenerator,
 	                                                JsonManager jsonManager,
 	                                                PlatformTransactionManager transactionManager){
-		return new OrderAnalyticsRedisPublisher(analyticsEventJpaRepository, analyticsAggregateJpaRepository,
+		return new RedisOrderAnalyticsPublisher(analyticsEventJpaRepository, analyticsAggregateJpaRepository,
 				analyticsEventStatusJpaRepository, analyticsStreamWriter, idGenerator, jsonManager, transactionManager);
 	}
 
@@ -580,7 +580,7 @@ public class OrderWebConfig{
 	AnalyticsOutboxSweepGateway analyticsOutboxSweepGateway(AnalyticsEventJpaRepository analyticsEventJpaRepository,
 	                                                        AnalyticsStreamWriter analyticsStreamWriter,
 	                                                        PlatformTransactionManager transactionManager){
-		return new AnalyticsOutboxSweepJpaGateway(analyticsEventJpaRepository, analyticsStreamWriter,
+		return new JpaAnalyticsOutboxSweepGateway(analyticsEventJpaRepository, analyticsStreamWriter,
 				transactionManager);
 	}
 
@@ -605,13 +605,13 @@ public class OrderWebConfig{
 	                                                  OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                                  LaundryServiceJpaRepository laundryServiceJpaRepository,
 	                                                  CryptoTool cryptoTool){
-		return new AnalyticsBackfillJpaGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+		return new JpaAnalyticsBackfillGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
 				laundryServiceJpaRepository, cryptoTool);
 	}
 
 	@Bean
 	AnalyticsBackfillUseCase analyticsBackfillUseCase(AnalyticsBackfillGateway analyticsBackfillGateway,
-	                                                  AnalyticsEventPublisher analyticsEventPublisher,
+	                                                  OrderAnalyticsPublisher analyticsEventPublisher,
 	                                                  @Value("${app.analytics.outbox.backfill-batch-size}") int backfillBatchSize){
 		return new DefaultAnalyticsBackfillUseCase(analyticsBackfillGateway, analyticsEventPublisher, backfillBatchSize);
 	}

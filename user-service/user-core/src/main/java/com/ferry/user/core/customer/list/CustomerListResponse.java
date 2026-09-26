@@ -1,9 +1,9 @@
 package com.ferry.user.core.customer.list;
 
-import com.ferry.user.domain.customer.CustomerAddressDomain;
-import com.ferry.user.domain.customer.CustomerDomain;
-import com.ferry.user.domain.customer.CustomerEmailDomain;
-import com.ferry.user.domain.customer.CustomerPhoneDomain;
+import com.ferry.user.domain.customer.CustomerAddress;
+import com.ferry.user.domain.customer.Customer;
+import com.ferry.user.domain.customer.CustomerEmail;
+import com.ferry.user.domain.customer.CustomerPhone;
 
 import java.util.List;
 import java.util.Map;
@@ -14,10 +14,10 @@ import java.util.Map;
  ************************/
 
 public record CustomerListResponse(
-	List<CustomerDomain> customers,
-	Map<String, List<CustomerEmailDomain>> emailsByCustomerId,
-	Map<String, List<CustomerPhoneDomain>> phonesByCustomerId,
-	Map<String, List<CustomerAddressDomain>> addressesByCustomerId,
+	List<Customer> customers,
+	Map<String, List<CustomerEmail>> emailsByCustomerId,
+	Map<String, List<CustomerPhone>> phonesByCustomerId,
+	Map<String, List<CustomerAddress>> addressesByCustomerId,
 	String nextCursor,
 	String prevCursor){
 }

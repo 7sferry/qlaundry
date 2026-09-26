@@ -1,11 +1,11 @@
 package com.ferry.order.core.order.payment;
 
-import com.ferry.order.domain.order.OrderDomain;
+import com.ferry.order.domain.order.Order;
 
 /************************
  * Made by [MR Ferry™]  *
  * on Agustus 2026      *
  ************************/
 
-public record OrderPaymentResponse(OrderDomain order){
+public record OrderPaymentResponse(Order order){
 }

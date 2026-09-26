@@ -1,22 +1,22 @@
 package com.ferry.order.core.order.detail;
 
-import com.ferry.order.domain.common.FullNameDomain;
-import com.ferry.order.domain.common.MoneyDomain;
-import com.ferry.order.domain.common.PhoneDomain;
+import com.ferry.order.domain.common.FullName;
+import com.ferry.order.domain.common.Money;
+import com.ferry.order.domain.common.Phone;
 import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.order.ClothingType;
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderIdDomain;
-import com.ferry.order.domain.order.OrderItemDomain;
-import com.ferry.order.domain.order.OrderNumberDomain;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderId;
+import com.ferry.order.domain.order.OrderItem;
+import com.ferry.order.domain.order.OrderNumber;
 import com.ferry.order.domain.order.OrderPriority;
-import com.ferry.order.domain.order.OrderPromotionDomain;
+import com.ferry.order.domain.order.OrderPromotion;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.order.PaymentMethod;
 import com.ferry.order.domain.order.PaymentStatus;
 import com.ferry.order.domain.service.ServiceUnit;
 import com.ferry.order.domain.staff.StaffRole;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -87,7 +87,7 @@ class DefaultOrderDetailUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		willReturn(Optional.empty()).given(gateway)
-				.findById(any(OrderIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(OrderId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new OrderDetailRequest(ORDER_ID), principal, presenter))
@@ -95,7 +95,7 @@ class DefaultOrderDetailUseCaseTest{
 				.hasMessage("Order Not Found"));
 
 		then(gateway).should(never())
-				.findItemsByOrderId(any(OrderIdDomain.class));
+				.findItemsByOrderId(any(OrderId.class));
 		then(presenter).should(never())
 				.present(any(OrderDetailResponse.class));
 	}
@@ -108,21 +108,21 @@ class DefaultOrderDetailUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		OrderDomain order = OrderDomain.builder()
+		Order order = Order.builder()
 				.id(ORDER_ID)
-				.orderNumber(new OrderNumberDomain(ORDER_NUMBER))
+				.orderNumber(new OrderNumber(ORDER_NUMBER))
 				.tenantId(TENANT_ID)
-				.customerName(new FullNameDomain(CUSTOMER_NAME))
-				.customerPhone(new PhoneDomain(CUSTOMER_PHONE))
+				.customerName(new FullName(CUSTOMER_NAME))
+				.customerPhone(new Phone(CUSTOMER_PHONE))
 				.serviceId("01SERVICESEPRAI00000000000")
 				.serviceName("Cuci Seprai")
 				.unit(ServiceUnit.KG)
-				.unitPrice(MoneyDomain.of(8000L))
+				.unitPrice(Money.of(8000L))
 				.quantity(1)
 				.weightKg(4.0d)
-				.subtotal(MoneyDomain.of(32000L))
-				.discount(MoneyDomain.ZERO)
-				.totalPrice(MoneyDomain.of(32000L))
+				.subtotal(Money.of(32000L))
+				.discount(Money.ZERO)
+				.totalPrice(Money.of(32000L))
 				.priority(OrderPriority.NORMAL)
 				.paymentMethod(PaymentMethod.CASH)
 				.paymentStatus(PaymentStatus.UNPAID)
@@ -135,7 +135,7 @@ class DefaultOrderDetailUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		List<OrderItemDomain> items = List.of(OrderItemDomain.builder()
+		List<OrderItem> items = List.of(OrderItem.builder()
 				.id("01ITEMSEPRAI000000000000000")
 				.orderId(ORDER_ID)
 				.type(ClothingType.BED_LINEN)
@@ -147,12 +147,12 @@ class DefaultOrderDetailUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build());
-		List<OrderPromotionDomain> promotions = List.of(OrderPromotionDomain.builder()
+		List<OrderPromotion> promotions = List.of(OrderPromotion.builder()
 				.id("01ORDERPROMOSEPRAI00000000")
 				.orderId(ORDER_ID)
 				.promotionId("01PROMODISKONSEPRAI0000000")
 				.code("SEPRAI20")
-				.discountAmount(MoneyDomain.of(9000L))
+				.discountAmount(Money.of(9000L))
 				.deleted(false)
 				.createdAt(now)
 				.createdBy(STAFF_ID)
@@ -160,20 +160,20 @@ class DefaultOrderDetailUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build());
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(OrderId.class), any(TenantId.class));
 		willReturn(items).given(gateway)
-				.findItemsByOrderId(any(OrderIdDomain.class));
+				.findItemsByOrderId(any(OrderId.class));
 		willReturn(promotions).given(gateway)
-				.findPromotionsByOrderId(any(OrderIdDomain.class));
+				.findPromotionsByOrderId(any(OrderId.class));
 
 		useCase.execute(new OrderDetailRequest(ORDER_ID), principal, presenter);
 
 		then(gateway).should()
-				.findById(eq(new OrderIdDomain(ORDER_ID)), eq(new TenantIdDomain(TENANT_ID)));
+				.findById(eq(new OrderId(ORDER_ID)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
-				.findItemsByOrderId(eq(new OrderIdDomain(ORDER_ID)));
+				.findItemsByOrderId(eq(new OrderId(ORDER_ID)));
 		then(gateway).should()
-				.findPromotionsByOrderId(eq(new OrderIdDomain(ORDER_ID)));
+				.findPromotionsByOrderId(eq(new OrderId(ORDER_ID)));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 

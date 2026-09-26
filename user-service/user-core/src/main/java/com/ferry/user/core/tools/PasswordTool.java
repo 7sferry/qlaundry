@@ -1,7 +1,7 @@
 package com.ferry.user.core.tools;
 
-import com.ferry.user.domain.common.HashedPasswordDomain;
-import com.ferry.user.domain.common.RawPasswordDomain;
+import com.ferry.user.domain.common.HashedPassword;
+import com.ferry.user.domain.common.RawPassword;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -9,7 +9,7 @@ import com.ferry.user.domain.common.RawPasswordDomain;
  ************************/
 
 public interface PasswordTool{
-	HashedPasswordDomain hash(RawPasswordDomain rawPasswordDomain);
+	HashedPassword hash(RawPassword rawPasswordDomain);
 
 	boolean matches(String rawPassword, String hashedPassword);
 }

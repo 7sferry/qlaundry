@@ -1,9 +1,9 @@
 package com.ferry.user.core.customer.list;
 
-import com.ferry.user.domain.common.AddressLineDomain;
-import com.ferry.user.domain.common.EmailDomain;
-import com.ferry.user.domain.common.FullNameDomain;
-import com.ferry.user.domain.common.PhoneDomain;
+import com.ferry.user.domain.common.AddressLine;
+import com.ferry.user.domain.common.Email;
+import com.ferry.user.domain.common.FullName;
+import com.ferry.user.domain.common.Phone;
 import com.ferry.user.domain.customer.*;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import com.ferry.utils.pagination.*;
@@ -66,24 +66,24 @@ class DefaultCustomerListUseCaseTest{
 	@Test
 	void givenCustomersFound_thenAggregatesContactInfoGroupedByCustomerId(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
-		CustomerDomain customer1 = CustomerDomain.register(TENANT_ID, new FullNameDomain("dewi anggraini"), null,
+		Customer customer1 = Customer.register(TENANT_ID, new FullName("dewi anggraini"), null,
 				PRINCIPAL_ID).toBuilder().id(CUSTOMER_ID_1).build();
-		CustomerDomain customer2 = CustomerDomain.register(TENANT_ID, new FullNameDomain("susanto wijaya"), null,
+		Customer customer2 = Customer.register(TENANT_ID, new FullName("susanto wijaya"), null,
 				PRINCIPAL_ID).toBuilder().id(CUSTOMER_ID_2).build();
 		willReturn(new CursorFetch<>(List.of(customer1, customer2), false)).given(gateway)
 				.findByFilter(any(CustomerFilter.class));
-		CustomerEmailDomain email1 = CustomerEmailDomain.register(CUSTOMER_ID_1,
-				new EmailDomain("dewi@laundry.test"), PRINCIPAL_ID);
+		CustomerEmail email1 = CustomerEmail.register(CUSTOMER_ID_1,
+				new Email("dewi@laundry.test"), PRINCIPAL_ID);
 		willReturn(List.of(email1)).given(gateway)
 				.findEmailsByFilter(any(CustomerEmailFilter.class));
-		CustomerPhoneDomain phone1 = CustomerPhoneDomain.register(CUSTOMER_ID_1,
-				new PhoneDomain("+6281122334455"), PRINCIPAL_ID);
-		CustomerPhoneDomain phone2 = CustomerPhoneDomain.register(CUSTOMER_ID_2,
-				new PhoneDomain("+6285566778899"), PRINCIPAL_ID);
+		CustomerPhone phone1 = CustomerPhone.register(CUSTOMER_ID_1,
+				new Phone("+6281122334455"), PRINCIPAL_ID);
+		CustomerPhone phone2 = CustomerPhone.register(CUSTOMER_ID_2,
+				new Phone("+6285566778899"), PRINCIPAL_ID);
 		willReturn(List.of(phone1, phone2)).given(gateway)
 				.findPhonesByFilter(any(CustomerPhoneFilter.class));
-		CustomerAddressDomain address2 = CustomerAddressDomain.register(CUSTOMER_ID_2,
-				new AddressLineDomain("Jl. Garuda No. 12"), PRINCIPAL_ID);
+		CustomerAddress address2 = CustomerAddress.register(CUSTOMER_ID_2,
+				new AddressLine("Jl. Garuda No. 12"), PRINCIPAL_ID);
 		willReturn(List.of(address2)).given(gateway)
 				.findAddressesByFilter(any(CustomerAddressFilter.class));
 
@@ -160,7 +160,7 @@ class DefaultCustomerListUseCaseTest{
 	@Test
 	void givenMoreRowsThanPageSize_thenPresentsNextCursorButNoPrevCursorOnFirstPage(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
-		CustomerDomain customer = CustomerDomain.register(TENANT_ID, new FullNameDomain("dewi anggraini"), null,
+		Customer customer = Customer.register(TENANT_ID, new FullName("dewi anggraini"), null,
 				PRINCIPAL_ID).toBuilder().id(CUSTOMER_ID_1).build();
 		willReturn(new CursorFetch<>(List.of(customer), true)).given(gateway)
 				.findByFilter(any(CustomerFilter.class));
@@ -181,7 +181,7 @@ class DefaultCustomerListUseCaseTest{
 	@Test
 	void givenCursorProvidedAndNoMoreRows_thenPresentsPrevCursorButNoNextCursor(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
-		CustomerDomain customer = CustomerDomain.register(TENANT_ID, new FullNameDomain("susanto wijaya"), null,
+		Customer customer = Customer.register(TENANT_ID, new FullName("susanto wijaya"), null,
 				PRINCIPAL_ID).toBuilder().id(CUSTOMER_ID_2).build();
 		willReturn(new CursorFetch<>(List.of(customer), false)).given(gateway)
 				.findByFilter(filterCaptor.capture());
@@ -205,7 +205,7 @@ class DefaultCustomerListUseCaseTest{
 	@Test
 	void givenSortByNameAscendingWithPrevDirection_thenFilterCarriesThatSort(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
-		CustomerDomain customer = CustomerDomain.register(TENANT_ID, new FullNameDomain("dewi anggraini"), null,
+		Customer customer = Customer.register(TENANT_ID, new FullName("dewi anggraini"), null,
 				PRINCIPAL_ID).toBuilder().id(CUSTOMER_ID_1).build();
 		willReturn(new CursorFetch<>(List.of(customer), false)).given(gateway)
 				.findByFilter(filterCaptor.capture());

@@ -1,17 +1,17 @@
 package com.ferry.order.core.service.update;
 
 import com.ferry.order.core.analytics.AnalyticsEventConfig;
-import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
-import com.ferry.order.domain.common.MoneyDomain;
-import com.ferry.order.domain.common.NoteDomain;
+import com.ferry.order.domain.common.Money;
+import com.ferry.order.domain.common.Note;
 import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.common.exception.OrderForbiddenActionException;
-import com.ferry.order.domain.service.LaundryServiceDomain;
-import com.ferry.order.domain.service.LaundryServiceIdDomain;
+import com.ferry.order.domain.service.LaundryService;
+import com.ferry.order.domain.service.LaundryServiceId;
 import com.ferry.order.domain.staff.StaffRole;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +25,7 @@ public class DefaultLaundryServiceUpdateUseCase implements LaundryServiceUpdateU
 	private static final double DEFAULT_EXPRESS_MULTIPLIER = 1.0d;
 
 	private final LaundryServiceUpdateGateway gateway;
-	private final AnalyticsEventPublisher publisher;
+	private final OrderAnalyticsPublisher publisher;
 
 	@Override
 	public void execute(LaundryServiceUpdateRequest request, OrderAuthPrincipal principal,
@@ -34,15 +34,15 @@ public class DefaultLaundryServiceUpdateUseCase implements LaundryServiceUpdateU
 			throw new OrderForbiddenActionException("Only super staff can manage the service price list");
 		}
 		request.validate();
-		LaundryServiceIdDomain serviceId = new LaundryServiceIdDomain(request.serviceId());
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		LaundryServiceDomain service = gateway.findById(serviceId, tenantId)
+		LaundryServiceId serviceId = new LaundryServiceId(request.serviceId());
+		TenantId tenantId = new TenantId(principal.tenantId());
+		LaundryService service = gateway.findById(serviceId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Service Not Found"));
 		double expressMultiplier = request.expressMultiplier() == null
 				? DEFAULT_EXPRESS_MULTIPLIER : request.expressMultiplier();
 		boolean active = request.active() == null || request.active();
-		LaundryServiceDomain saved = gateway.save(service.update(request.name(),
-				new NoteDomain(request.description()), new MoneyDomain(request.pricePerUnit()), request.unit(),
+		LaundryService saved = gateway.save(service.update(request.name(),
+				new Note(request.description()), new Money(request.pricePerUnit()), request.unit(),
 				request.category(), request.estimatedHours(), expressMultiplier, request.popular(), active,
 				principal.userId()));
 		publisher.publish(publisher.save(AnalyticsEventConfig.laundryService(AnalyticsEventType.LAUNDRY_SERVICE_UPDATED,

@@ -1,7 +1,7 @@
 package com.ferry.order.gateway.service.repository;
 
 import com.ferry.order.domain.service.LaundryServiceFilter;
-import com.ferry.order.gateway.service.entity.LaundryServiceJpaEntity;
+import com.ferry.order.gateway.service.entity.LaundryServiceJpa;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,23 +15,23 @@ import java.util.Optional;
  * on Agustus 2026      *
  ************************/
 
-public interface LaundryServiceJpaRepository extends JpaRepository<LaundryServiceJpaEntity, String>{
+public interface LaundryServiceJpaRepository extends JpaRepository<LaundryServiceJpa, String>{
 
-	Optional<LaundryServiceJpaEntity> findByIdAndTenantIdAndDeletedIsFalse(String id, String tenantId);
+	Optional<LaundryServiceJpa> findByIdAndTenantIdAndDeletedIsFalse(String id, String tenantId);
 
 	@Query("select s " +
-			"from LaundryServiceJpaEntity s " +
+			"from LaundryServiceJpa s " +
 			"where " +
 			"(:tenantId is null or s.tenantId = :tenantId) AND " +
 			"(:afterId is null or s.id > :afterId) " +
 			"order by s.id asc")
-	List<LaundryServiceJpaEntity> findBackfillPage(@Param("tenantId") String tenantId, @Param("afterId") String afterId,
+	List<LaundryServiceJpa> findBackfillPage(@Param("tenantId") String tenantId, @Param("afterId") String afterId,
 	                                               Pageable pageable);
 
 	boolean existsByNameIgnoreCaseAndTenantIdAndDeletedIsFalse(String name, String tenantId);
 
 	@Query("select s " +
-			"from LaundryServiceJpaEntity s " +
+			"from LaundryServiceJpa s " +
 			"where " +
 			"(:#{#filter?.nameStartsWith()} is null or lower(s.name) like :#{#filter?.nameStartsWith()}) AND " +
 			"(:#{#filter?.categoryValue()} is null or s.categoryId = :#{#filter?.categoryValue()}) AND " +
@@ -40,10 +40,10 @@ public interface LaundryServiceJpaRepository extends JpaRepository<LaundryServic
 			"(:#{#filter?.cursor?.id} is null or s.id > :#{#filter?.cursor?.id}) AND " +
 			"s.deleted IS FALSE " +
 			"order by s.id asc")
-	List<LaundryServiceJpaEntity> findAfterById(@Param("filter") LaundryServiceFilter filter, Pageable pageable);
+	List<LaundryServiceJpa> findAfterById(@Param("filter") LaundryServiceFilter filter, Pageable pageable);
 
 	@Query("select s " +
-			"from LaundryServiceJpaEntity s " +
+			"from LaundryServiceJpa s " +
 			"where " +
 			"(:#{#filter?.nameStartsWith()} is null or lower(s.name) like :#{#filter?.nameStartsWith()}) AND " +
 			"(:#{#filter?.categoryValue()} is null or s.categoryId = :#{#filter?.categoryValue()}) AND " +
@@ -52,10 +52,10 @@ public interface LaundryServiceJpaRepository extends JpaRepository<LaundryServic
 			"(:#{#filter?.cursor?.id} is null or s.id < :#{#filter?.cursor?.id}) AND " +
 			"s.deleted IS FALSE " +
 			"order by s.id desc")
-	List<LaundryServiceJpaEntity> findBeforeById(@Param("filter") LaundryServiceFilter filter, Pageable pageable);
+	List<LaundryServiceJpa> findBeforeById(@Param("filter") LaundryServiceFilter filter, Pageable pageable);
 
 	@Query("select s " +
-			"from LaundryServiceJpaEntity s " +
+			"from LaundryServiceJpa s " +
 			"where " +
 			"(:#{#filter?.nameStartsWith()} is null or lower(s.name) like :#{#filter?.nameStartsWith()}) AND " +
 			"(:#{#filter?.categoryValue()} is null or s.categoryId = :#{#filter?.categoryValue()}) AND " +
@@ -65,10 +65,10 @@ public interface LaundryServiceJpaRepository extends JpaRepository<LaundryServic
 			"  (s.name = :#{#filter?.cursor?.sortValue} and s.id > :#{#filter?.cursor?.id})) AND " +
 			"s.deleted IS FALSE " +
 			"order by s.name asc, s.id asc")
-	List<LaundryServiceJpaEntity> findAfterByName(@Param("filter") LaundryServiceFilter filter, Pageable pageable);
+	List<LaundryServiceJpa> findAfterByName(@Param("filter") LaundryServiceFilter filter, Pageable pageable);
 
 	@Query("select s " +
-			"from LaundryServiceJpaEntity s " +
+			"from LaundryServiceJpa s " +
 			"where " +
 			"(:#{#filter?.nameStartsWith()} is null or lower(s.name) like :#{#filter?.nameStartsWith()}) AND " +
 			"(:#{#filter?.categoryValue()} is null or s.categoryId = :#{#filter?.categoryValue()}) AND " +
@@ -78,6 +78,6 @@ public interface LaundryServiceJpaRepository extends JpaRepository<LaundryServic
 			"  (s.name = :#{#filter?.cursor?.sortValue} and s.id < :#{#filter?.cursor?.id})) AND " +
 			"s.deleted IS FALSE " +
 			"order by s.name desc, s.id desc")
-	List<LaundryServiceJpaEntity> findBeforeByName(@Param("filter") LaundryServiceFilter filter, Pageable pageable);
+	List<LaundryServiceJpa> findBeforeByName(@Param("filter") LaundryServiceFilter filter, Pageable pageable);
 
 }

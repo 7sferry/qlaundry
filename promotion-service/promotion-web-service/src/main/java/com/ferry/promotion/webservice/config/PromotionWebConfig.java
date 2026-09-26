@@ -23,13 +23,13 @@ import com.ferry.promotion.core.promotion.release.PromotionReleaseUseCase;
 import com.ferry.promotion.core.promotion.update.DefaultPromotionUpdateUseCase;
 import com.ferry.promotion.core.promotion.update.PromotionUpdateGateway;
 import com.ferry.promotion.core.promotion.update.PromotionUpdateUseCase;
-import com.ferry.promotion.gateway.promotion.PromotionCreateJpaGateway;
-import com.ferry.promotion.gateway.promotion.PromotionToggleJpaGateway;
-import com.ferry.promotion.gateway.promotion.PromotionDetailJpaGateway;
-import com.ferry.promotion.gateway.promotion.PromotionListJpaGateway;
-import com.ferry.promotion.gateway.promotion.PromotionRedemptionJpaGateway;
-import com.ferry.promotion.gateway.promotion.PromotionReleaseJpaGateway;
-import com.ferry.promotion.gateway.promotion.PromotionUpdateJpaGateway;
+import com.ferry.promotion.gateway.promotion.JpaPromotionCreateGateway;
+import com.ferry.promotion.gateway.promotion.JpaPromotionToggleGateway;
+import com.ferry.promotion.gateway.promotion.JpaPromotionDetailGateway;
+import com.ferry.promotion.gateway.promotion.JpaPromotionListGateway;
+import com.ferry.promotion.gateway.promotion.JpaPromotionRedemptionGateway;
+import com.ferry.promotion.gateway.promotion.JpaPromotionReleaseGateway;
+import com.ferry.promotion.gateway.promotion.JpaPromotionUpdateGateway;
 import com.ferry.promotion.gateway.promotion.repository.PromotionJpaRepository;
 import com.ferry.promotion.gateway.promotion.repository.PromotionRedemptionJpaRepository;
 import com.ferry.utils.cache.CacheHandler;
@@ -68,7 +68,7 @@ public class PromotionWebConfig{
 	@Bean
 	PromotionCreateGateway promotionCreateGateway(PromotionJpaRepository promotionJpaRepository,
 	                                              IdGenerator idGenerator){
-		return new PromotionCreateJpaGateway(promotionJpaRepository, idGenerator);
+		return new JpaPromotionCreateGateway(promotionJpaRepository, idGenerator);
 	}
 
 	@Bean
@@ -78,7 +78,7 @@ public class PromotionWebConfig{
 
 	@Bean
 	PromotionUpdateGateway promotionUpdateGateway(PromotionJpaRepository promotionJpaRepository){
-		return new PromotionUpdateJpaGateway(promotionJpaRepository);
+		return new JpaPromotionUpdateGateway(promotionJpaRepository);
 	}
 
 	@Bean
@@ -88,7 +88,7 @@ public class PromotionWebConfig{
 
 	@Bean
 	PromotionToggleGateway promotionToggleGateway(PromotionJpaRepository promotionJpaRepository){
-		return new PromotionToggleJpaGateway(promotionJpaRepository);
+		return new JpaPromotionToggleGateway(promotionJpaRepository);
 	}
 
 	@Bean
@@ -98,7 +98,7 @@ public class PromotionWebConfig{
 
 	@Bean
 	PromotionDetailGateway promotionDetailGateway(PromotionJpaRepository promotionJpaRepository){
-		return new PromotionDetailJpaGateway(promotionJpaRepository);
+		return new JpaPromotionDetailGateway(promotionJpaRepository);
 	}
 
 	@Bean
@@ -108,7 +108,7 @@ public class PromotionWebConfig{
 
 	@Bean
 	PromotionListGateway promotionListGateway(PromotionJpaRepository promotionJpaRepository){
-		return new PromotionListJpaGateway(promotionJpaRepository);
+		return new JpaPromotionListGateway(promotionJpaRepository);
 	}
 
 	@Bean
@@ -121,7 +121,7 @@ public class PromotionWebConfig{
 			PromotionJpaRepository promotionJpaRepository,
 			PromotionRedemptionJpaRepository promotionRedemptionJpaRepository,
 			IdGenerator idGenerator){
-		return new PromotionRedemptionJpaGateway(promotionJpaRepository, promotionRedemptionJpaRepository,
+		return new JpaPromotionRedemptionGateway(promotionJpaRepository, promotionRedemptionJpaRepository,
 				idGenerator);
 	}
 
@@ -133,7 +133,7 @@ public class PromotionWebConfig{
 	@Bean
 	PromotionReleaseGateway promotionReleaseGateway(PromotionJpaRepository promotionJpaRepository,
 	                                                PromotionRedemptionJpaRepository promotionRedemptionJpaRepository){
-		return new PromotionReleaseJpaGateway(promotionJpaRepository, promotionRedemptionJpaRepository);
+		return new JpaPromotionReleaseGateway(promotionJpaRepository, promotionRedemptionJpaRepository);
 	}
 
 	@Bean

@@ -4,7 +4,7 @@ import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException
 import com.ferry.analytics.domain.dashboard.DashboardSummaryProjection;
 import com.ferry.analytics.domain.dashboard.StatusCountProjection;
 import com.ferry.analytics.domain.staff.StaffRole;
-import com.ferry.analytics.domain.tenant.TenantIdDomain;
+import com.ferry.analytics.domain.tenant.TenantId;
 import com.ferry.analytics.domain.token.AnalyticsAuthPrincipal;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,18 +58,18 @@ class DefaultDashboardSummaryUseCaseTest{
 				new StatusCountProjection("COMPLETED", 41L));
 		willReturn(new DashboardSummaryProjection(2L, BigDecimal.valueOf(96000), 55L, BigDecimal.valueOf(5500000),
 				50L, BigDecimal.valueOf(4400000), 3L, 6L, 1L)).given(gateway)
-				.summarize(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class),
+				.summarize(any(TenantId.class), any(LocalDate.class), any(LocalDate.class),
 						any(LocalDate.class));
 		willReturn(distribution).given(gateway)
-				.statusDistribution(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class));
+				.statusDistribution(any(TenantId.class), any(LocalDate.class), any(LocalDate.class));
 
 		useCase.execute(new DashboardSummaryRequest(null, "Asia/Jakarta"), principal, presenter);
 
 		then(gateway).should()
-				.summarize(eq(new TenantIdDomain(TENANT_ID)), eq(LocalDate.of(2026, 10, 1)),
+				.summarize(eq(new TenantId(TENANT_ID)), eq(LocalDate.of(2026, 10, 1)),
 						eq(LocalDate.of(2026, 10, 1)), eq(LocalDate.of(2026, 9, 1)));
 		then(gateway).should()
-				.statusDistribution(eq(new TenantIdDomain(TENANT_ID)), eq(LocalDate.of(2026, 10, 1)),
+				.statusDistribution(eq(new TenantId(TENANT_ID)), eq(LocalDate.of(2026, 10, 1)),
 						eq(LocalDate.of(2026, 11, 1)));
 		then(presenter).should()
 				.present(responseCaptor.capture());
@@ -97,10 +97,10 @@ class DefaultDashboardSummaryUseCaseTest{
 				.build();
 		willReturn(new DashboardSummaryProjection(1L, BigDecimal.valueOf(24000), 9L, BigDecimal.valueOf(310000),
 				0L, BigDecimal.ZERO, 0L, 2L, 0L)).given(gateway)
-				.summarize(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class),
+				.summarize(any(TenantId.class), any(LocalDate.class), any(LocalDate.class),
 						any(LocalDate.class));
 		willReturn(List.of()).given(gateway)
-				.statusDistribution(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class));
+				.statusDistribution(any(TenantId.class), any(LocalDate.class), any(LocalDate.class));
 
 		useCase.execute(new DashboardSummaryRequest(null, null), principal, presenter);
 
@@ -128,10 +128,10 @@ class DefaultDashboardSummaryUseCaseTest{
 				.build();
 		willReturn(new DashboardSummaryProjection(0L, BigDecimal.ZERO, 2L, BigDecimal.valueOf(100000), 3L,
 				BigDecimal.valueOf(300000), 1L, 0L, 0L)).given(gateway)
-				.summarize(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class),
+				.summarize(any(TenantId.class), any(LocalDate.class), any(LocalDate.class),
 						any(LocalDate.class));
 		willReturn(List.of()).given(gateway)
-				.statusDistribution(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class));
+				.statusDistribution(any(TenantId.class), any(LocalDate.class), any(LocalDate.class));
 
 		useCase.execute(new DashboardSummaryRequest(null, null), principal, presenter);
 
@@ -155,18 +155,18 @@ class DefaultDashboardSummaryUseCaseTest{
 				.build();
 		willReturn(new DashboardSummaryProjection(4L, BigDecimal.valueOf(150000), 20L, BigDecimal.valueOf(2000000),
 				5L, BigDecimal.valueOf(400000), 2L, 3L, 0L)).given(gateway)
-				.summarize(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class),
+				.summarize(any(TenantId.class), any(LocalDate.class), any(LocalDate.class),
 						any(LocalDate.class));
 		willReturn(List.of()).given(gateway)
-				.statusDistribution(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class));
+				.statusDistribution(any(TenantId.class), any(LocalDate.class), any(LocalDate.class));
 
 		useCase.execute(new DashboardSummaryRequest(LocalDate.of(2026, 7, 15), null), principal, presenter);
 
 		then(gateway).should()
-				.summarize(eq(new TenantIdDomain(TENANT_ID)), eq(LocalDate.of(2026, 7, 15)),
+				.summarize(eq(new TenantId(TENANT_ID)), eq(LocalDate.of(2026, 7, 15)),
 						eq(LocalDate.of(2026, 7, 1)), eq(LocalDate.of(2026, 6, 1)));
 		then(gateway).should()
-				.statusDistribution(eq(new TenantIdDomain(TENANT_ID)), eq(LocalDate.of(2026, 7, 1)),
+				.statusDistribution(eq(new TenantId(TENANT_ID)), eq(LocalDate.of(2026, 7, 1)),
 						eq(LocalDate.of(2026, 8, 1)));
 	}
 

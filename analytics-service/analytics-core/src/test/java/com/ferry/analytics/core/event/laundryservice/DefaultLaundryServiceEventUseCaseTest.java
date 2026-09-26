@@ -1,8 +1,8 @@
 package com.ferry.analytics.core.event.laundryservice;
 
 import com.ferry.analytics.domain.event.AnalyticsAggregate;
-import com.ferry.analytics.domain.event.ConsumedEventDomain;
-import com.ferry.analytics.domain.event.LaundryServiceSnapshotDomain;
+import com.ferry.analytics.domain.event.ConsumedEvent;
+import com.ferry.analytics.domain.event.LaundryServiceSnapshot;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,14 +37,14 @@ class DefaultLaundryServiceEventUseCaseTest{
 	@Mock
 	LaundryServiceEventPresenter presenter;
 	@Captor
-	ArgumentCaptor<ConsumedEventDomain> consumedCaptor;
+	ArgumentCaptor<ConsumedEvent> consumedCaptor;
 	@Captor
 	ArgumentCaptor<LaundryServiceEventResponse> responseCaptor;
 
 	@Test
 	void givenMissingType_thenThrowsConstraintViolationException(){
 		Instant now = Instant.now();
-		LaundryServiceSnapshotDomain service = LaundryServiceSnapshotDomain.builder()
+		LaundryServiceSnapshot service = LaundryServiceSnapshot.builder()
 				.tenantId(TENANT_ID)
 				.serviceId(SERVICE_ID)
 				.name("Setrika Uap")
@@ -70,7 +70,7 @@ class DefaultLaundryServiceEventUseCaseTest{
 	@Test
 	void givenDeletedServiceSnapshot_thenUpsertsItAndRecordsTheConsumedEvent(){
 		Instant now = Instant.now();
-		LaundryServiceSnapshotDomain service = LaundryServiceSnapshotDomain.builder()
+		LaundryServiceSnapshot service = LaundryServiceSnapshot.builder()
 				.tenantId(TENANT_ID)
 				.serviceId(SERVICE_ID)
 				.name("Setrika Uap")

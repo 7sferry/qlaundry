@@ -1,21 +1,21 @@
 package com.ferry.order.core.service.delete;
 
 import com.ferry.order.core.analytics.AnalyticsEventConfig;
-import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
 import com.ferry.order.domain.analytics.AnalyticsAggregate;
-import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEvent;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
-import com.ferry.order.domain.common.MoneyDomain;
-import com.ferry.order.domain.common.NoteDomain;
+import com.ferry.order.domain.common.Money;
+import com.ferry.order.domain.common.Note;
 import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.common.exception.OrderForbiddenActionException;
-import com.ferry.order.domain.service.LaundryServiceDomain;
-import com.ferry.order.domain.service.LaundryServiceIdDomain;
+import com.ferry.order.domain.service.LaundryService;
+import com.ferry.order.domain.service.LaundryServiceId;
 import com.ferry.order.domain.service.ServiceCategory;
 import com.ferry.order.domain.service.ServiceUnit;
 import com.ferry.order.domain.staff.StaffRole;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -52,7 +52,7 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 	@Mock
 	LaundryServiceDeleteGateway gateway;
 	@Mock
-	AnalyticsEventPublisher publisher;
+	OrderAnalyticsPublisher publisher;
 	@Captor
 	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
 	@InjectMocks
@@ -60,7 +60,7 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 	@Mock
 	LaundryServiceDeletePresenter presenter;
 	@Captor
-	ArgumentCaptor<LaundryServiceDomain> serviceCaptor;
+	ArgumentCaptor<LaundryService> serviceCaptor;
 
 	@Test
 	void givenNonSuperStaffRole_thenThrowsForbiddenActionException(){
@@ -101,7 +101,7 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		willReturn(Optional.empty()).given(gateway)
-				.findById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(LaundryServiceId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new LaundryServiceDeleteRequest(SERVICE_ID), principal, presenter))
@@ -109,9 +109,9 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 				.hasMessage("Service Not Found"));
 
 		then(gateway).should(never())
-				.hasOpenOrders(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.hasOpenOrders(any(LaundryServiceId.class), any(TenantId.class));
 		then(gateway).should(never())
-				.save(any(LaundryServiceDomain.class));
+				.save(any(LaundryService.class));
 	}
 
 	@Test
@@ -122,12 +122,12 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Sepatu Deep Clean")
-				.description(new NoteDomain("shoe deep clean"))
-				.pricePerUnit(MoneyDomain.of(30000L))
+				.description(new Note("shoe deep clean"))
+				.pricePerUnit(Money.of(30000L))
 				.unit(ServiceUnit.SET)
 				.category(ServiceCategory.SPECIALTY)
 				.estimatedHours(48)
@@ -141,9 +141,9 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(service)).given(gateway)
-				.findById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(LaundryServiceId.class), any(TenantId.class));
 		willReturn(true).given(gateway)
-				.hasOpenOrders(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.hasOpenOrders(any(LaundryServiceId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new LaundryServiceDeleteRequest(SERVICE_ID), principal, presenter))
@@ -151,7 +151,7 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 				.hasMessage("Cannot delete a service that still has orders in progress"));
 
 		then(gateway).should(never())
-				.save(any(LaundryServiceDomain.class));
+				.save(any(LaundryService.class));
 		then(presenter).should(never())
 				.present(any(LaundryServiceDeleteResponse.class));
 	}
@@ -164,12 +164,12 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Sepatu Deep Clean")
-				.description(new NoteDomain("shoe deep clean"))
-				.pricePerUnit(MoneyDomain.of(30000L))
+				.description(new Note("shoe deep clean"))
+				.pricePerUnit(Money.of(30000L))
 				.unit(ServiceUnit.SET)
 				.category(ServiceCategory.SPECIALTY)
 				.estimatedHours(48)
@@ -183,12 +183,12 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 				.updatedBy("01STAFFFOUNDINGOWNER0000000")
 				.build();
 		willReturn(Optional.of(service)).given(gateway)
-				.findById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(LaundryServiceId.class), any(TenantId.class));
 		willReturn(false).given(gateway)
-				.hasOpenOrders(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<LaundryServiceDomain>getArgument(0)).given(gateway)
-				.save(any(LaundryServiceDomain.class));
-		willReturn(AnalyticsEventDomain.create(AnalyticsAggregate.LAUNDRY_SERVICE, AnalyticsEventType.LAUNDRY_SERVICE_DELETED,
+				.hasOpenOrders(any(LaundryServiceId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<LaundryService>getArgument(0)).given(gateway)
+				.save(any(LaundryService.class));
+		willReturn(AnalyticsEvent.create(AnalyticsAggregate.LAUNDRY_SERVICE, AnalyticsEventType.LAUNDRY_SERVICE_DELETED,
 				TENANT_ID, SERVICE_ID, 1, "{}", STAFF_ID)).given(publisher)
 				.save(any(AnalyticsEventConfig.class));
 
@@ -197,15 +197,15 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(AnalyticsEventDomain.class));
+				.publish(any(AnalyticsEvent.class));
 		then(gateway).should()
-				.hasOpenOrders(eq(new LaundryServiceIdDomain(SERVICE_ID)), eq(new TenantIdDomain(TENANT_ID)));
+				.hasOpenOrders(eq(new LaundryServiceId(SERVICE_ID)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
 				.save(serviceCaptor.capture());
 		then(presenter).should()
 				.present(eq(new LaundryServiceDeleteResponse(SERVICE_ID)));
 
-		LaundryServiceDomain saved = serviceCaptor.getValue();
+		LaundryService saved = serviceCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(analyticsCaptor.getValue().type())

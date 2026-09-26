@@ -1,11 +1,11 @@
 package com.ferry.user.core.staff.delete;
 
-import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.common.exception.ForbiddenActionException;
 import com.ferry.user.domain.common.exception.NotFoundException;
-import com.ferry.user.domain.staff.StaffDomain;
+import com.ferry.user.domain.staff.Staff;
 import com.ferry.user.domain.staff.StaffRole;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
@@ -24,9 +24,9 @@ public class DefaultStaffDeleteUseCase implements StaffDeleteUseCase{
 			throw new ForbiddenActionException("Only super staff can delete staff");
 		}
 		request.validate();
-		UsernameDomain username = new UsernameDomain(request.username());
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		StaffDomain target = gateway.findByUsername(username, tenantId)
+		Username username = new Username(request.username());
+		TenantId tenantId = new TenantId(principal.tenantId());
+		Staff target = gateway.findByUsername(username, tenantId)
 				.orElseThrow(() -> new NotFoundException("Staff Not Found"));
 		if(target.id().equals(principal.userId())){
 			throw new ForbiddenActionException("Cannot delete your own account");

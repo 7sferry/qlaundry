@@ -2,10 +2,10 @@ package com.ferry.analytics.core.event.order;
 
 import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
 import com.ferry.analytics.domain.event.AnalyticsAggregate;
-import com.ferry.analytics.domain.event.ConsumedEventDomain;
-import com.ferry.analytics.domain.event.OrderItemSnapshotDomain;
-import com.ferry.analytics.domain.event.OrderPromotionSnapshotDomain;
-import com.ferry.analytics.domain.event.OrderSnapshotDomain;
+import com.ferry.analytics.domain.event.ConsumedEvent;
+import com.ferry.analytics.domain.event.OrderItemSnapshot;
+import com.ferry.analytics.domain.event.OrderPromotionSnapshot;
+import com.ferry.analytics.domain.event.OrderSnapshot;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,20 +45,20 @@ class DefaultOrderEventUseCaseTest{
 	@Mock
 	OrderEventPresenter presenter;
 	@Captor
-	ArgumentCaptor<OrderSnapshotDomain> orderCaptor;
+	ArgumentCaptor<OrderSnapshot> orderCaptor;
 	@Captor
-	ArgumentCaptor<List<OrderItemSnapshotDomain>> itemsCaptor;
+	ArgumentCaptor<List<OrderItemSnapshot>> itemsCaptor;
 	@Captor
-	ArgumentCaptor<List<OrderPromotionSnapshotDomain>> promotionsCaptor;
+	ArgumentCaptor<List<OrderPromotionSnapshot>> promotionsCaptor;
 	@Captor
-	ArgumentCaptor<ConsumedEventDomain> consumedCaptor;
+	ArgumentCaptor<ConsumedEvent> consumedCaptor;
 	@Captor
 	ArgumentCaptor<OrderEventResponse> responseCaptor;
 
 	@Test
 	void givenBlankEventId_thenThrowsConstraintViolationException(){
 		Instant now = Instant.now();
-		OrderSnapshotDomain order = OrderSnapshotDomain.builder()
+		OrderSnapshot order = OrderSnapshot.builder()
 				.tenantId(TENANT_ID)
 				.orderId(ORDER_ID)
 				.orderNumber("INV-20260914-K3M9QX")
@@ -93,7 +93,7 @@ class DefaultOrderEventUseCaseTest{
 	@Test
 	void givenItemOfAnotherOrder_thenThrowsInvalidAnalyticStateExceptionWithoutWriting(){
 		Instant now = Instant.now();
-		OrderSnapshotDomain order = OrderSnapshotDomain.builder()
+		OrderSnapshot order = OrderSnapshot.builder()
 				.tenantId(TENANT_ID)
 				.orderId(ORDER_ID)
 				.orderNumber("INV-20260914-P7D2WA")
@@ -116,7 +116,7 @@ class DefaultOrderEventUseCaseTest{
 				.updatedAt(now)
 				.version(1)
 				.build();
-		OrderItemSnapshotDomain strayItem = OrderItemSnapshotDomain.builder()
+		OrderItemSnapshot strayItem = OrderItemSnapshot.builder()
 				.tenantId(TENANT_ID)
 				.orderId("01ORDERLAINMILIKTETANGGA0")
 				.itemId("01ITEMKEMEJABATIK00000000")
@@ -134,15 +134,15 @@ class DefaultOrderEventUseCaseTest{
 				.hasMessageContaining("01ITEMKEMEJABATIK00000000"));
 
 		then(gateway).should(never())
-				.upsert(any(OrderSnapshotDomain.class), anyList(), anyList());
+				.upsert(any(OrderSnapshot.class), anyList(), anyList());
 		then(gateway).should(never())
-				.recordConsumed(any(ConsumedEventDomain.class));
+				.recordConsumed(any(ConsumedEvent.class));
 	}
 
 	@Test
 	void givenOrderSnapshotWithItemsAndPromotions_thenUpsertsAllAndRecordsTheConsumedEvent(){
 		Instant now = Instant.now();
-		OrderSnapshotDomain order = OrderSnapshotDomain.builder()
+		OrderSnapshot order = OrderSnapshot.builder()
 				.tenantId(TENANT_ID)
 				.orderId(ORDER_ID)
 				.orderNumber("INV-20260914-B8N4TZ")
@@ -166,7 +166,7 @@ class DefaultOrderEventUseCaseTest{
 				.updatedAt(now)
 				.version(2)
 				.build();
-		OrderItemSnapshotDomain item = OrderItemSnapshotDomain.builder()
+		OrderItemSnapshot item = OrderItemSnapshot.builder()
 				.tenantId(TENANT_ID)
 				.orderId(ORDER_ID)
 				.itemId("01ITEMCELANAJEANS00000000")
@@ -176,7 +176,7 @@ class DefaultOrderEventUseCaseTest{
 				.version(0)
 				.createdAt(now)
 				.build();
-		OrderPromotionSnapshotDomain promotion = OrderPromotionSnapshotDomain.builder()
+		OrderPromotionSnapshot promotion = OrderPromotionSnapshot.builder()
 				.tenantId(TENANT_ID)
 				.orderId(ORDER_ID)
 				.promotionId("01PROMOMERDEKA00000000000")
@@ -196,7 +196,7 @@ class DefaultOrderEventUseCaseTest{
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
-		ConsumedEventDomain consumed = consumedCaptor.getValue();
+		ConsumedEvent consumed = consumedCaptor.getValue();
 		OrderEventResponse response = responseCaptor.getValue();
 
 		thenSoftly(softly -> {
@@ -217,7 +217,7 @@ class DefaultOrderEventUseCaseTest{
 	@Test
 	void givenAnEventTypeTheConsumerHasNeverSeen_thenItIsStillTheSameUpsert(){
 		Instant now = Instant.now();
-		OrderSnapshotDomain order = OrderSnapshotDomain.builder()
+		OrderSnapshot order = OrderSnapshot.builder()
 				.tenantId(TENANT_ID)
 				.orderId(ORDER_ID)
 				.orderNumber("INV-20260914-H2R6VC")

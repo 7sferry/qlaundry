@@ -4,7 +4,7 @@ import com.ferry.analytics.core.constant.AnalyticsConstant;
 import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
 import com.ferry.analytics.domain.dashboard.DashboardSummaryProjection;
 import com.ferry.analytics.domain.dashboard.StatusCountProjection;
-import com.ferry.analytics.domain.tenant.TenantIdDomain;
+import com.ferry.analytics.domain.tenant.TenantId;
 import com.ferry.analytics.domain.token.AnalyticsAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
@@ -28,7 +28,7 @@ public class DefaultDashboardSummaryUseCase implements DashboardSummaryUseCase{
 	public void execute(DashboardSummaryRequest request, AnalyticsAuthPrincipal principal,
 	                    DashboardSummaryPresenter presenter){
 		request.validate();
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
+		TenantId tenantId = new TenantId(principal.tenantId());
 		ZoneId zone = resolveZone(request.zone());
 		LocalDate today = LocalDate.ofInstant(clock.instant(), zone);
 		LocalDate date = request.date() == null ? today : request.date();

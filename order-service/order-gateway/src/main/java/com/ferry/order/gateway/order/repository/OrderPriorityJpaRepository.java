@@ -1,6 +1,6 @@
 package com.ferry.order.gateway.order.repository;
 
-import com.ferry.order.gateway.order.entity.OrderPriorityJpaEntity;
+import com.ferry.order.gateway.order.entity.OrderPriorityJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /************************
@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * on Agustus 2026      *
  ************************/
 
-public interface OrderPriorityJpaRepository extends JpaRepository<OrderPriorityJpaEntity, Short>{
+public interface OrderPriorityJpaRepository extends JpaRepository<OrderPriorityJpa, Short>{
 }

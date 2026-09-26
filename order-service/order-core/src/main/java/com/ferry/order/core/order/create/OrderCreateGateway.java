@@ -1,11 +1,11 @@
 package com.ferry.order.core.order.create;
 
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderItemDomain;
-import com.ferry.order.domain.order.OrderPromotionDomain;
-import com.ferry.order.domain.service.LaundryServiceDomain;
-import com.ferry.order.domain.service.LaundryServiceIdDomain;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderItem;
+import com.ferry.order.domain.order.OrderPromotion;
+import com.ferry.order.domain.service.LaundryService;
+import com.ferry.order.domain.service.LaundryServiceId;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 
 import java.util.Optional;
@@ -16,13 +16,13 @@ import java.util.Optional;
  ************************/
 
 public interface OrderCreateGateway{
-	Optional<LaundryServiceDomain> findServiceById(LaundryServiceIdDomain serviceId, TenantIdDomain tenantId);
+	Optional<LaundryService> findServiceById(LaundryServiceId serviceId, TenantId tenantId);
 
-	OrderDomain save(OrderDomain order);
+	Order save(Order order);
 
-	OrderItemDomain save(OrderItemDomain item);
+	OrderItem save(OrderItem item);
 
-	OrderPromotionDomain save(OrderPromotionDomain promotion);
+	OrderPromotion save(OrderPromotion promotion);
 
-	OrderDomain markPickedUp(OrderDomain order, OrderAuthPrincipal principal);
+	Order markPickedUp(Order order, OrderAuthPrincipal principal);
 }

@@ -1,14 +1,14 @@
 package com.ferry.user.core.customer.delete;
 
-import com.ferry.user.domain.common.DescriptionDomain;
-import com.ferry.user.domain.common.FullNameDomain;
+import com.ferry.user.domain.common.Description;
+import com.ferry.user.domain.common.FullName;
 import com.ferry.user.domain.common.exception.ForbiddenActionException;
 import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import com.ferry.user.domain.common.exception.NotFoundException;
-import com.ferry.user.domain.customer.CustomerDomain;
-import com.ferry.user.domain.customer.CustomerIdDomain;
+import com.ferry.user.domain.customer.Customer;
+import com.ferry.user.domain.customer.CustomerId;
 import com.ferry.user.domain.staff.StaffRole;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -48,7 +48,7 @@ class DefaultCustomerDeleteUseCaseTest{
 	@Mock
 	CustomerDeletePresenter presenter;
 	@Captor
-	ArgumentCaptor<CustomerDomain> customerCaptor;
+	ArgumentCaptor<Customer> customerCaptor;
 	@Captor
 	ArgumentCaptor<CustomerDeleteResponse> responseCaptor;
 
@@ -111,7 +111,7 @@ class DefaultCustomerDeleteUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		willReturn(Optional.empty()).given(gateway)
-				.findById(any(CustomerIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(CustomerId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new CustomerDeleteRequest(CUSTOMER_ID), principal, presenter))
@@ -119,7 +119,7 @@ class DefaultCustomerDeleteUseCaseTest{
 				.hasMessage("Customer Not Found"));
 
 		then(gateway).should(never())
-				.save(any(CustomerDomain.class));
+				.save(any(Customer.class));
 		then(gateway).should(never())
 				.deleteContacts(anyString(), anyString());
 		then(presenter).should(never())
@@ -133,16 +133,16 @@ class DefaultCustomerDeleteUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		CustomerDomain existing = CustomerDomain.register(TENANT_ID, new FullNameDomain("setiawan wibowo"),
-						new DescriptionDomain("regular customer"), PRINCIPAL_ID)
+		Customer existing = Customer.register(TENANT_ID, new FullName("setiawan wibowo"),
+						new Description("regular customer"), PRINCIPAL_ID)
 				.toBuilder().id(CUSTOMER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway)
-				.findById(any(CustomerIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(CustomerId.class), any(TenantId.class));
 
 		useCase.execute(new CustomerDeleteRequest(CUSTOMER_ID), principal, presenter);
 
 		then(gateway).should()
-				.findById(eq(new CustomerIdDomain(CUSTOMER_ID)), eq(new TenantIdDomain(TENANT_ID)));
+				.findById(eq(new CustomerId(CUSTOMER_ID)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
 				.save(customerCaptor.capture());
 		then(gateway).should()
@@ -150,7 +150,7 @@ class DefaultCustomerDeleteUseCaseTest{
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
-		CustomerDomain saved = customerCaptor.getValue();
+		Customer saved = customerCaptor.getValue();
 		CustomerDeleteResponse response = responseCaptor.getValue();
 
 		thenSoftly(softly -> {

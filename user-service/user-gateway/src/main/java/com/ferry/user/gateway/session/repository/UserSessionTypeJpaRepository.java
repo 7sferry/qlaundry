@@ -1,7 +1,7 @@
 package com.ferry.user.gateway.session.repository;
 
-import com.ferry.user.gateway.session.entity.UserSessionJpaEntity;
-import com.ferry.user.gateway.session.entity.UserSessionTypeJpaEntity;
+import com.ferry.user.gateway.session.entity.UserSessionJpa;
+import com.ferry.user.gateway.session.entity.UserSessionTypeJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /************************
@@ -9,5 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * on Juli 2026         *
  ************************/
 
-public interface UserSessionTypeJpaRepository extends JpaRepository<UserSessionTypeJpaEntity, Short>{
+public interface UserSessionTypeJpaRepository extends JpaRepository<UserSessionTypeJpa, Short>{
 }

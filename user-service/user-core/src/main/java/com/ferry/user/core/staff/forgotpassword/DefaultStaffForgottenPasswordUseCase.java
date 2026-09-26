@@ -2,12 +2,12 @@ package com.ferry.user.core.staff.forgotpassword;
 
 import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.constant.PasswordConstant;
-import com.ferry.user.core.tenant.registration.UserEmailPublisher;
+import com.ferry.user.core.tools.UserEmailPublisher;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.common.EmailDomain;
-import com.ferry.user.domain.common.UsernameDomain;
-import com.ferry.user.domain.staff.forgottenpassword.ForgottenPasswordOtpDomain;
-import com.ferry.user.domain.notification.EmailTriggerDomain;
+import com.ferry.user.domain.common.Email;
+import com.ferry.user.domain.common.Username;
+import com.ferry.user.domain.staff.forgottenpassword.ForgottenPasswordOtp;
+import com.ferry.user.domain.notification.EmailTrigger;
 import com.ferry.user.domain.notification.EmailTriggerType;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -47,16 +47,16 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 		long startedAt = System.nanoTime();
 		try{
 			request.validate();
-			UsernameDomain username = new UsernameDomain(request.username());
+			Username username = new Username(request.username());
 			gateway.findEmailWithUsername(username).ifPresentOrElse(email -> {
 				String otp = String.format("%06d", PasswordConstant.getRandom().nextInt(0, 1_000_000));
 				userCacheManager.set(PasswordConstant.OTP_KEY + username.value(), otp,
 						PasswordConstant.OTP_DURATION);
-				ForgottenPasswordOtpDomain payload = new ForgottenPasswordOtpDomain(request.username(), otp);
-				EmailDomain recipient = new EmailDomain(email.email());
+				ForgottenPasswordOtp payload = new ForgottenPasswordOtp(request.username(), otp);
+				Email recipient = new Email(email.email());
 				EmailTriggerConfig config = new EmailTriggerConfig(payload, email.staffId(),
 						EmailTriggerType.FORGOTTEN_PASSWORD, recipient);
-				EmailTriggerDomain saved = emailPublisher.save(config);
+				EmailTrigger saved = emailPublisher.save(config);
 				emailPublisher.publish(saved);
 				String maskedEmail = maskEmail(email.email());
 				presenter.present(new StaffForgottenPasswordResponse(maskedEmail));

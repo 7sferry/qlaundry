@@ -1,6 +1,6 @@
 package com.ferry.promotion.core.promotion.redemption;
 
-import com.ferry.promotion.domain.common.MoneyDomain;
+import com.ferry.promotion.domain.common.Money;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
@@ -16,40 +16,40 @@ public class DiscountCalculator{
 	private static final BigDecimal HUNDRED = BigDecimal.valueOf(100L);
 	private static final int PERCENTAGE_FACTOR_SCALE = 6;
 
-	private final MoneyDomain initialPrice;
-	private MoneyDomain totalDiscountValue = MoneyDomain.ZERO;
+	private final Money initialPrice;
+	private Money totalDiscountValue = Money.ZERO;
 
-	public MoneyDomain visit(NonCumulativePercentageDiscount discountEntity){
-		MoneyDomain discountValue = initialPrice.multiply(discountEntity.percentageValue()
+	public Money visit(NonCumulativePercentageDiscount discountEntity){
+		Money discountValue = initialPrice.multiply(discountEntity.percentageValue()
 				.divide(HUNDRED, PERCENTAGE_FACTOR_SCALE, RoundingMode.HALF_EVEN));
 		if(!discountValue.isPositive()){
 			return discountValue;
 		}
-		MoneyDomain granted = discountValue.min(discountEntity.maxDiscountAmount()).min(initialPrice);
+		Money granted = discountValue.min(discountEntity.maxDiscountAmount()).min(initialPrice);
 		this.totalDiscountValue = this.totalDiscountValue.plus(granted);
 		return granted;
 	}
 
-	public MoneyDomain visit(CumulativePercentageDiscount discountEntity){
-		MoneyDomain basis = new MoneyDomain(initialPrice.value().subtract(this.totalDiscountValue.value()).max(BigDecimal.ZERO));
-		MoneyDomain discountValue = basis
+	public Money visit(CumulativePercentageDiscount discountEntity){
+		Money basis = new Money(initialPrice.value().subtract(this.totalDiscountValue.value()).max(BigDecimal.ZERO));
+		Money discountValue = basis
 				.multiply(discountEntity.percentage()
 						.divide(HUNDRED, PERCENTAGE_FACTOR_SCALE, RoundingMode.HALF_EVEN));
 		if(!discountValue.isPositive()){
 			return discountValue;
 		}
-		MoneyDomain granted = discountValue.min(discountEntity.maxDiscountAmount()).min(basis);
+		Money granted = discountValue.min(discountEntity.maxDiscountAmount()).min(basis);
 		this.totalDiscountValue = this.totalDiscountValue.plus(granted);
 		return granted;
 	}
 
-	public MoneyDomain visit(AmountDiscount discountEntity){
-		MoneyDomain basis = new MoneyDomain(initialPrice.value().subtract(this.totalDiscountValue.value()).max(BigDecimal.ZERO));
-		MoneyDomain discountValue = new MoneyDomain(discountEntity.discountValue());
+	public Money visit(AmountDiscount discountEntity){
+		Money basis = new Money(initialPrice.value().subtract(this.totalDiscountValue.value()).max(BigDecimal.ZERO));
+		Money discountValue = new Money(discountEntity.discountValue());
 		if(!discountValue.isPositive()){
 			return discountValue;
 		}
-		MoneyDomain granted = discountValue.min(discountEntity.maxDiscountAmount()).min(basis);
+		Money granted = discountValue.min(discountEntity.maxDiscountAmount()).min(basis);
 		this.totalDiscountValue = this.totalDiscountValue.plus(granted);
 		return granted;
 	}

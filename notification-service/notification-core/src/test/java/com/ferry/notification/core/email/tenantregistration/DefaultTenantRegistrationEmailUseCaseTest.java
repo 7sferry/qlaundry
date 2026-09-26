@@ -2,8 +2,8 @@ package com.ferry.notification.core.email.tenantregistration;
 
 import com.ferry.notification.core.email.history.EmailHistoryGateway;
 import com.ferry.notification.core.email.send.EmailSendGateway;
-import com.ferry.notification.domain.ContentDomain;
-import com.ferry.notification.domain.EmailNotificationDomain;
+import com.ferry.notification.domain.Content;
+import com.ferry.notification.domain.EmailNotification;
 import com.ferry.notification.domain.EmailType;
 import com.ferry.notification.domain.exception.InvalidaNotificationStateException;
 import jakarta.validation.ConstraintViolationException;
@@ -50,9 +50,9 @@ class DefaultTenantRegistrationEmailUseCaseTest{
 	@Mock
 	TenantRegistrationEmailPresenter presenter;
 	@Captor
-	ArgumentCaptor<EmailNotificationDomain> notificationCaptor;
+	ArgumentCaptor<EmailNotification> notificationCaptor;
 	@Captor
-	ArgumentCaptor<ContentDomain> contentCaptor;
+	ArgumentCaptor<Content> contentCaptor;
 
 	@Test
 	void givenBlankTriggerId_thenThrowsConstraintViolationException(){
@@ -99,15 +99,15 @@ class DefaultTenantRegistrationEmailUseCaseTest{
 		TenantRegistrationEmailRequest request = new TenantRegistrationEmailRequest(TRIGGER_ID, RECIPIENT, STAFF_FULL_NAME,
 				STAFF_USERNAME, TENANT_ID, TENANT_NAME, "A great laundry chain", Instant.now(), CONFIRMATION_TOKEN);
 		willReturn("<html>content</html>").given(composer).compose(request);
-		willAnswer(invocation -> invocation.getArgument(0)).given(emailHistoryGateway).save(any(EmailNotificationDomain.class));
+		willAnswer(invocation -> invocation.getArgument(0)).given(emailHistoryGateway).save(any(EmailNotification.class));
 
 		useCase.execute(request, presenter);
 
 		then(emailSendGateway).should().send(notificationCaptor.capture(), contentCaptor.capture());
-		then(emailHistoryGateway).should().save(any(EmailNotificationDomain.class));
+		then(emailHistoryGateway).should().save(any(EmailNotification.class));
 		then(presenter).should().present(any(TenantRegistrationEmailResponse.class));
 
-		EmailNotificationDomain notification = notificationCaptor.getValue();
+		EmailNotification notification = notificationCaptor.getValue();
 		thenSoftly(softly -> {
 			softly.then(notification.typeValue()).isEqualTo(EmailType.TENANT_REGISTRATION.name());
 			softly.then(notification.referenceId()).isEqualTo(TRIGGER_ID);

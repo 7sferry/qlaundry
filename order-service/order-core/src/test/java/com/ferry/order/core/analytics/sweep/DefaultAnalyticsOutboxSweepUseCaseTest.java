@@ -2,7 +2,7 @@ package com.ferry.order.core.analytics.sweep;
 
 import com.ferry.order.core.analytics.AnalyticsOutboxConstant;
 import com.ferry.order.domain.analytics.AnalyticsAggregate;
-import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEvent;
 import com.ferry.order.domain.analytics.AnalyticsEventStatus;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ class DefaultAnalyticsOutboxSweepUseCaseTest{
 	@Captor
 	ArgumentCaptor<Instant> cutoffCaptor;
 	@Captor
-	ArgumentCaptor<AnalyticsEventDomain> eventCaptor;
+	ArgumentCaptor<AnalyticsEvent> eventCaptor;
 
 	@Test
 	void givenNothingStuckInTheOutbox_thenReturnsAnEmptySweepLookingBackOnlyPastTheGracePeriod(){
@@ -60,7 +60,7 @@ class DefaultAnalyticsOutboxSweepUseCaseTest{
 		then(gateway).should()
 				.findUnpublishedCreatedBefore(cutoffCaptor.capture(), eq(SWEEP_BATCH_SIZE));
 		then(gateway).should(never())
-				.republish(any(AnalyticsEventDomain.class));
+				.republish(any(AnalyticsEvent.class));
 
 		thenSoftly(softly -> {
 			softly.then(response.isEmpty()).isTrue();
@@ -72,7 +72,7 @@ class DefaultAnalyticsOutboxSweepUseCaseTest{
 	@Test
 	void givenAnEventLeftCreatedByARedisOutage_thenRepublishesIt(){
 		Instant createdAt = Instant.now().minusSeconds(600L);
-		AnalyticsEventDomain event = AnalyticsEventDomain.builder()
+		AnalyticsEvent event = AnalyticsEvent.builder()
 				.id("01EVENTREDISMATIPAGI00000")
 				.aggregate(AnalyticsAggregate.ORDER)
 				.type(AnalyticsEventType.ORDER_CREATED)
@@ -98,7 +98,7 @@ class DefaultAnalyticsOutboxSweepUseCaseTest{
 		then(gateway).should()
 				.republish(eq(event));
 		then(gateway).should(never())
-				.recordFailure(any(AnalyticsEventDomain.class));
+				.recordFailure(any(AnalyticsEvent.class));
 
 		thenSoftly(softly -> {
 			softly.then(response.republished()).isEqualTo(1);
@@ -109,7 +109,7 @@ class DefaultAnalyticsOutboxSweepUseCaseTest{
 	@Test
 	void givenRedisStillDown_thenRecordsTheFailureAndKeepsSweepingTheRestOfTheBatch(){
 		Instant createdAt = Instant.now().minusSeconds(1800L);
-		AnalyticsEventDomain first = AnalyticsEventDomain.builder()
+		AnalyticsEvent first = AnalyticsEvent.builder()
 				.id("01EVENTGAGALLAGI000000000")
 				.aggregate(AnalyticsAggregate.LAUNDRY_SERVICE)
 				.type(AnalyticsEventType.LAUNDRY_SERVICE_UPDATED)
@@ -126,7 +126,7 @@ class DefaultAnalyticsOutboxSweepUseCaseTest{
 				.updatedAt(createdAt)
 				.updatedBy(AnalyticsOutboxConstant.SWEEPER_ACTOR)
 				.build();
-		AnalyticsEventDomain second = AnalyticsEventDomain.builder()
+		AnalyticsEvent second = AnalyticsEvent.builder()
 				.id("01EVENTBERHASILKEDUA00000")
 				.aggregate(AnalyticsAggregate.ORDER)
 				.type(AnalyticsEventType.ORDER_PAID)
@@ -145,18 +145,18 @@ class DefaultAnalyticsOutboxSweepUseCaseTest{
 		willReturn(List.of(first, second)).given(gateway)
 				.findUnpublishedCreatedBefore(any(Instant.class), anyInt());
 		willThrow(new IllegalStateException("Unable to connect to localhost:6379")).willDoNothing().given(gateway)
-				.republish(any(AnalyticsEventDomain.class));
+				.republish(any(AnalyticsEvent.class));
 		DefaultAnalyticsOutboxSweepUseCase useCase = new DefaultAnalyticsOutboxSweepUseCase(gateway, GRACE_PERIOD,
 				SWEEP_BATCH_SIZE);
 
 		AnalyticsOutboxSweepResponse response = useCase.execute();
 
 		then(gateway).should(times(2))
-				.republish(any(AnalyticsEventDomain.class));
+				.republish(any(AnalyticsEvent.class));
 		then(gateway).should()
 				.recordFailure(eventCaptor.capture());
 
-		AnalyticsEventDomain failed = eventCaptor.getValue();
+		AnalyticsEvent failed = eventCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(failed.id()).isEqualTo("01EVENTGAGALLAGI000000000");

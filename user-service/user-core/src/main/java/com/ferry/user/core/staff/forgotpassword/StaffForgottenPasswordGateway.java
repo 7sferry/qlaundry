@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.forgotpassword;
 
-import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.staff.forgottenpassword.StaffEmailForgottenPasswordProjection;
 
 import java.util.Optional;
@@ -11,5 +11,5 @@ import java.util.Optional;
  ************************/
 
 public interface StaffForgottenPasswordGateway{
-	Optional<StaffEmailForgottenPasswordProjection> findEmailWithUsername(UsernameDomain username);
+	Optional<StaffEmailForgottenPasswordProjection> findEmailWithUsername(Username username);
 }

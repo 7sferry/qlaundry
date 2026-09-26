@@ -4,7 +4,7 @@ import com.ferry.user.core.staff.constant.TokenConstant;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.session.SessionType;
-import com.ferry.user.domain.session.UserSessionDomain;
+import com.ferry.user.domain.session.UserSession;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
@@ -31,7 +31,7 @@ public class DefaultStaffLogoutUseCase implements StaffLogoutUseCase{
 	}
 
 	private void revokeSession(String hashedRefreshToken){
-		UserSessionDomain currentSession = gateway.findSessionById(hashedRefreshToken)
+		UserSession currentSession = gateway.findSessionById(hashedRefreshToken)
 				.orElse(null);
 		if(currentSession == null || currentSession.sessionType() != SessionType.STAFF){
 			return;
@@ -45,8 +45,8 @@ public class DefaultStaffLogoutUseCase implements StaffLogoutUseCase{
 		cacheManager.delete(TokenConstant.REFRESH_KEY + hashedRefreshToken);
 	}
 
-	private void expireSession(UserSessionDomain currentSession, Instant now){
-		UserSessionDomain userSession = currentSession.toBuilder()
+	private void expireSession(UserSession currentSession, Instant now){
+		UserSession userSession = currentSession.toBuilder()
 				.expirationTime(now)
 				.build();
 		gateway.save(userSession);

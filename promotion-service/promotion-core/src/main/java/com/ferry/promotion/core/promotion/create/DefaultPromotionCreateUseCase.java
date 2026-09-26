@@ -1,13 +1,13 @@
 package com.ferry.promotion.core.promotion.create;
 
-import com.ferry.promotion.domain.common.MoneyDomain;
-import com.ferry.promotion.domain.common.NoteDomain;
+import com.ferry.promotion.domain.common.Money;
+import com.ferry.promotion.domain.common.Note;
 import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
 import com.ferry.promotion.domain.common.exception.PromotionForbiddenActionException;
-import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
-import com.ferry.promotion.domain.promotion.PromotionDomain;
+import com.ferry.promotion.domain.promotion.PromotionCode;
+import com.ferry.promotion.domain.promotion.Promotion;
 import com.ferry.promotion.domain.staff.StaffRole;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.tenant.TenantId;
 import com.ferry.promotion.domain.token.PromotionAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
@@ -30,22 +30,22 @@ public class DefaultPromotionCreateUseCase implements PromotionCreateUseCase{
 			throw new PromotionForbiddenActionException("Only super staff can manage promotions");
 		}
 		request.validate();
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		PromotionCodeDomain code = new PromotionCodeDomain(request.code());
+		TenantId tenantId = new TenantId(principal.tenantId());
+		PromotionCode code = new PromotionCode(request.code());
 		if(gateway.existsByCode(code, tenantId)){
 			throw new InvalidPromotionStateException("Promotion code already exists");
 		}
 		boolean combinable = request.combinable() == null || request.combinable();
-		PromotionDomain saved = gateway.save(PromotionDomain.create(tenantId.value(), code, request.name(),
-				new NoteDomain(request.description()), request.type(), request.percentage(),
+		Promotion saved = gateway.save(Promotion.create(tenantId.value(), code, request.name(),
+				new Note(request.description()), request.type(), request.percentage(),
 				money(request.amount()), money(request.maxDiscountAmount()), money(request.minSubtotal()),
 				combinable, request.usageLimit(), instant(request.startAt()), instant(request.endAt()),
 				principal.userId()));
 		presenter.present(new PromotionCreateResponse(saved));
 	}
 
-	private MoneyDomain money(BigDecimal value){
-		return value == null ? null : new MoneyDomain(value);
+	private Money money(BigDecimal value){
+		return value == null ? null : new Money(value);
 	}
 
 	private Instant instant(Long epochMilli){

@@ -4,7 +4,7 @@ import com.ferry.user.core.staff.constant.TokenConstant;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.session.SessionType;
-import com.ferry.user.domain.session.UserSessionDomain;
+import com.ferry.user.domain.session.UserSession;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,7 +45,7 @@ class DefaultStaffLogoutUseCaseTest{
 	@Mock
 	StaffLogoutPresenter presenter;
 	@Captor
-	ArgumentCaptor<UserSessionDomain> sessionCaptor;
+	ArgumentCaptor<UserSession> sessionCaptor;
 
 	@Test
 	void givenBlankRefreshToken_thenThrowsConstraintViolationException(){
@@ -73,7 +73,7 @@ class DefaultStaffLogoutUseCaseTest{
 	@Test
 	void givenSessionTypeIsNotStaff_thenPresentsByeMessageWithoutClearingCache(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
-		UserSessionDomain session = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.CUSTOMER);
+		UserSession session = UserSession.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.CUSTOMER);
 		willReturn(Optional.of(session)).given(gateway).findSessionById(HASHED_REFRESH_TOKEN);
 
 		useCase.execute(new StaffLogoutRequest(REFRESH_TOKEN), presenter);
@@ -86,7 +86,7 @@ class DefaultStaffLogoutUseCaseTest{
 	@Test
 	void givenSessionNotYetExpired_thenExpiresSessionAndClearsAllCaches(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
-		UserSessionDomain session = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.STAFF);
+		UserSession session = UserSession.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.STAFF);
 		willReturn(Optional.of(session)).given(gateway).findSessionById(HASHED_REFRESH_TOKEN);
 
 		useCase.execute(new StaffLogoutRequest(REFRESH_TOKEN), presenter);
@@ -103,7 +103,7 @@ class DefaultStaffLogoutUseCaseTest{
 	@Test
 	void givenSessionAlreadyExpired_thenSkipsExpiringButStillClearsCaches(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
-		UserSessionDomain session = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().minusSeconds(60), USER_ID, SessionType.STAFF);
+		UserSession session = UserSession.create(HASHED_REFRESH_TOKEN, Instant.now().minusSeconds(60), USER_ID, SessionType.STAFF);
 		willReturn(Optional.of(session)).given(gateway).findSessionById(HASHED_REFRESH_TOKEN);
 
 		useCase.execute(new StaffLogoutRequest(REFRESH_TOKEN), presenter);

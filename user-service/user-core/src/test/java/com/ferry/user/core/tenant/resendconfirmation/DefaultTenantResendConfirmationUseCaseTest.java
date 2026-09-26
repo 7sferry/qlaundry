@@ -3,16 +3,16 @@ package com.ferry.user.core.tenant.resendconfirmation;
 import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.tenant.constant.TenantConfirmationConstant;
 import com.ferry.user.core.tenant.registration.TenantRegistrationEmailMessage;
-import com.ferry.user.core.tenant.registration.UserEmailPublisher;
+import com.ferry.user.core.tools.UserEmailPublisher;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.common.DescriptionDomain;
-import com.ferry.user.domain.common.EmailDomain;
-import com.ferry.user.domain.common.FullNameDomain;
-import com.ferry.user.domain.common.UsernameDomain;
-import com.ferry.user.domain.notification.EmailTriggerDomain;
+import com.ferry.user.domain.common.Description;
+import com.ferry.user.domain.common.Email;
+import com.ferry.user.domain.common.FullName;
+import com.ferry.user.domain.common.Username;
+import com.ferry.user.domain.notification.EmailTrigger;
 import com.ferry.user.domain.notification.EmailTriggerType;
-import com.ferry.user.domain.tenant.TenantDomain;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.Tenant;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.tenant.resendconfirmation.TenantAdminContactProjection;
 import org.junit.jupiter.api.Test;
@@ -71,7 +71,7 @@ class DefaultTenantResendConfirmationUseCaseTest{
 
 	@Test
 	void givenTenantNotFound_thenPresentsGenericSuccessMessageWithoutSendingEmail(){
-		willReturn(Optional.empty()).given(gateway).findById(new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.empty()).given(gateway).findById(new TenantId(TENANT_ID));
 
 		useCase.execute(new TenantResendConfirmationRequest(TENANT_ID), presenter);
 
@@ -81,9 +81,9 @@ class DefaultTenantResendConfirmationUseCaseTest{
 
 	@Test
 	void givenTenantAlreadyActive_thenPresentsGenericSuccessMessageWithoutSendingEmail(){
-		TenantDomain tenant = new TenantDomain(TENANT_ID, new UsernameDomain(TENANT_USERNAME), new FullNameDomain(TENANT_NAME),
-				new DescriptionDomain("desc"), TenantStatus.ACTIVE, null, false, Instant.now(), null, Instant.now(), null);
-		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantIdDomain(TENANT_ID));
+		Tenant tenant = new Tenant(TENANT_ID, new Username(TENANT_USERNAME), new FullName(TENANT_NAME),
+				new Description("desc"), TenantStatus.ACTIVE, null, false, Instant.now(), null, Instant.now(), null);
+		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantId(TENANT_ID));
 
 		useCase.execute(new TenantResendConfirmationRequest(TENANT_ID), presenter);
 
@@ -94,10 +94,10 @@ class DefaultTenantResendConfirmationUseCaseTest{
 
 	@Test
 	void givenAdminContactNotFound_thenPresentsGenericSuccessMessageWithoutSendingEmail(){
-		TenantDomain tenant = new TenantDomain(TENANT_ID, new UsernameDomain(TENANT_USERNAME), new FullNameDomain(TENANT_NAME),
-				new DescriptionDomain("desc"), TenantStatus.PENDING, null, false, Instant.now(), null, Instant.now(), null);
-		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantIdDomain(TENANT_ID));
-		willReturn(Optional.empty()).given(gateway).findAdminContact(new TenantIdDomain(TENANT_ID));
+		Tenant tenant = new Tenant(TENANT_ID, new Username(TENANT_USERNAME), new FullName(TENANT_NAME),
+				new Description("desc"), TenantStatus.PENDING, null, false, Instant.now(), null, Instant.now(), null);
+		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantId(TENANT_ID));
+		willReturn(Optional.empty()).given(gateway).findAdminContact(new TenantId(TENANT_ID));
 
 		useCase.execute(new TenantResendConfirmationRequest(TENANT_ID), presenter);
 
@@ -107,13 +107,13 @@ class DefaultTenantResendConfirmationUseCaseTest{
 
 	@Test
 	void givenValidRequest_thenCachesNewTokenPublishesEmailAndPresentsSuccessMessage(){
-		TenantDomain tenant = new TenantDomain(TENANT_ID, new UsernameDomain(TENANT_USERNAME), new FullNameDomain(TENANT_NAME),
-				new DescriptionDomain("desc"), TenantStatus.PENDING, null, false, Instant.now(), null, Instant.now(), null);
-		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantIdDomain(TENANT_ID));
+		Tenant tenant = new Tenant(TENANT_ID, new Username(TENANT_USERNAME), new FullName(TENANT_NAME),
+				new Description("desc"), TenantStatus.PENDING, null, false, Instant.now(), null, Instant.now(), null);
+		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantId(TENANT_ID));
 		TenantAdminContactProjection admin = new TenantAdminContactProjection(ADMIN_EMAIL, ADMIN_FULL_NAME, ADMIN_USERNAME, ADMIN_STAFF_ID);
-		willReturn(Optional.of(admin)).given(gateway).findAdminContact(new TenantIdDomain(TENANT_ID));
-		EmailTriggerDomain trigger = EmailTriggerDomain.create(EmailTriggerType.TENANT_REGISTRATION,
-				new EmailDomain(ADMIN_EMAIL), "{}", null);
+		willReturn(Optional.of(admin)).given(gateway).findAdminContact(new TenantId(TENANT_ID));
+		EmailTrigger trigger = EmailTrigger.create(EmailTriggerType.TENANT_REGISTRATION,
+				new Email(ADMIN_EMAIL), "{}", null);
 		willReturn(trigger).given(emailPublisher).save(emailConfigCaptor.capture());
 
 		useCase.execute(new TenantResendConfirmationRequest(TENANT_ID), presenter);

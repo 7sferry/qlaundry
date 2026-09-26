@@ -1,13 +1,13 @@
 package com.ferry.user.core.staff.detail;
 
-import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.staff.detail.StaffAddressDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffEmailDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffPhoneDetailProjection;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
@@ -25,11 +25,11 @@ public class DefaultStaffDetailUseCase implements StaffDetailUseCase{
 	@Override
 	public void execute(StaffDetailRequest request, UserAuthPrincipal principal, StaffDetailPresenter presenter){
 		request.validate();
-		UsernameDomain username = new UsernameDomain(request.username());
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
+		Username username = new Username(request.username());
+		TenantId tenantId = new TenantId(principal.tenantId());
 		StaffDetailProjection staff = gateway.findDetail(username, tenantId)
 				.orElseThrow(() -> new NotFoundException("Staff Not Found"));
-		StaffIdDomain staffId = new StaffIdDomain(staff.id());
+		StaffId staffId = new StaffId(staff.id());
 		StaffPhoneFilter phoneFilter = StaffPhoneFilter.builder()
 				.staffId(staffId.value())
 				.build();

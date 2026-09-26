@@ -1,13 +1,13 @@
 package com.ferry.user.core.customer.list;
 
 import com.ferry.utils.pagination.CursorFetch;
-import com.ferry.user.domain.customer.CustomerAddressDomain;
+import com.ferry.user.domain.customer.CustomerAddress;
 import com.ferry.user.domain.customer.CustomerAddressFilter;
-import com.ferry.user.domain.customer.CustomerDomain;
-import com.ferry.user.domain.customer.CustomerEmailDomain;
+import com.ferry.user.domain.customer.Customer;
+import com.ferry.user.domain.customer.CustomerEmail;
 import com.ferry.user.domain.customer.CustomerEmailFilter;
 import com.ferry.user.domain.customer.CustomerFilter;
-import com.ferry.user.domain.customer.CustomerPhoneDomain;
+import com.ferry.user.domain.customer.CustomerPhone;
 import com.ferry.user.domain.customer.CustomerPhoneFilter;
 
 import java.util.List;
@@ -18,11 +18,11 @@ import java.util.List;
  ************************/
 
 public interface CustomerListGateway{
-	CursorFetch<CustomerDomain> findByFilter(CustomerFilter filter);
+	CursorFetch<Customer> findByFilter(CustomerFilter filter);
 
-	List<CustomerEmailDomain> findEmailsByFilter(CustomerEmailFilter filter);
+	List<CustomerEmail> findEmailsByFilter(CustomerEmailFilter filter);
 
-	List<CustomerPhoneDomain> findPhonesByFilter(CustomerPhoneFilter filter);
+	List<CustomerPhone> findPhonesByFilter(CustomerPhoneFilter filter);
 
-	List<CustomerAddressDomain> findAddressesByFilter(CustomerAddressFilter filter);
+	List<CustomerAddress> findAddressesByFilter(CustomerAddressFilter filter);
 }

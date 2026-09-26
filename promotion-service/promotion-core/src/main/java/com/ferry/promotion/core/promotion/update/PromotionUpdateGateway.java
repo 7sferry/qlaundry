@@ -1,9 +1,9 @@
 package com.ferry.promotion.core.promotion.update;
 
-import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
-import com.ferry.promotion.domain.promotion.PromotionDomain;
-import com.ferry.promotion.domain.promotion.PromotionIdDomain;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.promotion.PromotionCode;
+import com.ferry.promotion.domain.promotion.Promotion;
+import com.ferry.promotion.domain.promotion.PromotionId;
+import com.ferry.promotion.domain.tenant.TenantId;
 
 import java.util.Optional;
 
@@ -13,9 +13,9 @@ import java.util.Optional;
  ************************/
 
 public interface PromotionUpdateGateway{
-	Optional<PromotionDomain> findById(PromotionIdDomain promotionId, TenantIdDomain tenantId);
+	Optional<Promotion> findById(PromotionId promotionId, TenantId tenantId);
 
-	boolean existsByCode(PromotionCodeDomain code, TenantIdDomain tenantId, PromotionIdDomain excludedId);
+	boolean existsByCode(PromotionCode code, TenantId tenantId, PromotionId excludedId);
 
-	PromotionDomain save(PromotionDomain promotion);
+	Promotion save(Promotion promotion);
 }

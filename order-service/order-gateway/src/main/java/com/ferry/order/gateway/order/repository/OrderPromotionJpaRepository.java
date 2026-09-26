@@ -1,6 +1,6 @@
 package com.ferry.order.gateway.order.repository;
 
-import com.ferry.order.gateway.order.entity.OrderPromotionJpaEntity;
+import com.ferry.order.gateway.order.entity.OrderPromotionJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Collection;
@@ -11,10 +11,10 @@ import java.util.List;
  * on Agustus 2026      *
  ************************/
 
-public interface OrderPromotionJpaRepository extends JpaRepository<OrderPromotionJpaEntity, String>{
+public interface OrderPromotionJpaRepository extends JpaRepository<OrderPromotionJpa, String>{
 
-	List<OrderPromotionJpaEntity> findByOrderIdAndDeletedIsFalseOrderById(String orderId);
+	List<OrderPromotionJpa> findByOrderIdAndDeletedIsFalseOrderById(String orderId);
 
-	List<OrderPromotionJpaEntity> findByOrderIdInAndDeletedIsFalseOrderById(Collection<String> orderIds);
+	List<OrderPromotionJpa> findByOrderIdInAndDeletedIsFalseOrderById(Collection<String> orderIds);
 
 }

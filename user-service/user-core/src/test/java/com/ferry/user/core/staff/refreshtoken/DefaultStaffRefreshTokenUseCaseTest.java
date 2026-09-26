@@ -5,11 +5,11 @@ import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.session.SessionType;
-import com.ferry.user.domain.session.UserSessionDomain;
+import com.ferry.user.domain.session.UserSession;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.staff.refresh.ExpiredSessionException;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
 import org.junit.jupiter.api.Test;
@@ -90,7 +90,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 	void givenSessionNotFoundAnywhere_thenThrowsExpiredSessionException(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN, StaffRefreshTokenResponse.class);
-		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSessionDomain.class);
+		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSession.class);
 		willReturn(Optional.empty()).given(gateway).findSessionById(HASHED_REFRESH_TOKEN);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter))
@@ -104,8 +104,8 @@ class DefaultStaffRefreshTokenUseCaseTest{
 	void givenSessionTypeIsNotStaff_thenPresentsUnauthorized(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN, StaffRefreshTokenResponse.class);
-		UserSessionDomain session = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.CUSTOMER);
-		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSessionDomain.class);
+		UserSession session = UserSession.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.CUSTOMER);
+		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSession.class);
 
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
@@ -117,8 +117,8 @@ class DefaultStaffRefreshTokenUseCaseTest{
 	void givenSessionExpired_thenPresentsUnauthorized(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN, StaffRefreshTokenResponse.class);
-		UserSessionDomain session = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().minusSeconds(60), USER_ID, SessionType.STAFF);
-		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSessionDomain.class);
+		UserSession session = UserSession.create(HASHED_REFRESH_TOKEN, Instant.now().minusSeconds(60), USER_ID, SessionType.STAFF);
+		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSession.class);
 
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
@@ -129,8 +129,8 @@ class DefaultStaffRefreshTokenUseCaseTest{
 	void givenSessionFetchedFromGateway_thenCachesSessionWithCappedDuration(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN, StaffRefreshTokenResponse.class);
-		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSessionDomain.class);
-		UserSessionDomain fetchedSession = UserSessionDomain.create(HASHED_REFRESH_TOKEN,
+		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSession.class);
+		UserSession fetchedSession = UserSession.create(HASHED_REFRESH_TOKEN,
 				Instant.now().plusSeconds(TokenConstant.REFRESH_CACHE_MAX_SECONDS + 3600), USER_ID, SessionType.STAFF);
 		willReturn(Optional.of(fetchedSession)).given(gateway).findSessionById(HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of("cached-access-token")).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
@@ -147,8 +147,8 @@ class DefaultStaffRefreshTokenUseCaseTest{
 	void givenValidSessionWithCachedAccessToken_thenPresentsCachedAccessTokenWithoutRotation(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN, StaffRefreshTokenResponse.class);
-		UserSessionDomain session = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.STAFF);
-		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSessionDomain.class);
+		UserSession session = UserSession.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.STAFF);
+		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSession.class);
 		willReturn(Optional.of("cached-access-token")).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
@@ -162,12 +162,12 @@ class DefaultStaffRefreshTokenUseCaseTest{
 	void givenValidSessionWithoutCachedAccessToken_andNotInRotationWindow_thenGeneratesAndCachesNewAccessToken(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN, StaffRefreshTokenResponse.class);
-		UserSessionDomain session = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.STAFF);
-		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSessionDomain.class);
+		UserSession session = UserSession.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.STAFF);
+		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSession.class);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of(new StaffLoginProjection(USER_ID, USERNAME, "hashed-pw", FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue())))
 				.given(gateway).findById(USER_ID);
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantId(TENANT_ID));
 		willReturn(NEW_ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(60L).given(tokenProcessor).getRotationDurationBeforeExpireInSeconds();
 		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();
@@ -184,12 +184,12 @@ class DefaultStaffRefreshTokenUseCaseTest{
 	void givenAccessTokenCacheDurationNotPositive_thenSkipsCachingAccessToken(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN, StaffRefreshTokenResponse.class);
-		UserSessionDomain session = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.STAFF);
-		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSessionDomain.class);
+		UserSession session = UserSession.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.STAFF);
+		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSession.class);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of(new StaffLoginProjection(USER_ID, USERNAME, "hashed-pw", FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue())))
 				.given(gateway).findById(USER_ID);
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantId(TENANT_ID));
 		willReturn(NEW_ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(60L).given(tokenProcessor).getRotationDurationBeforeExpireInSeconds();
 		willReturn(30L).given(tokenProcessor).getAccessDurationInSeconds();
@@ -204,8 +204,8 @@ class DefaultStaffRefreshTokenUseCaseTest{
 	void givenStaffNotFoundDuringAccessTokenGeneration_thenThrowsNotFoundException(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN, StaffRefreshTokenResponse.class);
-		UserSessionDomain session = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.STAFF);
-		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSessionDomain.class);
+		UserSession session = UserSession.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.STAFF);
+		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSession.class);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(gateway).findById(USER_ID);
 
@@ -220,12 +220,12 @@ class DefaultStaffRefreshTokenUseCaseTest{
 	void givenTenantNotFoundDuringAccessTokenGeneration_thenThrowsNotFoundException(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN, StaffRefreshTokenResponse.class);
-		UserSessionDomain session = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.STAFF);
-		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSessionDomain.class);
+		UserSession session = UserSession.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.STAFF);
+		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSession.class);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of(new StaffLoginProjection(USER_ID, USERNAME, "hashed-pw", FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue())))
 				.given(gateway).findById(USER_ID);
-		willReturn(Optional.empty()).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.empty()).given(gateway).findTenantById(new TenantId(TENANT_ID));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter))
 				.isInstanceOf(NotFoundException.class)
@@ -238,12 +238,12 @@ class DefaultStaffRefreshTokenUseCaseTest{
 	void givenRoleNotFoundDuringAccessTokenGeneration_thenThrowsNotFoundException(){
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN, StaffRefreshTokenResponse.class);
-		UserSessionDomain session = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.STAFF);
-		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSessionDomain.class);
+		UserSession session = UserSession.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(3600), USER_ID, SessionType.STAFF);
+		willReturn(Optional.of(session)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSession.class);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of(new StaffLoginProjection(USER_ID, USERNAME, "hashed-pw", FULL_NAME, TENANT_ID, (short) 99)))
 				.given(gateway).findById(USER_ID);
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantId(TENANT_ID));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter))
 				.isInstanceOf(NotFoundException.class)
@@ -257,25 +257,25 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(NEW_HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(NEW_REFRESH_TOKEN);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN, StaffRefreshTokenResponse.class);
-		UserSessionDomain currentSession = UserSessionDomain.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(30), USER_ID, SessionType.STAFF);
-		willReturn(Optional.of(currentSession)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSessionDomain.class);
+		UserSession currentSession = UserSession.create(HASHED_REFRESH_TOKEN, Instant.now().plusSeconds(30), USER_ID, SessionType.STAFF);
+		willReturn(Optional.of(currentSession)).given(cacheManager).get(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN, UserSession.class);
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of(new StaffLoginProjection(USER_ID, USERNAME, "hashed-pw", FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue())))
 				.given(gateway).findById(USER_ID);
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantIdDomain(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantId(TENANT_ID));
 		willReturn(NEW_ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(60L).given(tokenProcessor).getRotationDurationBeforeExpireInSeconds();
 		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();
 		willReturn(Optional.empty()).given(gateway).findSessionById(HASHED_REFRESH_TOKEN);
-		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(UserSessionDomain.class));
+		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(UserSession.class));
 		willReturn(NEW_REFRESH_TOKEN).given(tokenProcessor).generateRefreshToken();
 		willReturn(86400L).given(tokenProcessor).getRefreshDurationInSeconds();
 
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
 		then(cacheManager).should().delete(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN);
-		then(gateway).should(times(2)).save(any(UserSessionDomain.class));
-		then(cacheManager).should().set(eq(TokenConstant.REFRESH_KEY + NEW_HASHED_REFRESH_TOKEN), any(UserSessionDomain.class),
+		then(gateway).should(times(2)).save(any(UserSession.class));
+		then(cacheManager).should().set(eq(TokenConstant.REFRESH_KEY + NEW_HASHED_REFRESH_TOKEN), any(UserSession.class),
 				eq(Duration.ofSeconds(TokenConstant.REFRESH_CACHE_MAX_SECONDS)));
 		then(cacheManager).should().set(eq(TokenConstant.ACCESS_KEY + NEW_HASHED_REFRESH_TOKEN), eq(NEW_ACCESS_TOKEN),
 				eq(Duration.ofSeconds(855)));

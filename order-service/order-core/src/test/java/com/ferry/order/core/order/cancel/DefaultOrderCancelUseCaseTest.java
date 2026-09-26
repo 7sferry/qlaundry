@@ -1,26 +1,26 @@
 package com.ferry.order.core.order.cancel;
 
 import com.ferry.order.core.analytics.AnalyticsEventConfig;
-import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.AnalyticsAggregate;
-import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEvent;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
-import com.ferry.order.domain.common.FullNameDomain;
-import com.ferry.order.domain.common.MoneyDomain;
-import com.ferry.order.domain.common.NoteDomain;
-import com.ferry.order.domain.common.PhoneDomain;
+import com.ferry.order.domain.common.FullName;
+import com.ferry.order.domain.common.Money;
+import com.ferry.order.domain.common.Note;
+import com.ferry.order.domain.common.Phone;
 import com.ferry.order.domain.common.exception.InvalidOrderStatusException;
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderIdDomain;
-import com.ferry.order.domain.order.OrderNumberDomain;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderId;
+import com.ferry.order.domain.order.OrderNumber;
 import com.ferry.order.domain.order.OrderPriority;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.order.PaymentMethod;
 import com.ferry.order.domain.order.PaymentStatus;
 import com.ferry.order.domain.service.ServiceUnit;
 import com.ferry.order.domain.staff.StaffRole;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,7 +58,7 @@ class DefaultOrderCancelUseCaseTest{
 	@Mock
 	OrderCancelGateway gateway;
 	@Mock
-	AnalyticsEventPublisher publisher;
+	OrderAnalyticsPublisher publisher;
 	@Captor
 	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
 	@InjectMocks
@@ -66,7 +66,7 @@ class DefaultOrderCancelUseCaseTest{
 	@Mock
 	OrderCancelPresenter presenter;
 	@Captor
-	ArgumentCaptor<OrderDomain> orderCaptor;
+	ArgumentCaptor<Order> orderCaptor;
 
 	@Test
 	void givenInProgressOrder_thenCancelsItWithTheReasonInStaffNotes(){
@@ -76,25 +76,25 @@ class DefaultOrderCancelUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		OrderDomain order = OrderDomain.builder()
+		Order order = Order.builder()
 				.id(ORDER_ID)
-				.orderNumber(new OrderNumberDomain(ORDER_NUMBER))
+				.orderNumber(new OrderNumber(ORDER_NUMBER))
 				.tenantId(TENANT_ID)
-				.customerName(new FullNameDomain(CUSTOMER_NAME))
-				.customerPhone(new PhoneDomain(CUSTOMER_PHONE))
+				.customerName(new FullName(CUSTOMER_NAME))
+				.customerPhone(new Phone(CUSTOMER_PHONE))
 				.serviceId("01SERVICEKARPET000000000")
 				.serviceName("Cuci Karpet")
 				.unit(ServiceUnit.SET)
-				.unitPrice(MoneyDomain.of(45000L))
+				.unitPrice(Money.of(45000L))
 				.quantity(2)
-				.subtotal(MoneyDomain.of(90000L))
-				.discount(MoneyDomain.ZERO)
-				.totalPrice(MoneyDomain.of(90000L))
+				.subtotal(Money.of(90000L))
+				.discount(Money.ZERO)
+				.totalPrice(Money.of(90000L))
 				.priority(OrderPriority.NORMAL)
 				.paymentMethod(PaymentMethod.CASH)
 				.paymentStatus(PaymentStatus.UNPAID)
 				.status(OrderStatus.IN_PROGRESS)
-				.notes(new NoteDomain("customer waiting"))
+				.notes(new Note("customer waiting"))
 				.pickupAt(now)
 				.estimatedDeliveryAt(now.plusSeconds(172800))
 				.deleted(false)
@@ -104,10 +104,10 @@ class DefaultOrderCancelUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<OrderDomain>getArgument(0)).given(gateway)
-				.save(any(OrderDomain.class));
-		willReturn(AnalyticsEventDomain.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_STATUS_CHANGED,
+				.findById(any(OrderId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
+				.save(any(Order.class));
+		willReturn(AnalyticsEvent.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_STATUS_CHANGED,
 				TENANT_ID, ORDER_ID, 1, "{}", STAFF_ID)).given(publisher)
 				.save(any(AnalyticsEventConfig.class));
 
@@ -116,13 +116,13 @@ class DefaultOrderCancelUseCaseTest{
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(AnalyticsEventDomain.class));
+				.publish(any(AnalyticsEvent.class));
 		then(gateway).should()
 				.save(orderCaptor.capture());
 		then(presenter).should()
 				.present(any(OrderCancelResponse.class));
 
-		OrderDomain saved = orderCaptor.getValue();
+		Order saved = orderCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(analyticsCaptor.getValue().type()).isEqualTo(AnalyticsEventType.ORDER_STATUS_CHANGED);
@@ -144,20 +144,20 @@ class DefaultOrderCancelUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		OrderDomain order = OrderDomain.builder()
+		Order order = Order.builder()
 				.id(ORDER_ID)
-				.orderNumber(new OrderNumberDomain(ORDER_NUMBER))
+				.orderNumber(new OrderNumber(ORDER_NUMBER))
 				.tenantId(TENANT_ID)
-				.customerName(new FullNameDomain(CUSTOMER_NAME))
-				.customerPhone(new PhoneDomain(CUSTOMER_PHONE))
+				.customerName(new FullName(CUSTOMER_NAME))
+				.customerPhone(new Phone(CUSTOMER_PHONE))
 				.serviceId("01SERVICEKARPET000000000")
 				.serviceName("Cuci Karpet")
 				.unit(ServiceUnit.SET)
-				.unitPrice(MoneyDomain.of(45000L))
+				.unitPrice(Money.of(45000L))
 				.quantity(2)
-				.subtotal(MoneyDomain.of(90000L))
-				.discount(MoneyDomain.ZERO)
-				.totalPrice(MoneyDomain.of(90000L))
+				.subtotal(Money.of(90000L))
+				.discount(Money.ZERO)
+				.totalPrice(Money.of(90000L))
 				.priority(OrderPriority.NORMAL)
 				.paymentMethod(PaymentMethod.CASH)
 				.paymentStatus(PaymentStatus.PAID)
@@ -172,7 +172,7 @@ class DefaultOrderCancelUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(OrderId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new OrderCancelRequest(ORDER_ID, "too late"), principal, presenter))
@@ -180,7 +180,7 @@ class DefaultOrderCancelUseCaseTest{
 				.hasMessage("Cannot change order status from COMPLETED to CANCELLED"));
 
 		then(gateway).should(never())
-				.save(any(OrderDomain.class));
+				.save(any(Order.class));
 	}
 
 }

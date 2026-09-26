@@ -1,14 +1,14 @@
 package com.ferry.user.core.customer.update;
 
-import com.ferry.user.domain.common.DescriptionDomain;
-import com.ferry.user.domain.common.FullNameDomain;
+import com.ferry.user.domain.common.Description;
+import com.ferry.user.domain.common.FullName;
 import com.ferry.user.domain.common.exception.NotFoundException;
-import com.ferry.user.domain.customer.CustomerAddressDomain;
-import com.ferry.user.domain.customer.CustomerDomain;
-import com.ferry.user.domain.customer.CustomerEmailDomain;
-import com.ferry.user.domain.customer.CustomerIdDomain;
-import com.ferry.user.domain.customer.CustomerPhoneDomain;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.customer.CustomerAddress;
+import com.ferry.user.domain.customer.Customer;
+import com.ferry.user.domain.customer.CustomerEmail;
+import com.ferry.user.domain.customer.CustomerId;
+import com.ferry.user.domain.customer.CustomerPhone;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -49,9 +49,9 @@ class DefaultCustomerUpdateUseCaseTest{
 	@Mock
 	CustomerUpdatePresenter presenter;
 	@Captor
-	ArgumentCaptor<CustomerDomain> customerCaptor;
+	ArgumentCaptor<Customer> customerCaptor;
 	@Captor
-	ArgumentCaptor<CustomerPhoneDomain> phoneCaptor;
+	ArgumentCaptor<CustomerPhone> phoneCaptor;
 	@Captor
 	ArgumentCaptor<CustomerUpdateResponse> responseCaptor;
 
@@ -84,14 +84,14 @@ class DefaultCustomerUpdateUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).userId(PRINCIPAL_ID).build();
 		CustomerUpdateRequest request = new CustomerUpdateRequest(CUSTOMER_ID, FULL_NAME, PHONE, null, null, null);
 		willReturn(Optional.empty()).given(gateway)
-				.findById(any(CustomerIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(CustomerId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(NotFoundException.class)
 				.hasMessage("Customer Not Found"));
 
 		then(gateway).should(never())
-				.save(any(CustomerDomain.class));
+				.save(any(Customer.class));
 		then(presenter).should(never())
 				.present(any(CustomerUpdateResponse.class));
 	}
@@ -101,19 +101,19 @@ class DefaultCustomerUpdateUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).userId(PRINCIPAL_ID).build();
 		CustomerUpdateRequest request = new CustomerUpdateRequest(CUSTOMER_ID, FULL_NAME, PHONE,
 				"hartono@laundry.test", "Jl. Semeru No. 3", "prefers weekend pickup");
-		CustomerDomain existingCustomer = CustomerDomain.register(TENANT_ID, new FullNameDomain("old name"),
-						new DescriptionDomain("old notes"), PRINCIPAL_ID)
+		Customer existingCustomer = Customer.register(TENANT_ID, new FullName("old name"),
+						new Description("old notes"), PRINCIPAL_ID)
 				.toBuilder().id(CUSTOMER_ID).build();
 		willReturn(Optional.of(existingCustomer)).given(gateway)
-				.findById(any(CustomerIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<CustomerDomain>getArgument(0)).given(gateway)
-				.save(any(CustomerDomain.class));
-		willAnswer(invocation -> invocation.<CustomerPhoneDomain>getArgument(0)).given(gateway)
-				.save(any(CustomerPhoneDomain.class));
-		willAnswer(invocation -> invocation.<CustomerEmailDomain>getArgument(0)).given(gateway)
-				.save(any(CustomerEmailDomain.class));
-		willAnswer(invocation -> invocation.<CustomerAddressDomain>getArgument(0)).given(gateway)
-				.save(any(CustomerAddressDomain.class));
+				.findById(any(CustomerId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Customer>getArgument(0)).given(gateway)
+				.save(any(Customer.class));
+		willAnswer(invocation -> invocation.<CustomerPhone>getArgument(0)).given(gateway)
+				.save(any(CustomerPhone.class));
+		willAnswer(invocation -> invocation.<CustomerEmail>getArgument(0)).given(gateway)
+				.save(any(CustomerEmail.class));
+		willAnswer(invocation -> invocation.<CustomerAddress>getArgument(0)).given(gateway)
+				.save(any(CustomerAddress.class));
 
 		useCase.execute(request, principal, presenter);
 
@@ -128,13 +128,13 @@ class DefaultCustomerUpdateUseCaseTest{
 		then(gateway).should()
 				.save(phoneCaptor.capture());
 		then(gateway).should()
-				.save(any(CustomerEmailDomain.class));
+				.save(any(CustomerEmail.class));
 		then(gateway).should()
-				.save(any(CustomerAddressDomain.class));
+				.save(any(CustomerAddress.class));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
-		CustomerDomain saved = customerCaptor.getValue();
+		Customer saved = customerCaptor.getValue();
 		CustomerUpdateResponse response = responseCaptor.getValue();
 
 		thenSoftly(softly -> {
@@ -153,22 +153,22 @@ class DefaultCustomerUpdateUseCaseTest{
 	void givenBlankEmailAndAddress_thenOnlyPhoneRowIsSaved(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).userId(PRINCIPAL_ID).build();
 		CustomerUpdateRequest request = new CustomerUpdateRequest(CUSTOMER_ID, FULL_NAME, PHONE, "", "   ", null);
-		CustomerDomain existingCustomer = CustomerDomain.register(TENANT_ID, new FullNameDomain("old name"),
-						new DescriptionDomain("old notes"), PRINCIPAL_ID)
+		Customer existingCustomer = Customer.register(TENANT_ID, new FullName("old name"),
+						new Description("old notes"), PRINCIPAL_ID)
 				.toBuilder().id(CUSTOMER_ID).build();
 		willReturn(Optional.of(existingCustomer)).given(gateway)
-				.findById(any(CustomerIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<CustomerDomain>getArgument(0)).given(gateway)
-				.save(any(CustomerDomain.class));
-		willAnswer(invocation -> invocation.<CustomerPhoneDomain>getArgument(0)).given(gateway)
-				.save(any(CustomerPhoneDomain.class));
+				.findById(any(CustomerId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Customer>getArgument(0)).given(gateway)
+				.save(any(Customer.class));
+		willAnswer(invocation -> invocation.<CustomerPhone>getArgument(0)).given(gateway)
+				.save(any(CustomerPhone.class));
 
 		useCase.execute(request, principal, presenter);
 
 		then(gateway).should(never())
-				.save(any(CustomerEmailDomain.class));
+				.save(any(CustomerEmail.class));
 		then(gateway).should(never())
-				.save(any(CustomerAddressDomain.class));
+				.save(any(CustomerAddress.class));
 		then(gateway).should()
 				.deleteEmails(CUSTOMER_ID, PRINCIPAL_ID);
 		then(gateway).should()
@@ -188,15 +188,15 @@ class DefaultCustomerUpdateUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).userId(PRINCIPAL_ID).build();
 		CustomerUpdateRequest request = new CustomerUpdateRequest(CUSTOMER_ID, FULL_NAME, "0813 9998 8877",
 				null, null, null);
-		CustomerDomain existingCustomer = CustomerDomain.register(TENANT_ID, new FullNameDomain("old name"),
-						new DescriptionDomain("old notes"), PRINCIPAL_ID)
+		Customer existingCustomer = Customer.register(TENANT_ID, new FullName("old name"),
+						new Description("old notes"), PRINCIPAL_ID)
 				.toBuilder().id(CUSTOMER_ID).build();
 		willReturn(Optional.of(existingCustomer)).given(gateway)
-				.findById(any(CustomerIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<CustomerDomain>getArgument(0)).given(gateway)
-				.save(any(CustomerDomain.class));
-		willAnswer(invocation -> invocation.<CustomerPhoneDomain>getArgument(0)).given(gateway)
-				.save(any(CustomerPhoneDomain.class));
+				.findById(any(CustomerId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Customer>getArgument(0)).given(gateway)
+				.save(any(Customer.class));
+		willAnswer(invocation -> invocation.<CustomerPhone>getArgument(0)).given(gateway)
+				.save(any(CustomerPhone.class));
 
 		useCase.execute(request, principal, presenter);
 

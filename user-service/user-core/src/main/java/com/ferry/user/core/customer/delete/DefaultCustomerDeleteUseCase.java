@@ -2,10 +2,10 @@ package com.ferry.user.core.customer.delete;
 
 import com.ferry.user.domain.common.exception.ForbiddenActionException;
 import com.ferry.user.domain.common.exception.NotFoundException;
-import com.ferry.user.domain.customer.CustomerDomain;
-import com.ferry.user.domain.customer.CustomerIdDomain;
+import com.ferry.user.domain.customer.Customer;
+import com.ferry.user.domain.customer.CustomerId;
 import com.ferry.user.domain.staff.StaffRole;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
@@ -24,9 +24,9 @@ public class DefaultCustomerDeleteUseCase implements CustomerDeleteUseCase{
 			throw new ForbiddenActionException("Only super staff can delete customer");
 		}
 		request.validate();
-		CustomerIdDomain customerId = new CustomerIdDomain(request.customerId());
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		CustomerDomain customer = gateway.findById(customerId, tenantId)
+		CustomerId customerId = new CustomerId(request.customerId());
+		TenantId tenantId = new TenantId(principal.tenantId());
+		Customer customer = gateway.findById(customerId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Customer Not Found"));
 		gateway.save(customer.markDeleted(principal.userId()));
 		gateway.deleteContacts(customer.id(), principal.userId());

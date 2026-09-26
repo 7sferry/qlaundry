@@ -1,6 +1,6 @@
 package com.ferry.order.core.order.create;
 
-import com.ferry.order.domain.order.OrderPromotionSagaDomain;
+import com.ferry.order.domain.order.OrderPromotionSaga;
 
 import java.util.List;
 
@@ -10,11 +10,11 @@ import java.util.List;
  ************************/
 
 public interface OrderPromotionGateway{
-	void openSaga(OrderPromotionSagaDomain saga);
+	void openSaga(OrderPromotionSaga saga);
 
-	void markSagaCommittedAfterCommit(OrderPromotionSagaDomain saga);
+	void markSagaCommittedAfterCommit(OrderPromotionSaga saga);
 
-	void markSagaReleased(OrderPromotionSagaDomain saga);
+	void markSagaReleased(OrderPromotionSaga saga);
 
 	List<PromotionRedemptionHttpResponse> redeem(PromotionRedemptionHttpRequest request);
 

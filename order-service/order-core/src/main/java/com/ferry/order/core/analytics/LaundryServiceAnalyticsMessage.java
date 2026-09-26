@@ -1,6 +1,6 @@
 package com.ferry.order.core.analytics;
 
-import com.ferry.order.domain.service.LaundryServiceDomain;
+import com.ferry.order.domain.service.LaundryService;
 import com.ferry.order.domain.service.ServiceCategory;
 import com.ferry.order.domain.service.ServiceUnit;
 
@@ -27,7 +27,7 @@ public record LaundryServiceAnalyticsMessage(
 	Long createdAt,
 	Long updatedAt){
 
-	public static LaundryServiceAnalyticsMessage from(LaundryServiceDomain service){
+	public static LaundryServiceAnalyticsMessage from(LaundryService service){
 		return new LaundryServiceAnalyticsMessage(service.tenantId(), service.id(), service.name(), service.category(),
 				service.unit(), service.pricePerUnit().value(), service.estimatedHours(), service.expressMultiplier(),
 				service.popular(), service.active(), service.deleted(),

@@ -1,8 +1,8 @@
 package com.ferry.user.core.staff.refreshtoken;
 
-import com.ferry.user.domain.session.UserSessionDomain;
+import com.ferry.user.domain.session.UserSession;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
 
 import java.util.Optional;
@@ -14,12 +14,12 @@ import java.util.Optional;
 
 public interface StaffRefreshTokenGateway{
 
-	Optional<TenantLoginProjection> findTenantById(TenantIdDomain tenantId);
+	Optional<TenantLoginProjection> findTenantById(TenantId tenantId);
 
 	Optional<StaffLoginProjection> findById(String id);
 
-	Optional<UserSessionDomain> findSessionById(String sessionId);
+	Optional<UserSession> findSessionById(String sessionId);
 
-	UserSessionDomain save(UserSessionDomain userSession);
+	UserSession save(UserSession userSession);
 
 }

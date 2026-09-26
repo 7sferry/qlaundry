@@ -1,10 +1,10 @@
 package com.ferry.order.core.order.detail;
 
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderIdDomain;
-import com.ferry.order.domain.order.OrderItemDomain;
-import com.ferry.order.domain.order.OrderPromotionDomain;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderId;
+import com.ferry.order.domain.order.OrderItem;
+import com.ferry.order.domain.order.OrderPromotion;
+import com.ferry.order.domain.tenant.TenantId;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,9 +15,9 @@ import java.util.Optional;
  ************************/
 
 public interface OrderDetailGateway{
-	Optional<OrderDomain> findById(OrderIdDomain orderId, TenantIdDomain tenantId);
+	Optional<Order> findById(OrderId orderId, TenantId tenantId);
 
-	List<OrderItemDomain> findItemsByOrderId(OrderIdDomain orderId);
+	List<OrderItem> findItemsByOrderId(OrderId orderId);
 
-	List<OrderPromotionDomain> findPromotionsByOrderId(OrderIdDomain orderId);
+	List<OrderPromotion> findPromotionsByOrderId(OrderId orderId);
 }

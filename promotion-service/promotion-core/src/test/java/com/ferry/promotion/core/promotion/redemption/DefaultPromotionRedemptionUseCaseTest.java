@@ -1,14 +1,14 @@
 package com.ferry.promotion.core.promotion.redemption;
 
-import com.ferry.promotion.domain.common.MoneyDomain;
-import com.ferry.promotion.domain.common.NoteDomain;
-import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
-import com.ferry.promotion.domain.promotion.PromotionDomain;
-import com.ferry.promotion.domain.promotion.PromotionIdDomain;
-import com.ferry.promotion.domain.promotion.PromotionRedemptionDomain;
+import com.ferry.promotion.domain.common.Money;
+import com.ferry.promotion.domain.common.Note;
+import com.ferry.promotion.domain.promotion.PromotionCode;
+import com.ferry.promotion.domain.promotion.Promotion;
+import com.ferry.promotion.domain.promotion.PromotionId;
+import com.ferry.promotion.domain.promotion.PromotionRedemption;
 import com.ferry.promotion.domain.promotion.PromotionRejection;
 import com.ferry.promotion.domain.promotion.PromotionType;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.tenant.TenantId;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,7 +59,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 	@Captor
 	ArgumentCaptor<List<PromotionRedemptionResponse>> responseCaptor;
 	@Captor
-	ArgumentCaptor<PromotionRedemptionDomain> redemptionCaptor;
+	ArgumentCaptor<PromotionRedemption> redemptionCaptor;
 
 	static Stream<BigDecimal> invalidSubtotal(){
 		return Stream.of(null, new BigDecimal("-40000"));
@@ -83,16 +83,16 @@ class DefaultPromotionRedemptionUseCaseTest{
 		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
-				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+				.findByReferenceId(anyString(), anyString(), any(TenantId.class));
 		willReturn(Optional.empty()).given(gateway)
-				.findByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
+				.findByCode(any(PromotionCode.class), any(TenantId.class));
 
 		useCase.execute(request, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
 		then(gateway).should(never())
-				.claimUsage(any(PromotionDomain.class));
+				.claimUsage(any(Promotion.class));
 		then(gateway).should()
 				.rollback();
 
@@ -106,12 +106,12 @@ class DefaultPromotionRedemptionUseCaseTest{
 	@Test
 	void givenExpiredPromotion_thenRejectsWithExpired(){
 		Instant now = Instant.now();
-		PromotionDomain promotion = PromotionDomain.builder()
+		Promotion promotion = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain(PROMO_CODE))
+				.code(new PromotionCode(PROMO_CODE))
 				.name("Diskon Akhir Pekan")
-				.description(new NoteDomain("weekend only"))
+				.description(new Note("weekend only"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("20"))
 				.combinable(true)
@@ -129,16 +129,16 @@ class DefaultPromotionRedemptionUseCaseTest{
 		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
-				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+				.findByReferenceId(anyString(), anyString(), any(TenantId.class));
 		willReturn(Optional.of(promotion)).given(gateway)
-				.findByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
+				.findByCode(any(PromotionCode.class), any(TenantId.class));
 
 		useCase.execute(request, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
 		then(gateway).should(never())
-				.claimUsage(any(PromotionDomain.class));
+				.claimUsage(any(Promotion.class));
 		then(gateway).should()
 				.rollback();
 
@@ -149,12 +149,12 @@ class DefaultPromotionRedemptionUseCaseTest{
 	@Test
 	void givenARetiredPromotion_thenRejectsWithInactiveRatherThanNotFound(){
 		Instant now = Instant.now();
-		PromotionDomain promotion = PromotionDomain.builder()
+		Promotion promotion = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain(PROMO_CODE))
+				.code(new PromotionCode(PROMO_CODE))
 				.name("Diskon Akhir Pekan")
-				.description(new NoteDomain("weekend only"))
+				.description(new Note("weekend only"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("20"))
 				.combinable(true)
@@ -172,16 +172,16 @@ class DefaultPromotionRedemptionUseCaseTest{
 		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
-				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+				.findByReferenceId(anyString(), anyString(), any(TenantId.class));
 		willReturn(Optional.of(promotion)).given(gateway)
-				.findByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
+				.findByCode(any(PromotionCode.class), any(TenantId.class));
 
 		useCase.execute(request, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
 		then(gateway).should(never())
-				.claimUsage(any(PromotionDomain.class));
+				.claimUsage(any(Promotion.class));
 		then(gateway).should()
 				.rollback();
 
@@ -195,12 +195,12 @@ class DefaultPromotionRedemptionUseCaseTest{
 	@Test
 	void givenTheUsageSlotIsLostToAConcurrentOrder_thenRejectsWithExhausted(){
 		Instant now = Instant.now();
-		PromotionDomain promotion = PromotionDomain.builder()
+		Promotion promotion = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain(PROMO_CODE))
+				.code(new PromotionCode(PROMO_CODE))
 				.name("Diskon Akhir Pekan")
-				.description(new NoteDomain("weekend only"))
+				.description(new Note("weekend only"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("20"))
 				.combinable(true)
@@ -218,18 +218,18 @@ class DefaultPromotionRedemptionUseCaseTest{
 		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
-				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+				.findByReferenceId(anyString(), anyString(), any(TenantId.class));
 		willReturn(Optional.of(promotion)).given(gateway)
-				.findByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
+				.findByCode(any(PromotionCode.class), any(TenantId.class));
 		willReturn(false).given(gateway)
-				.claimUsage(any(PromotionDomain.class));
+				.claimUsage(any(Promotion.class));
 
 		useCase.execute(request, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
 		then(gateway).should(never())
-				.save(any(PromotionRedemptionDomain.class));
+				.save(any(PromotionRedemption.class));
 		then(gateway).should()
 				.rollback();
 
@@ -240,12 +240,12 @@ class DefaultPromotionRedemptionUseCaseTest{
 	@Test
 	void givenMultipleCodesAndANonCombinablePromotion_thenRejectsWithNotCombinable(){
 		Instant now = Instant.now();
-		PromotionDomain promotion = PromotionDomain.builder()
+		Promotion promotion = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain(PROMO_CODE))
+				.code(new PromotionCode(PROMO_CODE))
 				.name("Diskon Akhir Pekan")
-				.description(new NoteDomain("weekend only"))
+				.description(new Note("weekend only"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("20"))
 				.combinable(false)
@@ -263,18 +263,18 @@ class DefaultPromotionRedemptionUseCaseTest{
 		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE, "LAINNYA"),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
-				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+				.findByReferenceId(anyString(), anyString(), any(TenantId.class));
 		willReturn(Optional.of(promotion)).given(gateway)
-				.findByCode(eq(new PromotionCodeDomain(PROMO_CODE)), any(TenantIdDomain.class));
+				.findByCode(eq(new PromotionCode(PROMO_CODE)), any(TenantId.class));
 		willReturn(Optional.empty()).given(gateway)
-				.findByCode(eq(new PromotionCodeDomain("LAINNYA")), any(TenantIdDomain.class));
+				.findByCode(eq(new PromotionCode("LAINNYA")), any(TenantId.class));
 
 		useCase.execute(request, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
 		then(gateway).should(never())
-				.claimUsage(any(PromotionDomain.class));
+				.claimUsage(any(Promotion.class));
 		then(gateway).should()
 				.rollback();
 
@@ -285,15 +285,15 @@ class DefaultPromotionRedemptionUseCaseTest{
 	@Test
 	void givenSubtotalBelowMinSubtotal_thenRejectsWithBelowMinSubtotal(){
 		Instant now = Instant.now();
-		PromotionDomain promotion = PromotionDomain.builder()
+		Promotion promotion = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain(PROMO_CODE))
+				.code(new PromotionCode(PROMO_CODE))
 				.name("Diskon Akhir Pekan")
-				.description(new NoteDomain("weekend only"))
+				.description(new Note("weekend only"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("20"))
-				.minSubtotal(MoneyDomain.of(100000L))
+				.minSubtotal(Money.of(100000L))
 				.combinable(true)
 				.usageLimit(50)
 				.usedCount(4)
@@ -309,16 +309,16 @@ class DefaultPromotionRedemptionUseCaseTest{
 		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
-				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+				.findByReferenceId(anyString(), anyString(), any(TenantId.class));
 		willReturn(Optional.of(promotion)).given(gateway)
-				.findByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
+				.findByCode(any(PromotionCode.class), any(TenantId.class));
 
 		useCase.execute(request, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
 		then(gateway).should(never())
-				.claimUsage(any(PromotionDomain.class));
+				.claimUsage(any(Promotion.class));
 		then(gateway).should()
 				.rollback();
 
@@ -329,26 +329,26 @@ class DefaultPromotionRedemptionUseCaseTest{
 	@Test
 	void givenTheSameOrderNumberAndCodeTwice_thenReplaysTheFirstRedemptionWithoutClaimingAgain(){
 		Instant now = Instant.now();
-		PromotionRedemptionDomain existing = PromotionRedemptionDomain.builder()
+		PromotionRedemption existing = PromotionRedemption.builder()
 				.id("01REDEEMAKHIRPEKAN000000")
 				.promotionId(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain(PROMO_CODE))
+				.code(new PromotionCode(PROMO_CODE))
 				.referenceId(ORDER_NUMBER)
-				.subtotal(MoneyDomain.of(40000L))
-				.discountAmount(MoneyDomain.of(8000L))
+				.subtotal(Money.of(40000L))
+				.discountAmount(Money.of(8000L))
 				.deleted(false)
 				.createdAt(now)
 				.createdBy(STAFF_ID)
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionDomain promotion = PromotionDomain.builder()
+		Promotion promotion = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain(PROMO_CODE))
+				.code(new PromotionCode(PROMO_CODE))
 				.name("Diskon Akhir Pekan")
-				.description(new NoteDomain("weekend only"))
+				.description(new Note("weekend only"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("20"))
 				.combinable(true)
@@ -366,18 +366,18 @@ class DefaultPromotionRedemptionUseCaseTest{
 		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.of(existing)).given(gateway)
-				.findByReferenceId(ORDER_NUMBER, PROMO_CODE, new TenantIdDomain(TENANT_ID));
+				.findByReferenceId(ORDER_NUMBER, PROMO_CODE, new TenantId(TENANT_ID));
 		willReturn(Optional.of(promotion)).given(gateway)
-				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(PromotionId.class), any(TenantId.class));
 
 		useCase.execute(request, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
 		then(gateway).should(never())
-				.claimUsage(any(PromotionDomain.class));
+				.claimUsage(any(Promotion.class));
 		then(gateway).should(never())
-				.save(any(PromotionRedemptionDomain.class));
+				.save(any(PromotionRedemption.class));
 		then(gateway).should(never())
 				.rollback();
 
@@ -392,15 +392,15 @@ class DefaultPromotionRedemptionUseCaseTest{
 	@Test
 	void givenACappedPercentagePromotion_thenGrantsAtMostTheCapAndRecordsTheRedemption(){
 		Instant now = Instant.now();
-		PromotionDomain promotion = PromotionDomain.builder()
+		Promotion promotion = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("GAJIAN30"))
+				.code(new PromotionCode("GAJIAN30"))
 				.name("Diskon Gajian")
-				.description(new NoteDomain("payday sale"))
+				.description(new Note("payday sale"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("30"))
-				.maxDiscountAmount(MoneyDomain.of(15000L))
+				.maxDiscountAmount(Money.of(15000L))
 				.combinable(true)
 				.usageLimit(200)
 				.usedCount(11)
@@ -416,13 +416,13 @@ class DefaultPromotionRedemptionUseCaseTest{
 		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of("GAJIAN30"),
 				new BigDecimal("120000"), ORDER_NUMBER, "01CUSTOMERRENI0000000000", STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
-				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+				.findByReferenceId(anyString(), anyString(), any(TenantId.class));
 		willReturn(Optional.of(promotion)).given(gateway)
-				.findByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
+				.findByCode(any(PromotionCode.class), any(TenantId.class));
 		willReturn(true).given(gateway)
-				.claimUsage(any(PromotionDomain.class));
-		willAnswer(invocation -> invocation.<PromotionRedemptionDomain>getArgument(0)).given(gateway)
-				.save(any(PromotionRedemptionDomain.class));
+				.claimUsage(any(Promotion.class));
+		willAnswer(invocation -> invocation.<PromotionRedemption>getArgument(0)).given(gateway)
+				.save(any(PromotionRedemption.class));
 
 		useCase.execute(request, presenter);
 
@@ -433,7 +433,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 		then(gateway).should(never())
 				.rollback();
 
-		PromotionRedemptionDomain redemption = redemptionCaptor.getValue();
+		PromotionRedemption redemption = redemptionCaptor.getValue();
 		PromotionRedemptionResponse response = responseCaptor.getValue().getFirst();
 
 		thenSoftly(softly -> {
@@ -451,12 +451,12 @@ class DefaultPromotionRedemptionUseCaseTest{
 	@Test
 	void givenTwoStackedPercentageCodes_thenTheSecondComputesTheDiscountOffTheRemainingAmount(){
 		Instant now = Instant.now();
-		PromotionDomain first = PromotionDomain.builder()
+		Promotion first = Promotion.builder()
 				.id("01PROMOPERTAMA000000000")
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("PERTAMA"))
+				.code(new PromotionCode("PERTAMA"))
 				.name("Diskon Pertama")
-				.description(new NoteDomain("first code in the stack"))
+				.description(new Note("first code in the stack"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("20"))
 				.combinable(true)
@@ -471,12 +471,12 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionDomain second = PromotionDomain.builder()
+		Promotion second = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("KEDUA"))
+				.code(new PromotionCode("KEDUA"))
 				.name("Diskon Kedua")
-				.description(new NoteDomain("stacked with another code"))
+				.description(new Note("stacked with another code"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("10"))
 				.combinable(true)
@@ -494,15 +494,15 @@ class DefaultPromotionRedemptionUseCaseTest{
 		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of("PERTAMA", "KEDUA"),
 				new BigDecimal("100000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
-				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+				.findByReferenceId(anyString(), anyString(), any(TenantId.class));
 		willReturn(Optional.of(first)).given(gateway)
-				.findByCode(eq(new PromotionCodeDomain("PERTAMA")), any(TenantIdDomain.class));
+				.findByCode(eq(new PromotionCode("PERTAMA")), any(TenantId.class));
 		willReturn(Optional.of(second)).given(gateway)
-				.findByCode(eq(new PromotionCodeDomain("KEDUA")), any(TenantIdDomain.class));
+				.findByCode(eq(new PromotionCode("KEDUA")), any(TenantId.class));
 		willReturn(true).given(gateway)
-				.claimUsage(any(PromotionDomain.class));
-		willAnswer(invocation -> invocation.<PromotionRedemptionDomain>getArgument(0)).given(gateway)
-				.save(any(PromotionRedemptionDomain.class));
+				.claimUsage(any(Promotion.class));
+		willAnswer(invocation -> invocation.<PromotionRedemption>getArgument(0)).given(gateway)
+				.save(any(PromotionRedemption.class));
 
 		useCase.execute(request, presenter);
 
@@ -511,7 +511,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 		then(gateway).should(never())
 				.rollback();
 
-		List<PromotionRedemptionDomain> redemptions = redemptionCaptor.getAllValues();
+		List<PromotionRedemption> redemptions = redemptionCaptor.getAllValues();
 
 		thenSoftly(softly -> {
 			softly.then(redemptions.getFirst().discountAmount().value()).isEqualByComparingTo(new BigDecimal("20000.00"));
@@ -522,12 +522,12 @@ class DefaultPromotionRedemptionUseCaseTest{
 	@Test
 	void givenANonCumulativePercentageStackedAfterAnotherCode_thenIgnoresDiscountSoFar(){
 		Instant now = Instant.now();
-		PromotionDomain first = PromotionDomain.builder()
+		Promotion first = Promotion.builder()
 				.id("01PROMOPERTAMA000000000")
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("PERTAMA"))
+				.code(new PromotionCode("PERTAMA"))
 				.name("Diskon Pertama")
-				.description(new NoteDomain("first code in the stack"))
+				.description(new Note("first code in the stack"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("20"))
 				.combinable(true)
@@ -542,12 +542,12 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionDomain second = PromotionDomain.builder()
+		Promotion second = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("KHUSUS"))
+				.code(new PromotionCode("KHUSUS"))
 				.name("Diskon Khusus")
-				.description(new NoteDomain("always off the original subtotal"))
+				.description(new Note("always off the original subtotal"))
 				.type(PromotionType.NON_CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("10"))
 				.combinable(true)
@@ -565,15 +565,15 @@ class DefaultPromotionRedemptionUseCaseTest{
 		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of("PERTAMA", "KHUSUS"),
 				new BigDecimal("100000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
-				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+				.findByReferenceId(anyString(), anyString(), any(TenantId.class));
 		willReturn(Optional.of(first)).given(gateway)
-				.findByCode(eq(new PromotionCodeDomain("PERTAMA")), any(TenantIdDomain.class));
+				.findByCode(eq(new PromotionCode("PERTAMA")), any(TenantId.class));
 		willReturn(Optional.of(second)).given(gateway)
-				.findByCode(eq(new PromotionCodeDomain("KHUSUS")), any(TenantIdDomain.class));
+				.findByCode(eq(new PromotionCode("KHUSUS")), any(TenantId.class));
 		willReturn(true).given(gateway)
-				.claimUsage(any(PromotionDomain.class));
-		willAnswer(invocation -> invocation.<PromotionRedemptionDomain>getArgument(0)).given(gateway)
-				.save(any(PromotionRedemptionDomain.class));
+				.claimUsage(any(Promotion.class));
+		willAnswer(invocation -> invocation.<PromotionRedemption>getArgument(0)).given(gateway)
+				.save(any(PromotionRedemption.class));
 
 		useCase.execute(request, presenter);
 
@@ -582,7 +582,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 		then(gateway).should(never())
 				.rollback();
 
-		List<PromotionRedemptionDomain> redemptions = redemptionCaptor.getAllValues();
+		List<PromotionRedemption> redemptions = redemptionCaptor.getAllValues();
 
 		thenSoftly(softly -> softly.then(redemptions.getLast().discountAmount().value())
 				.isEqualByComparingTo(new BigDecimal("10000.00")));
@@ -591,14 +591,14 @@ class DefaultPromotionRedemptionUseCaseTest{
 	@Test
 	void givenAFixedAmountPromotion_thenGrantsTheExactAmount(){
 		Instant now = Instant.now();
-		PromotionDomain promotion = PromotionDomain.builder()
+		Promotion promotion = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("POTONGAN"))
+				.code(new PromotionCode("POTONGAN"))
 				.name("Diskon Potongan")
-				.description(new NoteDomain("flat cut"))
+				.description(new Note("flat cut"))
 				.type(PromotionType.FIXED_AMOUNT)
-				.amount(MoneyDomain.of(8000L))
+				.amount(Money.of(8000L))
 				.combinable(true)
 				.usageLimit(50)
 				.usedCount(2)
@@ -614,13 +614,13 @@ class DefaultPromotionRedemptionUseCaseTest{
 		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of("POTONGAN"),
 				new BigDecimal("40000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
-				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+				.findByReferenceId(anyString(), anyString(), any(TenantId.class));
 		willReturn(Optional.of(promotion)).given(gateway)
-				.findByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
+				.findByCode(any(PromotionCode.class), any(TenantId.class));
 		willReturn(true).given(gateway)
-				.claimUsage(any(PromotionDomain.class));
-		willAnswer(invocation -> invocation.<PromotionRedemptionDomain>getArgument(0)).given(gateway)
-				.save(any(PromotionRedemptionDomain.class));
+				.claimUsage(any(Promotion.class));
+		willAnswer(invocation -> invocation.<PromotionRedemption>getArgument(0)).given(gateway)
+				.save(any(PromotionRedemption.class));
 
 		useCase.execute(request, presenter);
 
@@ -636,15 +636,15 @@ class DefaultPromotionRedemptionUseCaseTest{
 	@Test
 	void givenAFixedAmountPromotionAboveItsCap_thenGrantsAtMostTheCap(){
 		Instant now = Instant.now();
-		PromotionDomain promotion = PromotionDomain.builder()
+		Promotion promotion = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("POTONGANBESAR"))
+				.code(new PromotionCode("POTONGANBESAR"))
 				.name("Diskon Potongan Besar")
-				.description(new NoteDomain("flat cut, capped"))
+				.description(new Note("flat cut, capped"))
 				.type(PromotionType.FIXED_AMOUNT)
-				.amount(MoneyDomain.of(20000L))
-				.maxDiscountAmount(MoneyDomain.of(15000L))
+				.amount(Money.of(20000L))
+				.maxDiscountAmount(Money.of(15000L))
 				.combinable(true)
 				.usageLimit(50)
 				.usedCount(3)
@@ -660,13 +660,13 @@ class DefaultPromotionRedemptionUseCaseTest{
 		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of("POTONGANBESAR"),
 				new BigDecimal("50000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
-				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+				.findByReferenceId(anyString(), anyString(), any(TenantId.class));
 		willReturn(Optional.of(promotion)).given(gateway)
-				.findByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class));
+				.findByCode(any(PromotionCode.class), any(TenantId.class));
 		willReturn(true).given(gateway)
-				.claimUsage(any(PromotionDomain.class));
-		willAnswer(invocation -> invocation.<PromotionRedemptionDomain>getArgument(0)).given(gateway)
-				.save(any(PromotionRedemptionDomain.class));
+				.claimUsage(any(Promotion.class));
+		willAnswer(invocation -> invocation.<PromotionRedemption>getArgument(0)).given(gateway)
+				.save(any(PromotionRedemption.class));
 
 		useCase.execute(request, presenter);
 
@@ -680,15 +680,15 @@ class DefaultPromotionRedemptionUseCaseTest{
 	@Test
 	void givenAFirstStackedCodeIsCappedByItsOwnMax_thenTheSecondCodeComputesOffTheCappedRemainder(){
 		Instant now = Instant.now();
-		PromotionDomain first = PromotionDomain.builder()
+		Promotion first = Promotion.builder()
 				.id("01PROMOPOTONGANBESAR0000")
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("SETENGAH"))
+				.code(new PromotionCode("SETENGAH"))
 				.name("Diskon Setengah")
-				.description(new NoteDomain("half off, capped"))
+				.description(new Note("half off, capped"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("50"))
-				.maxDiscountAmount(MoneyDomain.of(10000L))
+				.maxDiscountAmount(Money.of(10000L))
 				.combinable(true)
 				.usageLimit(50)
 				.usedCount(0)
@@ -701,12 +701,12 @@ class DefaultPromotionRedemptionUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		PromotionDomain second = PromotionDomain.builder()
+		Promotion second = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("SEPULUH"))
+				.code(new PromotionCode("SEPULUH"))
 				.name("Diskon Sepuluh")
-				.description(new NoteDomain("stacked after the capped code"))
+				.description(new Note("stacked after the capped code"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("10"))
 				.combinable(true)
@@ -724,15 +724,15 @@ class DefaultPromotionRedemptionUseCaseTest{
 		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of("SETENGAH", "SEPULUH"),
 				new BigDecimal("100000"), ORDER_NUMBER, null, STAFF_ID);
 		willReturn(Optional.empty()).given(gateway)
-				.findByReferenceId(anyString(), anyString(), any(TenantIdDomain.class));
+				.findByReferenceId(anyString(), anyString(), any(TenantId.class));
 		willReturn(Optional.of(first)).given(gateway)
-				.findByCode(eq(new PromotionCodeDomain("SETENGAH")), any(TenantIdDomain.class));
+				.findByCode(eq(new PromotionCode("SETENGAH")), any(TenantId.class));
 		willReturn(Optional.of(second)).given(gateway)
-				.findByCode(eq(new PromotionCodeDomain("SEPULUH")), any(TenantIdDomain.class));
+				.findByCode(eq(new PromotionCode("SEPULUH")), any(TenantId.class));
 		willReturn(true).given(gateway)
-				.claimUsage(any(PromotionDomain.class));
-		willAnswer(invocation -> invocation.<PromotionRedemptionDomain>getArgument(0)).given(gateway)
-				.save(any(PromotionRedemptionDomain.class));
+				.claimUsage(any(Promotion.class));
+		willAnswer(invocation -> invocation.<PromotionRedemption>getArgument(0)).given(gateway)
+				.save(any(PromotionRedemption.class));
 
 		useCase.execute(request, presenter);
 
@@ -741,7 +741,7 @@ class DefaultPromotionRedemptionUseCaseTest{
 		then(gateway).should(never())
 				.rollback();
 
-		List<PromotionRedemptionDomain> redemptions = redemptionCaptor.getAllValues();
+		List<PromotionRedemption> redemptions = redemptionCaptor.getAllValues();
 
 		thenSoftly(softly -> {
 			softly.then(redemptions.getFirst().discountAmount().value()).isEqualByComparingTo(new BigDecimal("10000.00"));

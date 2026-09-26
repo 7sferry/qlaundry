@@ -1,21 +1,21 @@
 package com.ferry.order.core.service.update;
 
 import com.ferry.order.core.analytics.AnalyticsEventConfig;
-import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
 import com.ferry.order.domain.analytics.AnalyticsAggregate;
-import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEvent;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
-import com.ferry.order.domain.common.MoneyDomain;
-import com.ferry.order.domain.common.NoteDomain;
+import com.ferry.order.domain.common.Money;
+import com.ferry.order.domain.common.Note;
 import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.common.exception.OrderForbiddenActionException;
-import com.ferry.order.domain.service.LaundryServiceDomain;
-import com.ferry.order.domain.service.LaundryServiceIdDomain;
+import com.ferry.order.domain.service.LaundryService;
+import com.ferry.order.domain.service.LaundryServiceId;
 import com.ferry.order.domain.service.ServiceCategory;
 import com.ferry.order.domain.service.ServiceUnit;
 import com.ferry.order.domain.staff.StaffRole;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -57,7 +57,7 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 	@Mock
 	LaundryServiceUpdateGateway gateway;
 	@Mock
-	AnalyticsEventPublisher publisher;
+	OrderAnalyticsPublisher publisher;
 	@Captor
 	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
 	@InjectMocks
@@ -65,7 +65,7 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 	@Mock
 	LaundryServiceUpdatePresenter presenter;
 	@Captor
-	ArgumentCaptor<LaundryServiceDomain> serviceCaptor;
+	ArgumentCaptor<LaundryService> serviceCaptor;
 
 	@Test
 	void givenNonSuperStaffRole_thenThrowsForbiddenActionException(){
@@ -117,14 +117,14 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				"iron within the day", new BigDecimal("6000"), ServiceUnit.ITEM, ServiceCategory.IRON, 12, 1.5d,
 				true, true);
 		willReturn(Optional.empty()).given(gateway)
-				.findById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(LaundryServiceId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(NotFoundException.class)
 				.hasMessage("Service Not Found"));
 
 		then(gateway).should(never())
-				.save(any(LaundryServiceDomain.class));
+				.save(any(LaundryService.class));
 	}
 
 	@Test
@@ -135,12 +135,12 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		LaundryServiceDomain existing = LaundryServiceDomain.builder()
+		LaundryService existing = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Setrika Reguler")
-				.description(new NoteDomain("iron next day"))
-				.pricePerUnit(MoneyDomain.of(4000L))
+				.description(new Note("iron next day"))
+				.pricePerUnit(Money.of(4000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
@@ -157,10 +157,10 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				"iron within the day", new BigDecimal("6000"), ServiceUnit.ITEM, ServiceCategory.IRON, 12, 1.5d,
 				true, true);
 		willReturn(Optional.of(existing)).given(gateway)
-				.findById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<LaundryServiceDomain>getArgument(0)).given(gateway)
-				.save(any(LaundryServiceDomain.class));
-		willReturn(AnalyticsEventDomain.create(AnalyticsAggregate.LAUNDRY_SERVICE, AnalyticsEventType.LAUNDRY_SERVICE_UPDATED,
+				.findById(any(LaundryServiceId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<LaundryService>getArgument(0)).given(gateway)
+				.save(any(LaundryService.class));
+		willReturn(AnalyticsEvent.create(AnalyticsAggregate.LAUNDRY_SERVICE, AnalyticsEventType.LAUNDRY_SERVICE_UPDATED,
 				TENANT_ID, SERVICE_ID, 1, "{}", STAFF_ID)).given(publisher)
 				.save(any(AnalyticsEventConfig.class));
 
@@ -169,15 +169,15 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(AnalyticsEventDomain.class));
+				.publish(any(AnalyticsEvent.class));
 		then(gateway).should()
-				.findById(eq(new LaundryServiceIdDomain(SERVICE_ID)), eq(new TenantIdDomain(TENANT_ID)));
+				.findById(eq(new LaundryServiceId(SERVICE_ID)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
 				.save(serviceCaptor.capture());
 		then(presenter).should()
 				.present(any(LaundryServiceUpdateResponse.class));
 
-		LaundryServiceDomain saved = serviceCaptor.getValue();
+		LaundryService saved = serviceCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(analyticsCaptor.getValue().type())
@@ -206,12 +206,12 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		LaundryServiceDomain existing = LaundryServiceDomain.builder()
+		LaundryService existing = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Setrika Reguler")
-				.description(new NoteDomain("iron next day"))
-				.pricePerUnit(MoneyDomain.of(4000L))
+				.description(new Note("iron next day"))
+				.pricePerUnit(Money.of(4000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
@@ -228,9 +228,9 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				"iron within the day", new BigDecimal("6000"), ServiceUnit.ITEM, ServiceCategory.IRON, 12, null,
 				true, true);
 		willReturn(Optional.of(existing)).given(gateway)
-				.findById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<LaundryServiceDomain>getArgument(0)).given(gateway)
-				.save(any(LaundryServiceDomain.class));
+				.findById(any(LaundryServiceId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<LaundryService>getArgument(0)).given(gateway)
+				.save(any(LaundryService.class));
 
 		useCase.execute(request, principal, presenter);
 
@@ -248,12 +248,12 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		LaundryServiceDomain existing = LaundryServiceDomain.builder()
+		LaundryService existing = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Setrika Reguler")
-				.description(new NoteDomain("iron next day"))
-				.pricePerUnit(MoneyDomain.of(4000L))
+				.description(new Note("iron next day"))
+				.pricePerUnit(Money.of(4000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
@@ -270,9 +270,9 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				"iron within the day", new BigDecimal("6000"), ServiceUnit.ITEM, ServiceCategory.IRON, 12, 1.2d,
 				true, null);
 		willReturn(Optional.of(existing)).given(gateway)
-				.findById(any(LaundryServiceIdDomain.class), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<LaundryServiceDomain>getArgument(0)).given(gateway)
-				.save(any(LaundryServiceDomain.class));
+				.findById(any(LaundryServiceId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<LaundryService>getArgument(0)).given(gateway)
+				.save(any(LaundryService.class));
 
 		useCase.execute(request, principal, presenter);
 

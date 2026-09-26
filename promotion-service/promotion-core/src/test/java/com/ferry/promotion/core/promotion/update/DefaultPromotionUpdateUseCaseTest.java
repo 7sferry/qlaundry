@@ -1,16 +1,16 @@
 package com.ferry.promotion.core.promotion.update;
 
-import com.ferry.promotion.domain.common.MoneyDomain;
-import com.ferry.promotion.domain.common.NoteDomain;
+import com.ferry.promotion.domain.common.Money;
+import com.ferry.promotion.domain.common.Note;
 import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
 import com.ferry.promotion.domain.common.exception.NotFoundException;
 import com.ferry.promotion.domain.common.exception.PromotionForbiddenActionException;
-import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
-import com.ferry.promotion.domain.promotion.PromotionDomain;
-import com.ferry.promotion.domain.promotion.PromotionIdDomain;
+import com.ferry.promotion.domain.promotion.PromotionCode;
+import com.ferry.promotion.domain.promotion.Promotion;
+import com.ferry.promotion.domain.promotion.PromotionId;
 import com.ferry.promotion.domain.promotion.PromotionType;
 import com.ferry.promotion.domain.staff.StaffRole;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.tenant.TenantId;
 import com.ferry.promotion.domain.token.PromotionAuthPrincipal;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,7 +50,7 @@ class DefaultPromotionUpdateUseCaseTest{
 	@Mock
 	PromotionUpdatePresenter presenter;
 	@Captor
-	ArgumentCaptor<PromotionDomain> promotionCaptor;
+	ArgumentCaptor<Promotion> promotionCaptor;
 
 	@Test
 	void givenNonSuperStaffRole_thenThrowsForbiddenActionException(){
@@ -82,14 +82,14 @@ class DefaultPromotionUpdateUseCaseTest{
 				"monthly", PromotionType.CUMULATIVE_PERCENTAGE, new BigDecimal("10"), null, null, null, null, 25,
 				startAt.toEpochMilli(), endAt.toEpochMilli(), true);
 		willReturn(Optional.empty()).given(gateway)
-				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(PromotionId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(NotFoundException.class)
 				.hasMessage("Promotion Not Found"));
 
 		then(gateway).should(never())
-				.save(any(PromotionDomain.class));
+				.save(any(Promotion.class));
 	}
 
 	@Test
@@ -102,12 +102,12 @@ class DefaultPromotionUpdateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		PromotionDomain promotion = PromotionDomain.builder()
+		Promotion promotion = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("AWALBULAN"))
+				.code(new PromotionCode("AWALBULAN"))
 				.name("Diskon Awal Bulan")
-				.description(new NoteDomain("monthly"))
+				.description(new Note("monthly"))
 				.type(PromotionType.CUMULATIVE_PERCENTAGE)
 				.percentage(new BigDecimal("10"))
 				.combinable(true)
@@ -126,16 +126,16 @@ class DefaultPromotionUpdateUseCaseTest{
 				"Diskon Tengah Bulan", "monthly", PromotionType.CUMULATIVE_PERCENTAGE, new BigDecimal("10"), null, null, null, null, 25,
 				startAt.toEpochMilli(), endAt.toEpochMilli(), true);
 		willReturn(Optional.of(promotion)).given(gateway)
-				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(PromotionId.class), any(TenantId.class));
 		willReturn(true).given(gateway)
-				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class), any(PromotionIdDomain.class));
+				.existsByCode(any(PromotionCode.class), any(TenantId.class), any(PromotionId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidPromotionStateException.class)
 				.hasMessage("Promotion code already exists"));
 
 		then(gateway).should(never())
-				.save(any(PromotionDomain.class));
+				.save(any(Promotion.class));
 	}
 
 	@Test
@@ -148,14 +148,14 @@ class DefaultPromotionUpdateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		PromotionDomain promotion = PromotionDomain.builder()
+		Promotion promotion = Promotion.builder()
 				.id(PROMOTION_ID)
 				.tenantId(TENANT_ID)
-				.code(new PromotionCodeDomain("AWALBULAN"))
+				.code(new PromotionCode("AWALBULAN"))
 				.name("Diskon Awal Bulan")
-				.description(new NoteDomain("monthly"))
+				.description(new Note("monthly"))
 				.type(PromotionType.FIXED_AMOUNT)
-				.amount(MoneyDomain.of(3000L))
+				.amount(Money.of(3000L))
 				.combinable(true)
 				.usageLimit(25)
 				.usedCount(7)
@@ -172,18 +172,18 @@ class DefaultPromotionUpdateUseCaseTest{
 				"monthly capped", PromotionType.CUMULATIVE_PERCENTAGE, new BigDecimal("12.5"), null, new BigDecimal("20000"), null, false, 40,
 				startAt.toEpochMilli(), endAt.toEpochMilli(), false);
 		willReturn(Optional.of(promotion)).given(gateway)
-				.findById(any(PromotionIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(PromotionId.class), any(TenantId.class));
 		willReturn(false).given(gateway)
-				.existsByCode(any(PromotionCodeDomain.class), any(TenantIdDomain.class), any(PromotionIdDomain.class));
-		willAnswer(invocation -> invocation.<PromotionDomain>getArgument(0)).given(gateway)
-				.save(any(PromotionDomain.class));
+				.existsByCode(any(PromotionCode.class), any(TenantId.class), any(PromotionId.class));
+		willAnswer(invocation -> invocation.<Promotion>getArgument(0)).given(gateway)
+				.save(any(Promotion.class));
 
 		useCase.execute(request, principal, presenter);
 
 		then(gateway).should()
 				.save(promotionCaptor.capture());
 
-		PromotionDomain saved = promotionCaptor.getValue();
+		Promotion saved = promotionCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(saved.codeValue()).isEqualTo("AWALBULAN");

@@ -1,8 +1,8 @@
 package com.ferry.promotion.core.promotion.release;
 
-import com.ferry.promotion.domain.promotion.PromotionIdDomain;
-import com.ferry.promotion.domain.promotion.PromotionRedemptionDomain;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.promotion.PromotionId;
+import com.ferry.promotion.domain.promotion.PromotionRedemption;
+import com.ferry.promotion.domain.tenant.TenantId;
 
 import java.util.List;
 
@@ -12,9 +12,9 @@ import java.util.List;
  ************************/
 
 public interface PromotionReleaseGateway{
-	List<PromotionRedemptionDomain> findByReferenceId(String referenceId, TenantIdDomain tenantId);
+	List<PromotionRedemption> findByReferenceId(String referenceId, TenantId tenantId);
 
-	boolean releaseUsage(PromotionIdDomain promotionId, TenantIdDomain tenantId, String releasedBy);
+	boolean releaseUsage(PromotionId promotionId, TenantId tenantId, String releasedBy);
 
-	PromotionRedemptionDomain save(PromotionRedemptionDomain redemption);
+	PromotionRedemption save(PromotionRedemption redemption);
 }

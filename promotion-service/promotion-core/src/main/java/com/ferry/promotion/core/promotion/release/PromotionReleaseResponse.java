@@ -1,6 +1,6 @@
 package com.ferry.promotion.core.promotion.release;
 
-import com.ferry.promotion.domain.promotion.PromotionRedemptionDomain;
+import com.ferry.promotion.domain.promotion.PromotionRedemption;
 
 import java.util.List;
 
@@ -11,5 +11,5 @@ import java.util.List;
 
 public record PromotionReleaseResponse(
 	String referenceId,
-	List<PromotionRedemptionDomain> released){
+	List<PromotionRedemption> released){
 }

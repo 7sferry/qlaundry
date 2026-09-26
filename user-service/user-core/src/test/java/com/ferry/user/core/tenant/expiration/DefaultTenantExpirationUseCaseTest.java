@@ -1,6 +1,6 @@
 package com.ferry.user.core.tenant.expiration;
 
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -46,8 +46,8 @@ class DefaultTenantExpirationUseCaseTest{
 	@Test
 	void givenPendingTenantsPastCutoff_thenExpiresEachOneAndReturnsCount(){
 		DefaultTenantExpirationUseCase useCase = new DefaultTenantExpirationUseCase(gateway, PENDING_EXPIRY_DURATION);
-		TenantIdDomain first = new TenantIdDomain("tnt-cirebon-01");
-		TenantIdDomain second = new TenantIdDomain("tnt-cirebon-02");
+		TenantId first = new TenantId("tnt-cirebon-01");
+		TenantId second = new TenantId("tnt-cirebon-02");
 		willReturn(List.of(first, second)).given(gateway).findPendingOlderThan(any(Instant.class));
 
 		int expired = useCase.execute();

@@ -1,10 +1,10 @@
 package com.ferry.promotion.core.promotion.redemption;
 
-import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
-import com.ferry.promotion.domain.promotion.PromotionDomain;
-import com.ferry.promotion.domain.promotion.PromotionIdDomain;
-import com.ferry.promotion.domain.promotion.PromotionRedemptionDomain;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.promotion.PromotionCode;
+import com.ferry.promotion.domain.promotion.Promotion;
+import com.ferry.promotion.domain.promotion.PromotionId;
+import com.ferry.promotion.domain.promotion.PromotionRedemption;
+import com.ferry.promotion.domain.tenant.TenantId;
 
 import java.util.Optional;
 
@@ -14,15 +14,15 @@ import java.util.Optional;
  ************************/
 
 public interface PromotionRedemptionGateway{
-	Optional<PromotionDomain> findByCode(PromotionCodeDomain code, TenantIdDomain tenantId);
+	Optional<Promotion> findByCode(PromotionCode code, TenantId tenantId);
 
-	Optional<PromotionDomain> findById(PromotionIdDomain promotionId, TenantIdDomain tenantId);
+	Optional<Promotion> findById(PromotionId promotionId, TenantId tenantId);
 
-	Optional<PromotionRedemptionDomain> findByReferenceId(String referenceId, String code, TenantIdDomain tenantId);
+	Optional<PromotionRedemption> findByReferenceId(String referenceId, String code, TenantId tenantId);
 
-	boolean claimUsage(PromotionDomain promotion);
+	boolean claimUsage(Promotion promotion);
 
-	PromotionRedemptionDomain save(PromotionRedemptionDomain redemption);
+	PromotionRedemption save(PromotionRedemption redemption);
 
 	void rollback();
 }

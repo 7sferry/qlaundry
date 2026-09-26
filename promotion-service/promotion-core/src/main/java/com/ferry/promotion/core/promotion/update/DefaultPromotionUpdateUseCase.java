@@ -1,15 +1,15 @@
 package com.ferry.promotion.core.promotion.update;
 
-import com.ferry.promotion.domain.common.MoneyDomain;
-import com.ferry.promotion.domain.common.NoteDomain;
+import com.ferry.promotion.domain.common.Money;
+import com.ferry.promotion.domain.common.Note;
 import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
 import com.ferry.promotion.domain.common.exception.NotFoundException;
 import com.ferry.promotion.domain.common.exception.PromotionForbiddenActionException;
-import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
-import com.ferry.promotion.domain.promotion.PromotionDomain;
-import com.ferry.promotion.domain.promotion.PromotionIdDomain;
+import com.ferry.promotion.domain.promotion.PromotionCode;
+import com.ferry.promotion.domain.promotion.Promotion;
+import com.ferry.promotion.domain.promotion.PromotionId;
 import com.ferry.promotion.domain.staff.StaffRole;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.tenant.TenantId;
 import com.ferry.promotion.domain.token.PromotionAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
@@ -32,25 +32,25 @@ public class DefaultPromotionUpdateUseCase implements PromotionUpdateUseCase{
 			throw new PromotionForbiddenActionException("Only super staff can manage promotions");
 		}
 		request.validate();
-		PromotionIdDomain promotionId = new PromotionIdDomain(request.promotionId());
-		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		PromotionDomain promotion = gateway.findById(promotionId, tenantId)
+		PromotionId promotionId = new PromotionId(request.promotionId());
+		TenantId tenantId = new TenantId(principal.tenantId());
+		Promotion promotion = gateway.findById(promotionId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Promotion Not Found"));
-		PromotionCodeDomain code = new PromotionCodeDomain(request.code());
+		PromotionCode code = new PromotionCode(request.code());
 		if(gateway.existsByCode(code, tenantId, promotionId)){
 			throw new InvalidPromotionStateException("Promotion code already exists");
 		}
 		boolean active = request.active() == null || request.active();
 		boolean combinable = request.combinable() == null || request.combinable();
-		PromotionDomain saved = gateway.save(promotion.update(code, request.name(),
-				new NoteDomain(request.description()), request.type(), request.percentage(), money(request.amount()),
+		Promotion saved = gateway.save(promotion.update(code, request.name(),
+				new Note(request.description()), request.type(), request.percentage(), money(request.amount()),
 				money(request.maxDiscountAmount()), money(request.minSubtotal()), combinable, request.usageLimit(),
 				instant(request.startAt()), instant(request.endAt()), active, principal.userId()));
 		presenter.present(new PromotionUpdateResponse(saved));
 	}
 
-	private MoneyDomain money(BigDecimal value){
-		return value == null ? null : new MoneyDomain(value);
+	private Money money(BigDecimal value){
+		return value == null ? null : new Money(value);
 	}
 
 	private Instant instant(Long epochMilli){

@@ -1,10 +1,10 @@
 package com.ferry.order.core.analytics;
 
 import com.ferry.order.domain.order.ClothingType;
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderItemDomain;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderItem;
 import com.ferry.order.domain.order.OrderPriority;
-import com.ferry.order.domain.order.OrderPromotionDomain;
+import com.ferry.order.domain.order.OrderPromotion;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.order.PaymentMethod;
 import com.ferry.order.domain.order.PaymentStatus;
@@ -66,8 +66,8 @@ public record OrderAnalyticsMessage(
 		Long createdAt){
 	}
 
-	public static OrderAnalyticsMessage from(OrderDomain order, List<OrderItemDomain> items,
-	                                         List<OrderPromotionDomain> promotions){
+	public static OrderAnalyticsMessage from(Order order, List<OrderItem> items,
+	                                         List<OrderPromotion> promotions){
 		return new OrderAnalyticsMessage(order.tenantId(), order.id(), order.orderNumberValue(), order.customerId(),
 				order.serviceId(), order.serviceName(), order.unit(), order.unitPrice().value(), order.quantity(),
 				order.weightKg(), order.subtotal().value(), order.discount().value(), order.totalPrice().value(),

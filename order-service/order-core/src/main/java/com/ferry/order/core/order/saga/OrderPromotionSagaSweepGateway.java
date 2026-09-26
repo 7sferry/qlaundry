@@ -1,8 +1,8 @@
 package com.ferry.order.core.order.saga;
 
-import com.ferry.order.domain.order.OrderNumberDomain;
-import com.ferry.order.domain.order.OrderPromotionSagaDomain;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.order.OrderNumber;
+import com.ferry.order.domain.order.OrderPromotionSaga;
+import com.ferry.order.domain.tenant.TenantId;
 
 import java.time.Instant;
 import java.util.List;
@@ -13,13 +13,13 @@ import java.util.List;
  ************************/
 
 public interface OrderPromotionSagaSweepGateway{
-	List<OrderPromotionSagaDomain> findPendingUntouchedSince(Instant cutoff, int limit);
+	List<OrderPromotionSaga> findPendingUntouchedSince(Instant cutoff, int limit);
 
-	boolean orderExists(OrderNumberDomain orderNumber, TenantIdDomain tenantId);
+	boolean orderExists(OrderNumber orderNumber, TenantId tenantId);
 
-	void markCommitted(OrderPromotionSagaDomain saga);
+	void markCommitted(OrderPromotionSaga saga);
 
-	void markReleased(OrderPromotionSagaDomain saga);
+	void markReleased(OrderPromotionSaga saga);
 
-	void recordFailure(OrderPromotionSagaDomain saga);
+	void recordFailure(OrderPromotionSaga saga);
 }

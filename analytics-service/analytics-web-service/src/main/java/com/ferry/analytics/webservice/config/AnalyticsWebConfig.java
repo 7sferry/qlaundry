@@ -13,12 +13,12 @@ import com.ferry.analytics.core.event.order.OrderEventUseCase;
 import com.ferry.analytics.core.report.DefaultReportUseCase;
 import com.ferry.analytics.core.report.ReportGateway;
 import com.ferry.analytics.core.report.ReportUseCase;
-import com.ferry.analytics.gateway.clickhouse.ClickHouseStore;
+import com.ferry.analytics.gateway.common.ClickHouseAnalyticStore;
 import com.ferry.analytics.gateway.common.AnalyticStore;
-import com.ferry.analytics.gateway.dashboard.DashboardSummaryClickHouseGateway;
-import com.ferry.analytics.gateway.event.LaundryServiceEventClickHouseGateway;
-import com.ferry.analytics.gateway.event.OrderEventClickHouseGateway;
-import com.ferry.analytics.gateway.report.ReportClickHouseGateway;
+import com.ferry.analytics.gateway.dashboard.ClickHouseDashboardSummaryGateway;
+import com.ferry.analytics.gateway.event.ClickHouseLaundryServiceEventGateway;
+import com.ferry.analytics.gateway.event.ClickHouseOrderEventGateway;
+import com.ferry.analytics.gateway.report.ClickHouseReportGateway;
 import com.ferry.utils.json.DefaultJsonManager;
 import com.ferry.utils.json.JsonManager;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,12 +65,12 @@ public class AnalyticsWebConfig{
 	@Bean
 	AnalyticStore analyticStore(Client clickHouseClient, JsonManager jsonManager,
 	                            @Value("${app.clickhouse.timeout:10s}") Duration timeout){
-		return new ClickHouseStore(clickHouseClient, jsonManager, timeout);
+		return new ClickHouseAnalyticStore(clickHouseClient, jsonManager, timeout);
 	}
 
 	@Bean
 	OrderEventGateway orderEventGateway(AnalyticStore analyticStore){
-		return new OrderEventClickHouseGateway(analyticStore);
+		return new ClickHouseOrderEventGateway(analyticStore);
 	}
 
 	@Bean
@@ -80,7 +80,7 @@ public class AnalyticsWebConfig{
 
 	@Bean
 	LaundryServiceEventGateway laundryServiceEventGateway(AnalyticStore analyticStore){
-		return new LaundryServiceEventClickHouseGateway(analyticStore);
+		return new ClickHouseLaundryServiceEventGateway(analyticStore);
 	}
 
 	@Bean
@@ -90,7 +90,7 @@ public class AnalyticsWebConfig{
 
 	@Bean
 	DashboardSummaryGateway dashboardSummaryGateway(AnalyticStore analyticStore){
-		return new DashboardSummaryClickHouseGateway(analyticStore);
+		return new ClickHouseDashboardSummaryGateway(analyticStore);
 	}
 
 	@Bean
@@ -100,7 +100,7 @@ public class AnalyticsWebConfig{
 
 	@Bean
 	ReportGateway reportGateway(AnalyticStore analyticStore){
-		return new ReportClickHouseGateway(analyticStore);
+		return new ClickHouseReportGateway(analyticStore);
 	}
 
 	@Bean

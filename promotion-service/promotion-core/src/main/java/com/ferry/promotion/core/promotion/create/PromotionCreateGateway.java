@@ -1,8 +1,8 @@
 package com.ferry.promotion.core.promotion.create;
 
-import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
-import com.ferry.promotion.domain.promotion.PromotionDomain;
-import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import com.ferry.promotion.domain.promotion.PromotionCode;
+import com.ferry.promotion.domain.promotion.Promotion;
+import com.ferry.promotion.domain.tenant.TenantId;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -10,7 +10,7 @@ import com.ferry.promotion.domain.tenant.TenantIdDomain;
  ************************/
 
 public interface PromotionCreateGateway{
-	boolean existsByCode(PromotionCodeDomain code, TenantIdDomain tenantId);
+	boolean existsByCode(PromotionCode code, TenantId tenantId);
 
-	PromotionDomain save(PromotionDomain promotion);
+	Promotion save(Promotion promotion);
 }

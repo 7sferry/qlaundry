@@ -3,14 +3,14 @@ package com.ferry.user.core.staff.resetpassword;
 import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.common.DescriptionDomain;
-import com.ferry.user.domain.common.FullNameDomain;
-import com.ferry.user.domain.common.HashedPasswordDomain;
-import com.ferry.user.domain.common.RawPasswordDomain;
-import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.Description;
+import com.ferry.user.domain.common.FullName;
+import com.ferry.user.domain.common.HashedPassword;
+import com.ferry.user.domain.common.RawPassword;
+import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.common.exception.InvalidPasswordException;
-import com.ferry.user.domain.staff.StaffDomain;
-import com.ferry.user.domain.staff.StaffPasswordDomain;
+import com.ferry.user.domain.staff.Staff;
+import com.ferry.user.domain.staff.StaffPassword;
 import com.ferry.user.domain.staff.StaffPasswordProjection;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.forgottenpassword.FailedToResetPasswordException;
@@ -57,7 +57,7 @@ class DefaultStaffResetPasswordUseCaseTest{
 	@Mock
 	StaffResetPasswordPresenter presenter;
 	@Captor
-	ArgumentCaptor<StaffPasswordDomain> passwordCaptor;
+	ArgumentCaptor<StaffPassword> passwordCaptor;
 
 	@Test
 	void givenBlankUsername_thenThrowsFailedToResetPasswordExceptionWithConstraintViolationCause(){
@@ -108,23 +108,23 @@ class DefaultStaffResetPasswordUseCaseTest{
 	@Test
 	void givenUsernameNotFound_thenThrowsFailedToResetPasswordExceptionWithInvalidUsernameMessage(){
 		willReturn(Optional.of(RESET_TOKEN)).given(cacheManager).getAndDelete(PasswordConstant.RESET_TOKEN_KEY + USERNAME);
-		willReturn(Optional.empty()).given(gateway).findByUsername(new UsernameDomain(USERNAME));
+		willReturn(Optional.empty()).given(gateway).findByUsername(new Username(USERNAME));
 
 		FailedToResetPasswordException thrown = catchThrowableOfType(FailedToResetPasswordException.class,
 				() -> useCase.execute(new StaffResetPasswordRequest(USERNAME, PASSWORD, RESET_TOKEN), presenter));
 
 		thenSoftly(softly -> softly.then(thrown.getMessage()).isEqualTo("Invalid username"));
-		then(gateway).should(never()).save(any(StaffPasswordDomain.class));
+		then(gateway).should(never()).save(any(StaffPassword.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
 	@Test
 	void givenPasswordWasUsedWithinLastThreeMonths_thenThrowsFailedToResetPasswordExceptionWithInvalidPasswordCause(){
 		willReturn(Optional.of(RESET_TOKEN)).given(cacheManager).getAndDelete(PasswordConstant.RESET_TOKEN_KEY + USERNAME);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new FullNameDomain("Hendra Wijaya"),
-						new DescriptionDomain("desc"), "tnt-02", StaffRole.STAFF, null)
+		Staff existing = Staff.register(new Username(USERNAME), new FullName("Hendra Wijaya"),
+						new Description("desc"), "tnt-02", StaffRole.STAFF, null)
 				.toBuilder().id(STAFF_ID).build();
-		willReturn(Optional.of(existing)).given(gateway).findByUsername(new UsernameDomain(USERNAME));
+		willReturn(Optional.of(existing)).given(gateway).findByUsername(new Username(USERNAME));
 		StaffPasswordProjection recentPassword = new StaffPasswordProjection("previously-used-hash");
 		willReturn(List.of(recentPassword)).given(gateway).findRecentPasswords(eq(STAFF_ID), any(Instant.class));
 		willReturn(true).given(passwordTool).matches(PASSWORD, "previously-used-hash");
@@ -133,17 +133,17 @@ class DefaultStaffResetPasswordUseCaseTest{
 				() -> useCase.execute(new StaffResetPasswordRequest(USERNAME, PASSWORD, RESET_TOKEN), presenter));
 
 		thenSoftly(softly -> softly.then(thrown.getCause()).isInstanceOf(InvalidPasswordException.class));
-		then(gateway).should(never()).save(any(StaffPasswordDomain.class));
+		then(gateway).should(never()).save(any(StaffPassword.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
 	@Test
 	void givenNewPasswordSameAsCurrentPassword_thenThrowsFailedToResetPasswordExceptionWithInvalidPasswordCause(){
 		willReturn(Optional.of(RESET_TOKEN)).given(cacheManager).getAndDelete(PasswordConstant.RESET_TOKEN_KEY + USERNAME);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new FullNameDomain("Hendra Wijaya"),
-						new DescriptionDomain("desc"), "tnt-02", StaffRole.STAFF, null)
+		Staff existing = Staff.register(new Username(USERNAME), new FullName("Hendra Wijaya"),
+						new Description("desc"), "tnt-02", StaffRole.STAFF, null)
 				.toBuilder().id(STAFF_ID).build();
-		willReturn(Optional.of(existing)).given(gateway).findByUsername(new UsernameDomain(USERNAME));
+		willReturn(Optional.of(existing)).given(gateway).findByUsername(new Username(USERNAME));
 		StaffPasswordProjection currentPassword = new StaffPasswordProjection("current-hash");
 		willReturn(Optional.of(currentPassword)).given(gateway).findCurrentPassword(STAFF_ID);
 		willReturn(true).given(passwordTool).matches(PASSWORD, "current-hash");
@@ -152,19 +152,19 @@ class DefaultStaffResetPasswordUseCaseTest{
 				() -> useCase.execute(new StaffResetPasswordRequest(USERNAME, PASSWORD, RESET_TOKEN), presenter));
 
 		thenSoftly(softly -> softly.then(thrown.getCause()).isInstanceOf(InvalidPasswordException.class));
-		then(gateway).should(never()).save(any(StaffPasswordDomain.class));
+		then(gateway).should(never()).save(any(StaffPassword.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
 	@Test
 	void givenValidRequest_thenHashesPasswordSavesPasswordHistoryAndPresentsSuccessMessage(){
 		willReturn(Optional.of(RESET_TOKEN)).given(cacheManager).getAndDelete(PasswordConstant.RESET_TOKEN_KEY + USERNAME);
-		StaffDomain existing = StaffDomain.register(new UsernameDomain(USERNAME), new FullNameDomain("Hendra Wijaya"),
-						new DescriptionDomain("desc"), "tnt-02", StaffRole.STAFF, null)
+		Staff existing = Staff.register(new Username(USERNAME), new FullName("Hendra Wijaya"),
+						new Description("desc"), "tnt-02", StaffRole.STAFF, null)
 				.toBuilder().id(STAFF_ID).build();
-		willReturn(Optional.of(existing)).given(gateway).findByUsername(new UsernameDomain(USERNAME));
+		willReturn(Optional.of(existing)).given(gateway).findByUsername(new Username(USERNAME));
 		willReturn(List.of()).given(gateway).findRecentPasswords(eq(STAFF_ID), any(Instant.class));
-		willReturn(new HashedPasswordDomain("new-hashed-password")).given(passwordTool).hash(new RawPasswordDomain(PASSWORD));
+		willReturn(new HashedPassword("new-hashed-password")).given(passwordTool).hash(new RawPassword(PASSWORD));
 
 		useCase.execute(new StaffResetPasswordRequest(USERNAME, PASSWORD, RESET_TOKEN), presenter);
 

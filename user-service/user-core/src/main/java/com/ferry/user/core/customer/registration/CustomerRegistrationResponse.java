@@ -1,9 +1,9 @@
 package com.ferry.user.core.customer.registration;
 
-import com.ferry.user.domain.customer.CustomerAddressDomain;
-import com.ferry.user.domain.customer.CustomerDomain;
-import com.ferry.user.domain.customer.CustomerEmailDomain;
-import com.ferry.user.domain.customer.CustomerPhoneDomain;
+import com.ferry.user.domain.customer.CustomerAddress;
+import com.ferry.user.domain.customer.Customer;
+import com.ferry.user.domain.customer.CustomerEmail;
+import com.ferry.user.domain.customer.CustomerPhone;
 
 import java.util.List;
 
@@ -13,8 +13,8 @@ import java.util.List;
  ************************/
 
 public record CustomerRegistrationResponse(
-	CustomerDomain customer,
-	List<CustomerEmailDomain> emails,
-	List<CustomerPhoneDomain> phones,
-	List<CustomerAddressDomain> addresses){
+	Customer customer,
+	List<CustomerEmail> emails,
+	List<CustomerPhone> phones,
+	List<CustomerAddress> addresses){
 }

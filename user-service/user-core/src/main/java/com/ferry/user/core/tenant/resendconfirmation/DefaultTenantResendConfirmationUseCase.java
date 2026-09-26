@@ -4,13 +4,13 @@ import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tenant.constant.TenantConfirmationConstant;
 import com.ferry.user.core.tenant.registration.TenantRegistrationEmailMessage;
-import com.ferry.user.core.tenant.registration.UserEmailPublisher;
+import com.ferry.user.core.tools.UserEmailPublisher;
 import com.ferry.user.core.tools.UserCacheManager;
-import com.ferry.user.domain.common.EmailDomain;
-import com.ferry.user.domain.notification.EmailTriggerDomain;
+import com.ferry.user.domain.common.Email;
+import com.ferry.user.domain.notification.EmailTrigger;
 import com.ferry.user.domain.notification.EmailTriggerType;
-import com.ferry.user.domain.tenant.TenantDomain;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.Tenant;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.tenant.resendconfirmation.FailedToResendConfirmationException;
 import com.ferry.user.domain.tenant.resendconfirmation.TenantAdminContactProjection;
@@ -43,8 +43,8 @@ public class DefaultTenantResendConfirmationUseCase implements TenantResendConfi
 		long startedAt = System.nanoTime();
 		try{
 			request.validate();
-			TenantIdDomain tenantId = new TenantIdDomain(request.tenantId());
-			TenantDomain tenant = gateway.findById(tenantId)
+			TenantId tenantId = new TenantId(request.tenantId());
+			Tenant tenant = gateway.findById(tenantId)
 					.orElseThrow(() -> new FailedToResendConfirmationException("Tenant not found"));
 			if(tenant.status() == TenantStatus.ACTIVE){
 				throw new FailedToResendConfirmationException("Tenant already confirmed");
@@ -61,7 +61,7 @@ public class DefaultTenantResendConfirmationUseCase implements TenantResendConfi
 		}
 	}
 
-	private void resendConfirmationEmail(TenantDomain tenant, TenantAdminContactProjection admin){
+	private void resendConfirmationEmail(Tenant tenant, TenantAdminContactProjection admin){
 		String confirmationToken = generateConfirmationToken();
 		cacheManager.set(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + tenant.id(), confirmationToken,
 				TenantConfirmationConstant.CONFIRM_TOKEN_DURATION);
@@ -69,8 +69,8 @@ public class DefaultTenantResendConfirmationUseCase implements TenantResendConfi
 				admin.staffUsername(), tenant.id(), tenant.fullNameValue(),
 				tenant.descriptionValue(), tenant.createdAt(), confirmationToken);
 		EmailTriggerConfig config = new EmailTriggerConfig(message, tenant.createdBy(), EmailTriggerType.TENANT_REGISTRATION,
-				new EmailDomain(admin.email()));
-		EmailTriggerDomain trigger = emailPublisher.save(config);
+				new Email(admin.email()));
+		EmailTrigger trigger = emailPublisher.save(config);
 		emailPublisher.publish(trigger);
 	}
 

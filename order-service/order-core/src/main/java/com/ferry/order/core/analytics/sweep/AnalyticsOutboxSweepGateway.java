@@ -1,6 +1,6 @@
 package com.ferry.order.core.analytics.sweep;
 
-import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEvent;
 
 import java.time.Instant;
 import java.util.List;
@@ -11,9 +11,9 @@ import java.util.List;
  ************************/
 
 public interface AnalyticsOutboxSweepGateway{
-	List<AnalyticsEventDomain> findUnpublishedCreatedBefore(Instant cutoff, int limit);
+	List<AnalyticsEvent> findUnpublishedCreatedBefore(Instant cutoff, int limit);
 
-	void republish(AnalyticsEventDomain event);
+	void republish(AnalyticsEvent event);
 
-	void recordFailure(AnalyticsEventDomain event);
+	void recordFailure(AnalyticsEvent event);
 }

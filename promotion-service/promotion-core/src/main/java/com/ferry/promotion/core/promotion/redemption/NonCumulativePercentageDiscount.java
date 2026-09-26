@@ -1,6 +1,6 @@
 package com.ferry.promotion.core.promotion.redemption;
 
-import com.ferry.promotion.domain.common.MoneyDomain;
+import com.ferry.promotion.domain.common.Money;
 
 import java.math.BigDecimal;
 
@@ -11,9 +11,9 @@ import java.math.BigDecimal;
 
 public record NonCumulativePercentageDiscount(
 	BigDecimal percentageValue,
-	MoneyDomain maxDiscountAmount) implements DiscountStrategy{
+	Money maxDiscountAmount) implements DiscountStrategy{
 	@Override
-	public MoneyDomain calculate(DiscountCalculator calculator){
+	public Money calculate(DiscountCalculator calculator){
 		return calculator.visit(this);
 	}
 

@@ -1,7 +1,7 @@
 package com.ferry.user.core.tenant.registration;
 
 import com.ferry.user.core.staff.registration.StaffRegistrationResponse;
-import com.ferry.user.domain.tenant.TenantDomain;
+import com.ferry.user.domain.tenant.Tenant;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -9,7 +9,7 @@ import com.ferry.user.domain.tenant.TenantDomain;
  ************************/
 
 public record TenantRegistrationResponse(
-	TenantDomain tenant,
+	Tenant tenant,
 	StaffRegistrationResponse staff
 ){
 	public String tenantName(){

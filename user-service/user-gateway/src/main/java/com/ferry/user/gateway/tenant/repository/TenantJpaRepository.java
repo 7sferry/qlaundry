@@ -1,6 +1,6 @@
 package com.ferry.user.gateway.tenant.repository;
 
-import com.ferry.user.gateway.tenant.entity.TenantJpaEntity;
+import com.ferry.user.gateway.tenant.entity.TenantJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,13 +15,13 @@ import java.util.Optional;
  * on Juli 2026         *
  ************************/
 
-public interface TenantJpaRepository extends JpaRepository<TenantJpaEntity, String>{
+public interface TenantJpaRepository extends JpaRepository<TenantJpa, String>{
 	<T> Optional<T> findByIdAndDeletedIsFalse(String id, Class<T> clazz);
 
 	<T> List<T> findAllByStatusIdAndDeletedIsFalseAndCreatedAtBefore(short statusId, Instant cutoff, Class<T> clazz);
 
 	@Modifying
-	@Query("update TenantJpaEntity t set t.username = null, t.deleted = true, t.updatedAt = CURRENT_TIMESTAMP " +
+	@Query("update TenantJpa t set t.username = null, t.deleted = true, t.updatedAt = CURRENT_TIMESTAMP " +
 			"where t.id = :tenantId and t.deleted is false")
 	void markDeleted(@Param("tenantId") String tenantId);
 }

@@ -1,27 +1,27 @@
 package com.ferry.order.core.analytics.backfill;
 
 import com.ferry.order.core.analytics.AnalyticsEventConfig;
-import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.AnalyticsOutboxConstant;
 import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.AnalyticsAggregate;
-import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEvent;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
-import com.ferry.order.domain.common.FullNameDomain;
-import com.ferry.order.domain.common.MoneyDomain;
-import com.ferry.order.domain.common.NoteDomain;
-import com.ferry.order.domain.common.PhoneDomain;
+import com.ferry.order.domain.common.FullName;
+import com.ferry.order.domain.common.Money;
+import com.ferry.order.domain.common.Note;
+import com.ferry.order.domain.common.Phone;
 import com.ferry.order.domain.order.ClothingType;
-import com.ferry.order.domain.order.OrderDomain;
-import com.ferry.order.domain.order.OrderIdDomain;
-import com.ferry.order.domain.order.OrderItemDomain;
-import com.ferry.order.domain.order.OrderNumberDomain;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderId;
+import com.ferry.order.domain.order.OrderItem;
+import com.ferry.order.domain.order.OrderNumber;
 import com.ferry.order.domain.order.OrderPriority;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.order.PaymentMethod;
 import com.ferry.order.domain.order.PaymentStatus;
-import com.ferry.order.domain.service.LaundryServiceDomain;
+import com.ferry.order.domain.service.LaundryService;
 import com.ferry.order.domain.service.ServiceCategory;
 import com.ferry.order.domain.service.ServiceUnit;
 import org.junit.jupiter.api.Test;
@@ -62,19 +62,19 @@ class DefaultAnalyticsBackfillUseCaseTest{
 	@Mock
 	AnalyticsBackfillGateway gateway;
 	@Mock
-	AnalyticsEventPublisher publisher;
+	OrderAnalyticsPublisher publisher;
 	@Captor
 	ArgumentCaptor<AnalyticsEventConfig> configCaptor;
 
 	@Test
 	void givenOneTenantWithAServiceAndAnOrder_thenReplaysBothThroughTheOutboxAtTheirCurrentVersion(){
 		Instant createdAt = Instant.now().minusSeconds(7776000L);
-		LaundryServiceDomain service = LaundryServiceDomain.builder()
+		LaundryService service = LaundryService.builder()
 				.id(SERVICE_ID)
 				.tenantId(TENANT_ID)
 				.name("Cuci Selimut")
-				.description(new NoteDomain("blanket wash"))
-				.pricePerUnit(MoneyDomain.of(30000L))
+				.description(new Note("blanket wash"))
+				.pricePerUnit(Money.of(30000L))
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.SPECIALTY)
 				.estimatedHours(48)
@@ -88,21 +88,21 @@ class DefaultAnalyticsBackfillUseCaseTest{
 				.updatedAt(createdAt)
 				.updatedBy(STAFF_ID)
 				.build();
-		OrderDomain order = OrderDomain.builder()
+		Order order = Order.builder()
 				.id(ORDER_ID)
-				.orderNumber(new OrderNumberDomain("INV-20260612-Q4Z7NB"))
+				.orderNumber(new OrderNumber("INV-20260612-Q4Z7NB"))
 				.tenantId(TENANT_ID)
 				.customerId("01CUSTOMERWULANDARI000000")
-				.customerName(new FullNameDomain("wulan dari"))
-				.customerPhone(new PhoneDomain("+6281299887766"))
+				.customerName(new FullName("wulan dari"))
+				.customerPhone(new Phone("+6281299887766"))
 				.serviceId(SERVICE_ID)
 				.serviceName("Cuci Selimut")
 				.unit(ServiceUnit.ITEM)
-				.unitPrice(MoneyDomain.of(30000L))
+				.unitPrice(Money.of(30000L))
 				.quantity(2)
-				.subtotal(MoneyDomain.of(60000L))
-				.discount(MoneyDomain.ZERO)
-				.totalPrice(MoneyDomain.of(60000L))
+				.subtotal(Money.of(60000L))
+				.discount(Money.ZERO)
+				.totalPrice(Money.of(60000L))
 				.priority(OrderPriority.NORMAL)
 				.paymentMethod(PaymentMethod.CASH)
 				.paymentStatus(PaymentStatus.PAID)
@@ -117,7 +117,7 @@ class DefaultAnalyticsBackfillUseCaseTest{
 				.updatedAt(createdAt.plusSeconds(172800L))
 				.updatedBy(STAFF_ID)
 				.build();
-		OrderItemDomain item = OrderItemDomain.builder()
+		OrderItem item = OrderItem.builder()
 				.id("01ITEMSELIMUTTEBAL0000000")
 				.orderId(ORDER_ID)
 				.type(ClothingType.BED_LINEN)
@@ -135,26 +135,26 @@ class DefaultAnalyticsBackfillUseCaseTest{
 		willReturn(List.of(order)).given(gateway)
 				.findOrdersAfter(anyString(), isNull(), anyInt());
 		willReturn(List.of(item)).given(gateway)
-				.findItemsByOrderId(any(OrderIdDomain.class));
+				.findItemsByOrderId(any(OrderId.class));
 		willReturn(List.of()).given(gateway)
-				.findPromotionsByOrderId(any(OrderIdDomain.class));
-		willReturn(AnalyticsEventDomain.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_BACKFILLED,
+				.findPromotionsByOrderId(any(OrderId.class));
+		willReturn(AnalyticsEvent.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_BACKFILLED,
 				TENANT_ID, ORDER_ID, 5, "{}", AnalyticsOutboxConstant.BACKFILL_ACTOR)).given(publisher)
 				.save(any(AnalyticsEventConfig.class));
 		DefaultAnalyticsBackfillUseCase useCase = new DefaultAnalyticsBackfillUseCase(gateway, publisher, BATCH_SIZE);
 
-		AnalyticsBackfillResponse response = useCase.execute(new AnalyticsBackfillRequest(" " + TENANT_ID + " "));
+		AnalyticsBackfillResponse response = useCase.execute(new AnalyticsBackfillRequest(' ' + TENANT_ID + ' '));
 
 		then(gateway).should()
 				.findServicesAfter(eq(TENANT_ID), isNull(), eq(BATCH_SIZE));
 		then(gateway).should()
 				.findOrdersAfter(eq(TENANT_ID), isNull(), eq(BATCH_SIZE));
 		then(gateway).should()
-				.findItemsByOrderId(eq(new OrderIdDomain(ORDER_ID)));
+				.findItemsByOrderId(eq(new OrderId(ORDER_ID)));
 		then(publisher).should(times(2))
 				.save(configCaptor.capture());
 		then(publisher).should(times(2))
-				.publish(any(AnalyticsEventDomain.class));
+				.publish(any(AnalyticsEvent.class));
 
 		AnalyticsEventConfig serviceEvent = configCaptor.getAllValues().getFirst();
 		AnalyticsEventConfig orderEvent = configCaptor.getAllValues().getLast();
@@ -187,7 +187,7 @@ class DefaultAnalyticsBackfillUseCaseTest{
 		then(publisher).should(never())
 				.save(any(AnalyticsEventConfig.class));
 		then(gateway).should(never())
-				.findItemsByOrderId(any(OrderIdDomain.class));
+				.findItemsByOrderId(any(OrderId.class));
 
 		thenSoftly(softly -> {
 			softly.then(response.orders()).isZero();

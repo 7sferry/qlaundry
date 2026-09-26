@@ -1,26 +1,24 @@
 package com.ferry.order.core.service.create;
 
 import com.ferry.order.core.analytics.AnalyticsEventConfig;
-import com.ferry.order.core.analytics.AnalyticsEventPublisher;
+import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
 import com.ferry.order.domain.analytics.AnalyticsAggregate;
-import com.ferry.order.domain.analytics.AnalyticsEventDomain;
+import com.ferry.order.domain.analytics.AnalyticsEvent;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
 import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 import com.ferry.order.domain.common.exception.OrderForbiddenActionException;
-import com.ferry.order.domain.service.LaundryServiceDomain;
+import com.ferry.order.domain.service.LaundryService;
 import com.ferry.order.domain.service.ServiceCategory;
 import com.ferry.order.domain.service.ServiceUnit;
 import com.ferry.order.domain.staff.StaffRole;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -54,7 +52,7 @@ class DefaultLaundryServiceCreateUseCaseTest{
 	@Mock
 	LaundryServiceCreateGateway gateway;
 	@Mock
-	AnalyticsEventPublisher publisher;
+	OrderAnalyticsPublisher publisher;
 	@Captor
 	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
 	@InjectMocks
@@ -62,7 +60,7 @@ class DefaultLaundryServiceCreateUseCaseTest{
 	@Mock
 	LaundryServiceCreatePresenter presenter;
 	@Captor
-	ArgumentCaptor<LaundryServiceDomain> serviceCaptor;
+	ArgumentCaptor<LaundryService> serviceCaptor;
 
 	@Test
 	void givenNonSuperStaffRole_thenThrowsForbiddenActionException(){
@@ -112,14 +110,14 @@ class DefaultLaundryServiceCreateUseCaseTest{
 		LaundryServiceCreateRequest request = new LaundryServiceCreateRequest(SERVICE_NAME, "wash and iron", new BigDecimal("9000"),
 				ServiceUnit.KG, ServiceCategory.WASH, 24, 1.75d, true);
 		willReturn(true).given(gateway)
-				.existsByName(anyString(), any(TenantIdDomain.class));
+				.existsByName(anyString(), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(InvalidOrderStateException.class)
 				.hasMessage("Service name already exists"));
 
 		then(gateway).should(never())
-				.save(any(LaundryServiceDomain.class));
+				.save(any(LaundryService.class));
 	}
 
 	@Test
@@ -132,11 +130,11 @@ class DefaultLaundryServiceCreateUseCaseTest{
 		LaundryServiceCreateRequest request = new LaundryServiceCreateRequest(SERVICE_NAME, "wash and iron", new BigDecimal("9000"),
 				ServiceUnit.KG, ServiceCategory.WASH, 24, 1.75d, true);
 		willReturn(false).given(gateway)
-				.existsByName(anyString(), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<LaundryServiceDomain>getArgument(0)).given(gateway)
-				.save(any(LaundryServiceDomain.class));
+				.existsByName(anyString(), any(TenantId.class));
+		willAnswer(invocation -> invocation.<LaundryService>getArgument(0)).given(gateway)
+				.save(any(LaundryService.class));
 
-		willReturn(AnalyticsEventDomain.create(AnalyticsAggregate.LAUNDRY_SERVICE, AnalyticsEventType.LAUNDRY_SERVICE_CREATED, TENANT_ID,
+		willReturn(AnalyticsEvent.create(AnalyticsAggregate.LAUNDRY_SERVICE, AnalyticsEventType.LAUNDRY_SERVICE_CREATED, TENANT_ID,
 				"01SERVICEBARU0000000000000", 1, "{}", STAFF_ID)).given(publisher)
 				.save(any(AnalyticsEventConfig.class));
 
@@ -145,15 +143,15 @@ class DefaultLaundryServiceCreateUseCaseTest{
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(AnalyticsEventDomain.class));
+				.publish(any(AnalyticsEvent.class));
 		then(gateway).should()
-				.existsByName(eq(SERVICE_NAME), eq(new TenantIdDomain(TENANT_ID)));
+				.existsByName(eq(SERVICE_NAME), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
 				.save(serviceCaptor.capture());
 		then(presenter).should()
 				.present(any(LaundryServiceCreateResponse.class));
 
-		LaundryServiceDomain saved = serviceCaptor.getValue();
+		LaundryService saved = serviceCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(analyticsCaptor.getValue().type())
@@ -182,9 +180,9 @@ class DefaultLaundryServiceCreateUseCaseTest{
 		LaundryServiceCreateRequest request = new LaundryServiceCreateRequest("Cuci Sepatu", null, new BigDecimal("25000"), ServiceUnit.SET,
 				ServiceCategory.SPECIALTY, 72, null, false);
 		willReturn(false).given(gateway)
-				.existsByName(anyString(), any(TenantIdDomain.class));
-		willAnswer(invocation -> invocation.<LaundryServiceDomain>getArgument(0)).given(gateway)
-				.save(any(LaundryServiceDomain.class));
+				.existsByName(anyString(), any(TenantId.class));
+		willAnswer(invocation -> invocation.<LaundryService>getArgument(0)).given(gateway)
+				.save(any(LaundryService.class));
 
 		useCase.execute(request, principal, presenter);
 

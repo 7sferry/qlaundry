@@ -2,7 +2,7 @@ package com.ferry.user.gateway.staff.repository;
 
 import com.ferry.user.domain.staff.StaffFilter;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
-import com.ferry.user.gateway.staff.entity.StaffJpaEntity;
+import com.ferry.user.gateway.staff.entity.StaffJpa;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -17,27 +17,27 @@ import java.util.Optional;
  * on Juli 2026         *
  ************************/
 
-public interface StaffJpaRepository extends JpaRepository<StaffJpaEntity, String>{
+public interface StaffJpaRepository extends JpaRepository<StaffJpa, String>{
 	boolean existsByUsername(String username);
 
 	@Query("select s " +
-			"FROM StaffJpaEntity s " +
-			"WHERE exists(SELECT 1 FROM TenantJpaEntity t WHERE t.id = s.tenantId AND t.deleted IS FALSE) " +
+			"FROM StaffJpa s " +
+			"WHERE exists(SELECT 1 FROM TenantJpa t WHERE t.id = s.tenantId AND t.deleted IS FALSE) " +
 			"AND s.deleted IS FALSE " +
 			"AND s.username = :username ")
 	<T> Optional<T> fetchByUsername(@Param("username") String username, Class<T> clazz);
 
 	@Query("select new com.ferry.user.domain.staff.login.StaffLoginProjection(s.id, s.username, p.password, s.fullName, s.tenantId, s.roleId) " +
-			"from StaffJpaEntity s " +
-			"join StaffPasswordJpaEntity p on p.staffId = s.id and p.deleted is false " +
+			"from StaffJpa s " +
+			"join StaffPasswordJpa p on p.staffId = s.id and p.deleted is false " +
 			"where s.username = :username and s.deleted is false " +
-			"and exists(select 1 from TenantJpaEntity t where t.id = s.tenantId and t.deleted is false)" +
+			"and exists(select 1 from TenantJpa t where t.id = s.tenantId and t.deleted is false)" +
 			" order by s.id desc limit 1")
 	Optional<StaffLoginProjection> findLoginByUsername(@Param("username") String username);
 
 	@Query("select new com.ferry.user.domain.staff.login.StaffLoginProjection(s.id, s.username, p.password, s.fullName, s.tenantId, s.roleId) " +
-			"from StaffJpaEntity s " +
-			"join StaffPasswordJpaEntity p on p.staffId = s.id and p.deleted is false " +
+			"from StaffJpa s " +
+			"join StaffPasswordJpa p on p.staffId = s.id and p.deleted is false " +
 			"where s.id = :id and s.deleted is false")
 	Optional<StaffLoginProjection> findLoginById(@Param("id") String id);
 
@@ -45,7 +45,7 @@ public interface StaffJpaRepository extends JpaRepository<StaffJpaEntity, String
 	<T> Optional<T> findByUsernameAndTenantIdAndDeletedIsFalse(String username, String tenantId, Class<T> clazz);
 
 	@Query("select s " +
-			"from StaffJpaEntity s " +
+			"from StaffJpa s " +
 			"where " +
 			"(:#{#filter?.fullNameStartsWith()} is null or lower(s.fullName) like :#{#filter?.fullNameStartsWith()}) AND " +
 			"(:#{#filter?.tenantId} is null or s.tenant.id = :#{#filter?.tenantId}) AND " +
@@ -55,7 +55,7 @@ public interface StaffJpaRepository extends JpaRepository<StaffJpaEntity, String
 	<T> List<T> findAfterById(@Param("filter") StaffFilter filter, Class<T> clazz, Pageable pageable);
 
 	@Query("select s " +
-			"from StaffJpaEntity s " +
+			"from StaffJpa s " +
 			"where " +
 			"(:#{#filter?.fullNameStartsWith()} is null or lower(s.fullName) like :#{#filter?.fullNameStartsWith()}) AND " +
 			"(:#{#filter?.tenantId} is null or s.tenant.id = :#{#filter?.tenantId}) AND " +
@@ -65,7 +65,7 @@ public interface StaffJpaRepository extends JpaRepository<StaffJpaEntity, String
 	<T> List<T> findBeforeById(@Param("filter") StaffFilter filter, Class<T> clazz, Pageable pageable);
 
 	@Query("select s " +
-			"from StaffJpaEntity s " +
+			"from StaffJpa s " +
 			"where " +
 			"(:#{#filter?.fullNameStartsWith()} is null or lower(s.fullName) like :#{#filter?.fullNameStartsWith()}) AND " +
 			"(:#{#filter?.tenantId} is null or s.tenant.id = :#{#filter?.tenantId}) AND " +
@@ -76,7 +76,7 @@ public interface StaffJpaRepository extends JpaRepository<StaffJpaEntity, String
 	<T> List<T> findAfterByFullName(@Param("filter") StaffFilter filter, Class<T> clazz, Pageable pageable);
 
 	@Query("select s " +
-			"from StaffJpaEntity s " +
+			"from StaffJpa s " +
 			"where " +
 			"(:#{#filter?.fullNameStartsWith()} is null or lower(s.fullName) like :#{#filter?.fullNameStartsWith()}) AND " +
 			"(:#{#filter?.tenantId} is null or s.tenant.id = :#{#filter?.tenantId}) AND " +
@@ -87,7 +87,7 @@ public interface StaffJpaRepository extends JpaRepository<StaffJpaEntity, String
 	<T> List<T> findBeforeByFullName(@Param("filter") StaffFilter filter, Class<T> clazz, Pageable pageable);
 
 	@Modifying
-	@Query("update StaffJpaEntity s set s.username = null, s.deleted = true, s.updatedAt = CURRENT_TIMESTAMP " +
+	@Query("update StaffJpa s set s.username = null, s.deleted = true, s.updatedAt = CURRENT_TIMESTAMP " +
 			"where s.tenantId = :tenantId and s.deleted is false")
 	void clearUsernamesByTenantId(@Param("tenantId") String tenantId);
 

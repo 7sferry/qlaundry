@@ -3,9 +3,9 @@ package com.ferry.order.core.order.saga;
 import com.ferry.order.core.order.constant.OrderPromotionSagaConstant;
 import com.ferry.order.core.order.create.OrderPromotionGateway;
 import com.ferry.order.core.order.create.PromotionReleaseHttpRequest;
-import com.ferry.order.domain.order.OrderNumberDomain;
-import com.ferry.order.domain.order.OrderPromotionSagaDomain;
-import com.ferry.order.domain.tenant.TenantIdDomain;
+import com.ferry.order.domain.order.OrderNumber;
+import com.ferry.order.domain.order.OrderPromotionSaga;
+import com.ferry.order.domain.tenant.TenantId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,12 +29,12 @@ public class DefaultOrderPromotionSagaSweepUseCase implements OrderPromotionSaga
 	@Override
 	public OrderPromotionSagaSweepResponse execute(){
 		Instant cutoff = Instant.now().minus(gracePeriod);
-		List<OrderPromotionSagaDomain> pending = gateway.findPendingUntouchedSince(cutoff, sweepBatchSize);
+		List<OrderPromotionSaga> pending = gateway.findPendingUntouchedSince(cutoff, sweepBatchSize);
 		int committed = 0;
 		int released = 0;
 		int failed = 0;
-		for(OrderPromotionSagaDomain saga : pending){
-			if(gateway.orderExists(new OrderNumberDomain(saga.referenceId()), new TenantIdDomain(saga.tenantId()))){
+		for(OrderPromotionSaga saga : pending){
+			if(gateway.orderExists(new OrderNumber(saga.referenceId()), new TenantId(saga.tenantId()))){
 				gateway.markCommitted(saga.commit(OrderPromotionSagaConstant.SWEEPER_ACTOR));
 				committed++;
 				continue;

@@ -1,8 +1,8 @@
 package com.ferry.user.core.customer.delete;
 
-import com.ferry.user.domain.customer.CustomerDomain;
-import com.ferry.user.domain.customer.CustomerIdDomain;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.customer.Customer;
+import com.ferry.user.domain.customer.CustomerId;
+import com.ferry.user.domain.tenant.TenantId;
 
 import java.util.Optional;
 
@@ -12,9 +12,9 @@ import java.util.Optional;
  ************************/
 
 public interface CustomerDeleteGateway{
-	Optional<CustomerDomain> findById(CustomerIdDomain customerId, TenantIdDomain tenantId);
+	Optional<Customer> findById(CustomerId customerId, TenantId tenantId);
 
-	CustomerDomain save(CustomerDomain customer);
+	Customer save(Customer customer);
 
 	void deleteContacts(String customerId, String updatedBy);
 }

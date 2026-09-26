@@ -1,0 +1,51 @@
+package com.ferry.notification.domain;
+
+import com.ferry.notification.domain.exception.InvalidaNotificationStateException;
+
+import java.time.Instant;
+
+/************************
+ * Made by [MR Ferry™]  *
+ * on Juli 2026         *
+ ************************/
+
+public record EmailNotification(
+	String id,
+	String referenceId,
+	EmailType type,
+	Email recipient,
+	Subject subject,
+	Instant createdAt,
+	Integer version,
+	Instant sentAt){
+	public EmailNotification{
+		if(type == null || recipient == null || subject == null){
+			throw new InvalidaNotificationStateException("Type, recipient, subject, and content must not be null");
+		}
+	}
+
+	public static EmailNotification compose(EmailType type, String referenceId, Email recipient,
+	                                              Subject subject){
+		return new EmailNotification(null, referenceId, type, recipient, subject, Instant.now(), null, null);
+	}
+
+	public EmailNotification markSent(){
+		return new EmailNotification(id, referenceId, type, recipient, subject, createdAt, version, Instant.now());
+	}
+
+	public String recipientValue(){
+		return recipient.value();
+	}
+
+	public String subjectValue(){
+		return subject.value();
+	}
+
+	public String typeValue(){
+		return type.name();
+	}
+
+	public short typeIdValue(){
+		return type.getValue();
+	}
+}

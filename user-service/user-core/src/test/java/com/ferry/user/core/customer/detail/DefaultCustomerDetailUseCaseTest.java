@@ -1,21 +1,21 @@
 package com.ferry.user.core.customer.detail;
 
-import com.ferry.user.domain.common.AddressLineDomain;
-import com.ferry.user.domain.common.DescriptionDomain;
-import com.ferry.user.domain.common.EmailDomain;
-import com.ferry.user.domain.common.FullNameDomain;
-import com.ferry.user.domain.common.PhoneDomain;
+import com.ferry.user.domain.common.AddressLine;
+import com.ferry.user.domain.common.Description;
+import com.ferry.user.domain.common.Email;
+import com.ferry.user.domain.common.FullName;
+import com.ferry.user.domain.common.Phone;
 import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import com.ferry.user.domain.common.exception.NotFoundException;
-import com.ferry.user.domain.customer.CustomerAddressDomain;
+import com.ferry.user.domain.customer.CustomerAddress;
 import com.ferry.user.domain.customer.CustomerAddressFilter;
-import com.ferry.user.domain.customer.CustomerDomain;
-import com.ferry.user.domain.customer.CustomerEmailDomain;
+import com.ferry.user.domain.customer.Customer;
+import com.ferry.user.domain.customer.CustomerEmail;
 import com.ferry.user.domain.customer.CustomerEmailFilter;
-import com.ferry.user.domain.customer.CustomerIdDomain;
-import com.ferry.user.domain.customer.CustomerPhoneDomain;
+import com.ferry.user.domain.customer.CustomerId;
+import com.ferry.user.domain.customer.CustomerPhone;
 import com.ferry.user.domain.customer.CustomerPhoneFilter;
-import com.ferry.user.domain.tenant.TenantIdDomain;
+import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
@@ -91,7 +91,7 @@ class DefaultCustomerDetailUseCaseTest{
 				.tenantId(TENANT_ID)
 				.build();
 		willReturn(Optional.empty()).given(gateway)
-				.findById(any(CustomerIdDomain.class), any(TenantIdDomain.class));
+				.findById(any(CustomerId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new CustomerDetailRequest(CUSTOMER_ID), principal, presenter))
@@ -109,17 +109,17 @@ class DefaultCustomerDetailUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder()
 				.tenantId(TENANT_ID)
 				.build();
-		CustomerDomain existing = CustomerDomain.register(TENANT_ID, new FullNameDomain("nuraini safitri"),
-						new DescriptionDomain("prefers cold wash"), PRINCIPAL_ID)
+		Customer existing = Customer.register(TENANT_ID, new FullName("nuraini safitri"),
+						new Description("prefers cold wash"), PRINCIPAL_ID)
 				.toBuilder().id(CUSTOMER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway)
-				.findById(any(CustomerIdDomain.class), any(TenantIdDomain.class));
-		List<CustomerEmailDomain> emails = List.of(CustomerEmailDomain.register(CUSTOMER_ID,
-				new EmailDomain("nuraini@laundry.test"), PRINCIPAL_ID));
-		List<CustomerPhoneDomain> phones = List.of(CustomerPhoneDomain.register(CUSTOMER_ID,
-				new PhoneDomain("+6285566778899"), PRINCIPAL_ID));
-		List<CustomerAddressDomain> addresses = List.of(CustomerAddressDomain.register(CUSTOMER_ID,
-				new AddressLineDomain("Jl. Prambanan No. 7"), PRINCIPAL_ID));
+				.findById(any(CustomerId.class), any(TenantId.class));
+		List<CustomerEmail> emails = List.of(CustomerEmail.register(CUSTOMER_ID,
+				new Email("nuraini@laundry.test"), PRINCIPAL_ID));
+		List<CustomerPhone> phones = List.of(CustomerPhone.register(CUSTOMER_ID,
+				new Phone("+6285566778899"), PRINCIPAL_ID));
+		List<CustomerAddress> addresses = List.of(CustomerAddress.register(CUSTOMER_ID,
+				new AddressLine("Jl. Prambanan No. 7"), PRINCIPAL_ID));
 		willReturn(emails).given(gateway)
 				.findEmailsByFilter(any(CustomerEmailFilter.class));
 		willReturn(phones).given(gateway)
