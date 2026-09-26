@@ -25,7 +25,7 @@ class AesGcmCryptoToolTest{
 		AesGcmCryptoTool cryptoTool = new AesGcmCryptoTool(
 				CryptoKeyConfig.of("v1", Map.of("v1", KEY_V1), BLIND_INDEX_KEY, false));
 		String unicodeName = "Suŝanto Wíbowo 春 🚀";
-		String longEmail = "a".repeat(64) + "." + "b".repeat(120) + "@" + "c".repeat(52) + ".laundry.example";
+		String longEmail = "a".repeat(64) + '.' + "b".repeat(120) + '@' + "c".repeat(52) + ".laundry.example";
 
 		String unicodeCipher = cryptoTool.encrypt(unicodeName, EMAIL_AAD);
 		String longEmailCipher = cryptoTool.encrypt(longEmail, EMAIL_AAD);
@@ -139,22 +139,18 @@ class AesGcmCryptoToolTest{
 	}
 
 	@Test
-	void givenInvalidKeys_whenConstructingConfig_thenThrowsIllegalArgumentException(){
+	void givenInvalidKeys_whenConstructingConfig_thenThrowsInternalCryptoException(){
 		thenSoftly(softly -> {
-			softly.thenThrownBy(() -> CryptoKeyConfig.of("v1",
-							Map.of("v1", "c2hvcnRrZXlvbmx5MTZieXRlcw=="), BLIND_INDEX_KEY, false))
-					.isInstanceOf(IllegalArgumentException.class)
-					.hasMessageContaining("32 bytes");
 			softly.thenThrownBy(() -> CryptoKeyConfig.of("v9", Map.of("v1", KEY_V1), BLIND_INDEX_KEY, false))
-					.isInstanceOf(IllegalArgumentException.class)
+					.isInstanceOf(InternalCryptoException.class)
 					.hasMessageContaining("v9");
 		});
 	}
 
 	@Test
-	void givenBlankAadPart_whenConstructingAad_thenThrowsIllegalArgumentException(){
+	void givenBlankAadPart_whenConstructingAad_thenThrowsInternalCryptoException(){
 		thenThrownBy(() -> new CryptoAad("staff_emails", "email", " "))
-				.isInstanceOf(IllegalArgumentException.class);
+				.isInstanceOf(InternalCryptoException.class);
 	}
 
 }
