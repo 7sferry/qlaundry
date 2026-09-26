@@ -1,7 +1,6 @@
 package com.ferry.order.core.order.schedule;
 
 import com.ferry.order.core.tools.OrderValidation;
-import jakarta.validation.constraints.Pattern;
 
 import java.time.LocalDate;
 
@@ -10,5 +9,5 @@ import java.time.LocalDate;
  * on September 2026    *
  ************************/
 
-public record OrderScheduleRequest(LocalDate date) implements OrderValidation{
+public record OrderScheduleRequest(LocalDate date, String zone) implements OrderValidation{
 }

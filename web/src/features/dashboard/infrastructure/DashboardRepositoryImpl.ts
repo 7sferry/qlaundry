@@ -16,20 +16,29 @@ import {
 	toScheduleItems,
 } from './dashboardWireMapping';
 
+function resolveTimeZone(): string {
+	try {
+		return Intl.DateTimeFormat().resolvedOptions().timeZone;
+	} catch {
+		return 'UTC';
+	}
+}
+
 export class DashboardRepositoryImpl implements DashboardRepository {
 	async getSummary(): Promise<DashboardSummary> {
-		return toDashboardSummary(await httpClient.get<DashboardSummaryWire>('/analytics/dashboard'));
+		const params = new URLSearchParams({zone: resolveTimeZone()});
+		return toDashboardSummary(await httpClient.get<DashboardSummaryWire>(`/analytics/dashboard?${params}`));
 	}
 
 	async getReport(period: ReportPeriod): Promise<DashboardReport> {
-		const wire = await httpClient.get<DashboardReportWire>(
-				`/analytics/report?period=${REPORT_PERIOD_TO_WIRE[period]}`,
-		);
+		const params = new URLSearchParams({period: REPORT_PERIOD_TO_WIRE[period], zone: resolveTimeZone()});
+		const wire = await httpClient.get<DashboardReportWire>(`/analytics/report?${params}`);
 		return toDashboardReport(wire, period);
 	}
 
 	async getTodaySchedule(): Promise<ScheduleItem[]> {
-		return toScheduleItems(await httpClient.get<OrderScheduleWire>('/order/schedule'));
+		const params = new URLSearchParams({zone: resolveTimeZone()});
+		return toScheduleItems(await httpClient.get<OrderScheduleWire>(`/order/schedule?${params}`));
 	}
 }
 

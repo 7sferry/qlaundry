@@ -62,7 +62,7 @@ class DefaultReportUseCaseTest{
 				.build();
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
-						useCase.execute(new ReportRequest(null), principal, presenter))
+						useCase.execute(new ReportRequest(null, null), principal, presenter))
 				.isInstanceOf(ConstraintViolationException.class));
 
 		then(gateway).shouldHaveNoInteractions();
@@ -83,7 +83,7 @@ class DefaultReportUseCaseTest{
 		willReturn(List.of()).given(gateway)
 				.serviceBreakdown(any(TenantIdDomain.class), any(ReportWindow.class));
 
-		useCase.execute(new ReportRequest(ReportPeriod.WEEK), principal, presenter);
+		useCase.execute(new ReportRequest(ReportPeriod.WEEK, "Asia/Jakarta"), principal, presenter);
 
 		then(gateway).should()
 				.revenueTrend(eq(new TenantIdDomain(TENANT_ID)), windowCaptor.capture());
@@ -122,7 +122,7 @@ class DefaultReportUseCaseTest{
 		willReturn(List.of()).given(gateway)
 				.serviceBreakdown(any(TenantIdDomain.class), any(ReportWindow.class));
 
-		useCase.execute(new ReportRequest(ReportPeriod.YEAR), principal, presenter);
+		useCase.execute(new ReportRequest(ReportPeriod.YEAR, null), principal, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
@@ -152,7 +152,7 @@ class DefaultReportUseCaseTest{
 		willReturn(List.of()).given(gateway)
 				.serviceBreakdown(any(TenantIdDomain.class), any(ReportWindow.class));
 
-		useCase.execute(new ReportRequest(ReportPeriod.QUARTER), principal, presenter);
+		useCase.execute(new ReportRequest(ReportPeriod.QUARTER, null), principal, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
@@ -185,7 +185,7 @@ class DefaultReportUseCaseTest{
 						BigDecimal.valueOf(100000)))).given(gateway)
 				.serviceBreakdown(any(TenantIdDomain.class), any(ReportWindow.class));
 
-		useCase.execute(new ReportRequest(ReportPeriod.MONTH), principal, presenter);
+		useCase.execute(new ReportRequest(ReportPeriod.MONTH, null), principal, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());

@@ -11,8 +11,7 @@ import com.ferry.analytics.domain.token.AnalyticsAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.InstantSource;
-import java.time.LocalDate;
+import java.time.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,17 +26,22 @@ public class DefaultReportUseCase implements ReportUseCase{
 	private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
 
 	private final ReportGateway gateway;
-	private final InstantSource instantSource;
+	private final Clock clock;
 
 	@Override
 	public void execute(ReportRequest request, AnalyticsAuthPrincipal principal, ReportPresenter presenter){
 		request.validate();
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		LocalDate today = LocalDate.ofInstant(instantSource.instant(), AnalyticsConstant.BUSINESS_ZONE);
+		ZoneId zone = resolveZone(request.zone());
+		LocalDate today = LocalDate.ofInstant(clock.instant(), zone);
 		ReportWindow window = request.period().windowFor(today);
 		List<TrendPoint> trend = fillBuckets(window, gateway.revenueTrend(tenantId, window));
 		List<ServiceShare> breakdown = shares(gateway.serviceBreakdown(tenantId, window));
 		presenter.present(new ReportResponse(request.period(), trend, breakdown));
+	}
+
+	private ZoneId resolveZone(String zone){
+		return zone == null || zone.isBlank() ? ZoneOffset.UTC : ZoneId.of(zone);
 	}
 
 	private List<TrendPoint> fillBuckets(ReportWindow window, List<RevenueBucketProjection> buckets){

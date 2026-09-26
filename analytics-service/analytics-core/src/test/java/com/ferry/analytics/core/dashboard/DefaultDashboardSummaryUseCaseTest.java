@@ -63,7 +63,7 @@ class DefaultDashboardSummaryUseCaseTest{
 		willReturn(distribution).given(gateway)
 				.statusDistribution(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class));
 
-		useCase.execute(new DashboardSummaryRequest(null), principal, presenter);
+		useCase.execute(new DashboardSummaryRequest(null, "Asia/Jakarta"), principal, presenter);
 
 		then(gateway).should()
 				.summarize(eq(new TenantIdDomain(TENANT_ID)), eq(LocalDate.of(2026, 10, 1)),
@@ -102,7 +102,7 @@ class DefaultDashboardSummaryUseCaseTest{
 		willReturn(List.of()).given(gateway)
 				.statusDistribution(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class));
 
-		useCase.execute(new DashboardSummaryRequest(null), principal, presenter);
+		useCase.execute(new DashboardSummaryRequest(null, null), principal, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
@@ -133,7 +133,7 @@ class DefaultDashboardSummaryUseCaseTest{
 		willReturn(List.of()).given(gateway)
 				.statusDistribution(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class));
 
-		useCase.execute(new DashboardSummaryRequest(null), principal, presenter);
+		useCase.execute(new DashboardSummaryRequest(null, null), principal, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
@@ -160,7 +160,7 @@ class DefaultDashboardSummaryUseCaseTest{
 		willReturn(List.of()).given(gateway)
 				.statusDistribution(any(TenantIdDomain.class), any(LocalDate.class), any(LocalDate.class));
 
-		useCase.execute(new DashboardSummaryRequest(LocalDate.of(2026, 7, 15)), principal, presenter);
+		useCase.execute(new DashboardSummaryRequest(LocalDate.of(2026, 7, 15), null), principal, presenter);
 
 		then(gateway).should()
 				.summarize(eq(new TenantIdDomain(TENANT_ID)), eq(LocalDate.of(2026, 7, 15)),
@@ -181,7 +181,7 @@ class DefaultDashboardSummaryUseCaseTest{
 				.build();
 
 		assertThatThrownBy(() -> useCase.execute(
-						new DashboardSummaryRequest(LocalDate.of(2026, 9, 27)), principal, presenter))
+						new DashboardSummaryRequest(LocalDate.of(2026, 9, 27), null), principal, presenter))
 				.isInstanceOf(InvalidAnalyticStateException.class)
 				.hasMessage("Dashboard date must not be in the future");
 

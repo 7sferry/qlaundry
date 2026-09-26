@@ -13,8 +13,8 @@ import com.ferry.analytics.core.event.order.OrderEventUseCase;
 import com.ferry.analytics.core.report.DefaultReportUseCase;
 import com.ferry.analytics.core.report.ReportGateway;
 import com.ferry.analytics.core.report.ReportUseCase;
-import com.ferry.analytics.gateway.common.AnalyticStore;
 import com.ferry.analytics.gateway.clickhouse.ClickHouseStore;
+import com.ferry.analytics.gateway.common.AnalyticStore;
 import com.ferry.analytics.gateway.dashboard.DashboardSummaryClickHouseGateway;
 import com.ferry.analytics.gateway.event.LaundryServiceEventClickHouseGateway;
 import com.ferry.analytics.gateway.event.OrderEventClickHouseGateway;
@@ -29,7 +29,6 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.time.Clock;
 import java.time.Duration;
-import java.time.InstantSource;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -46,7 +45,7 @@ public class AnalyticsWebConfig{
 	}
 
 	@Bean
-	InstantSource instantSource(){
+	Clock clock(){
 		return Clock.systemUTC();
 	}
 
@@ -95,8 +94,8 @@ public class AnalyticsWebConfig{
 	}
 
 	@Bean
-	DashboardSummaryUseCase dashboardSummaryUseCase(DashboardSummaryGateway dashboardSummaryGateway, InstantSource instantSource){
-		return new DefaultDashboardSummaryUseCase(dashboardSummaryGateway, instantSource);
+	DashboardSummaryUseCase dashboardSummaryUseCase(DashboardSummaryGateway dashboardSummaryGateway, Clock clock){
+		return new DefaultDashboardSummaryUseCase(dashboardSummaryGateway, clock);
 	}
 
 	@Bean
@@ -105,8 +104,8 @@ public class AnalyticsWebConfig{
 	}
 
 	@Bean
-	ReportUseCase reportUseCase(ReportGateway reportGateway, InstantSource instantSource){
-		return new DefaultReportUseCase(reportGateway, instantSource);
+	ReportUseCase reportUseCase(ReportGateway reportGateway, Clock clock){
+		return new DefaultReportUseCase(reportGateway, clock);
 	}
 
 }

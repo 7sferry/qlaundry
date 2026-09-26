@@ -132,7 +132,7 @@ DELETE /api/service/delete
 POST   /api/order/create
 GET    /api/order/list
 GET    /api/order/detail
-GET    /api/order/schedule       ?date=     → today's (or that Jakarta day's) due pickups and deliveries
+GET    /api/order/schedule       ?date=&zone=  → today's (or that day's, in the given IANA zone — defaults to UTC) due pickups and deliveries
 GET    /api/invoice/link         ?orderId=  → {token, expiresAt} (bearer token)
 GET    /api/public/invoice/pdf   ?token=    → application/pdf (no bearer token — the signature is the auth)
 PUT    /api/order/confirm
@@ -170,11 +170,11 @@ The invoice PDF is rendered with Thymeleaf + openhtmltopdf and served **inline**
 ### `analytics-service`
 
 ```
-GET    /api/analytics/dashboard           → {todayOrders, todayRevenue, monthOrders, monthRevenue, pendingOrders, inProgressOrders, readyOrders, revenueGrowth, ordersGrowth, statusDistribution}
-GET    /api/analytics/report   ?period=WEEK|MONTH|QUARTER|YEAR → {period, revenueTrend, serviceBreakdown}
+GET    /api/analytics/dashboard   ?date=&zone=       → {todayOrders, todayRevenue, monthOrders, monthRevenue, pendingOrders, inProgressOrders, readyOrders, revenueGrowth, ordersGrowth, statusDistribution}
+GET    /api/analytics/report   ?period=WEEK|MONTH|QUARTER|YEAR&zone= → {period, revenueTrend, serviceBreakdown}
 ```
 
-Revenue and order counts exclude cancelled orders; days, weeks and months are bucketed in `Asia/Jakarta`; growth compares this calendar month with the previous one (`0` when last month was empty). Poke at ClickHouse with `docker exec -it clickhouse clickhouse-client --user analytics --password 12345`. The schema is `analytics-service/analytics-gateway/sql/init.sql` and only runs on an **empty volume** — a schema change in dev is `docker compose down -v` then the backfill below.
+Revenue and order counts exclude cancelled orders; days, weeks and months are bucketed in whatever IANA `zone` the frontend sends (defaults to UTC when omitted — there is no hardcoded business timezone); growth compares this calendar month with the previous one (`0` when last month was empty). Poke at ClickHouse with `docker exec -it clickhouse clickhouse-client --user analytics --password 12345`. The schema is `analytics-service/analytics-gateway/sql/init.sql` and only runs on an **empty volume** — a schema change in dev is `docker compose down -v` then the backfill below.
 
 order-service writes an `analytics_events` outbox row in the same transaction as every order/service change and `XADD`s it to `analytics:event:ORDER` or `analytics:event:LAUNDRY_SERVICE` after commit; a 5-minute sweeper republishes anything Redis missed. Each event is the full row plus its JPA ``, and ClickHouse's `ReplacingMergeTree(version)` keeps the newest, so duplicates and replays are harmless. To load orders that existed before this (or rebuild ClickHouse), run order-service once with `-Dspring-boot.run.profiles=analytics-backfill`; reconciliation queries and the DLQ runbook are in `analytics-service/analytics-gateway/sql/reconcile.md`. After a fresh install also seed `analytics_aggregates` and `analytics_event_statuses` from `order-gateway/sql/init.sql`.
 

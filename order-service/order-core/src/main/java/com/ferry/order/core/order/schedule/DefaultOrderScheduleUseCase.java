@@ -12,6 +12,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +27,6 @@ import java.util.stream.Stream;
 public class DefaultOrderScheduleUseCase implements OrderScheduleUseCase{
 	private static final Set<OrderStatus> PICKUP_STATUSES = Set.of(OrderStatus.PENDING, OrderStatus.CONFIRMED);
 	private static final Set<OrderStatus> DELIVERY_STATUSES = Set.of(OrderStatus.READY, OrderStatus.OUT_FOR_DELIVERY);
-	private static final ZoneId JAKARTA = ZoneId.of("Asia/Jakarta");
 
 	private final OrderScheduleGateway gateway;
 	private final Clock clock;
@@ -35,9 +35,10 @@ public class DefaultOrderScheduleUseCase implements OrderScheduleUseCase{
 	public void execute(OrderScheduleRequest request, OrderAuthPrincipal principal, OrderSchedulePresenter presenter){
 		request.validate();
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		LocalDate date = resolveDate(request.date());
-		Instant from = date.atStartOfDay(JAKARTA).toInstant();
-		Instant to = date.plusDays(1).atStartOfDay(JAKARTA).toInstant();
+		ZoneId zone = resolveZone(request.zone());
+		LocalDate date = resolveDate(request.date(), zone);
+		Instant from = date.atStartOfDay(zone).toInstant();
+		Instant to = date.plusDays(1).atStartOfDay(zone).toInstant();
 		Stream<Item> pickups = gateway.findPickupsBetween(tenantId, from, to, PICKUP_STATUSES).stream()
 				.map(order -> item(order, OrderScheduleType.PICKUP));
 		Stream<Item> deliveries = gateway.findDeliveriesBetween(tenantId, from, to, DELIVERY_STATUSES).stream()
@@ -48,9 +49,13 @@ public class DefaultOrderScheduleUseCase implements OrderScheduleUseCase{
 		presenter.present(new OrderScheduleResponse(date, items));
 	}
 
-	private LocalDate resolveDate(LocalDate date){
+	private ZoneId resolveZone(String zone){
+		return zone == null || zone.isBlank() ? ZoneOffset.UTC : ZoneId.of(zone);
+	}
+
+	private LocalDate resolveDate(LocalDate date, ZoneId zone){
 		if(date == null){
-			return LocalDate.ofInstant(clock.instant(), JAKARTA);
+			return LocalDate.ofInstant(clock.instant(), zone);
 		}
 		return date;
 	}

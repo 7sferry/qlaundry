@@ -9,8 +9,7 @@ import com.ferry.analytics.domain.token.AnalyticsAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.InstantSource;
-import java.time.LocalDate;
+import java.time.*;
 import java.util.List;
 
 /************************
@@ -23,14 +22,15 @@ public class DefaultDashboardSummaryUseCase implements DashboardSummaryUseCase{
 	private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
 
 	private final DashboardSummaryGateway gateway;
-	private final InstantSource clock;
+	private final Clock clock;
 
 	@Override
 	public void execute(DashboardSummaryRequest request, AnalyticsAuthPrincipal principal,
 	                    DashboardSummaryPresenter presenter){
 		request.validate();
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
-		LocalDate today = LocalDate.ofInstant(clock.instant(), AnalyticsConstant.BUSINESS_ZONE);
+		ZoneId zone = resolveZone(request.zone());
+		LocalDate today = LocalDate.ofInstant(clock.instant(), zone);
 		LocalDate date = request.date() == null ? today : request.date();
 		if(date.isAfter(today)){
 			throw new InvalidAnalyticStateException("Dashboard date must not be in the future");
@@ -45,6 +45,10 @@ public class DefaultDashboardSummaryUseCase implements DashboardSummaryUseCase{
 				growth(orZero(summary.monthRevenue()), orZero(summary.lastMonthRevenue())),
 				growth(BigDecimal.valueOf(summary.monthOrders()), BigDecimal.valueOf(summary.lastMonthOrders())),
 				distribution));
+	}
+
+	private ZoneId resolveZone(String zone){
+		return zone == null || zone.isBlank() ? ZoneOffset.UTC : ZoneId.of(zone);
 	}
 
 	private BigDecimal growth(BigDecimal current, BigDecimal previous){

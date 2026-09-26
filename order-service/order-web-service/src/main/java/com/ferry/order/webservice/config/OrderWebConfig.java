@@ -316,8 +316,13 @@ public class OrderWebConfig{
 	}
 
 	@Bean
-	OrderScheduleUseCase orderScheduleUseCase(OrderScheduleGateway orderScheduleGateway){
-		return new DefaultOrderScheduleUseCase(orderScheduleGateway, Clock.systemUTC());
+	OrderScheduleUseCase orderScheduleUseCase(OrderScheduleGateway orderScheduleGateway, Clock clock){
+		return new DefaultOrderScheduleUseCase(orderScheduleGateway, clock);
+	}
+
+	@Bean
+	Clock clock(){
+		return Clock.systemUTC();
 	}
 
 	@Bean
