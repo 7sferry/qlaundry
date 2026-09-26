@@ -231,7 +231,7 @@ export default function PromotionsPage() {
 	// avoids both: StrictMode's replay presents the *same* filters, so it's recognized as a no-op
 	// and skipped without ever touching a cleanup; a genuine change always has different filters, so
 	// it's never mistaken for a replay no matter how the ref got into its current state.
-	const lastFiltersKey = useRef<string>();
+	const lastFiltersKey = useRef<string | undefined>(undefined);
 	useEffect(() => {
 		const key = JSON.stringify({search, typeFilter, sortBy, sortDir, pageSize});
 		if (lastFiltersKey.current === undefined || lastFiltersKey.current === key) {

@@ -118,7 +118,7 @@ export default function CustomersPage() {
 	// Compares against the *last processed* filter snapshot, not a boolean "have we mounted" flag —
 	// see `PromotionsPage`'s identical effect for why a boolean (with or without a self-resetting
 	// cleanup) gets this wrong under React 18 StrictMode's dev-only mount double-invoke.
-	const lastFiltersKey = useRef<string>();
+	const lastFiltersKey = useRef<string | undefined>(undefined);
 	useEffect(() => {
 		const key = JSON.stringify({search, sortBy, sortDir, pageSize});
 		if (lastFiltersKey.current === undefined || lastFiltersKey.current === key) {
