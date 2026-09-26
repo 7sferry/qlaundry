@@ -3,6 +3,7 @@ package com.ferry.user.domain.staff;
 import com.ferry.user.domain.common.FullNameDomain;
 import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -19,7 +20,7 @@ public record StaffDomain(String id, UsernameDomain username, FullNameDomain ful
                           String updatedBy){
 	public StaffDomain{
 		if(username == null || fullName == null){
-			throw new IllegalArgumentException("Username and full fullName must not be null");
+			throw new InvalidUserStateException("Username and full fullName must not be null");
 		}
 	}
 

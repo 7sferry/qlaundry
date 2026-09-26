@@ -1,5 +1,7 @@
 package com.ferry.analytics.domain.report;
 
+import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,10 +14,10 @@ import java.util.List;
 public record ReportWindow(ReportPeriod period, LocalDate from, LocalDate toExclusive){
 	public ReportWindow{
 		if(period == null || from == null || toExclusive == null){
-			throw new IllegalArgumentException("Report period and bounds must not be null");
+			throw new InvalidAnalyticStateException("Report period and bounds must not be null");
 		}
 		if(!from.isBefore(toExclusive)){
-			throw new IllegalArgumentException("Report start must be before its end");
+			throw new InvalidAnalyticStateException("Report start must be before its end");
 		}
 	}
 

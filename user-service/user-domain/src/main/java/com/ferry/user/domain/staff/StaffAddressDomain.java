@@ -1,6 +1,7 @@
 package com.ferry.user.domain.staff;
 
 import com.ferry.user.domain.common.AddressLineDomain;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 
 import java.time.Instant;
 
@@ -14,7 +15,7 @@ public record StaffAddressDomain(String id, String staffId, AddressLineDomain ad
                                  String updatedBy){
 	public StaffAddressDomain{
 		if(staffId == null || addressLine == null){
-			throw new IllegalArgumentException("User id and full addressLine must not be null");
+			throw new InvalidUserStateException("User id and full addressLine must not be null");
 		}
 	}
 

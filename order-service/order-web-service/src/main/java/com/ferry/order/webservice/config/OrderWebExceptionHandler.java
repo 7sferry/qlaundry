@@ -1,6 +1,7 @@
 package com.ferry.order.webservice.config;
 
 import com.ferry.order.domain.common.exception.*;
+import com.ferry.utils.crypto.InvalidCryptoException;
 import com.ferry.utils.httpclient.HttpClientException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 public class OrderWebExceptionHandler{
 
 	@ExceptionHandler({InvalidOrderStatusException.class, UnsupportedPaymentMethodException.class,
-			IllegalArgumentException.class, ConstraintViolationException.class})
+			ConstraintViolationException.class})
 	ProblemDetail handleBadRequest(RuntimeException e){
 		log.warn(e.getMessage(), e);
 		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());

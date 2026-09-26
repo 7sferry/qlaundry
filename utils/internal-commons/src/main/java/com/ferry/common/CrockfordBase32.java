@@ -1,5 +1,7 @@
 package com.ferry.common;
 
+import com.ferry.common.exception.InternalUtilsException;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -98,7 +100,7 @@ public class CrockfordBase32{
 		for (char c : cleaned.toCharArray()) {
 			Integer value = DECODE_MAP.get(c);
 			if (value == null) {
-				throw new IllegalArgumentException("Invalid character in encoded string: " + c);
+				throw new InternalUtilsException("Invalid character in encoded string: " + c);
 			}
 
 			buffer = (buffer << 5) | value;
@@ -112,11 +114,11 @@ public class CrockfordBase32{
 
 		// Validate no trailing bits that would cause ambiguous padding
 		if (bitsLeft >= 5) {
-			throw new IllegalArgumentException("Invalid padding in encoded string");
+			throw new InternalUtilsException("Invalid padding in encoded string");
 		}
 
 		if ((buffer & ((1 << bitsLeft) - 1)) != 0) {
-			throw new IllegalArgumentException("Non-zero trailing bits in encoded string");
+			throw new InternalUtilsException("Non-zero trailing bits in encoded string");
 		}
 
 		byte[] result = new byte[count];
@@ -126,7 +128,7 @@ public class CrockfordBase32{
 
 	public static String encodeNumber(long value) {
 		if (value < 0) {
-			throw new IllegalArgumentException("Value must be non-negative");
+			throw new InternalUtilsException("Value must be non-negative");
 		}
 		if (value == 0) {
 			return "0";
@@ -146,7 +148,7 @@ public class CrockfordBase32{
 
 	public static long decodeNumber(String encoded) {
 		if (encoded == null || encoded.isEmpty() || encoded.length() > 13) {
-			throw new IllegalArgumentException("invalid string " + encoded);
+			throw new InternalUtilsException("invalid string " + encoded);
 		}
 
 		long result = 0;
@@ -157,7 +159,7 @@ public class CrockfordBase32{
 			Integer value = DECODE_MAP.get(Character.toUpperCase(c));
 
 			if (value == null) {
-				throw new IllegalArgumentException("Invalid character in encoded string: " + c);
+				throw new InternalUtilsException("Invalid character in encoded string: " + c);
 			}
 
 			// Shift the running result by 5 bits to the left

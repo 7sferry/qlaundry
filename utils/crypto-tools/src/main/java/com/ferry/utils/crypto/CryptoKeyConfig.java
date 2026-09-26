@@ -19,21 +19,21 @@ public record CryptoKeyConfig(String activeKeyId, Map<String, Key> keys, Key bli
 
 	public CryptoKeyConfig{
 		if(activeKeyId == null || activeKeyId.isBlank()){
-			throw new IllegalArgumentException("Active key id must not be blank");
+			throw new InternalCryptoException("Active key id must not be blank");
 		}
 		if(keys == null || keys.isEmpty()){
-			throw new IllegalArgumentException("Key map must not be empty");
+			throw new InternalCryptoException("Key map must not be empty");
 		}
 		if(!keys.containsKey(activeKeyId)){
-			throw new IllegalArgumentException("Active key id " + activeKeyId + " is missing from the key map");
+			throw new InternalCryptoException("Active key id " + activeKeyId + " is missing from the key map");
 		}
 		keys.forEach((keyId, key) -> {
 			if(key == null){
-				throw new IllegalArgumentException("Key " + keyId + " must be exactly " + KEY_LENGTH + " bytes");
+				throw new InternalCryptoException("Key " + keyId + " must be exactly " + KEY_LENGTH + " bytes");
 			}
 		});
 		if(blindIndexKey == null){
-			throw new IllegalArgumentException("Blind index key must be exactly " + KEY_LENGTH + " bytes");
+			throw new InternalCryptoException("Blind index key must be exactly " + KEY_LENGTH + " bytes");
 		}
 		keys = Map.copyOf(keys);
 	}
@@ -41,7 +41,7 @@ public record CryptoKeyConfig(String activeKeyId, Map<String, Key> keys, Key bli
 	public static CryptoKeyConfig of(String activeKeyId, Map<String, String> base64Keys, String base64BlindIndexKey,
 	                                 boolean allowPlaintextRead){
 		if(base64Keys == null){
-			throw new IllegalArgumentException("Key map must not be empty");
+			throw new InternalCryptoException("Key map must not be empty");
 		}
 		Map<String, Key> keys = new HashMap<>();
 		base64Keys.forEach((keyId, base64Key) -> {
@@ -54,12 +54,12 @@ public record CryptoKeyConfig(String activeKeyId, Map<String, Key> keys, Key bli
 
 	private static byte[] decode(String keyId, String base64Key){
 		if(base64Key == null || base64Key.isBlank()){
-			throw new IllegalArgumentException("Key " + keyId + " must not be blank");
+			throw new InternalCryptoException("Key " + keyId + " must not be blank");
 		}
 		try{
 			return Base64.getDecoder().decode(base64Key);
-		}catch(IllegalArgumentException e){
-			throw new IllegalArgumentException("Key " + keyId + " is not valid base64", e);
+		}catch(InternalCryptoException e){
+			throw new InternalCryptoException("Key " + keyId + " is not valid base64", e);
 		}
 	}
 

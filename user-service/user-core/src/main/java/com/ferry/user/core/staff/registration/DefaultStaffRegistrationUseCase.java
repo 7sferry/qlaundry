@@ -3,6 +3,7 @@ package com.ferry.user.core.staff.registration;
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.domain.common.*;
 import com.ferry.user.domain.common.exception.ForbiddenActionException;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import com.ferry.user.domain.common.exception.InvalidUsernameException;
 import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.token.UserAuthPrincipal;
@@ -66,7 +67,7 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 	private void saveEmail(StaffRegistrationRequest request, StaffDomain registeredUser, UserAuthPrincipal principal){
 		List<String> emails = request.emails() == null ? List.of() : request.emails();
 		if(emails.isEmpty()){
-			throw new IllegalArgumentException("Emails cannot be empty");
+			throw new InvalidUserStateException("Emails cannot be empty");
 		}
 		for(String email : emails){
 			gateway.save(StaffEmailDomain.register(registeredUser.id(), new EmailDomain(email), principal.userId()));

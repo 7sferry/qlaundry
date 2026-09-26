@@ -3,6 +3,7 @@ package com.ferry.order.domain.service;
 import com.ferry.order.domain.common.Decimals;
 import com.ferry.order.domain.common.MoneyDomain;
 import com.ferry.order.domain.common.NoteDomain;
+import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 import com.ferry.order.domain.order.OrderPriority;
 import lombok.Builder;
 
@@ -24,19 +25,19 @@ public record LaundryServiceDomain(String id, String tenantId, String name, Note
 
 	public LaundryServiceDomain{
 		if(tenantId == null || tenantId.isBlank()){
-			throw new IllegalArgumentException("Tenant id must not be blank");
+			throw new InvalidOrderStateException("Tenant id must not be blank");
 		}
 		if(name == null || name.isBlank()){
-			throw new IllegalArgumentException("Service name must not be blank");
+			throw new InvalidOrderStateException("Service name must not be blank");
 		}
 		if(pricePerUnit == null || unit == null || category == null){
-			throw new IllegalArgumentException("Price, unit and category must not be null");
+			throw new InvalidOrderStateException("Price, unit and category must not be null");
 		}
 		if(estimatedHours <= 0){
-			throw new IllegalArgumentException("Estimated hours must be greater than zero");
+			throw new InvalidOrderStateException("Estimated hours must be greater than zero");
 		}
 		if(expressMultiplier < MIN_EXPRESS_MULTIPLIER){
-			throw new IllegalArgumentException("Express multiplier must be at least 1");
+			throw new InvalidOrderStateException("Express multiplier must be at least 1");
 		}
 		expressMultiplier = Decimals.scaled(expressMultiplier);
 	}
@@ -86,7 +87,7 @@ public record LaundryServiceDomain(String id, String tenantId, String name, Note
 
 	private double weight(Double weightKg){
 		if(weightKg == null || weightKg <= 0){
-			throw new IllegalArgumentException("Weight in kg is required for a per-kg service");
+			throw new InvalidOrderStateException("Weight in kg is required for a per-kg service");
 		}
 		return Decimals.scaled(weightKg.doubleValue());
 	}

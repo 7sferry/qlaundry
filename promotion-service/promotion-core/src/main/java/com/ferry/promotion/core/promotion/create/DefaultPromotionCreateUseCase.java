@@ -2,6 +2,7 @@ package com.ferry.promotion.core.promotion.create;
 
 import com.ferry.promotion.domain.common.MoneyDomain;
 import com.ferry.promotion.domain.common.NoteDomain;
+import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
 import com.ferry.promotion.domain.common.exception.PromotionForbiddenActionException;
 import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
 import com.ferry.promotion.domain.promotion.PromotionDomain;
@@ -32,7 +33,7 @@ public class DefaultPromotionCreateUseCase implements PromotionCreateUseCase{
 		TenantIdDomain tenantId = new TenantIdDomain(principal.tenantId());
 		PromotionCodeDomain code = new PromotionCodeDomain(request.code());
 		if(gateway.existsByCode(code, tenantId)){
-			throw new IllegalArgumentException("Promotion code already exists");
+			throw new InvalidPromotionStateException("Promotion code already exists");
 		}
 		boolean combinable = request.combinable() == null || request.combinable();
 		PromotionDomain saved = gateway.save(PromotionDomain.create(tenantId.value(), code, request.name(),

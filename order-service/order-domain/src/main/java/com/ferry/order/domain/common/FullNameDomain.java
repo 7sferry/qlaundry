@@ -1,5 +1,7 @@
 package com.ferry.order.domain.common;
 
+import com.ferry.order.domain.common.exception.InvalidOrderStateException;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Agustus 2026      *
@@ -8,7 +10,7 @@ package com.ferry.order.domain.common;
 public record FullNameDomain(String value){
 	public FullNameDomain{
 		if(value == null || value.isBlank()){
-			throw new IllegalArgumentException("Full name must not be blank");
+			throw new InvalidOrderStateException("Full name must not be blank");
 		}
 	}
 }

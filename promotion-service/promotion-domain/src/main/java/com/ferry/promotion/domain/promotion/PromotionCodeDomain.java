@@ -1,5 +1,7 @@
 package com.ferry.promotion.domain.promotion;
 
+import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
+
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -13,11 +15,11 @@ public record PromotionCodeDomain(String value){
 
 	public PromotionCodeDomain{
 		if(value == null || value.isBlank()){
-			throw new IllegalArgumentException("Promotion code must not be blank");
+			throw new InvalidPromotionStateException("Promotion code must not be blank");
 		}
 		value = value.trim().toUpperCase(Locale.ROOT);
 		if(!CODE_PATTERN.matcher(value).matches()){
-			throw new IllegalArgumentException(
+			throw new InvalidPromotionStateException(
 					"Promotion code must be 3 to 32 characters of letters, digits, dash or underscore");
 		}
 	}

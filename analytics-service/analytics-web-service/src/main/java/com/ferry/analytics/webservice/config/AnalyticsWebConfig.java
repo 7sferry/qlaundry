@@ -13,6 +13,7 @@ import com.ferry.analytics.core.event.order.OrderEventUseCase;
 import com.ferry.analytics.core.report.DefaultReportUseCase;
 import com.ferry.analytics.core.report.ReportGateway;
 import com.ferry.analytics.core.report.ReportUseCase;
+import com.ferry.analytics.gateway.common.AnalyticStore;
 import com.ferry.analytics.gateway.clickhouse.ClickHouseStore;
 import com.ferry.analytics.gateway.dashboard.DashboardSummaryClickHouseGateway;
 import com.ferry.analytics.gateway.event.LaundryServiceEventClickHouseGateway;
@@ -62,14 +63,14 @@ public class AnalyticsWebConfig{
 	}
 
 	@Bean
-	ClickHouseStore clickHouseStore(Client clickHouseClient, JsonManager jsonManager,
-	                                @Value("${app.clickhouse.timeout:10s}") Duration timeout){
+	AnalyticStore analyticStore(Client clickHouseClient, JsonManager jsonManager,
+	                            @Value("${app.clickhouse.timeout:10s}") Duration timeout){
 		return new ClickHouseStore(clickHouseClient, jsonManager, timeout);
 	}
 
 	@Bean
-	OrderEventGateway orderEventGateway(ClickHouseStore clickHouseStore){
-		return new OrderEventClickHouseGateway(clickHouseStore);
+	OrderEventGateway orderEventGateway(AnalyticStore analyticStore){
+		return new OrderEventClickHouseGateway(analyticStore);
 	}
 
 	@Bean
@@ -78,8 +79,8 @@ public class AnalyticsWebConfig{
 	}
 
 	@Bean
-	LaundryServiceEventGateway laundryServiceEventGateway(ClickHouseStore clickHouseStore){
-		return new LaundryServiceEventClickHouseGateway(clickHouseStore);
+	LaundryServiceEventGateway laundryServiceEventGateway(AnalyticStore analyticStore){
+		return new LaundryServiceEventClickHouseGateway(analyticStore);
 	}
 
 	@Bean
@@ -88,8 +89,8 @@ public class AnalyticsWebConfig{
 	}
 
 	@Bean
-	DashboardSummaryGateway dashboardSummaryGateway(ClickHouseStore clickHouseStore){
-		return new DashboardSummaryClickHouseGateway(clickHouseStore);
+	DashboardSummaryGateway dashboardSummaryGateway(AnalyticStore analyticStore){
+		return new DashboardSummaryClickHouseGateway(analyticStore);
 	}
 
 	@Bean
@@ -98,8 +99,8 @@ public class AnalyticsWebConfig{
 	}
 
 	@Bean
-	ReportGateway reportGateway(ClickHouseStore clickHouseStore){
-		return new ReportClickHouseGateway(clickHouseStore);
+	ReportGateway reportGateway(AnalyticStore analyticStore){
+		return new ReportClickHouseGateway(analyticStore);
 	}
 
 	@Bean

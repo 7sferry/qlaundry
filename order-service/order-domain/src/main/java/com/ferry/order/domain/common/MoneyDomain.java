@@ -1,5 +1,7 @@
 package com.ferry.order.domain.common;
 
+import com.ferry.order.domain.common.exception.InvalidOrderStateException;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -14,10 +16,10 @@ public record MoneyDomain(BigDecimal value){
 
 	public MoneyDomain{
 		if(value == null){
-			throw new IllegalArgumentException("Amount must not be null");
+			throw new InvalidOrderStateException("Amount must not be null");
 		}
 		if(value.signum() < 0){
-			throw new IllegalArgumentException("Amount must not be negative");
+			throw new InvalidOrderStateException("Amount must not be negative");
 		}
 		value = value.setScale(SCALE, RoundingMode.HALF_EVEN);
 	}
@@ -40,7 +42,7 @@ public record MoneyDomain(BigDecimal value){
 
 	public MoneyDomain minus(MoneyDomain other){
 		if(other.value.compareTo(value) > 0){
-			throw new IllegalArgumentException("Discount must not exceed the subtotal");
+			throw new InvalidOrderStateException("Discount must not exceed the subtotal");
 		}
 		return new MoneyDomain(value.subtract(other.value));
 	}

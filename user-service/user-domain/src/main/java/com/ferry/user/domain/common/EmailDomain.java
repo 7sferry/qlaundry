@@ -1,5 +1,7 @@
 package com.ferry.user.domain.common;
 
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Juli 2026         *
@@ -8,10 +10,10 @@ package com.ferry.user.domain.common;
 public record EmailDomain(String value){
 	public EmailDomain{
 		if(value == null || value.isBlank()){
-			throw new IllegalArgumentException("Email must not be blank");
+			throw new InvalidUserStateException("Email must not be blank");
 		}
 		if(!value.contains("@") || !value.contains(".")){
-			throw new IllegalArgumentException("Invalid email format.");
+			throw new InvalidUserStateException("Invalid email format.");
 		}
 	}
 }

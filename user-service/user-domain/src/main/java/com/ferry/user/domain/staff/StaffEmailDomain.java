@@ -1,6 +1,7 @@
 package com.ferry.user.domain.staff;
 
 import com.ferry.user.domain.common.EmailDomain;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 
 import java.time.Instant;
 
@@ -14,7 +15,7 @@ public record StaffEmailDomain(String id, String staffId, EmailDomain email,
                                String updatedBy){
 	public StaffEmailDomain{
 		if(staffId == null || email == null){
-			throw new IllegalArgumentException("User id and email must not be null");
+			throw new InvalidUserStateException("User id and email must not be null");
 		}
 	}
 

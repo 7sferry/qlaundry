@@ -1,6 +1,7 @@
 package com.ferry.user.domain.customer;
 
 import com.ferry.user.domain.common.PhoneDomain;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 
 import java.time.Instant;
 
@@ -14,7 +15,7 @@ public record CustomerPhoneDomain(String id, String customerId, PhoneDomain phon
                                   Instant updatedAt, String updatedBy){
 	public CustomerPhoneDomain{
 		if(customerId == null || phone == null){
-			throw new IllegalArgumentException("Customer id and phone must not be null");
+			throw new InvalidUserStateException("Customer id and phone must not be null");
 		}
 	}
 

@@ -1,5 +1,6 @@
 package com.ferry.analytics.core.event.order;
 
+import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
 import com.ferry.analytics.domain.event.AnalyticsAggregate;
 import com.ferry.analytics.domain.event.ConsumedEventDomain;
 import com.ferry.analytics.domain.event.OrderItemSnapshotDomain;
@@ -22,13 +23,13 @@ public class DefaultOrderEventUseCase implements OrderEventUseCase{
 		OrderSnapshotDomain order = request.order();
 		for(OrderItemSnapshotDomain item : request.items()){
 			if(!order.orderId().equals(item.orderId()) || !order.tenantId().equals(item.tenantId())){
-				throw new IllegalArgumentException("Order item " + item.itemId() + " does not belong to order "
+				throw new InvalidAnalyticStateException("Order item " + item.itemId() + " does not belong to order "
 						+ order.orderId());
 			}
 		}
 		for(OrderPromotionSnapshotDomain promotion : request.promotions()){
 			if(!order.orderId().equals(promotion.orderId()) || !order.tenantId().equals(promotion.tenantId())){
-				throw new IllegalArgumentException("Order promotion " + promotion.promotionId()
+				throw new InvalidAnalyticStateException("Order promotion " + promotion.promotionId()
 						+ " does not belong to order " + order.orderId());
 			}
 		}

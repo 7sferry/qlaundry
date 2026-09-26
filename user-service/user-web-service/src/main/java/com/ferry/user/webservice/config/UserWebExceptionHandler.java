@@ -33,7 +33,7 @@ public class UserWebExceptionHandler{
 	}
 
 	@ExceptionHandler({InvalidUsernameException.class, TurnstileVerificationException.class,
-			InvalidPasswordException.class, IllegalArgumentException.class,
+			InvalidPasswordException.class, InvalidUserStateException.class,
 			ConstraintViolationException.class})
 	ProblemDetail handleBadRequest(RuntimeException e){
 		log.warn(e.getMessage(), e);

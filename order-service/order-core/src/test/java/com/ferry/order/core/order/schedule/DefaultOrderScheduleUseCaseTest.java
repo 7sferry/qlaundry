@@ -47,23 +47,6 @@ class DefaultOrderScheduleUseCaseTest{
 	ArgumentCaptor<OrderScheduleResponse> responseCaptor;
 
 	@Test
-	void givenMalformedDate_thenThrowsConstraintViolationException(){
-		DefaultOrderScheduleUseCase useCase = new DefaultOrderScheduleUseCase(gateway,
-				Clock.fixed(Instant.parse("2026-09-14T02:00:00Z"), ZoneOffset.UTC));
-		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
-				.userId(STAFF_ID)
-				.tenantId(TENANT_ID)
-				.role(StaffRole.STAFF)
-				.build();
-
-		thenSoftly(softly -> softly.thenThrownBy(() ->
-						useCase.execute(new OrderScheduleRequest("14/09/2026"), principal, presenter))
-				.isInstanceOf(ConstraintViolationException.class));
-
-		then(gateway).shouldHaveNoInteractions();
-	}
-
-	@Test
 	void givenImpossibleCalendarDate_thenThrowsIllegalArgumentException(){
 		DefaultOrderScheduleUseCase useCase = new DefaultOrderScheduleUseCase(gateway,
 				Clock.fixed(Instant.parse("2026-09-14T02:00:00Z"), ZoneOffset.UTC));
@@ -74,7 +57,7 @@ class DefaultOrderScheduleUseCaseTest{
 				.build();
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
-						useCase.execute(new OrderScheduleRequest("2026-02-30"), principal, presenter))
+						useCase.execute(new OrderScheduleRequest(LocalDate.parse("2026-02-30")), principal, presenter))
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessage("Schedule date must be a valid yyyy-MM-dd date"));
 
@@ -144,7 +127,7 @@ class DefaultOrderScheduleUseCaseTest{
 				.findDeliveriesBetween(any(TenantIdDomain.class), any(Instant.class), any(Instant.class),
 						anyCollection());
 
-		useCase.execute(new OrderScheduleRequest("2026-12-31"), principal, presenter);
+		useCase.execute(new OrderScheduleRequest(LocalDate.parse("2026-12-31")), principal, presenter);
 
 		then(gateway).should()
 				.findPickupsBetween(eq(new TenantIdDomain(TENANT_ID)), eq(Instant.parse("2026-12-30T17:00:00Z")),

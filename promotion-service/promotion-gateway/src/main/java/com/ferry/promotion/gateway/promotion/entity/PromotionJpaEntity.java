@@ -102,7 +102,7 @@ public class PromotionJpaEntity{
 
 	public static PromotionDomain construct(PromotionJpaEntity saved){
 		return new PromotionDomain(saved.id, saved.tenantId, new PromotionCodeDomain(saved.code), saved.name,
-				new NoteDomain(saved.description), PromotionType.fromValue(saved.typeId).orElseThrow(),
+				new NoteDomain(saved.description), PromotionType.fromValue(saved.typeId),
 				saved.percentage, saved.amount == null ? null : new MoneyDomain(saved.amount),
 				saved.maxDiscountAmount == null ? null : new MoneyDomain(saved.maxDiscountAmount),
 				saved.minSubtotal == null ? null : new MoneyDomain(saved.minSubtotal), saved.combinable,

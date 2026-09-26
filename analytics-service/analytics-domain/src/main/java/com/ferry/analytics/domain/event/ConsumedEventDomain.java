@@ -1,5 +1,7 @@
 package com.ferry.analytics.domain.event;
 
+import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
+
 import java.time.Instant;
 
 /************************
@@ -11,10 +13,10 @@ public record ConsumedEventDomain(String eventId, AnalyticsAggregate aggregate, 
                                   String aggregateId, int version, Instant consumedAt){
 	public ConsumedEventDomain{
 		if(eventId == null || eventId.isBlank()){
-			throw new IllegalArgumentException("Event id must not be blank");
+			throw new InvalidAnalyticStateException("Event id must not be blank");
 		}
 		if(aggregate == null){
-			throw new IllegalArgumentException("Event aggregate must not be null");
+			throw new InvalidAnalyticStateException("Event aggregate must not be null");
 		}
 	}
 

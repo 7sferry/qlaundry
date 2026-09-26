@@ -7,6 +7,7 @@ import com.ferry.order.domain.common.FullNameDomain;
 import com.ferry.order.domain.common.MoneyDomain;
 import com.ferry.order.domain.common.NoteDomain;
 import com.ferry.order.domain.common.PhoneDomain;
+import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 import com.ferry.order.domain.common.exception.InvalidOrderStatusException;
 import com.ferry.order.domain.service.LaundryServiceDomain;
 import com.ferry.order.domain.service.ServiceUnit;
@@ -31,19 +32,19 @@ public record OrderDomain(String id, OrderNumberDomain orderNumber, String tenan
                           Instant updatedAt, String updatedBy){
 	public OrderDomain{
 		if(tenantId == null || tenantId.isBlank()){
-			throw new IllegalArgumentException("Tenant id must not be blank");
+			throw new InvalidOrderStateException("Tenant id must not be blank");
 		}
 		if(orderNumber == null || customerName == null || customerPhone == null){
-			throw new IllegalArgumentException("Order number, customer name and customer phone must not be null");
+			throw new InvalidOrderStateException("Order number, customer name and customer phone must not be null");
 		}
 		if(serviceId == null || serviceId.isBlank()){
-			throw new IllegalArgumentException("Service id must not be blank");
+			throw new InvalidOrderStateException("Service id must not be blank");
 		}
 		if(quantity <= 0){
-			throw new IllegalArgumentException("Quantity must be greater than zero");
+			throw new InvalidOrderStateException("Quantity must be greater than zero");
 		}
 		if(pickupAt == null){
-			throw new IllegalArgumentException("Pickup date must not be null");
+			throw new InvalidOrderStateException("Pickup date must not be null");
 		}
 		weightKg = Decimals.scaled(weightKg);
 	}
@@ -93,7 +94,7 @@ public record OrderDomain(String id, OrderNumberDomain orderNumber, String tenan
 
 	public OrderDomain markPaid(String updatedBy){
 		if(paymentStatus == PaymentStatus.PAID){
-			throw new IllegalArgumentException("Order is already paid");
+			throw new InvalidOrderStatusException("Order is already paid");
 		}
 		if(status == OrderStatus.CANCELLED){
 			throw new InvalidOrderStatusException("A cancelled order cannot be paid");

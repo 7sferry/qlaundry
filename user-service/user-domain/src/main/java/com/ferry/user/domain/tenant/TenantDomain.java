@@ -3,6 +3,7 @@ package com.ferry.user.domain.tenant;
 import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.FullNameDomain;
 import com.ferry.user.domain.common.UsernameDomain;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 
 import java.time.Instant;
 
@@ -17,7 +18,7 @@ public record TenantDomain(String id, UsernameDomain username, FullNameDomain fu
 
 	public TenantDomain {
 		if(username == null || fullName == null){
-			throw new IllegalArgumentException("Username and name must not be null");
+			throw new InvalidUserStateException("Username and name must not be null");
 		}
 	}
 

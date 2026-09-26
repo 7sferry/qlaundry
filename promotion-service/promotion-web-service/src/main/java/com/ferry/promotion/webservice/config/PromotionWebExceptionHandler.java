@@ -1,5 +1,6 @@
 package com.ferry.promotion.webservice.config;
 
+import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
 import com.ferry.promotion.domain.common.exception.NotFoundException;
 import com.ferry.promotion.domain.common.exception.PromotionForbiddenActionException;
 import com.ferry.promotion.domain.common.exception.PromotionNotRedeemableException;
@@ -21,7 +22,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @Slf4j
 public class PromotionWebExceptionHandler{
 
-	@ExceptionHandler({PromotionNotRedeemableException.class, IllegalArgumentException.class,
+	@ExceptionHandler({PromotionNotRedeemableException.class, InvalidPromotionStateException.class,
 			ConstraintViolationException.class})
 	ProblemDetail handleBadRequest(RuntimeException e){
 		log.warn(e.getMessage(), e);

@@ -1,5 +1,7 @@
 package com.ferry.order.domain.tenant;
 
+import com.ferry.order.domain.common.exception.InvalidOrderStateException;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Agustus 2026      *
@@ -8,7 +10,7 @@ package com.ferry.order.domain.tenant;
 public record TenantIdDomain(String value){
 	public TenantIdDomain{
 		if(value == null || value.isBlank()){
-			throw new IllegalArgumentException("value is null");
+			throw new InvalidOrderStateException("value is null");
 		}
 	}
 }

@@ -6,6 +6,7 @@ import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
 import com.ferry.order.domain.common.MoneyDomain;
 import com.ferry.order.domain.common.NoteDomain;
+import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 import com.ferry.order.domain.common.exception.OrderForbiddenActionException;
 import com.ferry.order.domain.service.LaundryServiceDomain;
 import com.ferry.order.domain.staff.StaffRole;
@@ -36,7 +37,7 @@ public class DefaultLaundryServiceCreateUseCase implements LaundryServiceCreateU
 		double expressMultiplier = request.expressMultiplier() == null
 				? DEFAULT_EXPRESS_MULTIPLIER : request.expressMultiplier();
 		if(gateway.existsByName(request.name(), tenantId)){
-			throw new IllegalArgumentException("Service name already exists");
+			throw new InvalidOrderStateException("Service name already exists");
 		}
 		LaundryServiceDomain saved = gateway.save(LaundryServiceDomain.create(tenantId.value(), request.name(),
 				new NoteDomain(request.description()), new MoneyDomain(request.pricePerUnit()), request.unit(),

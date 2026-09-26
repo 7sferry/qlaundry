@@ -1,5 +1,6 @@
 package com.ferry.order.domain.order;
 
+import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -17,16 +18,16 @@ public record OrderPromotionSagaDomain(String id, String tenantId, String refere
 
 	public OrderPromotionSagaDomain{
 		if(tenantId == null || tenantId.isBlank()){
-			throw new IllegalArgumentException("Tenant id must not be blank");
+			throw new InvalidOrderStateException("Tenant id must not be blank");
 		}
 		if(referenceId == null || referenceId.isBlank()){
-			throw new IllegalArgumentException("Saga reference id must not be blank");
+			throw new InvalidOrderStateException("Saga reference id must not be blank");
 		}
 		if(status == null){
-			throw new IllegalArgumentException("Saga status must not be null");
+			throw new InvalidOrderStateException("Saga status must not be null");
 		}
 		if(attempts < 0){
-			throw new IllegalArgumentException("Saga attempts must not be negative");
+			throw new InvalidOrderStateException("Saga attempts must not be negative");
 		}
 		if(lastError != null && lastError.length() > LAST_ERROR_MAX_LENGTH){
 			lastError = lastError.substring(0, LAST_ERROR_MAX_LENGTH);

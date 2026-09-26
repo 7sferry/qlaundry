@@ -11,7 +11,7 @@ public record CryptoAad(String table, String column, String owner){
 	public CryptoAad{
 		if(table == null || table.isBlank() || column == null || column.isBlank()
 				|| owner == null || owner.isBlank()){
-			throw new IllegalArgumentException("AAD table, column, and owner must not be blank");
+			throw new InternalCryptoException("AAD table, column, and owner must not be blank");
 		}
 	}
 

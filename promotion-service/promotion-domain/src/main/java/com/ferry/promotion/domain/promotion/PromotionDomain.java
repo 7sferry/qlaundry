@@ -2,6 +2,7 @@ package com.ferry.promotion.domain.promotion;
 
 import com.ferry.promotion.domain.common.MoneyDomain;
 import com.ferry.promotion.domain.common.NoteDomain;
+import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -28,46 +29,46 @@ public record PromotionDomain(String id, String tenantId, PromotionCodeDomain co
 
 	public PromotionDomain{
 		if(tenantId == null || tenantId.isBlank()){
-			throw new IllegalArgumentException("Tenant id must not be blank");
+			throw new InvalidPromotionStateException("Tenant id must not be blank");
 		}
 		if(code == null){
-			throw new IllegalArgumentException("Promotion code must not be null");
+			throw new InvalidPromotionStateException("Promotion code must not be null");
 		}
 		if(name == null || name.isBlank()){
-			throw new IllegalArgumentException("Promotion name must not be blank");
+			throw new InvalidPromotionStateException("Promotion name must not be blank");
 		}
 		if(type == null){
-			throw new IllegalArgumentException("Promotion type must not be null");
+			throw new InvalidPromotionStateException("Promotion type must not be null");
 		}
 		if(type.isPercentageBased()){
 			if(percentage == null || percentage.compareTo(BigDecimal.ZERO) <= 0
 					|| percentage.compareTo(MAX_PERCENTAGE) > 0){
-				throw new IllegalArgumentException("Percentage must be greater than zero and at most 100");
+				throw new InvalidPromotionStateException("Percentage must be greater than zero and at most 100");
 			}
 			percentage = percentage.setScale(PERCENTAGE_SCALE, RoundingMode.HALF_EVEN);
 		}else if(amount == null || !amount.isPositive()){
-			throw new IllegalArgumentException("Fixed amount must be greater than zero");
+			throw new InvalidPromotionStateException("Fixed amount must be greater than zero");
 		}
 		if(maxDiscountAmount != null && !maxDiscountAmount.isPositive()){
-			throw new IllegalArgumentException("Maximum discount amount must be greater than zero");
+			throw new InvalidPromotionStateException("Maximum discount amount must be greater than zero");
 		}
 		if(minSubtotal != null && !minSubtotal.isPositive()){
-			throw new IllegalArgumentException("Minimum subtotal must be greater than zero");
+			throw new InvalidPromotionStateException("Minimum subtotal must be greater than zero");
 		}
 		if(usageLimit != null && usageLimit <= 0){
-			throw new IllegalArgumentException("Usage limit must be greater than zero");
+			throw new InvalidPromotionStateException("Usage limit must be greater than zero");
 		}
 		if(usedCount < 0){
-			throw new IllegalArgumentException("Used count must not be negative");
+			throw new InvalidPromotionStateException("Used count must not be negative");
 		}
 		if(startAt == null){
-			throw new IllegalArgumentException("Promotion start date must not be null");
+			throw new InvalidPromotionStateException("Promotion start date must not be null");
 		}
 		if(endAt == null){
-			throw new IllegalArgumentException("Promotion end date must not be null");
+			throw new InvalidPromotionStateException("Promotion end date must not be null");
 		}
 		if(!endAt.isAfter(startAt)){
-			throw new IllegalArgumentException("Promotion end date must be after its start date");
+			throw new InvalidPromotionStateException("Promotion end date must be after its start date");
 		}
 	}
 

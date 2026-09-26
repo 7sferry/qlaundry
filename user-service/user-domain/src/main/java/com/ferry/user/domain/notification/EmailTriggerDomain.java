@@ -1,6 +1,7 @@
 package com.ferry.user.domain.notification;
 
 import com.ferry.user.domain.common.EmailDomain;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 
 import java.time.Instant;
 
@@ -15,7 +16,7 @@ public record EmailTriggerDomain(String id, EmailTriggerType type, EmailDomain r
 
 	public EmailTriggerDomain{
 		if(type == null || recipient == null || payload == null){
-			throw new IllegalArgumentException("Type, recipient, and payload must not be null");
+			throw new InvalidUserStateException("Type, recipient, and payload must not be null");
 		}
 	}
 

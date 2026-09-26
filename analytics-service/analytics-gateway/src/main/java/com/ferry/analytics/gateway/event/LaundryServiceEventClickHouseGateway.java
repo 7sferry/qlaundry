@@ -3,7 +3,7 @@ package com.ferry.analytics.gateway.event;
 import com.ferry.analytics.core.event.laundryservice.LaundryServiceEventGateway;
 import com.ferry.analytics.domain.event.ConsumedEventDomain;
 import com.ferry.analytics.domain.event.LaundryServiceSnapshotDomain;
-import com.ferry.analytics.gateway.clickhouse.ClickHouseStore;
+import com.ferry.analytics.gateway.common.AnalyticStore;
 import lombok.RequiredArgsConstructor;
 
 import java.util.LinkedHashMap;
@@ -20,7 +20,7 @@ public class LaundryServiceEventClickHouseGateway implements LaundryServiceEvent
 	private static final String SERVICES_TABLE = "laundry_services_current";
 	private static final String CONSUMED_EVENTS_TABLE = "consumed_events";
 
-	private final ClickHouseStore store;
+	private final AnalyticStore store;
 
 	@Override
 	public void upsert(LaundryServiceSnapshotDomain service){
@@ -36,12 +36,12 @@ public class LaundryServiceEventClickHouseGateway implements LaundryServiceEvent
 		row.put("tenant_id", event.tenantId());
 		row.put("aggregate_id", event.aggregateId());
 		row.put("version", event.version());
-		row.put("consumed_at", ClickHouseStore.dateTime(event.consumedAt()));
-		row.put("created_at", ClickHouseStore.dateTime(event.consumedAt()));
+		row.put("consumed_at", store.dateTime(event.consumedAt()));
+		row.put("created_at", store.dateTime(event.consumedAt()));
 		store.insert(CONSUMED_EVENTS_TABLE, List.of(row));
 	}
 
-	private static Map<String, Object> construct(LaundryServiceSnapshotDomain service){
+	private Map<String, Object> construct(LaundryServiceSnapshotDomain service){
 		Map<String, Object> row = new LinkedHashMap<>();
 		row.put("tenant_id", service.tenantId());
 		row.put("service_id", service.serviceId());
@@ -51,12 +51,12 @@ public class LaundryServiceEventClickHouseGateway implements LaundryServiceEvent
 		row.put("price_per_unit", service.pricePerUnit());
 		row.put("estimated_hours", service.estimatedHours());
 		row.put("express_multiplier", service.expressMultiplier());
-		row.put("popular", ClickHouseStore.flag(service.popular()));
-		row.put("active", ClickHouseStore.flag(service.active()));
-		row.put("deleted", ClickHouseStore.flag(service.deleted()));
+		row.put("popular", store.flag(service.popular()));
+		row.put("active", store.flag(service.active()));
+		row.put("deleted", store.flag(service.deleted()));
 		row.put("version", service.version());
-		row.put("created_at", ClickHouseStore.dateTime(service.createdAt()));
-		row.put("updated_at", ClickHouseStore.dateTime(service.updatedAt()));
+		row.put("created_at", store.dateTime(service.createdAt()));
+		row.put("updated_at", store.dateTime(service.updatedAt()));
 		return row;
 	}
 

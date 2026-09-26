@@ -1,5 +1,6 @@
 package com.ferry.order.domain.order;
 
+import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -15,13 +16,13 @@ public record OrderItemDomain(String id, String orderId, ClothingType type, Stri
                               Instant updatedAt, String updatedBy){
 	public OrderItemDomain{
 		if(orderId == null || orderId.isBlank()){
-			throw new IllegalArgumentException("Order id must not be blank");
+			throw new InvalidOrderStateException("Order id must not be blank");
 		}
 		if(type == null){
-			throw new IllegalArgumentException("Clothing type must not be null");
+			throw new InvalidOrderStateException("Clothing type must not be null");
 		}
 		if(quantity <= 0){
-			throw new IllegalArgumentException("Item quantity must be greater than zero");
+			throw new InvalidOrderStateException("Item quantity must be greater than zero");
 		}
 	}
 

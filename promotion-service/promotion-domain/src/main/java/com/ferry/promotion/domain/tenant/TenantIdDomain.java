@@ -1,5 +1,7 @@
 package com.ferry.promotion.domain.tenant;
 
+import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Agustus 2026      *
@@ -8,7 +10,7 @@ package com.ferry.promotion.domain.tenant;
 public record TenantIdDomain(String value){
 	public TenantIdDomain{
 		if(value == null || value.isBlank()){
-			throw new IllegalArgumentException("value is null");
+			throw new InvalidPromotionStateException("value is null");
 		}
 	}
 }

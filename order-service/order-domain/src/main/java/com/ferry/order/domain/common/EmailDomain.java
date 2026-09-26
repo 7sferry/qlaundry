@@ -1,5 +1,7 @@
 package com.ferry.order.domain.common;
 
+import com.ferry.order.domain.common.exception.InvalidOrderStateException;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Agustus 2026      *
@@ -8,10 +10,10 @@ package com.ferry.order.domain.common;
 public record EmailDomain(String value){
 	public EmailDomain{
 		if(value == null || value.isBlank()){
-			throw new IllegalArgumentException("Email must not be blank");
+			throw new InvalidOrderStateException("Email must not be blank");
 		}
 		if(!value.contains("@") || !value.contains(".")){
-			throw new IllegalArgumentException("Invalid email format.");
+			throw new InvalidOrderStateException("Invalid email format.");
 		}
 	}
 }

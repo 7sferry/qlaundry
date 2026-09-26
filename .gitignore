@@ -37,4 +37,4 @@ build/
 ### VS Code ###
 .vscode/
 
-*-local.yaml
+*local.*

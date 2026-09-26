@@ -1,11 +1,13 @@
 package com.ferry.order.domain.order;
 
 import com.ferry.common.CrockfordBase32;
+import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 /************************
@@ -14,13 +16,13 @@ import java.time.format.DateTimeFormatter;
  ************************/
 
 public record OrderNumberDomain(String value){
-	private static final ZoneId BUSINESS_ZONE = ZoneId.of("Asia/Jakarta");
+	private static final ZoneId BUSINESS_ZONE = ZoneOffset.UTC;
 	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd").withZone(BUSINESS_ZONE);
 	private static final SecureRandom RANDOM = new SecureRandom();
 
 	public OrderNumberDomain{
 		if(value == null || value.isBlank()){
-			throw new IllegalArgumentException("Order number must not be blank");
+			throw new InvalidOrderStateException("Order number must not be blank");
 		}
 	}
 

@@ -1,6 +1,7 @@
 package com.ferry.user.domain.staff;
 
 import com.ferry.user.domain.common.HashedPasswordDomain;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 
 import java.time.Instant;
 
@@ -14,7 +15,7 @@ public record StaffPasswordDomain(String id, String staffId, HashedPasswordDomai
                                   String updatedBy){
 	public StaffPasswordDomain{
 		if(staffId == null || password == null){
-			throw new IllegalArgumentException("Staff id and password must not be null");
+			throw new InvalidUserStateException("Staff id and password must not be null");
 		}
 	}
 

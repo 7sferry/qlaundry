@@ -1,5 +1,7 @@
 package com.ferry.notification.domain;
 
+import com.ferry.notification.domain.exception.InvalidaNotificationStateException;
+
 import java.time.Instant;
 
 /************************
@@ -12,7 +14,7 @@ public record EmailNotificationDomain(String id, String referenceId, EmailType t
                                       Instant sentAt){
 	public EmailNotificationDomain{
 		if(type == null || recipient == null || subject == null){
-			throw new IllegalArgumentException("Type, recipient, subject, and content must not be null");
+			throw new InvalidaNotificationStateException("Type, recipient, subject, and content must not be null");
 		}
 	}
 

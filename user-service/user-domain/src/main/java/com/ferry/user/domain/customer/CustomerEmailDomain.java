@@ -1,6 +1,7 @@
 package com.ferry.user.domain.customer;
 
 import com.ferry.user.domain.common.EmailDomain;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 
 import java.time.Instant;
 
@@ -14,7 +15,7 @@ public record CustomerEmailDomain(String id, String customerId, EmailDomain emai
                                   Instant updatedAt, String updatedBy){
 	public CustomerEmailDomain{
 		if(customerId == null || email == null){
-			throw new IllegalArgumentException("Customer id and email must not be null");
+			throw new InvalidUserStateException("Customer id and email must not be null");
 		}
 	}
 

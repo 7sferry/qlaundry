@@ -1,6 +1,7 @@
 package com.ferry.promotion.domain.promotion;
 
 import com.ferry.promotion.domain.common.MoneyDomain;
+import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -17,16 +18,16 @@ public record PromotionRedemptionDomain(String id, String promotionId, String te
                                         Instant createdAt, String createdBy, Instant updatedAt, String updatedBy){
 	public PromotionRedemptionDomain{
 		if(promotionId == null || promotionId.isBlank()){
-			throw new IllegalArgumentException("Promotion id must not be blank");
+			throw new InvalidPromotionStateException("Promotion id must not be blank");
 		}
 		if(tenantId == null || tenantId.isBlank()){
-			throw new IllegalArgumentException("Tenant id must not be blank");
+			throw new InvalidPromotionStateException("Tenant id must not be blank");
 		}
 		if(referenceId == null || referenceId.isBlank()){
-			throw new IllegalArgumentException("Reference id must not be blank");
+			throw new InvalidPromotionStateException("Reference id must not be blank");
 		}
 		if(code == null || subtotal == null || discountAmount == null){
-			throw new IllegalArgumentException("Code, subtotal and discount amount must not be null");
+			throw new InvalidPromotionStateException("Code, subtotal and discount amount must not be null");
 		}
 	}
 

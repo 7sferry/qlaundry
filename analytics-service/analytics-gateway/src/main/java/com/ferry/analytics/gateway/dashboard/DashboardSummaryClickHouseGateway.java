@@ -4,7 +4,7 @@ import com.ferry.analytics.core.dashboard.DashboardSummaryGateway;
 import com.ferry.analytics.domain.dashboard.DashboardSummaryProjection;
 import com.ferry.analytics.domain.dashboard.StatusCountProjection;
 import com.ferry.analytics.domain.tenant.TenantIdDomain;
-import com.ferry.analytics.gateway.clickhouse.ClickHouseStore;
+import com.ferry.analytics.gateway.common.AnalyticStore;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
@@ -48,7 +48,7 @@ public class DashboardSummaryClickHouseGateway implements DashboardSummaryGatewa
 			ORDER BY status
 			""";
 
-	private final ClickHouseStore store;
+	private final AnalyticStore store;
 
 	@Override
 	public DashboardSummaryProjection summarize(TenantIdDomain tenantId, LocalDate today, LocalDate monthStart,

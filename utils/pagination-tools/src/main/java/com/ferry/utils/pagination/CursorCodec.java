@@ -23,7 +23,7 @@ public final class CursorCodec{
 		byte[] decoded = Base64.getUrlDecoder().decode(token);
 		String[] parts = new String(decoded, StandardCharsets.UTF_8).split(SEPARATOR, 2);
 		if(parts.length != 2 || parts[0].isEmpty() || parts[1].isEmpty()){
-			throw new IllegalArgumentException("Invalid cursor");
+			throw new InternalPaginationException("Invalid cursor");
 		}
 		return new PageCursor(parts[0], parts[1]);
 	}

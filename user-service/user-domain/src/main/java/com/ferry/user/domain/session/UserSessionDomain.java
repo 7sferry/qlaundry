@@ -1,5 +1,6 @@
 package com.ferry.user.domain.session;
 
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -14,13 +15,13 @@ public record UserSessionDomain(String id, Instant expirationTime, String userId
                                 Integer version, Instant createdAt, Instant updatedAt){
 	public UserSessionDomain{
 		if(expirationTime == null){
-			throw new IllegalArgumentException("expirationTime cannot be null");
+			throw new InvalidUserStateException("expirationTime cannot be null");
 		}
 		if(userId == null){
-			throw new IllegalArgumentException("userId cannot be null");
+			throw new InvalidUserStateException("userId cannot be null");
 		}
 		if(sessionType == null){
-			throw new IllegalArgumentException("session type cannot be null");
+			throw new InvalidUserStateException("session type cannot be null");
 		}
 	}
 

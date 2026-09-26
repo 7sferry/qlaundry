@@ -2,6 +2,7 @@ package com.ferry.promotion.core.promotion.update;
 
 import com.ferry.promotion.domain.common.MoneyDomain;
 import com.ferry.promotion.domain.common.NoteDomain;
+import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
 import com.ferry.promotion.domain.common.exception.NotFoundException;
 import com.ferry.promotion.domain.common.exception.PromotionForbiddenActionException;
 import com.ferry.promotion.domain.promotion.PromotionCodeDomain;
@@ -37,7 +38,7 @@ public class DefaultPromotionUpdateUseCase implements PromotionUpdateUseCase{
 				.orElseThrow(() -> new NotFoundException("Promotion Not Found"));
 		PromotionCodeDomain code = new PromotionCodeDomain(request.code());
 		if(gateway.existsByCode(code, tenantId, promotionId)){
-			throw new IllegalArgumentException("Promotion code already exists");
+			throw new InvalidPromotionStateException("Promotion code already exists");
 		}
 		boolean active = request.active() == null || request.active();
 		boolean combinable = request.combinable() == null || request.combinable();

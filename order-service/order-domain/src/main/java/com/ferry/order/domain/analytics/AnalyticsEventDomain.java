@@ -1,5 +1,6 @@
 package com.ferry.order.domain.analytics;
 
+import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -19,19 +20,19 @@ public record AnalyticsEventDomain(String id, AnalyticsAggregate aggregate, Anal
 
 	public AnalyticsEventDomain{
 		if(aggregate == null || type == null || status == null){
-			throw new IllegalArgumentException("Analytics event aggregate, type and status must not be null");
+			throw new InvalidOrderStateException("Analytics event aggregate, type and status must not be null");
 		}
 		if(tenantId == null || tenantId.isBlank()){
-			throw new IllegalArgumentException("Tenant id must not be blank");
+			throw new InvalidOrderStateException("Tenant id must not be blank");
 		}
 		if(aggregateId == null || aggregateId.isBlank()){
-			throw new IllegalArgumentException("Analytics event aggregate id must not be blank");
+			throw new InvalidOrderStateException("Analytics event aggregate id must not be blank");
 		}
 		if(payload == null || payload.isBlank()){
-			throw new IllegalArgumentException("Analytics event payload must not be blank");
+			throw new InvalidOrderStateException("Analytics event payload must not be blank");
 		}
 		if(aggregateVersion < 0 || attempts < 0){
-			throw new IllegalArgumentException("Analytics event version and attempts must not be negative");
+			throw new InvalidOrderStateException("Analytics event version and attempts must not be negative");
 		}
 		if(lastError != null && lastError.length() > LAST_ERROR_MAX_LENGTH){
 			lastError = lastError.substring(0, LAST_ERROR_MAX_LENGTH);

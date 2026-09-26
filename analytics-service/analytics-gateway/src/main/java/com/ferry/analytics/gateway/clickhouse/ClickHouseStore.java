@@ -6,6 +6,7 @@ import com.clickhouse.client.api.insert.InsertResponse;
 import com.clickhouse.client.api.query.QueryResponse;
 import com.clickhouse.data.ClickHouseFormat;
 import com.ferry.analytics.domain.common.exception.AnalyticsStoreException;
+import com.ferry.analytics.gateway.common.AnalyticStore;
 import com.ferry.utils.json.JsonManager;
 import lombok.RequiredArgsConstructor;
 
@@ -28,7 +29,7 @@ import java.util.function.Function;
  ************************/
 
 @RequiredArgsConstructor
-public class ClickHouseStore{
+public class ClickHouseStore implements AnalyticStore{
 	private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 			.withZone(ZoneOffset.UTC);
 
@@ -36,6 +37,7 @@ public class ClickHouseStore{
 	private final JsonManager jsonManager;
 	private final Duration timeout;
 
+	@Override
 	public void insert(String table, List<Map<String, Object>> rows){
 		if(rows.isEmpty()){
 			return;
@@ -55,6 +57,7 @@ public class ClickHouseStore{
 		}
 	}
 
+	@Override
 	public <T> List<T> query(String sql, Map<String, Object> params, Function<ClickHouseBinaryFormatReader, T> mapper){
 		try(QueryResponse response = client.query(sql, params).get(timeout.toMillis(), TimeUnit.MILLISECONDS)){
 			ClickHouseBinaryFormatReader reader = client.newBinaryFormatReader(response);
@@ -72,11 +75,13 @@ public class ClickHouseStore{
 		}
 	}
 
-	public static String dateTime(Instant instant){
+	@Override
+	public String dateTime(Instant instant){
 		return instant == null ? null : DATE_TIME_FORMAT.format(instant);
 	}
 
-	public static int flag(boolean value){
+	@Override
+	public int flag(boolean value){
 		return value ? 1 : 0;
 	}
 

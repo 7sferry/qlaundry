@@ -6,7 +6,7 @@ import com.ferry.analytics.domain.report.ReportWindow;
 import com.ferry.analytics.domain.report.RevenueBucketProjection;
 import com.ferry.analytics.domain.report.ServiceBreakdownProjection;
 import com.ferry.analytics.domain.tenant.TenantIdDomain;
-import com.ferry.analytics.gateway.clickhouse.ClickHouseStore;
+import com.ferry.analytics.gateway.common.AnalyticStore;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
@@ -50,7 +50,7 @@ public class ReportClickHouseGateway implements ReportGateway{
 			ORDER BY revenue DESC, service_id
 			""";
 
-	private final ClickHouseStore store;
+	private final AnalyticStore store;
 
 	@Override
 	public List<RevenueBucketProjection> revenueTrend(TenantIdDomain tenantId, ReportWindow window){

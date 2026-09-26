@@ -1,5 +1,6 @@
 package com.ferry.analytics.domain.event;
 
+import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -19,19 +20,19 @@ public record OrderSnapshotDomain(String tenantId, String orderId, String orderN
                                   Instant createdAt, Instant updatedAt, boolean deleted, int version){
 	public OrderSnapshotDomain{
 		if(tenantId == null || tenantId.isBlank()){
-			throw new IllegalArgumentException("Tenant id must not be blank");
+			throw new InvalidAnalyticStateException("Tenant id must not be blank");
 		}
 		if(orderId == null || orderId.isBlank()){
-			throw new IllegalArgumentException("Order id must not be blank");
+			throw new InvalidAnalyticStateException("Order id must not be blank");
 		}
 		if(status == null || status.isBlank()){
-			throw new IllegalArgumentException("Order status must not be blank");
+			throw new InvalidAnalyticStateException("Order status must not be blank");
 		}
 		if(totalPrice == null || createdAt == null || updatedAt == null){
-			throw new IllegalArgumentException("Order total price and timestamps must not be null");
+			throw new InvalidAnalyticStateException("Order total price and timestamps must not be null");
 		}
 		if(version < 0){
-			throw new IllegalArgumentException("Order version must not be negative");
+			throw new InvalidAnalyticStateException("Order version must not be negative");
 		}
 	}
 }

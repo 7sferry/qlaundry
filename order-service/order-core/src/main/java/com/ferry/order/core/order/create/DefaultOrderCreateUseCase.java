@@ -10,6 +10,7 @@ import com.ferry.order.domain.common.FullNameDomain;
 import com.ferry.order.domain.common.MoneyDomain;
 import com.ferry.order.domain.common.NoteDomain;
 import com.ferry.order.domain.common.PhoneDomain;
+import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.common.exception.UnsupportedPaymentMethodException;
 import com.ferry.order.domain.customer.CustomerIdDomain;
@@ -51,7 +52,7 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		LaundryServiceDomain service = gateway.findServiceById(serviceId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Service Not Found"));
 		if(!service.active()){
-			throw new IllegalArgumentException("Service is no longer available");
+			throw new InvalidOrderStateException("Service is no longer available");
 		}
 		OrderPriority priority = request.priority() == null ? OrderPriority.NORMAL : request.priority();
 		PaymentMethod paymentMethod = resolvePaymentMethod(request.paymentMethod());
@@ -145,7 +146,7 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 			}
 			String trimmed = code.trim();
 			if(!codes.add(trimmed)){
-				throw new IllegalArgumentException("Duplicate promo code: " + trimmed);
+				throw new InvalidOrderStateException("Duplicate promo code: " + trimmed);
 			}
 		}
 		return codes;
@@ -161,10 +162,10 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		List<PromotionRedemptionHttpResponse> responses = promotionGateway.redeem(request);
 		for(PromotionRedemptionHttpResponse response : responses){
 			if(response == null){
-				throw new IllegalArgumentException("Promotion code is not recognised");
+				throw new InvalidOrderStateException("Promotion code is not recognised");
 			}
 			if(!response.applied()){
-				IllegalArgumentException rejection = new IllegalArgumentException(response.message());
+				InvalidOrderStateException rejection = new InvalidOrderStateException(response.message());
 				closeRejectedSaga(saga, principal, rejection);
 				throw rejection;
 			}

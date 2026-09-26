@@ -1,5 +1,6 @@
 package com.ferry.analytics.domain.event;
 
+import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -14,13 +15,13 @@ public record OrderItemSnapshotDomain(String tenantId, String orderId, String it
                                       int quantity, boolean deleted, int version, Instant createdAt){
 	public OrderItemSnapshotDomain{
 		if(tenantId == null || tenantId.isBlank() || orderId == null || orderId.isBlank()){
-			throw new IllegalArgumentException("Item tenant id and order id must not be blank");
+			throw new InvalidAnalyticStateException("Item tenant id and order id must not be blank");
 		}
 		if(itemId == null || itemId.isBlank()){
-			throw new IllegalArgumentException("Item id must not be blank");
+			throw new InvalidAnalyticStateException("Item id must not be blank");
 		}
 		if(version < 0){
-			throw new IllegalArgumentException("Item version must not be negative");
+			throw new InvalidAnalyticStateException("Item version must not be negative");
 		}
 	}
 }

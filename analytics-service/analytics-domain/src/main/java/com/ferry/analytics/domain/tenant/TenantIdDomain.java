@@ -1,5 +1,7 @@
 package com.ferry.analytics.domain.tenant;
 
+import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
+
 /************************
  * Made by [MR Ferry™]  *
  * on September 2026    *
@@ -8,7 +10,7 @@ package com.ferry.analytics.domain.tenant;
 public record TenantIdDomain(String value){
 	public TenantIdDomain{
 		if(value == null || value.isBlank()){
-			throw new IllegalArgumentException("value is null");
+			throw new InvalidAnalyticStateException("value is null");
 		}
 	}
 }

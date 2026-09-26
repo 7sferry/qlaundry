@@ -1,5 +1,7 @@
 package com.ferry.promotion.domain.common;
 
+import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -14,10 +16,10 @@ public record MoneyDomain(BigDecimal value){
 
 	public MoneyDomain{
 		if(value == null){
-			throw new IllegalArgumentException("Amount must not be null");
+			throw new InvalidPromotionStateException("Amount must not be null");
 		}
 		if(value.signum() < 0){
-			throw new IllegalArgumentException("Amount must not be negative");
+			throw new InvalidPromotionStateException("Amount must not be negative");
 		}
 		value = value.setScale(SCALE, RoundingMode.HALF_EVEN);
 	}

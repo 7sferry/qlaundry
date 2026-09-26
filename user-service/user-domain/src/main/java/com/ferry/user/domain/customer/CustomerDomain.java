@@ -2,6 +2,7 @@ package com.ferry.user.domain.customer;
 
 import com.ferry.user.domain.common.DescriptionDomain;
 import com.ferry.user.domain.common.FullNameDomain;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -17,7 +18,7 @@ public record CustomerDomain(String id, String tenantId, FullNameDomain fullName
                              Instant updatedAt, String updatedBy){
 	public CustomerDomain{
 		if(fullName == null){
-			throw new IllegalArgumentException("Full name must not be null");
+			throw new InvalidUserStateException("Full name must not be null");
 		}
 	}
 

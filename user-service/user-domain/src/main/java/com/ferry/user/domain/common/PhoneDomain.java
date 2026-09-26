@@ -1,5 +1,7 @@
 package com.ferry.user.domain.common;
 
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Juli 2026         *
@@ -11,11 +13,11 @@ public record PhoneDomain(String value){
 
 	public PhoneDomain{
 		if(value == null || value.isBlank()){
-			throw new IllegalArgumentException("Phone must not be blank");
+			throw new InvalidUserStateException("Phone must not be blank");
 		}
 		value = normalize(value);
 		if(!value.matches(E164_PATTERN)){
-			throw new IllegalArgumentException("Phone must be in E.164 format, e.g. +6281234567890");
+			throw new InvalidUserStateException("Phone must be in E.164 format, e.g. +6281234567890");
 		}
 	}
 

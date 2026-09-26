@@ -4,6 +4,7 @@ import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.domain.common.*;
 import com.ferry.user.domain.common.exception.InvalidPasswordException;
+import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.token.UserAuthPrincipal;
@@ -88,7 +89,7 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 	private void replaceEmails(StaffUpdateRequest request, StaffDomain staff, UserAuthPrincipal principal){
 		List<String> emails = request.emails() == null ? List.of() : request.emails();
 		if(emails.isEmpty()){
-			throw new IllegalArgumentException("Emails cannot be empty");
+			throw new InvalidUserStateException("Emails cannot be empty");
 		}
 		gateway.deleteEmails(staff.id(), principal.userId());
 		for(String email : emails){

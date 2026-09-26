@@ -28,8 +28,12 @@ public enum PromotionType{
 
 	private final short value;
 
-	public static Optional<PromotionType> fromValue(short value){
-		return Optional.ofNullable(PROMOTION_TYPE_MAP.get(value));
+	public static PromotionType fromValue(short value){
+		PromotionType type = PROMOTION_TYPE_MAP.get(value);
+		if(type == null){
+			throw new IllegalArgumentException("No such promotion type: " + value);
+		}
+		return type;
 	}
 
 	public boolean isPercentageBased(){

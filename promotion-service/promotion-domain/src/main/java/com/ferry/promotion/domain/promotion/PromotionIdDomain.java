@@ -1,5 +1,7 @@
 package com.ferry.promotion.domain.promotion;
 
+import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Agustus 2026      *
@@ -8,7 +10,7 @@ package com.ferry.promotion.domain.promotion;
 public record PromotionIdDomain(String value){
 	public PromotionIdDomain{
 		if(value == null || value.isBlank()){
-			throw new IllegalArgumentException("PromotionIdDomain value is null");
+			throw new InvalidPromotionStateException("PromotionIdDomain value is null");
 		}
 	}
 }

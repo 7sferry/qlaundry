@@ -1,6 +1,7 @@
 package com.ferry.analytics.webservice.config;
 
 import com.ferry.analytics.domain.common.exception.AnalyticsStoreException;
+import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @Slf4j
 public class AnalyticsWebExceptionHandler{
 
-	@ExceptionHandler({IllegalArgumentException.class, ConstraintViolationException.class})
+	@ExceptionHandler({InvalidAnalyticStateException.class, ConstraintViolationException.class})
 	ProblemDetail handleBadRequest(RuntimeException e){
 		log.warn(e.getMessage(), e);
 		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());

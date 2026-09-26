@@ -1,6 +1,7 @@
 package com.ferry.order.domain.order;
 
 import com.ferry.order.domain.common.MoneyDomain;
+import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -16,16 +17,16 @@ public record OrderPromotionDomain(String id, String orderId, String promotionId
                                    String createdBy, Instant updatedAt, String updatedBy){
 	public OrderPromotionDomain{
 		if(orderId == null || orderId.isBlank()){
-			throw new IllegalArgumentException("Order id must not be blank");
+			throw new InvalidOrderStateException("Order id must not be blank");
 		}
 		if(promotionId == null || promotionId.isBlank()){
-			throw new IllegalArgumentException("Promotion id must not be blank");
+			throw new InvalidOrderStateException("Promotion id must not be blank");
 		}
 		if(code == null || code.isBlank()){
-			throw new IllegalArgumentException("Promotion code must not be blank");
+			throw new InvalidOrderStateException("Promotion code must not be blank");
 		}
 		if(discountAmount == null){
-			throw new IllegalArgumentException("Promotion discount amount must not be null");
+			throw new InvalidOrderStateException("Promotion discount amount must not be null");
 		}
 	}
 
