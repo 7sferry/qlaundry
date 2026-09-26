@@ -44,6 +44,10 @@ gateway/                nginx reverse proxy (docker-compose)
 
 Full backend architecture, code conventions, and the email/stream contract are documented in the root `CLAUDE.md`.
 
+## CI
+
+`.github/workflows/backend-ci.yml` builds the backend and runs its unit tests on every push and on pull requests into `master` (Temurin JDK 25, `./mvnw test` from the repo root). It doesn't cover `web/`.
+
 ## Prerequisites
 
 - Java 25, Maven (or use the bundled `./mvnw`)
