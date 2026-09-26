@@ -18,6 +18,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -64,7 +65,8 @@ class DefaultStaffRegistrationUseCaseTest{
 	ArgumentCaptor<StaffDomain> staffCaptor;
 
 	@ParameterizedTest
-	@ValueSource(strings = {" ", "budi"})
+	@NullAndEmptySource
+	@ValueSource(strings = {"   ", "budi", "budi@01"})
 	void givenInvalidUsername_thenThrowsConstraintViolationException(String username){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(username, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(EMAIL), null, null);

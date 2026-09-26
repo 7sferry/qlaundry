@@ -9,8 +9,11 @@ import com.ferry.promotion.domain.promotion.PromotionRedemptionDomain;
 import com.ferry.promotion.domain.promotion.PromotionRejection;
 import com.ferry.promotion.domain.promotion.PromotionType;
 import com.ferry.promotion.domain.tenant.TenantIdDomain;
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -21,6 +24,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -56,6 +60,23 @@ class DefaultPromotionRedemptionUseCaseTest{
 	ArgumentCaptor<List<PromotionRedemptionResponse>> responseCaptor;
 	@Captor
 	ArgumentCaptor<PromotionRedemptionDomain> redemptionCaptor;
+
+	static Stream<BigDecimal> invalidSubtotal(){
+		return Stream.of(null, new BigDecimal("-40000"));
+	}
+
+	@ParameterizedTest
+	@MethodSource("invalidSubtotal")
+	void givenNullOrNegativeSubtotal_thenThrowsConstraintViolationException(BigDecimal subtotal){
+		PromotionRedemptionRequest request = new PromotionRedemptionRequest(TENANT_ID, List.of(PROMO_CODE),
+				subtotal, ORDER_NUMBER, null, STAFF_ID);
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, presenter))
+				.isInstanceOf(ConstraintViolationException.class));
+
+		then(gateway).shouldHaveNoInteractions();
+		then(presenter).shouldHaveNoInteractions();
+	}
 
 	@Test
 	void givenUnknownCode_thenRejectsWithNotFound(){

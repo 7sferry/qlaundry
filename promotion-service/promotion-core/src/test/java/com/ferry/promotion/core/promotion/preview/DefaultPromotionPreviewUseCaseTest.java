@@ -8,6 +8,8 @@ import com.ferry.promotion.domain.token.PromotionAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -17,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.BDDMockito.then;
@@ -57,6 +60,24 @@ class DefaultPromotionPreviewUseCaseTest{
 	@Test
 	void givenEmptyPromotions_thenThrowsConstraintViolationException(){
 		PromotionPreviewRequest request = new PromotionPreviewRequest(List.of(), new BigDecimal("50000"));
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal(), presenter))
+				.isInstanceOf(ConstraintViolationException.class));
+
+		then(presenter).shouldHaveNoInteractions();
+	}
+
+	static Stream<BigDecimal> invalidSubtotal(){
+		return Stream.of(null, new BigDecimal("-50000"));
+	}
+
+	@ParameterizedTest
+	@MethodSource("invalidSubtotal")
+	void givenNullOrNegativeSubtotal_thenThrowsConstraintViolationException(BigDecimal subtotal){
+		Instant now = Instant.now();
+		PromotionSnapshot snapshot = snapshot("01PROMODISKONKENANGA000", "KENANGA10",
+				PromotionType.CUMULATIVE_PERCENTAGE, new BigDecimal("10"), now);
+		PromotionPreviewRequest request = new PromotionPreviewRequest(List.of(snapshot), subtotal);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal(), presenter))
 				.isInstanceOf(ConstraintViolationException.class));

@@ -20,6 +20,8 @@ import com.ferry.order.domain.token.OrderAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -29,6 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.ArgumentMatchers.eq;
@@ -82,15 +85,20 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 		then(gateway).shouldHaveNoInteractions();
 	}
 
-	@Test
-	void givenNonPositivePrice_thenThrowsConstraintViolationException(){
+	static Stream<BigDecimal> invalidPricePerUnit(){
+		return Stream.of(null, BigDecimal.ZERO, new BigDecimal("-6000"));
+	}
+
+	@ParameterizedTest
+	@MethodSource("invalidPricePerUnit")
+	void givenNullOrNonPositivePrice_thenThrowsConstraintViolationException(BigDecimal pricePerUnit){
 		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		LaundryServiceUpdateRequest request = new LaundryServiceUpdateRequest(SERVICE_ID, SERVICE_NAME,
-				"iron within the day", BigDecimal.ZERO, ServiceUnit.ITEM, ServiceCategory.IRON, 12, 1.5d, true, true);
+				"iron within the day", pricePerUnit, ServiceUnit.ITEM, ServiceCategory.IRON, 12, 1.5d, true, true);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(ConstraintViolationException.class));
