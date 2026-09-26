@@ -6,7 +6,6 @@ import com.ferry.order.domain.service.LaundryService;
 import com.ferry.order.domain.service.ServiceCategory;
 import com.ferry.order.domain.service.ServiceUnit;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,15 +36,9 @@ public class LaundryServiceJpa{
 	private String description;
 	@Column(nullable = false, precision = 19, scale = Money.SCALE)
 	private BigDecimal pricePerUnit;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private ServiceUnitJpa unit;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "unit_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short unitId;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private ServiceCategoryJpa category;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "category_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short categoryId;
 	@Column(nullable = false)
 	private int estimatedHours;
@@ -68,28 +61,15 @@ public class LaundryServiceJpa{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
-	public void setUnit(ServiceUnitJpa unit){
-		this.unit = unit;
-		this.unitId = unit.getId();
-	}
-
-	public void setCategory(ServiceCategoryJpa category){
-		this.category = category;
-		this.categoryId = category.getId();
-	}
-
-	public static LaundryServiceJpa construct(String id, LaundryService service, ServiceUnitJpa unit,
-	                                                ServiceCategoryJpa category){
+	public static LaundryServiceJpa construct(String id, LaundryService service){
 		LaundryServiceJpa entity = new LaundryServiceJpa();
 		entity.id = id;
 		entity.tenantId = service.tenantId();
 		entity.name = service.name();
 		entity.description = service.descriptionValue();
 		entity.pricePerUnit = service.pricePerUnit().value();
-		entity.unit = unit;
-		entity.unitId = unit.getId();
-		entity.category = category;
-		entity.categoryId = category.getId();
+		entity.unitId = service.unit().getValue();
+		entity.categoryId = service.category().getValue();
 		entity.estimatedHours = service.estimatedHours();
 		entity.expressMultiplier = service.expressMultiplier();
 		entity.popular = service.popular();

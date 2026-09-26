@@ -30,10 +30,7 @@ public class OrderItemJpa{
 	@Setter(AccessLevel.PRIVATE)
 	@Column(nullable = false, name = "order_id", insertable = false, updatable = false)
 	private String orderId;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private ClothingTypeJpa type;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "type_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short typeId;
 	@Column(length = 100)
 	private String label;
@@ -57,19 +54,12 @@ public class OrderItemJpa{
 		this.orderId = order.getId();
 	}
 
-	public void setType(ClothingTypeJpa type){
-		this.type = type;
-		this.typeId = type.getId();
-	}
-
-	public static OrderItemJpa construct(String id, OrderItem item, OrderJpa order,
-	                                           ClothingTypeJpa type){
+	public static OrderItemJpa construct(String id, OrderItem item, OrderJpa order){
 		OrderItemJpa entity = new OrderItemJpa();
 		entity.id = id;
 		entity.order = order;
 		entity.orderId = order.getId();
-		entity.type = type;
-		entity.typeId = type.getId();
+		entity.typeId = item.type().getValue();
 		entity.label = item.label();
 		entity.quantity = item.quantity();
 		entity.createdBy = item.createdBy();

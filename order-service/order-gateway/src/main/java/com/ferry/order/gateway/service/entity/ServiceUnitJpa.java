@@ -1,12 +1,18 @@
 package com.ferry.order.gateway.service.entity;
 
+import com.ferry.order.gateway.order.entity.OrderJpa;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Set;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -24,4 +30,12 @@ public class ServiceUnitJpa{
 
 	@Column(nullable = false, length = 25)
 	private String name;
+
+	@JoinColumn(name = "unitId")
+	@OneToMany(fetch = FetchType.LAZY)
+	private Set<OrderJpa> orders;
+
+	@JoinColumn(name = "unitId")
+	@OneToMany(fetch = FetchType.LAZY)
+	private Set<LaundryServiceJpa> laundryServices;
 }

@@ -7,11 +7,7 @@ import com.ferry.order.domain.service.LaundryServiceId;
 import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.gateway.order.repository.OrderJpaRepository;
 import com.ferry.order.gateway.service.entity.LaundryServiceJpa;
-import com.ferry.order.gateway.service.entity.ServiceCategoryJpa;
-import com.ferry.order.gateway.service.entity.ServiceUnitJpa;
 import com.ferry.order.gateway.service.repository.LaundryServiceJpaRepository;
-import com.ferry.order.gateway.service.repository.ServiceCategoryJpaRepository;
-import com.ferry.order.gateway.service.repository.ServiceUnitJpaRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -31,8 +27,6 @@ public class JpaLaundryServiceDeleteGateway implements LaundryServiceDeleteGatew
 			.toList();
 
 	private final LaundryServiceJpaRepository laundryServiceJpaRepository;
-	private final ServiceUnitJpaRepository serviceUnitJpaRepository;
-	private final ServiceCategoryJpaRepository serviceCategoryJpaRepository;
 	private final OrderJpaRepository orderJpaRepository;
 
 	@Override
@@ -48,10 +42,8 @@ public class JpaLaundryServiceDeleteGateway implements LaundryServiceDeleteGatew
 
 	@Override
 	public LaundryService save(LaundryService service){
-		ServiceUnitJpa unit = serviceUnitJpaRepository.getReferenceById(service.unit().getValue());
-		ServiceCategoryJpa category = serviceCategoryJpaRepository.getReferenceById(service.category().getValue());
 		LaundryServiceJpa saved = laundryServiceJpaRepository.saveAndFlush(
-				LaundryServiceJpa.construct(service.id(), service, unit, category));
+				LaundryServiceJpa.construct(service.id(), service));
 		return LaundryServiceJpa.construct(saved);
 	}
 

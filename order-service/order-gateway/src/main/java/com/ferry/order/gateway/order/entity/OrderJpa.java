@@ -13,11 +13,9 @@ import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.order.PaymentMethod;
 import com.ferry.order.domain.order.PaymentStatus;
 import com.ferry.order.domain.service.ServiceUnit;
-import com.ferry.order.gateway.service.entity.ServiceUnitJpa;
 import com.ferry.utils.crypto.CryptoAad;
 import com.ferry.utils.crypto.CryptoTool;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -71,10 +69,7 @@ public class OrderJpa{
 	private String serviceId;
 	@Column(nullable = false, length = 100)
 	private String serviceName;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private ServiceUnitJpa unit;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "unit_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short unitId;
 	@Column(nullable = false, precision = 19, scale = Money.SCALE)
 	private BigDecimal unitPrice;
@@ -88,25 +83,13 @@ public class OrderJpa{
 	private BigDecimal discount;
 	@Column(nullable = false, precision = 19, scale = Money.SCALE)
 	private BigDecimal totalPrice;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private OrderPriorityJpa priority;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "priority_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short priorityId;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private PaymentMethodJpa paymentMethod;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "payment_method_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short paymentMethodId;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private PaymentStatusJpa paymentStatus;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "payment_status_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short paymentStatusId;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private OrderStatusJpa status;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "status_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short statusId;
 	@Column
 	private String notes;
@@ -131,31 +114,6 @@ public class OrderJpa{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
-	public void setUnit(ServiceUnitJpa unit){
-		this.unit = unit;
-		this.unitId = unit.getId();
-	}
-
-	public void setPriority(OrderPriorityJpa priority){
-		this.priority = priority;
-		this.priorityId = priority.getId();
-	}
-
-	public void setPaymentMethod(PaymentMethodJpa paymentMethod){
-		this.paymentMethod = paymentMethod;
-		this.paymentMethodId = paymentMethod.getId();
-	}
-
-	public void setPaymentStatus(PaymentStatusJpa paymentStatus){
-		this.paymentStatus = paymentStatus;
-		this.paymentStatusId = paymentStatus.getId();
-	}
-
-	public void setStatus(OrderStatusJpa status){
-		this.status = status;
-		this.statusId = status.getId();
-	}
-
 	private static CryptoAad aad(String id, String column){
 		return new CryptoAad(TABLE, column, id);
 	}
@@ -164,10 +122,7 @@ public class OrderJpa{
 		return email.toLowerCase(Locale.ROOT).trim();
 	}
 
-	public static OrderJpa construct(String id, Order order, ServiceUnitJpa unit,
-	                                       OrderPriorityJpa priority, PaymentMethodJpa paymentMethod,
-	                                       PaymentStatusJpa paymentStatus, OrderStatusJpa status,
-	                                       CryptoTool cryptoTool){
+	public static OrderJpa construct(String id, Order order, CryptoTool cryptoTool){
 		OrderJpa entity = new OrderJpa();
 		entity.id = id;
 		entity.orderNumber = order.orderNumberValue();
@@ -188,22 +143,17 @@ public class OrderJpa{
 		}
 		entity.serviceId = order.serviceId();
 		entity.serviceName = order.serviceName();
-		entity.unit = unit;
-		entity.unitId = unit.getId();
+		entity.unitId = order.unit().getValue();
 		entity.unitPrice = order.unitPrice().value();
 		entity.quantity = order.quantity();
 		entity.weightKg = order.weightKg();
 		entity.subtotal = order.subtotal().value();
 		entity.discount = order.discount().value();
 		entity.totalPrice = order.totalPrice().value();
-		entity.priority = priority;
-		entity.priorityId = priority.getId();
-		entity.paymentMethod = paymentMethod;
-		entity.paymentMethodId = paymentMethod.getId();
-		entity.paymentStatus = paymentStatus;
-		entity.paymentStatusId = paymentStatus.getId();
-		entity.status = status;
-		entity.statusId = status.getId();
+		entity.priorityId = order.priority().getValue();
+		entity.paymentMethodId = order.paymentMethod().getValue();
+		entity.paymentStatusId = order.paymentStatus().getValue();
+		entity.statusId = order.status().getValue();
 		entity.notes = order.notesValue();
 		entity.staffNotes = order.staffNotesValue();
 		entity.pickupAt = order.pickupAt();

@@ -79,8 +79,6 @@ import com.ferry.order.gateway.service.JpaLaundryServiceDeleteGateway;
 import com.ferry.order.gateway.service.JpaLaundryServiceListGateway;
 import com.ferry.order.gateway.service.JpaLaundryServiceUpdateGateway;
 import com.ferry.order.gateway.service.repository.LaundryServiceJpaRepository;
-import com.ferry.order.gateway.service.repository.ServiceCategoryJpaRepository;
-import com.ferry.order.gateway.service.repository.ServiceUnitJpaRepository;
 import com.ferry.order.webservice.analytics.sweep.AnalyticsOutboxScheduler;
 import com.ferry.order.webservice.order.saga.OrderPromotionSagaScheduler;
 import com.ferry.promotion.client.DefaultPromotionServiceClient;
@@ -145,11 +143,8 @@ public class OrderWebConfig{
 
 	@Bean
 	LaundryServiceCreateGateway laundryServiceCreateGateway(LaundryServiceJpaRepository laundryServiceJpaRepository,
-	                                                        ServiceUnitJpaRepository serviceUnitJpaRepository,
-	                                                        ServiceCategoryJpaRepository serviceCategoryJpaRepository,
 	                                                        IdGenerator idGenerator){
-		return new JpaLaundryServiceCreateGateway(laundryServiceJpaRepository, serviceUnitJpaRepository,
-				serviceCategoryJpaRepository, idGenerator);
+		return new JpaLaundryServiceCreateGateway(laundryServiceJpaRepository, idGenerator);
 	}
 
 	@Bean
@@ -169,11 +164,8 @@ public class OrderWebConfig{
 	}
 
 	@Bean
-	LaundryServiceUpdateGateway laundryServiceUpdateGateway(LaundryServiceJpaRepository laundryServiceJpaRepository,
-	                                                        ServiceUnitJpaRepository serviceUnitJpaRepository,
-	                                                        ServiceCategoryJpaRepository serviceCategoryJpaRepository){
-		return new JpaLaundryServiceUpdateGateway(laundryServiceJpaRepository, serviceUnitJpaRepository,
-				serviceCategoryJpaRepository);
+	LaundryServiceUpdateGateway laundryServiceUpdateGateway(LaundryServiceJpaRepository laundryServiceJpaRepository){
+		return new JpaLaundryServiceUpdateGateway(laundryServiceJpaRepository);
 	}
 
 	@Bean
@@ -184,11 +176,8 @@ public class OrderWebConfig{
 
 	@Bean
 	LaundryServiceDeleteGateway laundryServiceDeleteGateway(LaundryServiceJpaRepository laundryServiceJpaRepository,
-	                                                        ServiceUnitJpaRepository serviceUnitJpaRepository,
-	                                                        ServiceCategoryJpaRepository serviceCategoryJpaRepository,
 	                                                        OrderJpaRepository orderJpaRepository){
-		return new JpaLaundryServiceDeleteGateway(laundryServiceJpaRepository, serviceUnitJpaRepository,
-				serviceCategoryJpaRepository, orderJpaRepository);
+		return new JpaLaundryServiceDeleteGateway(laundryServiceJpaRepository, orderJpaRepository);
 	}
 
 	@Bean
@@ -230,20 +219,12 @@ public class OrderWebConfig{
 	                                      OrderItemJpaRepository orderItemJpaRepository,
 	                                      OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                      LaundryServiceJpaRepository laundryServiceJpaRepository,
-	                                      ServiceUnitJpaRepository serviceUnitJpaRepository,
-	                                      OrderPriorityJpaRepository orderPriorityJpaRepository,
-	                                      PaymentMethodJpaRepository paymentMethodJpaRepository,
-	                                      PaymentStatusJpaRepository paymentStatusJpaRepository,
-	                                      OrderStatusJpaRepository orderStatusJpaRepository,
-	                                      ClothingTypeJpaRepository clothingTypeJpaRepository,
 	                                      IdGenerator idGenerator,
 	                                      CryptoTool cryptoTool,
 	                                      OrderConfirmUseCase orderConfirmUseCase,
 	                                      OrderPickupUseCase orderPickupUseCase){
 		return new JpaOrderCreateGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
-				laundryServiceJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
-				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
-				clothingTypeJpaRepository, idGenerator, cryptoTool, orderConfirmUseCase, orderPickupUseCase);
+				laundryServiceJpaRepository, idGenerator, cryptoTool, orderConfirmUseCase, orderPickupUseCase);
 	}
 
 	@Bean
@@ -383,17 +364,11 @@ public class OrderWebConfig{
 
 	@Bean
 	OrderConfirmGateway orderConfirmGateway(OrderJpaRepository orderJpaRepository,
-	                                        ServiceUnitJpaRepository serviceUnitJpaRepository,
-	                                        OrderPriorityJpaRepository orderPriorityJpaRepository,
-	                                        PaymentMethodJpaRepository paymentMethodJpaRepository,
-	                                        PaymentStatusJpaRepository paymentStatusJpaRepository,
-	                                        OrderStatusJpaRepository orderStatusJpaRepository,
 	                                        OrderItemJpaRepository orderItemJpaRepository,
 	                                        OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                        CryptoTool cryptoTool){
-		return new JpaOrderConfirmGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
-				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
-				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
+		return new JpaOrderConfirmGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+				cryptoTool);
 	}
 
 	@Bean
@@ -404,17 +379,11 @@ public class OrderWebConfig{
 
 	@Bean
 	OrderPickupGateway orderPickupGateway(OrderJpaRepository orderJpaRepository,
-	                                      ServiceUnitJpaRepository serviceUnitJpaRepository,
-	                                      OrderPriorityJpaRepository orderPriorityJpaRepository,
-	                                      PaymentMethodJpaRepository paymentMethodJpaRepository,
-	                                      PaymentStatusJpaRepository paymentStatusJpaRepository,
-	                                      OrderStatusJpaRepository orderStatusJpaRepository,
 	                                      OrderItemJpaRepository orderItemJpaRepository,
 	                                      OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                      CryptoTool cryptoTool){
-		return new JpaOrderPickupGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
-				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
-				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
+		return new JpaOrderPickupGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+				cryptoTool);
 	}
 
 	@Bean
@@ -425,17 +394,11 @@ public class OrderWebConfig{
 
 	@Bean
 	OrderProcessGateway orderProcessGateway(OrderJpaRepository orderJpaRepository,
-	                                        ServiceUnitJpaRepository serviceUnitJpaRepository,
-	                                        OrderPriorityJpaRepository orderPriorityJpaRepository,
-	                                        PaymentMethodJpaRepository paymentMethodJpaRepository,
-	                                        PaymentStatusJpaRepository paymentStatusJpaRepository,
-	                                        OrderStatusJpaRepository orderStatusJpaRepository,
 	                                        OrderItemJpaRepository orderItemJpaRepository,
 	                                        OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                        CryptoTool cryptoTool){
-		return new JpaOrderProcessGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
-				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
-				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
+		return new JpaOrderProcessGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+				cryptoTool);
 	}
 
 	@Bean
@@ -446,17 +409,11 @@ public class OrderWebConfig{
 
 	@Bean
 	OrderReadyGateway orderReadyGateway(OrderJpaRepository orderJpaRepository,
-	                                    ServiceUnitJpaRepository serviceUnitJpaRepository,
-	                                    OrderPriorityJpaRepository orderPriorityJpaRepository,
-	                                    PaymentMethodJpaRepository paymentMethodJpaRepository,
-	                                    PaymentStatusJpaRepository paymentStatusJpaRepository,
-	                                    OrderStatusJpaRepository orderStatusJpaRepository,
 	                                    OrderItemJpaRepository orderItemJpaRepository,
 	                                    OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                    CryptoTool cryptoTool){
-		return new JpaOrderReadyGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
-				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
-				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
+		return new JpaOrderReadyGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+				cryptoTool);
 	}
 
 	@Bean
@@ -467,17 +424,11 @@ public class OrderWebConfig{
 
 	@Bean
 	OrderDeliverGateway orderDeliverGateway(OrderJpaRepository orderJpaRepository,
-	                                        ServiceUnitJpaRepository serviceUnitJpaRepository,
-	                                        OrderPriorityJpaRepository orderPriorityJpaRepository,
-	                                        PaymentMethodJpaRepository paymentMethodJpaRepository,
-	                                        PaymentStatusJpaRepository paymentStatusJpaRepository,
-	                                        OrderStatusJpaRepository orderStatusJpaRepository,
 	                                        OrderItemJpaRepository orderItemJpaRepository,
 	                                        OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                        CryptoTool cryptoTool){
-		return new JpaOrderDeliverGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
-				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
-				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
+		return new JpaOrderDeliverGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+				cryptoTool);
 	}
 
 	@Bean
@@ -488,17 +439,11 @@ public class OrderWebConfig{
 
 	@Bean
 	OrderCompleteGateway orderCompleteGateway(OrderJpaRepository orderJpaRepository,
-	                                          ServiceUnitJpaRepository serviceUnitJpaRepository,
-	                                          OrderPriorityJpaRepository orderPriorityJpaRepository,
-	                                          PaymentMethodJpaRepository paymentMethodJpaRepository,
-	                                          PaymentStatusJpaRepository paymentStatusJpaRepository,
-	                                          OrderStatusJpaRepository orderStatusJpaRepository,
 	                                          OrderItemJpaRepository orderItemJpaRepository,
 	                                          OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                          CryptoTool cryptoTool){
-		return new JpaOrderCompleteGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
-				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
-				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
+		return new JpaOrderCompleteGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+				cryptoTool);
 	}
 
 	@Bean
@@ -509,17 +454,11 @@ public class OrderWebConfig{
 
 	@Bean
 	OrderCancelGateway orderCancelGateway(OrderJpaRepository orderJpaRepository,
-	                                      ServiceUnitJpaRepository serviceUnitJpaRepository,
-	                                      OrderPriorityJpaRepository orderPriorityJpaRepository,
-	                                      PaymentMethodJpaRepository paymentMethodJpaRepository,
-	                                      PaymentStatusJpaRepository paymentStatusJpaRepository,
-	                                      OrderStatusJpaRepository orderStatusJpaRepository,
 	                                      OrderItemJpaRepository orderItemJpaRepository,
 	                                      OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                      CryptoTool cryptoTool){
-		return new JpaOrderCancelGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
-				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
-				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
+		return new JpaOrderCancelGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+				cryptoTool);
 	}
 
 	@Bean
@@ -530,17 +469,11 @@ public class OrderWebConfig{
 
 	@Bean
 	OrderPaymentGateway orderPaymentGateway(OrderJpaRepository orderJpaRepository,
-	                                        ServiceUnitJpaRepository serviceUnitJpaRepository,
-	                                        OrderPriorityJpaRepository orderPriorityJpaRepository,
-	                                        PaymentMethodJpaRepository paymentMethodJpaRepository,
-	                                        PaymentStatusJpaRepository paymentStatusJpaRepository,
-	                                        OrderStatusJpaRepository orderStatusJpaRepository,
 	                                        OrderItemJpaRepository orderItemJpaRepository,
 	                                        OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                        CryptoTool cryptoTool){
-		return new JpaOrderPaymentGateway(orderJpaRepository, serviceUnitJpaRepository, orderPriorityJpaRepository,
-				paymentMethodJpaRepository, paymentStatusJpaRepository, orderStatusJpaRepository,
-				orderItemJpaRepository, orderPromotionJpaRepository, cryptoTool);
+		return new JpaOrderPaymentGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+				cryptoTool);
 	}
 
 	@Bean

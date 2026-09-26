@@ -12,26 +12,14 @@ import com.ferry.order.domain.service.LaundryService;
 import com.ferry.order.domain.service.LaundryServiceId;
 import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
-import com.ferry.order.gateway.order.entity.ClothingTypeJpa;
 import com.ferry.order.gateway.order.entity.OrderItemJpa;
 import com.ferry.order.gateway.order.entity.OrderJpa;
-import com.ferry.order.gateway.order.entity.OrderPriorityJpa;
 import com.ferry.order.gateway.order.entity.OrderPromotionJpa;
-import com.ferry.order.gateway.order.entity.OrderStatusJpa;
-import com.ferry.order.gateway.order.entity.PaymentMethodJpa;
-import com.ferry.order.gateway.order.entity.PaymentStatusJpa;
-import com.ferry.order.gateway.order.repository.ClothingTypeJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderItemJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderJpaRepository;
-import com.ferry.order.gateway.order.repository.OrderPriorityJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderPromotionJpaRepository;
-import com.ferry.order.gateway.order.repository.OrderStatusJpaRepository;
-import com.ferry.order.gateway.order.repository.PaymentMethodJpaRepository;
-import com.ferry.order.gateway.order.repository.PaymentStatusJpaRepository;
 import com.ferry.order.gateway.service.entity.LaundryServiceJpa;
-import com.ferry.order.gateway.service.entity.ServiceUnitJpa;
 import com.ferry.order.gateway.service.repository.LaundryServiceJpaRepository;
-import com.ferry.order.gateway.service.repository.ServiceUnitJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
@@ -49,12 +37,6 @@ public class JpaOrderCreateGateway implements OrderCreateGateway{
 	private final OrderItemJpaRepository orderItemJpaRepository;
 	private final OrderPromotionJpaRepository orderPromotionJpaRepository;
 	private final LaundryServiceJpaRepository laundryServiceJpaRepository;
-	private final ServiceUnitJpaRepository serviceUnitJpaRepository;
-	private final OrderPriorityJpaRepository orderPriorityJpaRepository;
-	private final PaymentMethodJpaRepository paymentMethodJpaRepository;
-	private final PaymentStatusJpaRepository paymentStatusJpaRepository;
-	private final OrderStatusJpaRepository orderStatusJpaRepository;
-	private final ClothingTypeJpaRepository clothingTypeJpaRepository;
 	private final IdGenerator idGenerator;
 	private final CryptoTool cryptoTool;
 	private final OrderConfirmUseCase orderConfirmUseCase;
@@ -69,15 +51,7 @@ public class JpaOrderCreateGateway implements OrderCreateGateway{
 	@Override
 	public Order save(Order order){
 		String id = idGenerator.generateId();
-		ServiceUnitJpa unit = serviceUnitJpaRepository.getReferenceById(order.unit().getValue());
-		OrderPriorityJpa priority = orderPriorityJpaRepository.getReferenceById(order.priority().getValue());
-		PaymentMethodJpa paymentMethod = paymentMethodJpaRepository.getReferenceById(
-				order.paymentMethod().getValue());
-		PaymentStatusJpa paymentStatus = paymentStatusJpaRepository.getReferenceById(
-				order.paymentStatus().getValue());
-		OrderStatusJpa status = orderStatusJpaRepository.getReferenceById(order.status().getValue());
-		OrderJpa saved = orderJpaRepository.save(OrderJpa.construct(id, order, unit, priority,
-				paymentMethod, paymentStatus, status, cryptoTool));
+		OrderJpa saved = orderJpaRepository.save(OrderJpa.construct(id, order, cryptoTool));
 		return OrderJpa.construct(saved, cryptoTool);
 	}
 
@@ -85,8 +59,7 @@ public class JpaOrderCreateGateway implements OrderCreateGateway{
 	public OrderItem save(OrderItem item){
 		String id = idGenerator.generateId();
 		OrderJpa order = orderJpaRepository.getReferenceById(item.orderId());
-		ClothingTypeJpa type = clothingTypeJpaRepository.getReferenceById(item.type().getValue());
-		OrderItemJpa saved = orderItemJpaRepository.save(OrderItemJpa.construct(id, item, order, type));
+		OrderItemJpa saved = orderItemJpaRepository.save(OrderItemJpa.construct(id, item, order));
 		return OrderItemJpa.construct(saved);
 	}
 

@@ -9,19 +9,9 @@ import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.gateway.order.entity.OrderItemJpa;
 import com.ferry.order.gateway.order.entity.OrderJpa;
 import com.ferry.order.gateway.order.entity.OrderPromotionJpa;
-import com.ferry.order.gateway.order.entity.OrderPriorityJpa;
-import com.ferry.order.gateway.order.entity.OrderStatusJpa;
-import com.ferry.order.gateway.order.entity.PaymentMethodJpa;
-import com.ferry.order.gateway.order.entity.PaymentStatusJpa;
 import com.ferry.order.gateway.order.repository.OrderItemJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderPromotionJpaRepository;
-import com.ferry.order.gateway.order.repository.OrderPriorityJpaRepository;
-import com.ferry.order.gateway.order.repository.OrderStatusJpaRepository;
-import com.ferry.order.gateway.order.repository.PaymentMethodJpaRepository;
-import com.ferry.order.gateway.order.repository.PaymentStatusJpaRepository;
-import com.ferry.order.gateway.service.entity.ServiceUnitJpa;
-import com.ferry.order.gateway.service.repository.ServiceUnitJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import lombok.RequiredArgsConstructor;
 
@@ -36,11 +26,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class JpaOrderCompleteGateway implements OrderCompleteGateway{
 	private final OrderJpaRepository orderJpaRepository;
-	private final ServiceUnitJpaRepository serviceUnitJpaRepository;
-	private final OrderPriorityJpaRepository orderPriorityJpaRepository;
-	private final PaymentMethodJpaRepository paymentMethodJpaRepository;
-	private final PaymentStatusJpaRepository paymentStatusJpaRepository;
-	private final OrderStatusJpaRepository orderStatusJpaRepository;
 	private final OrderItemJpaRepository orderItemJpaRepository;
 	private final OrderPromotionJpaRepository orderPromotionJpaRepository;
 	private final CryptoTool cryptoTool;
@@ -53,15 +38,7 @@ public class JpaOrderCompleteGateway implements OrderCompleteGateway{
 
 	@Override
 	public Order save(Order order){
-		ServiceUnitJpa unit = serviceUnitJpaRepository.getReferenceById(order.unit().getValue());
-		OrderPriorityJpa priority = orderPriorityJpaRepository.getReferenceById(order.priority().getValue());
-		PaymentMethodJpa paymentMethod = paymentMethodJpaRepository.getReferenceById(
-				order.paymentMethod().getValue());
-		PaymentStatusJpa paymentStatus = paymentStatusJpaRepository.getReferenceById(
-				order.paymentStatus().getValue());
-		OrderStatusJpa status = orderStatusJpaRepository.getReferenceById(order.status().getValue());
-		OrderJpa saved = orderJpaRepository.saveAndFlush(OrderJpa.construct(order.id(), order, unit,
-				priority, paymentMethod, paymentStatus, status, cryptoTool));
+		OrderJpa saved = orderJpaRepository.saveAndFlush(OrderJpa.construct(order.id(), order, cryptoTool));
 		return OrderJpa.construct(saved, cryptoTool);
 	}
 
