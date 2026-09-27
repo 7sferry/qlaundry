@@ -25,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.ZoneId;
 import java.util.List;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
@@ -48,6 +49,7 @@ class DefaultTenantRegistrationUseCaseTest{
 	private static final String EMAIL = "wahyu@qlaundry.com";
 	private static final String CAPTCHA_TOKEN = "cf-turnstile-tok-1122";
 	private static final String TENANT_ID = "tnt-gen-8899";
+	private static final ZoneId TIME_ZONE = ZoneId.of("Asia/Makassar");
 
 	@Mock
 	TenantRegistrationGateway gateway;
@@ -67,10 +69,12 @@ class DefaultTenantRegistrationUseCaseTest{
 	ArgumentCaptor<EmailTriggerConfig> emailConfigCaptor;
 	@Captor
 	ArgumentCaptor<TenantRegistrationResponse> responseCaptor;
+	@Captor
+	ArgumentCaptor<Tenant> tenantCaptor;
 
 	@Test
 	void givenBlankFullName_thenThrowsConstraintViolationException(){
-		TenantRegistrationRequest request = new TenantRegistrationRequest(" ", TENANT_NAME, "desc",
+		TenantRegistrationRequest request = new TenantRegistrationRequest(" ", TENANT_NAME, "desc", TIME_ZONE,
 				USERNAME, PASSWORD, List.of(EMAIL), null, null, CAPTCHA_TOKEN);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, presenter))
@@ -84,7 +88,7 @@ class DefaultTenantRegistrationUseCaseTest{
 
 	@Test
 	void givenEmptyEmails_thenThrowsConstraintViolationException(){
-		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME, "desc",
+		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME, "desc", TIME_ZONE,
 				USERNAME, PASSWORD, List.of(), null, null, CAPTCHA_TOKEN);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, presenter))
@@ -97,7 +101,7 @@ class DefaultTenantRegistrationUseCaseTest{
 
 	@Test
 	void givenCaptchaVerificationFails_thenThrowsTurnstileVerificationException(){
-		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME, "desc",
+		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME, "desc", TIME_ZONE,
 				USERNAME, PASSWORD, List.of(EMAIL), null, null, CAPTCHA_TOKEN);
 		willReturn(false).given(verificationGateway).verify(CAPTCHA_TOKEN);
 
@@ -112,7 +116,7 @@ class DefaultTenantRegistrationUseCaseTest{
 
 	@Test
 	void givenUsernameAlreadyTaken_thenPresentsFakeResponseAndNeverSavesTenant(){
-		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME, "desc",
+		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME, "desc", TIME_ZONE,
 				USERNAME, PASSWORD, List.of(EMAIL), null, null, CAPTCHA_TOKEN);
 		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
 		willReturn(true).given(gateway).existsByUsername(new Username(USERNAME));
@@ -130,12 +134,12 @@ class DefaultTenantRegistrationUseCaseTest{
 	@Test
 	void givenValidRequestWithDescription_thenRegistersAdminWithGivenDescription(){
 		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME,
-				"A great laundry chain", USERNAME, PASSWORD, List.of(EMAIL), null, null,
+				"A great laundry chain", TIME_ZONE, USERNAME, PASSWORD, List.of(EMAIL), null, null,
 				CAPTCHA_TOKEN);
 		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
 		willAnswer(invocation -> {
 			Tenant arg = invocation.getArgument(0);
-			return new Tenant(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
+			return new Tenant(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.timeZone(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
 		}).given(gateway).save(any(Tenant.class));
 		Staff admin = Staff.register(new Username(USERNAME),
@@ -158,12 +162,12 @@ class DefaultTenantRegistrationUseCaseTest{
 	@Test
 	void givenValidRequestWithoutDescription_thenRegistersAdminWithDefaultSuperAdminDescription(){
 		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME,
-				null, USERNAME, PASSWORD, List.of(EMAIL), null, null,
+				null, null, USERNAME, PASSWORD, List.of(EMAIL), null, null,
 				CAPTCHA_TOKEN);
 		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
 		willAnswer(invocation -> {
 			Tenant arg = invocation.getArgument(0);
-			return new Tenant(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
+			return new Tenant(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.timeZone(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
 		}).given(gateway).save(any(Tenant.class));
 		Staff admin = Staff.register(new Username(USERNAME),
@@ -182,12 +186,12 @@ class DefaultTenantRegistrationUseCaseTest{
 	@Test
 	void givenValidRequestWithEmails_thenPublishesTenantRegistrationEmailWithCorrectPayload(){
 		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME,
-				"desc", USERNAME, PASSWORD, List.of(EMAIL), null, null,
+				"desc", TIME_ZONE, USERNAME, PASSWORD, List.of(EMAIL), null, null,
 				CAPTCHA_TOKEN);
 		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
 		willAnswer(invocation -> {
 			Tenant arg = invocation.getArgument(0);
-			return new Tenant(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
+			return new Tenant(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.timeZone(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
 		}).given(gateway).save(any(Tenant.class));
 		Staff admin = Staff.register(new Username(USERNAME),
@@ -218,12 +222,12 @@ class DefaultTenantRegistrationUseCaseTest{
 	@Test
 	void givenValidRequest_thenPresentsResponseWithTenantAndAdmin(){
 		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME,
-				"desc", USERNAME, PASSWORD, List.of(EMAIL), null, null,
+				"desc", TIME_ZONE, USERNAME, PASSWORD, List.of(EMAIL), null, null,
 				CAPTCHA_TOKEN);
 		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
 		willAnswer(invocation -> {
 			Tenant arg = invocation.getArgument(0);
-			return new Tenant(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.status(), null, false,
+			return new Tenant(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.timeZone(), arg.status(), null, false,
 					arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
 		}).given(gateway).save(any(Tenant.class));
 		Staff admin = Staff.register(new Username(USERNAME),
@@ -242,6 +246,52 @@ class DefaultTenantRegistrationUseCaseTest{
 			softly.then(response.tenantName()).isEqualTo(TENANT_NAME);
 			softly.then(response.staffUserName()).isEqualTo(USERNAME);
 		});
+	}
+
+	@Test
+	void givenBrowserTimeZone_thenSavesTenantWithThatTimeZone(){
+		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME,
+				"desc", TIME_ZONE, USERNAME, PASSWORD, List.of(EMAIL), null, null,
+				CAPTCHA_TOKEN);
+		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
+		willAnswer(invocation -> {
+			Tenant arg = invocation.getArgument(0);
+			return new Tenant(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.timeZone(),
+					arg.status(), null, false, arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
+		}).given(gateway).save(tenantCaptor.capture());
+		Staff admin = Staff.register(new Username(USERNAME),
+				new FullName(FULL_NAME), new Description("Super Admin"), TENANT_ID, StaffRole.SUPER_STAFF, null);
+		willReturn(new StaffRegistrationResponse(admin)).given(gateway).registerAdmin(any(StaffRegistrationRequest.class), any(Tenant.class));
+		EmailTrigger trigger = EmailTrigger.create(EmailTriggerType.TENANT_REGISTRATION,
+				new Email(EMAIL), "{}", null);
+		willReturn(trigger).given(emailPublisher).save(any(EmailTriggerConfig.class));
+
+		useCase.execute(request, presenter);
+
+		thenSoftly(softly -> softly.then(tenantCaptor.getValue().timeZone()).isEqualTo(TIME_ZONE));
+	}
+
+	@Test
+	void givenNoTimeZone_thenSavesTenantInUtc(){
+		TenantRegistrationRequest request = new TenantRegistrationRequest(FULL_NAME, TENANT_NAME,
+				"desc", null, USERNAME, PASSWORD, List.of(EMAIL), null, null,
+				CAPTCHA_TOKEN);
+		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
+		willAnswer(invocation -> {
+			Tenant arg = invocation.getArgument(0);
+			return new Tenant(TENANT_ID, arg.username(), arg.fullName(), arg.description(), arg.timeZone(),
+					arg.status(), null, false, arg.createdAt(), arg.createdBy(), arg.updatedAt(), arg.updatedBy());
+		}).given(gateway).save(tenantCaptor.capture());
+		Staff admin = Staff.register(new Username(USERNAME),
+				new FullName(FULL_NAME), new Description("Super Admin"), TENANT_ID, StaffRole.SUPER_STAFF, null);
+		willReturn(new StaffRegistrationResponse(admin)).given(gateway).registerAdmin(any(StaffRegistrationRequest.class), any(Tenant.class));
+		EmailTrigger trigger = EmailTrigger.create(EmailTriggerType.TENANT_REGISTRATION,
+				new Email(EMAIL), "{}", null);
+		willReturn(trigger).given(emailPublisher).save(any(EmailTriggerConfig.class));
+
+		useCase.execute(request, presenter);
+
+		thenSoftly(softly -> softly.then(tenantCaptor.getValue().timeZone()).isEqualTo(ZoneId.of("UTC")));
 	}
 
 }

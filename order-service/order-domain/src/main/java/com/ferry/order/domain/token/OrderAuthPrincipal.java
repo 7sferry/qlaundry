@@ -4,6 +4,9 @@ import com.ferry.order.domain.session.SessionType;
 import com.ferry.order.domain.staff.StaffRole;
 import lombok.Builder;
 
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Agustus 2026      *
@@ -16,7 +19,12 @@ public record OrderAuthPrincipal(
 	String fullName,
 	String tenantName,
 	String tenantId,
+	ZoneId timeZone,
 	SessionType sessionType,
 	StaffRole role){
+
+	public OrderAuthPrincipal{
+		timeZone = timeZone == null ? ZoneOffset.UTC : timeZone;
+	}
 
 }

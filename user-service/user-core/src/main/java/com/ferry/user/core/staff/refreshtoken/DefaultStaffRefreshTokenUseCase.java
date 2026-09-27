@@ -137,7 +137,7 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 		StaffRole role = StaffRole.findByValue(staff.roleId())
 				.orElseThrow(() -> new NotFoundException("role not found"));
 		UserAuthPrincipal userToken = new UserAuthPrincipal(staff.id(), staff.username(),
-				staff.fullName(), tenant.fullName(), staff.tenantId(), SessionType.STAFF, role);
+				staff.fullName(), tenant.fullName(), staff.tenantId(), tenant.timeZone(), SessionType.STAFF, role);
 		return tokenProcessor.generateAccessToken(userToken);
 	}
 

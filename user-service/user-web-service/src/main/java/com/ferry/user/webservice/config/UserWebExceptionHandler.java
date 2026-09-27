@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -38,6 +39,13 @@ public class UserWebExceptionHandler{
 	ProblemDetail handleBadRequest(RuntimeException e){
 		log.warn(e.getMessage(), e);
 		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+	}
+
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	ProblemDetail handleUnreadableBody(HttpMessageNotReadableException e){
+		log.warn(e.getMessage(), e);
+		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+				"Request body is malformed or carries a value outside the accepted set");
 	}
 
 	@ExceptionHandler(NotFoundException.class)

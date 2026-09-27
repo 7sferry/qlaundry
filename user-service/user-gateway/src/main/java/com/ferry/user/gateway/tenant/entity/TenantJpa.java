@@ -10,8 +10,10 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters.ZoneIdConverter;
 
 import java.time.Instant;
+import java.time.ZoneId;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -33,6 +35,8 @@ public class TenantJpa{
 	private String fullName;
 	@Column
 	private String description;
+	@Column(nullable = false, length = 50)
+	private ZoneId timeZone;
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	private TenantStatusJpa status;
 	@Setter(AccessLevel.PRIVATE)
@@ -58,7 +62,7 @@ public class TenantJpa{
 
 	public static Tenant construct(TenantJpa saved){
 		return new Tenant(saved.id, new Username(saved.username), new FullName(saved.fullName),
-				new Description(saved.description), TenantStatus.findByValue(saved.statusId).orElseThrow(),
+				new Description(saved.description), saved.timeZone, TenantStatus.findByValue(saved.statusId).orElseThrow(),
 				saved.version, saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
 	}
 
@@ -72,6 +76,7 @@ public class TenantJpa{
 		entity.username = tenant.usernameValue();
 		entity.description = tenant.descriptionValue();
 		entity.fullName = tenant.fullNameValue();
+		entity.timeZone = tenant.timeZone();
 		entity.status = status;
 		entity.statusId = status.getId();
 		entity.version = tenant.version();

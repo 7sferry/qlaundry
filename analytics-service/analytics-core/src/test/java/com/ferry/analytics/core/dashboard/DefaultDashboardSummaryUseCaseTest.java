@@ -57,6 +57,7 @@ class DefaultDashboardSummaryUseCaseTest{
 		AnalyticsAuthPrincipal principal = AnalyticsAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
+				.timeZone(ZoneId.of(JAKARTA))
 				.role(StaffRole.STAFF)
 				.build();
 		List<StatusCountProjection> distribution = List.of(new StatusCountProjection("PENDING", 3L),
@@ -67,7 +68,7 @@ class DefaultDashboardSummaryUseCaseTest{
 		willReturn(distribution).given(gateway)
 				.statusDistribution(any(TenantId.class), any(DashboardWindow.class));
 
-		useCase.execute(new DashboardSummaryRequest(null, JAKARTA), principal, presenter);
+		useCase.execute(new DashboardSummaryRequest(null), principal, presenter);
 
 		then(gateway).should()
 				.summarize(eq(new TenantId(TENANT_ID)), windowCaptor.capture());
@@ -111,7 +112,7 @@ class DefaultDashboardSummaryUseCaseTest{
 		willReturn(List.of()).given(gateway)
 				.statusDistribution(any(TenantId.class), any(DashboardWindow.class));
 
-		useCase.execute(new DashboardSummaryRequest(null, null), principal, presenter);
+		useCase.execute(new DashboardSummaryRequest(null), principal, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
@@ -141,7 +142,7 @@ class DefaultDashboardSummaryUseCaseTest{
 		willReturn(List.of()).given(gateway)
 				.statusDistribution(any(TenantId.class), any(DashboardWindow.class));
 
-		useCase.execute(new DashboardSummaryRequest(null, null), principal, presenter);
+		useCase.execute(new DashboardSummaryRequest(null), principal, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
@@ -167,7 +168,7 @@ class DefaultDashboardSummaryUseCaseTest{
 		willReturn(List.of()).given(gateway)
 				.statusDistribution(any(TenantId.class), any(DashboardWindow.class));
 
-		useCase.execute(new DashboardSummaryRequest(LocalDate.of(2026, 7, 15), null), principal, presenter);
+		useCase.execute(new DashboardSummaryRequest(LocalDate.of(2026, 7, 15)), principal, presenter);
 
 		then(gateway).should()
 				.summarize(eq(new TenantId(TENANT_ID)), windowCaptor.capture());
@@ -196,7 +197,7 @@ class DefaultDashboardSummaryUseCaseTest{
 				.build();
 
 		assertThatThrownBy(() -> useCase.execute(
-						new DashboardSummaryRequest(LocalDate.of(2026, 9, 27), null), principal, presenter))
+						new DashboardSummaryRequest(LocalDate.of(2026, 9, 27)), principal, presenter))
 				.isInstanceOf(InvalidAnalyticStateException.class)
 				.hasMessage("Dashboard date must not be in the future");
 

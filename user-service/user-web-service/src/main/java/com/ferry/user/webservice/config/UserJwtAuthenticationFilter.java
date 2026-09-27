@@ -18,6 +18,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
+import java.time.DateTimeException;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,12 +60,21 @@ public class UserJwtAuthenticationFilter implements Filter{
 				String.valueOf(payload.get("fullName")),
 				String.valueOf(payload.get("tenantName")),
 				String.valueOf(payload.get("tenantId")),
+				timeZone(payload.get("timeZone")),
 				sessionType,
 				role
 		);
 		UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
 		SecurityContextHolder.getContext().setAuthentication(auth);
 		chain.doFilter(request, response);
+	}
+
+	private static ZoneId timeZone(Object claim){
+		try{
+			return claim == null ? null : ZoneId.of(claim.toString());
+		} catch (DateTimeException e){
+			return ZoneOffset.UTC;
+		}
 	}
 
 }

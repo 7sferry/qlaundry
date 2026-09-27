@@ -15,14 +15,18 @@ import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
+import com.ferry.user.domain.token.UserAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
@@ -63,6 +67,8 @@ class DefaultStaffLoginUseCaseTest{
 	DefaultStaffLoginUseCase useCase;
 	@Mock
 	StaffLoginPresenter presenter;
+	@Captor
+	ArgumentCaptor<UserAuthPrincipal> principalCaptor;
 
 	@Test
 	void givenBlankUsername_thenThrowsFailedToLoginExceptionWithConstraintViolationCause(){
@@ -148,7 +154,7 @@ class DefaultStaffLoginUseCaseTest{
 				FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue());
 		willReturn(Optional.of(staff)).given(gateway).findByUsername(new Username(USERNAME));
 		willReturn(true).given(passwordTool).matches(eq(PASSWORD), any());
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", TenantStatus.PENDING.getValue())))
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", ZoneId.of("Asia/Jakarta"), TenantStatus.PENDING.getValue())))
 				.given(gateway).findTenantById(new TenantId(TENANT_ID));
 
 		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
@@ -169,7 +175,7 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(86400L).given(tokenProcessor).getRefreshDurationInSeconds();
 		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(UserSession.class));
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", TenantStatus.ACTIVE.getValue())))
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", ZoneId.of("Asia/Jakarta"), TenantStatus.ACTIVE.getValue())))
 				.given(gateway).findTenantById(new TenantId(TENANT_ID));
 
 		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
@@ -191,7 +197,7 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(86400L).given(tokenProcessor).getRefreshDurationInSeconds();
 		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(UserSession.class));
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", TenantStatus.ACTIVE.getValue())))
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", ZoneId.of("Asia/Jakarta"), TenantStatus.ACTIVE.getValue())))
 				.given(gateway).findTenantById(new TenantId(TENANT_ID));
 		willReturn(ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();
@@ -215,7 +221,7 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
 		willReturn(86400L).given(tokenProcessor).getRefreshDurationInSeconds();
 		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(UserSession.class));
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", TenantStatus.ACTIVE.getValue())))
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", ZoneId.of("Asia/Jakarta"), TenantStatus.ACTIVE.getValue())))
 				.given(gateway).findTenantById(new TenantId(TENANT_ID));
 		willReturn(ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(30L).given(tokenProcessor).getAccessDurationInSeconds();
@@ -224,6 +230,51 @@ class DefaultStaffLoginUseCaseTest{
 
 		then(cacheManager).should(never()).set(eq(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN), any(), any());
 		then(presenter).should().present(new StaffLoginResponse(ACCESS_TOKEN, REFRESH_TOKEN));
+	}
+
+	@Test
+	void givenTenantWithItsOwnTimeZone_thenAccessTokenCarriesTheTenantTimeZone(){
+		StaffLoginProjection staff = new StaffLoginProjection(USER_ID, USERNAME, HASHED_PASSWORD,
+				FULL_NAME, TENANT_ID, StaffRole.SUPER_STAFF.getValue());
+		willReturn(Optional.of(staff)).given(gateway).findByUsername(new Username(USERNAME));
+		willReturn(true).given(passwordTool).matches(eq(PASSWORD), anyString());
+		willReturn(REFRESH_TOKEN).given(tokenProcessor).generateRefreshToken();
+		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
+		willReturn(86400L).given(tokenProcessor).getRefreshDurationInSeconds();
+		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(UserSession.class));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", ZoneId.of("Asia/Makassar"), TenantStatus.ACTIVE.getValue())))
+				.given(gateway).findTenantById(new TenantId(TENANT_ID));
+		willReturn(ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(principalCaptor.capture());
+		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();
+
+		useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter);
+
+		UserAuthPrincipal principal = principalCaptor.getValue();
+		thenSoftly(softly -> {
+			softly.then(principal.timeZone()).isEqualTo(ZoneId.of("Asia/Makassar"));
+			softly.then(principal.tenantId()).isEqualTo(TENANT_ID);
+			softly.then(principal.tenantName()).isEqualTo("Tenant Medan");
+		});
+	}
+
+	@Test
+	void givenTenantWithoutTimeZoneYet_thenAccessTokenFallsBackToUtc(){
+		StaffLoginProjection staff = new StaffLoginProjection(USER_ID, USERNAME, HASHED_PASSWORD,
+				FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue());
+		willReturn(Optional.of(staff)).given(gateway).findByUsername(new Username(USERNAME));
+		willReturn(true).given(passwordTool).matches(eq(PASSWORD), anyString());
+		willReturn(REFRESH_TOKEN).given(tokenProcessor).generateRefreshToken();
+		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
+		willReturn(86400L).given(tokenProcessor).getRefreshDurationInSeconds();
+		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(UserSession.class));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", null, TenantStatus.ACTIVE.getValue())))
+				.given(gateway).findTenantById(new TenantId(TENANT_ID));
+		willReturn(ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(principalCaptor.capture());
+		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();
+
+		useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter);
+
+		thenSoftly(softly -> softly.then(principalCaptor.getValue().timeZone()).isEqualTo(ZoneId.of("UTC")));
 	}
 
 }

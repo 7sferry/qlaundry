@@ -48,7 +48,7 @@ public class JpaTenantRegistrationGateway implements TenantRegistrationGateway{
 	public StaffRegistrationResponse registerAdmin(StaffRegistrationRequest request, Tenant tenant){
 		StaffRegistrationResponse[] result = new StaffRegistrationResponse[1];
 		UserAuthPrincipal principal = new UserAuthPrincipal(tenant.id(), request.username(), request.fullName(),
-				tenant.fullNameValue(), tenant.id(), SessionType.STAFF, StaffRole.SUPER_STAFF);
+				tenant.fullNameValue(), tenant.id(), tenant.timeZone(), SessionType.STAFF, StaffRole.SUPER_STAFF);
 		staffRegistrationUseCase.execute(request, principal, response -> result[0] = response);
 		return result[0];
 	}

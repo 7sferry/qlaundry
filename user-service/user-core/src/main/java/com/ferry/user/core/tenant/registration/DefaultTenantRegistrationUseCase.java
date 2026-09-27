@@ -74,7 +74,7 @@ public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCa
 		}
 		FullName name = new FullName(request.tenantName());
 		Description description = new Description(request.description());
-		Tenant tenant = Tenant.register(username, name, description);
+		Tenant tenant = Tenant.register(username, name, description, request.timeZone());
 		return gateway.save(tenant);
 	}
 

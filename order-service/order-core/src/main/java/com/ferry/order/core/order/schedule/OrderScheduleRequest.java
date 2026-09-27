@@ -9,5 +9,5 @@ import java.time.LocalDate;
  * on September 2026    *
  ************************/
 
-public record OrderScheduleRequest(LocalDate date, String zone) implements OrderValidation{
+public record OrderScheduleRequest(LocalDate date) implements OrderValidation{
 }

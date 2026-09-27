@@ -64,7 +64,7 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		AddressLine customerAddress = request.customerAddress() == null || request.customerAddress().isBlank()
 				? null : new AddressLine(request.customerAddress());
 		Money discount = request.discount() == null ? Money.ZERO : new Money(request.discount());
-		Order order = Order.create(tenantId.value(), customerId,
+		Order order = Order.create(tenantId.value(), principal.timeZone(), customerId,
 				new FullName(request.customerName()), new Phone(request.customerPhone()), customerEmail,
 				customerAddress, service, request.quantity(), request.weightKg(), discount, priority, paymentMethod,
 				pickupAt, estimatedDeliveryAt, new Note(request.notes()), principal.userId());

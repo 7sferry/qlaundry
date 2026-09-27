@@ -4,10 +4,8 @@ import com.ferry.common.CrockfordBase32;
 import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 
 import java.security.SecureRandom;
-import java.time.Instant;
-import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 /************************
@@ -16,8 +14,7 @@ import java.time.format.DateTimeFormatter;
  ************************/
 
 public record OrderNumber(String value){
-	private static final ZoneId BUSINESS_ZONE = ZoneOffset.UTC;
-	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd").withZone(BUSINESS_ZONE);
+	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
 	private static final SecureRandom RANDOM = new SecureRandom();
 
 	public OrderNumber{
@@ -26,11 +23,12 @@ public record OrderNumber(String value){
 		}
 	}
 
-	public static OrderNumber generate(Instant createdAt){
+	public static OrderNumber generate(ZoneId zone){
 		byte[] bytes = new byte[6];
 		RANDOM.nextBytes(bytes);
-		long number = LocalTime.now().toNanoOfDay() / 1000000L;
-		return new OrderNumber("INV-" + DATE_FORMAT.format(createdAt) + '-' +
+		ZonedDateTime now = ZonedDateTime.now(zone);
+		long number = now.toLocalTime().toNanoOfDay() / 1000000L;
+		return new OrderNumber("INV-" + DATE_FORMAT.format(now) + '-' +
 				CrockfordBase32.encode(number, 6) +
 				CrockfordBase32.encode(bytes));
 	}

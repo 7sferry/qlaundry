@@ -30,7 +30,7 @@ public class DefaultDashboardSummaryUseCase implements DashboardSummaryUseCase{
 	                    DashboardSummaryPresenter presenter){
 		request.validate();
 		TenantId tenantId = new TenantId(principal.tenantId());
-		ZoneId zone = resolveZone(request.zone());
+		ZoneId zone = principal.timeZone();
 		LocalDate today = LocalDate.ofInstant(clock.instant(), zone);
 		LocalDate date = request.date() == null ? today : request.date();
 		if(date.isAfter(today)){
@@ -45,10 +45,6 @@ public class DefaultDashboardSummaryUseCase implements DashboardSummaryUseCase{
 				growth(orZero(summary.monthRevenue()), orZero(summary.lastMonthRevenue())),
 				growth(BigDecimal.valueOf(summary.monthOrders()), BigDecimal.valueOf(summary.lastMonthOrders())),
 				distribution));
-	}
-
-	private ZoneId resolveZone(String zone){
-		return zone == null || zone.isBlank() ? ZoneOffset.UTC : ZoneId.of(zone);
 	}
 
 	private BigDecimal growth(BigDecimal current, BigDecimal previous){

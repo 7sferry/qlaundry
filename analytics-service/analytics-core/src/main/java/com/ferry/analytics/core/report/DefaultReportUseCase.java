@@ -32,16 +32,12 @@ public class DefaultReportUseCase implements ReportUseCase{
 	public void execute(ReportRequest request, AnalyticsAuthPrincipal principal, ReportPresenter presenter){
 		request.validate();
 		TenantId tenantId = new TenantId(principal.tenantId());
-		ZoneId zone = resolveZone(request.zone());
+		ZoneId zone = principal.timeZone();
 		LocalDate today = LocalDate.ofInstant(clock.instant(), zone);
 		ReportWindow window = request.period().windowFor(today, zone);
 		List<TrendPoint> trend = fillBuckets(window, gateway.revenueTrend(tenantId, window));
 		List<ServiceShare> breakdown = shares(gateway.serviceBreakdown(tenantId, window));
 		presenter.present(new ReportResponse(request.period(), trend, breakdown));
-	}
-
-	private ZoneId resolveZone(String zone){
-		return zone == null || zone.isBlank() ? ZoneOffset.UTC : ZoneId.of(zone);
 	}
 
 	private List<TrendPoint> fillBuckets(ReportWindow window, List<RevenueBucketProjection> buckets){

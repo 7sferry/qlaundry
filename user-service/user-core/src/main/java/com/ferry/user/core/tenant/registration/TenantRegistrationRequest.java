@@ -4,6 +4,7 @@ import com.ferry.user.core.tools.UserValidation;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 
+import java.time.ZoneId;
 import java.util.List;
 
 /************************
@@ -15,6 +16,7 @@ public record TenantRegistrationRequest(
 	@NotBlank String fullName,
 	@NotBlank String tenantName,
 	String description,
+	ZoneId timeZone,
 	@NotBlank String username,
 	@NotBlank String password,
 	@NotEmpty List<String> emails,

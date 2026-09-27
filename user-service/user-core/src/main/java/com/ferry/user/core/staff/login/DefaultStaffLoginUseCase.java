@@ -63,7 +63,7 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 		StaffRole role = StaffRole.findByValue(staff.roleId())
 				.orElseThrow(() -> new NotFoundException("role not found"));
 		UserAuthPrincipal userToken = new UserAuthPrincipal(staff.id(), staff.username(),
-				staff.fullName(), tenant.fullName(), staff.tenantId(), SessionType.STAFF, role);
+				staff.fullName(), tenant.fullName(), staff.tenantId(), tenant.timeZone(), SessionType.STAFF, role);
 		String accessToken = tokenProcessor.generateAccessToken(userToken);
 		long cacheDurationInSeconds = tokenProcessor.getAccessDurationInSeconds()
 				- TokenConstant.ACCESS_CACHE_EARLY_EXPIRY_SECONDS;

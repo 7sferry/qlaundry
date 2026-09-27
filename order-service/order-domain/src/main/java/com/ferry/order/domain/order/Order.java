@@ -14,6 +14,7 @@ import com.ferry.order.domain.service.ServiceUnit;
 import lombok.Builder;
 
 import java.time.Instant;
+import java.time.ZoneId;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -73,7 +74,7 @@ public record Order(
 		weightKg = Decimals.scaled(weightKg);
 	}
 
-	public static Order create(String tenantId, String customerId, FullName customerName,
+	public static Order create(String tenantId, ZoneId tenantZone, String customerId, FullName customerName,
 	                                 Phone customerPhone, Email customerEmail,
 	                                 AddressLine customerAddress, LaundryService service, int quantity,
 	                                 Double weightKg, Money discount, OrderPriority priority,
@@ -83,7 +84,7 @@ public record Order(
 		Money subtotal = service.priceFor(quantity, weightKg, priority);
 		Money appliedDiscount = discount == null ? Money.ZERO : discount;
 		Instant deliveryAt = estimatedDeliveryAt == null ? service.estimatedDeliveryFrom(pickupAt) : estimatedDeliveryAt;
-		return new Order(null, OrderNumber.generate(now), tenantId, customerId, customerName,
+		return new Order(null, OrderNumber.generate(tenantZone), tenantId, customerId, customerName,
 				customerPhone, customerEmail, customerAddress, service.id(), service.name(), service.unit(),
 				service.pricePerUnit(), quantity, weightKg, subtotal, appliedDiscount,
 				subtotal.minus(appliedDiscount), priority, paymentMethod, PaymentStatus.UNPAID, OrderStatus.PENDING,

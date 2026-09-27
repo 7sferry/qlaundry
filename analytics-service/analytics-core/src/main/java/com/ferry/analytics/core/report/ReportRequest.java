@@ -9,5 +9,5 @@ import jakarta.validation.constraints.NotNull;
  * on September 2026    *
  ************************/
 
-public record ReportRequest(@NotNull ReportPeriod period, String zone) implements AnalyticsValidation{
+public record ReportRequest(@NotNull ReportPeriod period) implements AnalyticsValidation{
 }

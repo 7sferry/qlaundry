@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
@@ -82,7 +83,8 @@ class DefaultTenantResendConfirmationUseCaseTest{
 	@Test
 	void givenTenantAlreadyActive_thenPresentsGenericSuccessMessageWithoutSendingEmail(){
 		Tenant tenant = new Tenant(TENANT_ID, new Username(TENANT_USERNAME), new FullName(TENANT_NAME),
-				new Description("desc"), TenantStatus.ACTIVE, null, false, Instant.now(), null, Instant.now(), null);
+				new Description("desc"), ZoneId.of("Asia/Jakarta"), TenantStatus.ACTIVE, null, false,
+				Instant.now(), null, Instant.now(), null);
 		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantId(TENANT_ID));
 
 		useCase.execute(new TenantResendConfirmationRequest(TENANT_ID), presenter);
@@ -95,7 +97,8 @@ class DefaultTenantResendConfirmationUseCaseTest{
 	@Test
 	void givenAdminContactNotFound_thenPresentsGenericSuccessMessageWithoutSendingEmail(){
 		Tenant tenant = new Tenant(TENANT_ID, new Username(TENANT_USERNAME), new FullName(TENANT_NAME),
-				new Description("desc"), TenantStatus.PENDING, null, false, Instant.now(), null, Instant.now(), null);
+				new Description("desc"), ZoneId.of("Asia/Jakarta"), TenantStatus.PENDING, null, false,
+				Instant.now(), null, Instant.now(), null);
 		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantId(TENANT_ID));
 		willReturn(Optional.empty()).given(gateway).findAdminContact(new TenantId(TENANT_ID));
 
@@ -108,7 +111,8 @@ class DefaultTenantResendConfirmationUseCaseTest{
 	@Test
 	void givenValidRequest_thenCachesNewTokenPublishesEmailAndPresentsSuccessMessage(){
 		Tenant tenant = new Tenant(TENANT_ID, new Username(TENANT_USERNAME), new FullName(TENANT_NAME),
-				new Description("desc"), TenantStatus.PENDING, null, false, Instant.now(), null, Instant.now(), null);
+				new Description("desc"), ZoneId.of("Asia/Jakarta"), TenantStatus.PENDING, null, false,
+				Instant.now(), null, Instant.now(), null);
 		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantId(TENANT_ID));
 		TenantAdminContactProjection admin = new TenantAdminContactProjection(ADMIN_EMAIL, ADMIN_FULL_NAME, ADMIN_USERNAME, ADMIN_STAFF_ID);
 		willReturn(Optional.of(admin)).given(gateway).findAdminContact(new TenantId(TENANT_ID));

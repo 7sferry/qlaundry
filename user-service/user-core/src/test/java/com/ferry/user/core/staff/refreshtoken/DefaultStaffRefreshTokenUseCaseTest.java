@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
@@ -167,7 +168,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of(new StaffLoginProjection(USER_ID, USERNAME, "hashed-pw", FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue())))
 				.given(gateway).findById(USER_ID);
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantId(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", ZoneId.of("Asia/Jakarta"), TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantId(TENANT_ID));
 		willReturn(NEW_ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(60L).given(tokenProcessor).getRotationDurationBeforeExpireInSeconds();
 		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();
@@ -189,7 +190,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of(new StaffLoginProjection(USER_ID, USERNAME, "hashed-pw", FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue())))
 				.given(gateway).findById(USER_ID);
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantId(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", ZoneId.of("Asia/Jakarta"), TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantId(TENANT_ID));
 		willReturn(NEW_ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(60L).given(tokenProcessor).getRotationDurationBeforeExpireInSeconds();
 		willReturn(30L).given(tokenProcessor).getAccessDurationInSeconds();
@@ -243,7 +244,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of(new StaffLoginProjection(USER_ID, USERNAME, "hashed-pw", FULL_NAME, TENANT_ID, (short) 99)))
 				.given(gateway).findById(USER_ID);
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantId(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", ZoneId.of("Asia/Jakarta"), TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantId(TENANT_ID));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter))
 				.isInstanceOf(NotFoundException.class)
@@ -262,7 +263,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		willReturn(Optional.empty()).given(cacheManager).get(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		willReturn(Optional.of(new StaffLoginProjection(USER_ID, USERNAME, "hashed-pw", FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue())))
 				.given(gateway).findById(USER_ID);
-		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantId(TENANT_ID));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Surabaya", ZoneId.of("Asia/Jakarta"), TenantStatus.ACTIVE.getValue()))).given(gateway).findTenantById(new TenantId(TENANT_ID));
 		willReturn(NEW_ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(60L).given(tokenProcessor).getRotationDurationBeforeExpireInSeconds();
 		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();

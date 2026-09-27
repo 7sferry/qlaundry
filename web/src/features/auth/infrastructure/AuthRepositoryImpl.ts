@@ -48,6 +48,14 @@ function toUser(detail: StaffDetailApiResponse): User {
 	};
 }
 
+function resolveTimeZone(): string | undefined {
+	try {
+		return Intl.DateTimeFormat().resolvedOptions().timeZone;
+	} catch {
+		return undefined;
+	}
+}
+
 function fetchStaffDetail(username: string): Promise<User> {
 	return httpClient
 			.get<StaffDetailApiResponse>(`/staff/detail?username=${encodeURIComponent(username)}`)
@@ -75,6 +83,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 		await httpClient.post<{ tenantName: string; username: string }>('/auth/tenant/registration', {
 			fullName: data.fullName,
 			tenantName: data.outletName,
+			timeZone: resolveTimeZone(),
 			username: data.username,
 			password: data.password,
 			emails: data.email ? [data.email] : [],

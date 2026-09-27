@@ -134,3 +134,11 @@ CREATE INDEX idx_staff_phones_phone_hash ON staff_phones (phone_hash);
 -- (see CryptoConstant). `SET user:encrypt:version v2` after adding v2 to app.crypto.keys and new rows
 -- encrypt under v2; existing rows keep decrypting under the key id stored in their own ciphertext prefix.
 -- Unset/unknown falls back to app.crypto.active-key-id, which stays `v1`.
+
+-- tenant time zone (September 2026): each tenant carries an IANA region id that decides its business day.
+-- The entity maps it NOT NULL, and ddl-auto: update cannot add a NOT NULL column to a table that already has rows,
+-- so on an existing database add it, backfill it, then tighten it by hand before booting the new build:
+-- ALTER TABLE tenants ADD COLUMN time_zone VARCHAR(50);
+-- UPDATE tenants SET time_zone = 'Asia/Jakarta' WHERE time_zone IS NULL;
+-- ALTER TABLE tenants ALTER COLUMN time_zone SET NOT NULL;
+-- New tenants get the registering browser's zone, or 'UTC' when none is sent.

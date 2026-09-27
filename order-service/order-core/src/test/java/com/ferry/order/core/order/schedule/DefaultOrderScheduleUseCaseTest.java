@@ -14,9 +14,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Clock;
-import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -58,31 +58,14 @@ class DefaultOrderScheduleUseCaseTest{
 				.build();
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
-						useCase.execute(new OrderScheduleRequest(LocalDate.parse("2026-02-30"), null), principal, presenter))
+						useCase.execute(new OrderScheduleRequest(LocalDate.parse("2026-02-30")), principal, presenter))
 				.isInstanceOf(DateTimeParseException.class));
 
 		then(gateway).shouldHaveNoInteractions();
 	}
 
 	@Test
-	void givenInvalidZone_thenThrowsDateTimeException(){
-		DefaultOrderScheduleUseCase useCase = new DefaultOrderScheduleUseCase(gateway,
-				Clock.fixed(Instant.parse("2026-09-14T02:00:00Z"), ZoneOffset.UTC));
-		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
-				.userId(STAFF_ID)
-				.tenantId(TENANT_ID)
-				.role(StaffRole.STAFF)
-				.build();
-
-		thenSoftly(softly -> softly.thenThrownBy(() ->
-						useCase.execute(new OrderScheduleRequest(null, "Not/AZone"), principal, presenter))
-				.isInstanceOf(DateTimeException.class));
-
-		then(gateway).shouldHaveNoInteractions();
-	}
-
-	@Test
-	void givenNoDateAndNoZone_thenUsesTodayInUtcAndMergesPickupsAndDeliveriesByTime(){
+	void givenNoDateAndNoTenantTimeZone_thenUsesTodayInUtcAndMergesPickupsAndDeliveriesByTime(){
 		DefaultOrderScheduleUseCase useCase = new DefaultOrderScheduleUseCase(gateway,
 				Clock.fixed(Instant.parse("2026-09-13T18:30:00Z"), ZoneOffset.UTC));
 		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
@@ -103,7 +86,7 @@ class DefaultOrderScheduleUseCaseTest{
 				.findDeliveriesBetween(any(TenantId.class), any(Instant.class), any(Instant.class),
 						anyCollection());
 
-		useCase.execute(new OrderScheduleRequest(null, null), principal, presenter);
+		useCase.execute(new OrderScheduleRequest(null), principal, presenter);
 
 		then(gateway).should()
 				.findPickupsBetween(eq(new TenantId(TENANT_ID)), eq(Instant.parse("2026-09-13T00:00:00Z")),
@@ -129,12 +112,13 @@ class DefaultOrderScheduleUseCaseTest{
 	}
 
 	@Test
-	void givenNoDateAndExplicitZone_thenUsesTodayInThatZoneInstead(){
+	void givenNoDateAndTenantTimeZone_thenUsesTodayInThatZoneInstead(){
 		DefaultOrderScheduleUseCase useCase = new DefaultOrderScheduleUseCase(gateway,
 				Clock.fixed(Instant.parse("2026-09-13T18:30:00Z"), ZoneOffset.UTC));
 		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
+				.timeZone(ZoneId.of("Asia/Jakarta"))
 				.role(StaffRole.STAFF)
 				.build();
 		willReturn(List.of()).given(gateway)
@@ -144,7 +128,7 @@ class DefaultOrderScheduleUseCaseTest{
 				.findDeliveriesBetween(any(TenantId.class), any(Instant.class), any(Instant.class),
 						anyCollection());
 
-		useCase.execute(new OrderScheduleRequest(null, "Asia/Jakarta"), principal, presenter);
+		useCase.execute(new OrderScheduleRequest(null), principal, presenter);
 
 		then(gateway).should()
 				.findPickupsBetween(eq(new TenantId(TENANT_ID)), eq(Instant.parse("2026-09-13T17:00:00Z")),
@@ -157,7 +141,7 @@ class DefaultOrderScheduleUseCaseTest{
 	}
 
 	@Test
-	void givenExplicitDateAndNoZone_thenQueriesThatUtcDay(){
+	void givenExplicitDateAndNoTenantTimeZone_thenQueriesThatUtcDay(){
 		DefaultOrderScheduleUseCase useCase = new DefaultOrderScheduleUseCase(gateway,
 				Clock.fixed(Instant.parse("2026-09-14T02:00:00Z"), ZoneOffset.UTC));
 		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
@@ -172,7 +156,7 @@ class DefaultOrderScheduleUseCaseTest{
 				.findDeliveriesBetween(any(TenantId.class), any(Instant.class), any(Instant.class),
 						anyCollection());
 
-		useCase.execute(new OrderScheduleRequest(LocalDate.parse("2026-12-31"), null), principal, presenter);
+		useCase.execute(new OrderScheduleRequest(LocalDate.parse("2026-12-31")), principal, presenter);
 
 		then(gateway).should()
 				.findPickupsBetween(eq(new TenantId(TENANT_ID)), eq(Instant.parse("2026-12-31T00:00:00Z")),
@@ -187,12 +171,13 @@ class DefaultOrderScheduleUseCaseTest{
 	}
 
 	@Test
-	void givenExplicitDateAndExplicitZone_thenQueriesThatZonesDay(){
+	void givenExplicitDateAndTenantTimeZone_thenQueriesThatZonesDay(){
 		DefaultOrderScheduleUseCase useCase = new DefaultOrderScheduleUseCase(gateway,
 				Clock.fixed(Instant.parse("2026-09-14T02:00:00Z"), ZoneOffset.UTC));
 		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
+				.timeZone(ZoneId.of("Asia/Jakarta"))
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		willReturn(List.of()).given(gateway)
@@ -202,7 +187,7 @@ class DefaultOrderScheduleUseCaseTest{
 				.findDeliveriesBetween(any(TenantId.class), any(Instant.class), any(Instant.class),
 						anyCollection());
 
-		useCase.execute(new OrderScheduleRequest(LocalDate.parse("2026-12-31"), "Asia/Jakarta"), principal, presenter);
+		useCase.execute(new OrderScheduleRequest(LocalDate.parse("2026-12-31")), principal, presenter);
 
 		then(gateway).should()
 				.findPickupsBetween(eq(new TenantId(TENANT_ID)), eq(Instant.parse("2026-12-30T17:00:00Z")),

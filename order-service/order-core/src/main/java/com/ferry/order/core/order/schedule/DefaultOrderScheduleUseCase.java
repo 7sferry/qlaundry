@@ -12,7 +12,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -35,7 +34,7 @@ public class DefaultOrderScheduleUseCase implements OrderScheduleUseCase{
 	public void execute(OrderScheduleRequest request, OrderAuthPrincipal principal, OrderSchedulePresenter presenter){
 		request.validate();
 		TenantId tenantId = new TenantId(principal.tenantId());
-		ZoneId zone = resolveZone(request.zone());
+		ZoneId zone = principal.timeZone();
 		LocalDate date = resolveDate(request.date(), zone);
 		Instant from = date.atStartOfDay(zone).toInstant();
 		Instant to = date.plusDays(1).atStartOfDay(zone).toInstant();
@@ -47,10 +46,6 @@ public class DefaultOrderScheduleUseCase implements OrderScheduleUseCase{
 				.sorted(Comparator.comparing(Item::scheduledAt).thenComparing(Item::orderId))
 				.toList();
 		presenter.present(new OrderScheduleResponse(date, items));
-	}
-
-	private ZoneId resolveZone(String zone){
-		return zone == null || zone.isBlank() ? ZoneOffset.UTC : ZoneId.of(zone);
 	}
 
 	private LocalDate resolveDate(LocalDate date, ZoneId zone){

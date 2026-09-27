@@ -63,7 +63,7 @@ class DefaultReportUseCaseTest{
 				.build();
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
-						useCase.execute(new ReportRequest(null, null), principal, presenter))
+						useCase.execute(new ReportRequest(null), principal, presenter))
 				.isInstanceOf(ConstraintViolationException.class));
 
 		then(gateway).shouldHaveNoInteractions();
@@ -76,6 +76,7 @@ class DefaultReportUseCaseTest{
 		AnalyticsAuthPrincipal principal = AnalyticsAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
+				.timeZone(ZoneId.of("Asia/Jakarta"))
 				.role(StaffRole.STAFF)
 				.build();
 		willReturn(List.of(new RevenueBucketProjection(LocalDate.of(2026, 9, 9), BigDecimal.valueOf(120000), 3L),
@@ -84,7 +85,7 @@ class DefaultReportUseCaseTest{
 		willReturn(List.of()).given(gateway)
 				.serviceBreakdown(any(TenantId.class), any(ReportWindow.class));
 
-		useCase.execute(new ReportRequest(ReportPeriod.WEEK, "Asia/Jakarta"), principal, presenter);
+		useCase.execute(new ReportRequest(ReportPeriod.WEEK), principal, presenter);
 
 		then(gateway).should()
 				.revenueTrend(eq(new TenantId(TENANT_ID)), windowCaptor.capture());
@@ -126,7 +127,7 @@ class DefaultReportUseCaseTest{
 		willReturn(List.of()).given(gateway)
 				.serviceBreakdown(any(TenantId.class), any(ReportWindow.class));
 
-		useCase.execute(new ReportRequest(ReportPeriod.YEAR, null), principal, presenter);
+		useCase.execute(new ReportRequest(ReportPeriod.YEAR), principal, presenter);
 
 		then(gateway).should()
 				.serviceBreakdown(eq(new TenantId(TENANT_ID)), windowCaptor.capture());
@@ -162,7 +163,7 @@ class DefaultReportUseCaseTest{
 		willReturn(List.of()).given(gateway)
 				.serviceBreakdown(any(TenantId.class), any(ReportWindow.class));
 
-		useCase.execute(new ReportRequest(ReportPeriod.QUARTER, null), principal, presenter);
+		useCase.execute(new ReportRequest(ReportPeriod.QUARTER), principal, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());
@@ -195,7 +196,7 @@ class DefaultReportUseCaseTest{
 						BigDecimal.valueOf(100000)))).given(gateway)
 				.serviceBreakdown(any(TenantId.class), any(ReportWindow.class));
 
-		useCase.execute(new ReportRequest(ReportPeriod.MONTH, null), principal, presenter);
+		useCase.execute(new ReportRequest(ReportPeriod.MONTH), principal, presenter);
 
 		then(presenter).should()
 				.present(responseCaptor.capture());

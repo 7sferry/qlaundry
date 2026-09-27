@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
@@ -110,7 +111,8 @@ class DefaultTenantConfirmRegistrationUseCaseTest{
 		willReturn(true).given(cacheManager)
 				.delete(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + TENANT_ID);
 		Tenant tenant = new Tenant(TENANT_ID, new Username(TENANT_USERNAME), new FullName("Bandung Fresh Laundry"),
-				new Description("desc"), TenantStatus.ACTIVE, null, false, Instant.now(), null, Instant.now(), null);
+				new Description("desc"), ZoneId.of("Asia/Jakarta"), TenantStatus.ACTIVE, null, false,
+				Instant.now(), null, Instant.now(), null);
 		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantId(TENANT_ID));
 
 		FailedToConfirmTenantException thrown = catchThrowableOfType(FailedToConfirmTenantException.class,
@@ -128,7 +130,8 @@ class DefaultTenantConfirmRegistrationUseCaseTest{
 		willReturn(true).given(cacheManager)
 				.delete(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + TENANT_ID);
 		Tenant tenant = new Tenant(TENANT_ID, new Username(TENANT_USERNAME), new FullName("Bandung Fresh Laundry"),
-				new Description("desc"), TenantStatus.PENDING, null, false, Instant.now(), null, Instant.now(), null);
+				new Description("desc"), ZoneId.of("Asia/Jakarta"), TenantStatus.PENDING, null, false,
+				Instant.now(), null, Instant.now(), null);
 		willReturn(Optional.of(tenant)).given(gateway).findById(new TenantId(TENANT_ID));
 		willReturn(tenant.activate()).given(gateway).save(any(Tenant.class));
 

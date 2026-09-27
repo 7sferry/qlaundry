@@ -126,6 +126,8 @@ PUT    /api/customer/update
 DELETE /api/customer/delete
 ```
 
+**Every tenant has a time zone, and it rides in the JWT.** Tenant registration stores the registering browser's IANA zone (sent automatically as `timeZone`; no form field; `UTC` when absent), and login/refresh put it into the access token as the `timeZone` claim. order- and analytics-service read it from the principal to decide what "today", a dashboard day/month and an order number's date mean, so every staff member of one laundry sees the same business day regardless of their own device. The column is `NOT NULL`, so tenants created before this must be backfilled before the new build boots (`user-service/user-web-service/sql/migration.sql`).
+
 ### `order-service`
 
 ```
@@ -136,7 +138,7 @@ DELETE /api/service/delete
 POST   /api/order/create
 GET    /api/order/list
 GET    /api/order/detail
-GET    /api/order/schedule       ?date=&zone=  → today's (or that day's, in the given IANA zone — defaults to UTC) due pickups and deliveries
+GET    /api/order/schedule       ?date=        → today's (or that day's, in the tenant's time zone) due pickups and deliveries
 GET    /api/invoice/link         ?orderId=  → {token, expiresAt} (bearer token)
 GET    /api/public/invoice/pdf   ?token=    → application/pdf (no bearer token — the signature is the auth)
 PUT    /api/order/confirm
@@ -174,11 +176,11 @@ The invoice PDF is rendered with Thymeleaf + openhtmltopdf and served **inline**
 ### `analytics-service`
 
 ```
-GET    /api/analytics/dashboard   ?date=&zone=       → {todayOrders, todayRevenue, monthOrders, monthRevenue, pendingOrders, inProgressOrders, readyOrders, revenueGrowth, ordersGrowth, statusDistribution}
-GET    /api/analytics/report   ?period=WEEK|MONTH|QUARTER|YEAR&zone= → {period, revenueTrend, serviceBreakdown}
+GET    /api/analytics/dashboard   ?date=             → {todayOrders, todayRevenue, monthOrders, monthRevenue, pendingOrders, inProgressOrders, readyOrders, revenueGrowth, ordersGrowth, statusDistribution}
+GET    /api/analytics/report   ?period=WEEK|MONTH|QUARTER|YEAR → {period, revenueTrend, serviceBreakdown}
 ```
 
-Revenue and order counts exclude cancelled orders; days, weeks and months are bucketed in whatever IANA `zone` the frontend sends (defaults to UTC when omitted — there is no hardcoded business timezone, in the use cases or in the ClickHouse queries); period queries filter on a raw `created_at` UTC-instant range so ClickHouse only reads the monthly partitions they need (query conventions in `analytics-service/analytics-gateway/sql/init.md`); growth compares this calendar month with the previous one (`0` when last month was empty). Poke at ClickHouse with `docker exec -it clickhouse clickhouse-client --user analytics --password 12345`. The schema is `analytics-service/analytics-gateway/sql/init.sql` and only runs on an **empty volume** — a schema change in dev is `docker compose down -v` then the backfill below.
+Revenue and order counts exclude cancelled orders; days, weeks and months are bucketed in the **tenant's time zone** (see below — no `zone` param, no hardcoded business timezone in the use cases or the ClickHouse queries); period queries filter on a raw `created_at` UTC-instant range so ClickHouse only reads the monthly partitions they need (query conventions in `analytics-service/analytics-gateway/sql/init.md`); growth compares this calendar month with the previous one (`0` when last month was empty). Poke at ClickHouse with `docker exec -it clickhouse clickhouse-client --user analytics --password 12345`. The schema is `analytics-service/analytics-gateway/sql/init.sql` and only runs on an **empty volume** — a schema change in dev is `docker compose down -v` then the backfill below.
 
 order-service writes an `analytics_events` outbox row in the same transaction as every order/service change and `XADD`s it to `analytics:event:ORDER` or `analytics:event:LAUNDRY_SERVICE` after commit; a 5-minute sweeper republishes anything Redis missed. Each event is the full row plus its JPA ``, and ClickHouse's `ReplacingMergeTree(version)` keeps the newest, so duplicates and replays are harmless. analytics-service consumes those streams in batches (up to `app.analytics.stream.event.poll.batch-size`, 500, per `XREADGROUP`) and writes each ClickHouse table once per batch, because every ClickHouse insert creates an on-disk part and per-event inserts pile up into "too many parts"; a batch that fails is retried one record at a time by the reclaim job, so a single bad record only dead-letters itself. To load orders that existed before this (or rebuild ClickHouse), run order-service once with `-Dspring-boot.run.profiles=analytics-backfill`; reconciliation queries and the DLQ runbook are in `analytics-service/analytics-gateway/sql/reconcile.md`. After a fresh install also seed `analytics_aggregates` and `analytics_event_statuses` from `order-gateway/sql/init.sql`.
 

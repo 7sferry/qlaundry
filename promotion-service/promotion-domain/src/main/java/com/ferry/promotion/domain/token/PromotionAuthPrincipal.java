@@ -4,6 +4,9 @@ import com.ferry.promotion.domain.session.SessionType;
 import com.ferry.promotion.domain.staff.StaffRole;
 import lombok.Builder;
 
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Agustus 2026      *
@@ -16,7 +19,12 @@ public record PromotionAuthPrincipal(
 	String fullName,
 	String tenantName,
 	String tenantId,
+	ZoneId timeZone,
 	SessionType sessionType,
 	StaffRole role){
+
+	public PromotionAuthPrincipal{
+		timeZone = timeZone == null ? ZoneOffset.UTC : timeZone;
+	}
 
 }
