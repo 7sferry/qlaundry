@@ -80,15 +80,17 @@ public class DefaultCacheHandler implements CacheHandler{
 				LOCK_KEY + key, LOCK_KEY, Duration.ofSeconds(30)
 		);
 		if(Boolean.TRUE.equals(acquired)){
-			CompletableFuture.runAsync(() -> {
-				try{
-					log.info("Revalidating from database");
-					fetchAndCacheFromDb(function, key, hardExpirationConfig, softExpirationConfig, jitterStartRange,
-							jitterEndRange);
-				} finally{
-					redis.delete(LOCK_KEY + key);
-				}
-			});
+			Thread.ofVirtual()
+					.name("cache-handler-")
+					.start(() -> {
+						try{
+							log.info("Revalidating from database");
+							fetchAndCacheFromDb(function, key, hardExpirationConfig, softExpirationConfig, jitterStartRange,
+									jitterEndRange);
+						} finally{
+							redis.delete(LOCK_KEY + key);
+						}
+					});
 		} else {
 			log.info("Already revalidates cache");
 		}

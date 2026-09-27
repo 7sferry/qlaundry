@@ -21,19 +21,17 @@ import java.util.Map;
 public class ClickHouseDashboardSummaryGateway implements DashboardSummaryGateway{
 	private static final String PERIOD_QUERY = """
 			SELECT
-			    toInt64(countIf(status != 'CANCELLED'
-			        AND created_at >= {dayFrom:DateTime64(3, 'UTC')} AND created_at < {dayTo:DateTime64(3, 'UTC')})) AS today_orders,
-			    toDecimal64(sumIf(total_price, status != 'CANCELLED'
-			        AND created_at >= {dayFrom:DateTime64(3, 'UTC')} AND created_at < {dayTo:DateTime64(3, 'UTC')}), 2) AS today_revenue,
-			    toInt64(countIf(status != 'CANCELLED' AND created_at >= {monthFrom:DateTime64(3, 'UTC')})) AS month_orders,
-			    toDecimal64(sumIf(total_price, status != 'CANCELLED'
-			        AND created_at >= {monthFrom:DateTime64(3, 'UTC')}), 2) AS month_revenue,
-			    toInt64(countIf(status != 'CANCELLED' AND created_at < {monthFrom:DateTime64(3, 'UTC')})) AS last_month_orders,
-			    toDecimal64(sumIf(total_price, status != 'CANCELLED'
-			        AND created_at < {monthFrom:DateTime64(3, 'UTC')}), 2) AS last_month_revenue
+			    toInt64(countIf(created_at >= {dayFrom:DateTime64(3, 'UTC')} AND created_at < {dayTo:DateTime64(3, 'UTC')})) AS today_orders,
+			    toDecimal64(sumIf(total_price,
+			        created_at >= {dayFrom:DateTime64(3, 'UTC')} AND created_at < {dayTo:DateTime64(3, 'UTC')}), 2) AS today_revenue,
+			    toInt64(countIf(created_at >= {monthFrom:DateTime64(3, 'UTC')})) AS month_orders,
+			    toDecimal64(sumIf(total_price, created_at >= {monthFrom:DateTime64(3, 'UTC')}), 2) AS month_revenue,
+			    toInt64(countIf(created_at < {monthFrom:DateTime64(3, 'UTC')})) AS last_month_orders,
+			    toDecimal64(sumIf(total_price, created_at < {monthFrom:DateTime64(3, 'UTC')}), 2) AS last_month_revenue
 			FROM orders_current FINAL
 			WHERE tenant_id = {tenantId:String}
 			  AND deleted = 0
+			  AND status != 'CANCELLED'
 			  AND created_at >= {lastMonthFrom:DateTime64(3, 'UTC')}
 			  AND created_at < {monthTo:DateTime64(3, 'UTC')}
 			SETTINGS do_not_merge_across_partitions_select_final = 1

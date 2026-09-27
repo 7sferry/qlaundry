@@ -23,11 +23,12 @@ public class ClickHouseReportGateway implements ReportGateway{
 	private static final String TREND_QUERY = """
 			SELECT
 			    toString(%s) AS bucket_start,
-			    toInt64(countIf(status != 'CANCELLED')) AS orders,
-			    toDecimal64(sumIf(total_price, status != 'CANCELLED'), 2) AS revenue
+			    toInt64(count()) AS orders,
+			    toDecimal64(sum(total_price), 2) AS revenue
 			FROM orders_current FINAL
 			WHERE tenant_id = {tenantId:String}
 			  AND deleted = 0
+			  AND status != 'CANCELLED'
 			  AND created_at >= {from:DateTime64(3, 'UTC')}
 			  AND created_at < {to:DateTime64(3, 'UTC')}
 			GROUP BY bucket_start

@@ -53,7 +53,12 @@ docker exec -it clickhouse clickhouse-client --user analytics --password 12345
 - Bucketing (`toDate` / `toMonday` / `toStartOfMonth`) takes the viewer's IANA zone as a `{zone:String}` parameter,
   never a hardcoded zone. Pass it through `AnalyticStore.timeZone(ZoneId)`, which maps Java's `Z` (the UTC default)
   to `UTC` — ClickHouse's tz database has no `Z`, and it doesn't know raw offsets like `+07:00` either.
-- Revenue = `sumIf(total_price, status != 'CANCELLED')`, orders = `countIf(status != 'CANCELLED')`. This differs
+- Revenue = `sum(total_price)`, orders = `count()`, both over `status != 'CANCELLED'`. When every aggregate in a
+  query shares that filter, put it in `WHERE` once rather than repeating it inside each `countIf`/`sumIf`. That is
+  safe under `FINAL` for the same reason `deleted = 0` is: a `WHERE` on a column outside the sorting key is applied
+  after `FINAL` picks the latest version (`optimize_move_to_prewhere_if_final` stays at its default `0` — never
+  enable it), so an order whose newest version is `CANCELLED` can't fall back to an older non-cancelled version.
+  This differs
   from order-service's `GET /order/customer-totals`, which counts cancelled orders on purpose — don't align them.
 - Parameterised queries only (`{name:Type}` server-side parameters), never string concatenation of a value. The
   only concatenated fragment is the bucket expression, chosen from a closed enum in the gateway (the zone inside it
