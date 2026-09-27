@@ -75,7 +75,7 @@ class AesGcmCryptoToolTest{
 				CryptoKeyConfig.of("v1", Map.of("v1", KEY_V1), BLIND_INDEX_KEY, false));
 		String cipher = cryptoTool.encrypt("gunawan@laundrykita.co.id", EMAIL_AAD);
 		char lastChar = cipher.charAt(cipher.length() - 1);
-		String tampered = cipher.substring(0, cipher.length() - 1) + (lastChar == 'A' ? 'B' : 'A');
+		String tampered = cipher.substring(0, cipher.length() - 1) + (lastChar + 2);
 
 		thenThrownBy(() -> cryptoTool.decrypt(tampered, EMAIL_AAD))
 				.isInstanceOf(InternalCryptoException.class);
