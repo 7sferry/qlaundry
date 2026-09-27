@@ -61,7 +61,7 @@ class DefaultTenantUpdateUseCaseTest{
 
 	private Tenant existingTenant(){
 		Instant now = Instant.now();
-		return new Tenant(TENANT_ID, new Username("budi"), new FullName("Budi Bersih Laundry"),
+		return new Tenant(TENANT_ID, new Username("budi01"), new FullName("Budi Bersih Laundry"),
 				new Description("Laundry kiloan"), ZoneId.of("UTC"), TenantStatus.ACTIVE, 5, false,
 				now, PRINCIPAL_ID, now, PRINCIPAL_ID);
 	}
