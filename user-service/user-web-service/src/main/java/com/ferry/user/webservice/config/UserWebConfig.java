@@ -53,6 +53,12 @@ import com.ferry.user.core.staff.update.StaffUpdateUseCase;
 import com.ferry.user.core.tenant.confirmregistration.DefaultTenantConfirmRegistrationUseCase;
 import com.ferry.user.core.tenant.confirmregistration.TenantConfirmRegistrationGateway;
 import com.ferry.user.core.tenant.confirmregistration.TenantConfirmRegistrationUseCase;
+import com.ferry.user.core.tenant.detail.DefaultTenantDetailUseCase;
+import com.ferry.user.core.tenant.detail.TenantDetailGateway;
+import com.ferry.user.core.tenant.detail.TenantDetailUseCase;
+import com.ferry.user.core.tenant.update.DefaultTenantUpdateUseCase;
+import com.ferry.user.core.tenant.update.TenantUpdateGateway;
+import com.ferry.user.core.tenant.update.TenantUpdateUseCase;
 import com.ferry.user.core.tenant.expiration.DefaultTenantExpirationUseCase;
 import com.ferry.user.core.tenant.expiration.TenantExpirationGateway;
 import com.ferry.user.core.tenant.expiration.TenantExpirationUseCase;
@@ -88,9 +94,11 @@ import com.ferry.user.gateway.staff.*;
 import com.ferry.user.gateway.staff.repository.*;
 import com.ferry.user.gateway.tenant.CloudflareVerificationGateway;
 import com.ferry.user.gateway.tenant.JpaTenantConfirmRegistrationGateway;
+import com.ferry.user.gateway.tenant.JpaTenantDetailGateway;
 import com.ferry.user.gateway.tenant.JpaTenantExpirationGateway;
 import com.ferry.user.gateway.tenant.JpaTenantRegistrationGateway;
 import com.ferry.user.gateway.tenant.JpaTenantResendConfirmationGateway;
+import com.ferry.user.gateway.tenant.JpaTenantUpdateGateway;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import com.ferry.user.gateway.tenant.repository.TenantStatusJpaRepository;
 import com.ferry.user.webservice.tenant.expiration.TenantExpirationScheduler;
@@ -536,6 +544,27 @@ public class UserWebConfig{
 	@Bean
 	StaffUpdateUseCase staffUpdateUseCase(StaffUpdateGateway staffUpdateGateway, PasswordTool passwordTool){
 		return new DefaultStaffUpdateUseCase(staffUpdateGateway, passwordTool);
+	}
+
+	@Bean
+	TenantDetailGateway tenantDetailGateway(TenantJpaRepository tenantJpaRepository){
+		return new JpaTenantDetailGateway(tenantJpaRepository);
+	}
+
+	@Bean
+	TenantDetailUseCase tenantDetailUseCase(TenantDetailGateway tenantDetailGateway){
+		return new DefaultTenantDetailUseCase(tenantDetailGateway);
+	}
+
+	@Bean
+	TenantUpdateGateway tenantUpdateGateway(TenantJpaRepository tenantJpaRepository,
+	                                        TenantStatusJpaRepository tenantStatusJpaRepository){
+		return new JpaTenantUpdateGateway(tenantJpaRepository, tenantStatusJpaRepository);
+	}
+
+	@Bean
+	TenantUpdateUseCase tenantUpdateUseCase(TenantUpdateGateway tenantUpdateGateway){
+		return new DefaultTenantUpdateUseCase(tenantUpdateGateway);
 	}
 
 }

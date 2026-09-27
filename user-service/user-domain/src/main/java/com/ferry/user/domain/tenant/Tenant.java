@@ -62,4 +62,9 @@ public record Tenant(
 				createdAt, createdBy, Instant.now(), updatedBy);
 	}
 
+	public Tenant update(FullName fullName, Description description, ZoneId timeZone, String updatedBy){
+		return new Tenant(id, username, fullName, description, timeZone, status, version, deleted, createdAt,
+				createdBy, Instant.now(), updatedBy);
+	}
+
 }

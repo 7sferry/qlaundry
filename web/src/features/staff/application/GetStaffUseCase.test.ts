@@ -7,6 +7,7 @@ const mockStaff: Staff = {
 	id: 'staff_1',
 	username: 'ratna.dewi',
 	fullName: 'Ratna Dewi',
+	role: 'STAFF',
 	emails: ['ratna@qlaundry.id'],
 	phones: ['081234567801'],
 	addresses: ['Jl. Anggrek No. 3'],

@@ -1,5 +1,7 @@
 package com.ferry.user.domain.staff.list;
 
+import com.ferry.user.domain.staff.StaffRole;
+
 import java.time.Instant;
 
 /************************
@@ -12,5 +14,9 @@ public record StaffListProjection(
 	String description,
 	String fullName,
 	Instant createdAt,
-	String username){
+	String username,
+	short roleId){
+	public StaffRole role(){
+		return StaffRole.findByValue(roleId).orElseThrow();
+	}
 }

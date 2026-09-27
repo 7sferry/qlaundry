@@ -6,7 +6,7 @@
 import {AtSign, Trash2} from 'lucide-react';
 import {Badge, Button, Drawer} from '@/core/ui';
 import {formatDate} from '@/core/utils/format';
-import type {Staff} from '../../domain/Staff';
+import {STAFF_ROLE_LABELS, type Staff} from '../../domain/Staff';
 
 interface StaffDetailDrawerProps {
 	staff: Staff | null;
@@ -42,7 +42,12 @@ export default function StaffDetailDrawer({staff, open, onClose, onDelete, canDe
 								</div>
 								<div>
 									<h3>{staff.fullName}</h3>
-									<Badge tone="info"><AtSign size={11}/> {staff.username}</Badge>
+									<div className="row" style={{gap: 6, flexWrap: 'wrap'}}>
+										<Badge tone="info"><AtSign size={11}/> {staff.username}</Badge>
+										<Badge tone={staff.role === 'SUPER_STAFF' ? 'info' : 'neutral'}>
+											{STAFF_ROLE_LABELS[staff.role]}
+										</Badge>
+									</div>
 								</div>
 							</div>
 

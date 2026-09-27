@@ -7,6 +7,7 @@ import {type FC, useEffect, useRef, useState} from 'react';
 import {NavLink, useNavigate} from 'react-router-dom';
 import {
 	BarChart3,
+	Building2,
 	ClipboardList,
 	LayoutDashboard,
 	ListChecks,
@@ -22,6 +23,7 @@ import {
 } from 'lucide-react';
 import {useAuth} from '@/features/auth/presentation/useAuth';
 import {useTheme} from '@/core/theme/useTheme';
+import {STAFF_ROLE_LABELS} from '@/features/staff/domain/Staff';
 
 const NAV_ITEMS: { path: string; label: string; icon: FC<{ size?: number }> }[] = [
 	{path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard},
@@ -69,6 +71,13 @@ const Sidebar: FC = () => {
 		navigate('/settings');
 	};
 
+	const goToTenantSettings = () => {
+		setMenuOpen(false);
+		navigate('/tenant-settings');
+	};
+
+	const isSuperStaff = user?.staffRole === 'SUPER_STAFF';
+
 	return (
 			<aside className="sidebar">
 				<div className="sidebar__brand">
@@ -107,8 +116,13 @@ const Sidebar: FC = () => {
 						{menuOpen && (
 								<div className="user-menu">
  								<button className="user-menu__item" onClick={goToSettings}>
- 									<Settings size={15}/> Settings
+ 									<Settings size={15}/> Account settings
  								</button>
+ 								{isSuperStaff && (
+ 										<button className="user-menu__item" onClick={goToTenantSettings}>
+ 											<Building2 size={15}/> Tenant setting
+ 										</button>
+ 								)}
  								<button className="user-menu__item user-menu__item--danger" onClick={() => void handleLogout()}>
  									<LogOut size={15}/> Sign out
  								</button>
@@ -122,7 +136,12 @@ const Sidebar: FC = () => {
 							<span className="avatar">{initials}</span>
 								<span>
 				      <strong>{user?.fullName ?? 'User'}</strong>
-				      {user?.tenantName && <small>{user.tenantName}</small>}
+				      {user?.tenantName && (
+				          <small>
+				            {user.tenantName}
+				            {user?.staffRole && ` · ${STAFF_ROLE_LABELS[user.staffRole] ?? user.staffRole}`}
+				          </small>
+				      )}
 				    </span>
 						</button>
 					</div>

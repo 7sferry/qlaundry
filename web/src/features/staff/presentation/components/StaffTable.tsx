@@ -4,10 +4,10 @@
  ************************/
 
 import {Plus, Search, Trash2, Users} from 'lucide-react';
-import {Button, Card, Field, Input, Pagination, Select} from '@/core/ui';
+import {Badge, Button, Card, Field, Input, Pagination, Select} from '@/core/ui';
 import {formatDate} from '@/core/utils/format';
 import {PAGE_SIZE_OPTIONS, type SortDirection} from '@/core/pagination/Pagination';
-import type {Staff} from '../../domain/Staff';
+import {STAFF_ROLE_LABELS, type Staff} from '../../domain/Staff';
 import type {StaffSortBy} from '../../domain/StaffRepository';
 
 interface StaffTableProps {
@@ -83,6 +83,7 @@ export default function StaffTable({
 						<thead>
 						<tr>
  						<th>Staff</th>
+ 						<th>Role</th>
  						<th>Contact</th>
  						<th>Address</th>
  						<th>Joined</th>
@@ -106,6 +107,11 @@ export default function StaffTable({
 												<span className="table-sub">@{s.username}</span>
 											</div>
 										</div>
+									</td>
+									<td>
+										<Badge tone={s.role === 'SUPER_STAFF' ? 'info' : 'neutral'}>
+											{STAFF_ROLE_LABELS[s.role]}
+										</Badge>
 									</td>
 									<td>
 										<div>

@@ -13,6 +13,7 @@ const PATH_TITLES: Record<string, string> = {
 	'/customers': 'Customer management',
 	'/staff': 'Staff management',
 	'/settings': 'Account settings',
+	'/tenant-settings': 'Tenant setting',
 	'/reports': 'Reports & analytics',
 };
 

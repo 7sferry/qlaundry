@@ -8,6 +8,7 @@ const mockStaff: Staff = {
 	username: 'ratna.dewi',
 	fullName: 'Ratna Dewi',
 	description: 'Kasir shift pagi',
+	role: 'SUPER_STAFF',
 	emails: ['ratna@qlaundry.id'],
 	phones: ['081234567801'],
 	addresses: ['Jl. Anggrek No. 3'],

@@ -68,8 +68,8 @@ class DefaultStaffListUseCaseTest{
 	@Test
 	void givenStaffFound_thenAggregatesContactInfoGroupedByStaffId(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
-		StaffListProjection staff1 = new StaffListProjection(STAFF_ID_1, "desc one", FULL_NAME_1, Instant.now(), USERNAME_1);
-		StaffListProjection staff2 = new StaffListProjection(STAFF_ID_2, "desc two", FULL_NAME_2, Instant.now(), USERNAME_2);
+		StaffListProjection staff1 = new StaffListProjection(STAFF_ID_1, "desc one", FULL_NAME_1, Instant.now(), USERNAME_1, StaffRole.STAFF.getValue());
+		StaffListProjection staff2 = new StaffListProjection(STAFF_ID_2, "desc two", FULL_NAME_2, Instant.now(), USERNAME_2, StaffRole.SUPER_STAFF.getValue());
 		willReturn(new CursorFetch<>(List.of(staff1, staff2), false)).given(gateway).findByFilter(any(StaffFilter.class));
 		StaffPhoneListProjection phone1 = new StaffPhoneListProjection(STAFF_ID_1, "081111111111");
 		StaffPhoneListProjection phone2 = new StaffPhoneListProjection(STAFF_ID_1, "082222222222");
@@ -112,7 +112,7 @@ class DefaultStaffListUseCaseTest{
 	@Test
 	void givenStaffWithoutAnyContactInfo_thenContactMapsRemainEmpty(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
-		StaffListProjection staff = new StaffListProjection(STAFF_ID_1, "desc", FULL_NAME_1, Instant.now(), USERNAME_1);
+		StaffListProjection staff = new StaffListProjection(STAFF_ID_1, "desc", FULL_NAME_1, Instant.now(), USERNAME_1, StaffRole.STAFF.getValue());
 		willReturn(new CursorFetch<>(List.of(staff), false)).given(gateway).findByFilter(any(StaffFilter.class));
 		willReturn(List.of()).given(gateway).findPhonesByFilter(any(StaffPhoneFilter.class));
 		willReturn(List.of()).given(gateway).findEmailsByFilter(any(StaffEmailFilter.class));
@@ -148,7 +148,7 @@ class DefaultStaffListUseCaseTest{
 	@Test
 	void givenMoreRowsThanPageSize_thenPresentsNextCursorButNoPrevCursorOnFirstPage(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
-		StaffListProjection staff = new StaffListProjection(STAFF_ID_1, "desc", FULL_NAME_1, Instant.now(), USERNAME_1);
+		StaffListProjection staff = new StaffListProjection(STAFF_ID_1, "desc", FULL_NAME_1, Instant.now(), USERNAME_1, StaffRole.STAFF.getValue());
 		willReturn(new CursorFetch<>(List.of(staff), true)).given(gateway).findByFilter(any(StaffFilter.class));
 		willReturn(List.of()).given(gateway).findPhonesByFilter(any(StaffPhoneFilter.class));
 		willReturn(List.of()).given(gateway).findEmailsByFilter(any(StaffEmailFilter.class));
@@ -167,7 +167,7 @@ class DefaultStaffListUseCaseTest{
 	@Test
 	void givenCursorProvidedAndNoMoreRows_thenPresentsPrevCursorButNoNextCursor(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
-		StaffListProjection staff = new StaffListProjection(STAFF_ID_2, "desc", FULL_NAME_2, Instant.now(), USERNAME_2);
+		StaffListProjection staff = new StaffListProjection(STAFF_ID_2, "desc", FULL_NAME_2, Instant.now(), USERNAME_2, StaffRole.SUPER_STAFF.getValue());
 		willReturn(new CursorFetch<>(List.of(staff), false)).given(gateway).findByFilter(any(StaffFilter.class));
 		willReturn(List.of()).given(gateway).findPhonesByFilter(any(StaffPhoneFilter.class));
 		willReturn(List.of()).given(gateway).findEmailsByFilter(any(StaffEmailFilter.class));
@@ -187,7 +187,7 @@ class DefaultStaffListUseCaseTest{
 	@Test
 	void givenPrevDirectionWithMoreRowsBefore_thenHasNextIsAlwaysTrue(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
-		StaffListProjection staff = new StaffListProjection(STAFF_ID_1, "desc", FULL_NAME_1, Instant.now(), USERNAME_1);
+		StaffListProjection staff = new StaffListProjection(STAFF_ID_1, "desc", FULL_NAME_1, Instant.now(), USERNAME_1, StaffRole.STAFF.getValue());
 		willReturn(new CursorFetch<>(List.of(staff), false)).given(gateway).findByFilter(filterCaptor.capture());
 		willReturn(List.of()).given(gateway).findPhonesByFilter(any(StaffPhoneFilter.class));
 		willReturn(List.of()).given(gateway).findEmailsByFilter(any(StaffEmailFilter.class));

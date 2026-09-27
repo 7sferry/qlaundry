@@ -6,6 +6,7 @@ import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.staff.StaffAddressFilter;
 import com.ferry.user.domain.staff.StaffEmailFilter;
 import com.ferry.user.domain.staff.StaffPhoneFilter;
+import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.detail.StaffAddressDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffDetailProjection;
 import com.ferry.user.domain.staff.detail.StaffEmailDetailProjection;
@@ -96,7 +97,7 @@ class DefaultStaffDetailUseCaseTest{
 	@Test
 	void givenStaffFound_thenPresentsDetailWithPhonesEmailsAndAddresses(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
-		StaffDetailProjection detail = new StaffDetailProjection(STAFF_ID, "desc", FULL_NAME, Instant.now(), USERNAME);
+		StaffDetailProjection detail = new StaffDetailProjection(STAFF_ID, "desc", FULL_NAME, Instant.now(), USERNAME, StaffRole.SUPER_STAFF.getValue());
 		willReturn(Optional.of(detail)).given(gateway).findDetail(new Username(USERNAME), new TenantId(TENANT_ID));
 		List<StaffPhoneDetailProjection> phones = List.of(new StaffPhoneDetailProjection("081234567890", STAFF_ID));
 		List<StaffEmailDetailProjection> emails = List.of(new StaffEmailDetailProjection("gunawan@qlaundry.com", STAFF_ID));
@@ -118,7 +119,7 @@ class DefaultStaffDetailUseCaseTest{
 	@Test
 	void givenStaffFoundWithNoContactInfo_thenPresentsDetailWithEmptyLists(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().tenantId(TENANT_ID).build();
-		StaffDetailProjection detail = new StaffDetailProjection(STAFF_ID, "desc", FULL_NAME, Instant.now(), USERNAME);
+		StaffDetailProjection detail = new StaffDetailProjection(STAFF_ID, "desc", FULL_NAME, Instant.now(), USERNAME, StaffRole.STAFF.getValue());
 		willReturn(Optional.of(detail)).given(gateway).findDetail(new Username(USERNAME), new TenantId(TENANT_ID));
 		willReturn(List.of()).given(gateway).findByFilter(any(StaffPhoneFilter.class));
 		willReturn(List.of()).given(gateway).findByFilter(any(StaffEmailFilter.class));

@@ -39,7 +39,7 @@ public class WebStaffListPresenter implements StaffListPresenter{
 							.map(e -> new Address(e.addressLine()))
 							.toList();
 					return new Staff(o.description(), o.fullName(), o.createdAt().toEpochMilli(), o.username(),
-							emails, phones, addresses);
+							o.role().name(), emails, phones, addresses);
 				})
 				.toList();
 		responseEntity = ResponseEntity.ok(new StaffListRestResponse(staffs, response.nextCursor(), response.prevCursor()));

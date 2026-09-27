@@ -26,7 +26,8 @@ public class WebStaffUpdatePresenter implements StaffUpdatePresenter{
 		List<Phone> phones = response.phones().stream().map(o -> new Phone(o.phone().value())).toList();
 		List<Address> addresses = response.addresses().stream().map(o -> new Address(o.addressLine().value())).toList();
 		responseEntity = ResponseEntity.ok(new StaffUpdateRestResponse(response.staff().descriptionValue(),
-				response.staff().fullNameValue(), createdAt, response.staff().usernameValue(), emails, phones, addresses));
+				response.staff().fullNameValue(), createdAt, response.staff().usernameValue(),
+				response.staff().role().name(), emails, phones, addresses));
 	}
 
 }

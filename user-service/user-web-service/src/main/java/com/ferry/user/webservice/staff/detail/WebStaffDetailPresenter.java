@@ -32,7 +32,7 @@ public class WebStaffDetailPresenter implements StaffDetailPresenter{
 		List<Phone> phones = response.phones().stream().map(o -> new Phone(o.phone())).toList();
 		List<Address> addresses = response.addresses().stream().map(o -> new Address(o.addressLine())).toList();
 		responseEntity = ResponseEntity.ok(new StaffDetailRestResponse(staff.description(), staff.fullName(),
-				createdAt, staff.username(), emails, phones, addresses));
+				createdAt, staff.username(), staff.role().name(), emails, phones, addresses));
 	}
 
 }

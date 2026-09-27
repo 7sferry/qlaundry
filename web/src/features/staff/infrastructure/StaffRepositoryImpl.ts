@@ -6,7 +6,7 @@
 import {httpClient} from '@/core/http/httpClient';
 import type {Page} from '@/core/pagination/Pagination';
 import type {StaffFilters, StaffRepository} from '../domain/StaffRepository';
-import type {CreateStaffInput, Staff, UpdateStaffInput} from '../domain/Staff';
+import type {CreateStaffInput, Staff, StaffRole, UpdateStaffInput} from '../domain/Staff';
 import {fallbackStaff} from './staffFallbackData';
 
 let localStaff: Staff[] = [...fallbackStaff];
@@ -17,6 +17,7 @@ interface StaffListApiResponse {
 		fullName: string;
 		createdAt: number;
 		username: string;
+		role: StaffRole;
 		emails: { email: string }[];
 		phones: { phone: string }[];
 		addresses: { address: string }[];
@@ -43,6 +44,7 @@ function toStaff(item: StaffListApiResponse['staffs'][number]): Staff {
 		username: item.username,
 		fullName: item.fullName,
 		description: item.description ?? undefined,
+		role: item.role,
 		emails: item.emails.map((e) => e.email),
 		phones: item.phones.map((p) => p.phone),
 		addresses: item.addresses.map((a) => a.address),
@@ -56,6 +58,7 @@ function newStaffFromInput(input: CreateStaffInput): Staff {
 		username: input.username,
 		fullName: input.fullName,
 		description: input.description,
+		role: input.role,
 		emails: input.emails,
 		phones: input.phones,
 		addresses: input.addresses,

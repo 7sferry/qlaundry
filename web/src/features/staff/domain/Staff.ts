@@ -5,11 +5,17 @@
 
 export type StaffRole = 'SUPER_STAFF' | 'STAFF';
 
+export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
+	SUPER_STAFF: 'Super staff',
+	STAFF: 'Staff',
+};
+
 export interface Staff {
 	id: string;
 	username: string;
 	fullName: string;
 	description?: string;
+	role: StaffRole;
 	emails: string[];
 	phones: string[];
 	addresses: string[];

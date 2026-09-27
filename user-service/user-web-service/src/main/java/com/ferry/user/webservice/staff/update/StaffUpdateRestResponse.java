@@ -12,6 +12,7 @@ public record StaffUpdateRestResponse(
 	String fullName,
 	long createdAt,
 	String username,
+	String role,
 	List<Email> emails,
 	List<Phone> phones,
 	List<Address> addresses){

@@ -20,6 +20,7 @@ import ServicesPage from '@/features/services/presentation/pages/ServicesPage';
 import PromotionsPage from '@/features/promotions/presentation/pages/PromotionsPage';
 import StaffPage from '@/features/staff/presentation/pages/StaffPage';
 import StaffSettingsPage from '@/features/staff/presentation/pages/StaffSettingsPage';
+import TenantSettingsPage from '@/features/tenant/presentation/pages/TenantSettingsPage';
 import Sidebar from '@/shared/components/Sidebar';
 import Topbar from '@/shared/components/Topbar';
 import {AuthProvider} from "@/features/auth/presentation/AuthContextProvider";
@@ -91,6 +92,7 @@ export default function App() {
                   <Route path="/promotions" element={<PromotionsPage/>}/>
                   <Route path="/staff" element={<StaffPage/>}/>
                   <Route path="/settings" element={<StaffSettingsPage/>}/>
+                  <Route path="/tenant-settings" element={<TenantSettingsPage/>}/>
                   <Route path="/reports" element={<ReportsPage/>}/>
                   <Route path="*" element={<Navigate to="/dashboard" replace/>}/>
                 </Route>
