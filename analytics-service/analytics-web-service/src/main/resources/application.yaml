@@ -38,6 +38,13 @@ app:
         retention-days: 7
         # daily XTRIM MINID cron for both event streams and both DLQs (see AnalyticsStreamTrimScheduler)
         trim-cron: '0 45 3 * * *'
+        poll:
+          # XREADGROUP COUNT — one ClickHouse insert per table carries up to this many events
+          batch-size: 500
+          # XREADGROUP BLOCK; also the back-off after a failed poll
+          timeout: 1s
+          # how long shutdown waits for an in-flight batch before the ClickHouse client closes
+          shutdown-timeout: 45s
         reclaim:
           # after this many failed deliveries a pending entry is dead-lettered instead of retried again
           max-deliveries: 5

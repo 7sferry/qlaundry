@@ -586,10 +586,18 @@ sequenceDiagram
     PG-->>OS: commit
     OS->>R: afterCommit XADD analytics:event:ORDER
     OS->>PG: mark row PUBLISHED (REQUIRES_NEW)
-    R-->>AS: XREADGROUP analytics-service
-    AS->>CH: insert orders_current / order_items / order_promotions
-    AS->>R: XACK
+    R-->>AS: XREADGROUP analytics-service COUNT 500
+    AS->>CH: one insert per table for the whole batch
+    AS->>R: XACK every applied record
 ```
+
+- **The consumer batches.** Every ClickHouse insert creates an on-disk part,
+  so one insert per event would bury the tables in tiny parts ("too many
+  parts") as volume grows. analytics-service reads up to 500 records per
+  poll with its own `XREADGROUP` loop (`AnalyticsStreamPoller`) and writes
+  each table once per batch. Invalid events are rejected individually and
+  left pending; a failed batch is retried record by record by the reclaim
+  job, so one bad row can't take its neighbours to the DLQ.
 
 - **Events are full-state snapshots**, not deltas: the whole row plus its JPA
   `@Version`. ClickHouse's `ReplacingMergeTree(version)` keeps the highest

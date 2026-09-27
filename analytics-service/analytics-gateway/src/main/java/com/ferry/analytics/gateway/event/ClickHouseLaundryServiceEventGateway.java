@@ -23,12 +23,16 @@ public class ClickHouseLaundryServiceEventGateway implements LaundryServiceEvent
 	private final AnalyticStore store;
 
 	@Override
-	public void upsert(LaundryServiceSnapshot service){
-		store.insert(SERVICES_TABLE, List.of(construct(service)));
+	public void upsert(List<LaundryServiceSnapshot> services){
+		store.insert(SERVICES_TABLE, services.stream().map(this::construct).toList());
 	}
 
 	@Override
-	public void recordConsumed(ConsumedEvent event){
+	public void recordConsumed(List<ConsumedEvent> events){
+		store.insert(CONSUMED_EVENTS_TABLE, events.stream().map(this::construct).toList());
+	}
+
+	private Map<String, Object> construct(ConsumedEvent event){
 		Map<String, Object> row = new LinkedHashMap<>();
 		row.put("event_id", event.eventId());
 		row.put("aggregate", event.aggregate().name());
@@ -38,7 +42,7 @@ public class ClickHouseLaundryServiceEventGateway implements LaundryServiceEvent
 		row.put("version", event.version());
 		row.put("consumed_at", store.dateTime(event.consumedAt()));
 		row.put("created_at", store.dateTime(event.consumedAt()));
-		store.insert(CONSUMED_EVENTS_TABLE, List.of(row));
+		return row;
 	}
 
 	private Map<String, Object> construct(LaundryServiceSnapshot service){

@@ -15,9 +15,14 @@ import java.util.List;
  ************************/
 
 public record OrderEventRequest(
-	@NotBlank String eventId,
-	@NotBlank String type,
-	@NotNull OrderSnapshot order,
-	@NotNull List<OrderItemSnapshot> items,
-	@NotNull List<OrderPromotionSnapshot> promotions) implements AnalyticsValidation{
+	@NotNull List<OrderEvent> events) implements AnalyticsValidation{
+
+	public record OrderEvent(
+		@NotBlank String eventId,
+		@NotBlank String type,
+		@NotNull OrderSnapshot order,
+		@NotNull List<OrderItemSnapshot> items,
+		@NotNull List<OrderPromotionSnapshot> promotions) implements AnalyticsValidation{
+	}
+
 }

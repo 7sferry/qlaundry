@@ -38,6 +38,7 @@ public class ClickHouseAnalyticStore implements AnalyticStore{
 	private final JsonManager jsonManager;
 	private final Duration timeout;
 
+	@SuppressWarnings("EmptyTryBlock")
 	@Override
 	public void insert(String table, List<Map<String, Object>> rows){
 		if(rows.isEmpty()){
@@ -60,8 +61,8 @@ public class ClickHouseAnalyticStore implements AnalyticStore{
 
 	@Override
 	public <T> List<T> query(String sql, Map<String, Object> params, Function<ClickHouseBinaryFormatReader, T> mapper){
-		try(QueryResponse response = client.query(sql, params).get(timeout.toMillis(), TimeUnit.MILLISECONDS)){
-			ClickHouseBinaryFormatReader reader = client.newBinaryFormatReader(response);
+		try(QueryResponse response = client.query(sql, params).get(timeout.toMillis(), TimeUnit.MILLISECONDS);
+		    ClickHouseBinaryFormatReader reader = client.newBinaryFormatReader(response)){
 			List<T> rows = new ArrayList<>();
 			while(reader.hasNext()){
 				reader.next();

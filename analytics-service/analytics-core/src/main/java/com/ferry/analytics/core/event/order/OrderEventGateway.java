@@ -13,8 +13,8 @@ import java.util.List;
  ************************/
 
 public interface OrderEventGateway{
-	void upsert(OrderSnapshot order, List<OrderItemSnapshot> items,
+	void upsert(List<OrderSnapshot> orders, List<OrderItemSnapshot> items,
 	            List<OrderPromotionSnapshot> promotions);
 
-	void recordConsumed(ConsumedEvent event);
+	void recordConsumed(List<ConsumedEvent> events);
 }

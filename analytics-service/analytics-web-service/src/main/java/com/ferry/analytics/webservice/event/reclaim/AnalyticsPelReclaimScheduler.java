@@ -1,5 +1,6 @@
 package com.ferry.analytics.webservice.event.reclaim;
 
+import com.ferry.analytics.webservice.event.AnalyticsListener;
 import com.ferry.analytics.webservice.event.AnalyticsStreamConstant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +11,6 @@ import org.springframework.data.redis.connection.stream.PendingMessages;
 import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.Duration;
@@ -32,7 +32,7 @@ public class AnalyticsPelReclaimScheduler{
 	private static final String LAST_ERROR_FIELD = "lastError";
 
 	private final StringRedisTemplate stringRedisTemplate;
-	private final Map<String, StreamListener<String, MapRecord<String, String, String>>> listenersByStream;
+	private final Map<String, AnalyticsListener> listenersByStream;
 	private final String group;
 	private final String consumer;
 	private final int maxDeliveries;
@@ -51,7 +51,7 @@ public class AnalyticsPelReclaimScheduler{
 		});
 	}
 
-	private void reclaim(String streamKey, StreamListener<String, MapRecord<String, String, String>> listener){
+	private void reclaim(String streamKey, AnalyticsListener listener){
 		StreamOperations<String, Object, Object> streams = stringRedisTemplate.opsForStream();
 		PendingMessages pending = streams.pending(streamKey, group, Range.unbounded(), reclaimBatchSize);
 		for(PendingMessage message : pending){
@@ -65,10 +65,11 @@ public class AnalyticsPelReclaimScheduler{
 			List<MapRecord<String, Object, Object>> claimed = streams.claim(streamKey, group, consumer,
 					reclaimMinIdle, message.getId());
 			for(MapRecord<String, Object, Object> record : claimed){
-				listener.onMessage(StreamRecords.newRecord()
+				MapRecord<String, String, String> single = StreamRecords.newRecord()
 						.in(streamKey)
 						.withId(record.getId())
-						.ofStrings(asStrings(record.getValue())));
+						.ofStrings(asStrings(record.getValue()));
+				listener.onBatch(List.of(single));
 			}
 		}
 	}

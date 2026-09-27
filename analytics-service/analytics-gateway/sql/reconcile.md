@@ -45,7 +45,9 @@ limit 5;
 ```
 
 - `status_id = 2` (`PUBLISHED`) — it reached the stream, so the consumer lost it: check the DLQ below and
-  `logs/analytics-web-service.log` for the event id.
+  `logs/analytics-web-service.log` for the event id. The consumer applies records in batches, so a batch-level
+  failure is logged once with its record-id range (`records <first>..<last>`), not per event; the reclaim job then
+  retries those records one by one and logs each failure with its event id.
 - `status_id = 1` (`CREATED`) — not on the stream yet: the sweeper hasn't reached it (it waits 2 minutes) or Redis was
   down when it tried (`attempts` / `last_error`).
 
