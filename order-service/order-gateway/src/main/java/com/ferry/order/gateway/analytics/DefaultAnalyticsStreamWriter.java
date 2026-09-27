@@ -3,7 +3,6 @@ package com.ferry.order.gateway.analytics;
 import com.ferry.order.domain.analytics.AnalyticsEvent;
 import com.ferry.order.domain.analytics.AnalyticsEventStatus;
 import com.ferry.order.gateway.analytics.repository.AnalyticsEventJpaRepository;
-import com.ferry.order.gateway.analytics.repository.AnalyticsEventStatusJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -33,7 +32,6 @@ public class DefaultAnalyticsStreamWriter implements AnalyticsStreamWriter{
 
 	private final StringRedisTemplate stringRedisTemplate;
 	private final AnalyticsEventJpaRepository analyticsEventJpaRepository;
-	private final AnalyticsEventStatusJpaRepository analyticsEventStatusJpaRepository;
 	private final PlatformTransactionManager transactionManager;
 	private final String streamKeyPrefix;
 
@@ -62,8 +60,7 @@ public class DefaultAnalyticsStreamWriter implements AnalyticsStreamWriter{
 		transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 		transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
 		transactionTemplate.executeWithoutResult(_ -> analyticsEventJpaRepository.transition(event.id(),
-				AnalyticsEventStatus.CREATED.getValue(),
-				analyticsEventStatusJpaRepository.getReferenceById(AnalyticsEventStatus.PUBLISHED.getValue()),
+				AnalyticsEventStatus.CREATED.getValue(), AnalyticsEventStatus.PUBLISHED.getValue(),
 				updatedBy, Instant.now()));
 	}
 

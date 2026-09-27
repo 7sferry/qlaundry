@@ -36,14 +36,12 @@ public class StaffJpa{
 	@Column
 	private String description;
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@Getter(AccessLevel.PRIVATE)
 	private TenantJpa tenant;
 	@Column(nullable = false, name = "tenant_id", insertable = false, updatable = false)
 	@Setter(AccessLevel.PRIVATE)
 	private String tenantId;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private StaffRoleJpa role;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "role_id", insertable = false, updatable = false, columnDefinition = "SMALLINT DEFAULT 1")
+	@Column(nullable = false, columnDefinition = "SMALLINT DEFAULT 1")
 	private short roleId;
 	@Version
 	private Integer version;
@@ -63,11 +61,6 @@ public class StaffJpa{
 		this.tenantId = tenant.getId();
 	}
 
-	public void setRole(StaffRoleJpa role){
-		this.role = role;
-		this.roleId = role.getId();
-	}
-
 	public static Staff construct(StaffJpa saved){
 		return new Staff(saved.id, new Username(saved.username),
 				new FullName(saved.fullName),
@@ -77,7 +70,7 @@ public class StaffJpa{
 				saved.updatedBy);
 	}
 
-	public static StaffJpa construct(String id, Staff register, TenantJpa tenant, StaffRoleJpa role){
+	public static StaffJpa construct(String id, Staff register, TenantJpa tenant, StaffRole role){
 		StaffJpa entity = new StaffJpa();
 		entity.id = id;
 		entity.username = register.usernameValue();
@@ -85,8 +78,7 @@ public class StaffJpa{
 		entity.fullName = register.fullNameValue();
 		entity.tenantId = tenant.getId();
 		entity.tenant = tenant;
-		entity.role = role;
-		entity.roleId = role.getId();
+		entity.roleId = role.getValue();
 		entity.createdBy = register.createdBy();
 		entity.updatedAt = register.updatedAt();
 		entity.createdAt = register.createdAt();

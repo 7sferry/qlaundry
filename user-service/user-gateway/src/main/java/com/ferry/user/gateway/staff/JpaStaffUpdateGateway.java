@@ -15,13 +15,11 @@ import com.ferry.user.gateway.staff.entity.StaffEmailJpa;
 import com.ferry.user.gateway.staff.entity.StaffJpa;
 import com.ferry.user.gateway.staff.entity.StaffPasswordJpa;
 import com.ferry.user.gateway.staff.entity.StaffPhoneJpa;
-import com.ferry.user.gateway.staff.entity.StaffRoleJpa;
 import com.ferry.user.gateway.staff.repository.StaffAddressJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffPasswordJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffPhoneJpaRepository;
-import com.ferry.user.gateway.staff.repository.StaffRoleJpaRepository;
 import com.ferry.user.gateway.tenant.entity.TenantJpa;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
@@ -41,7 +39,6 @@ import java.util.Optional;
 public class JpaStaffUpdateGateway implements StaffUpdateGateway{
 	private final StaffJpaRepository staffJpaRepository;
 	private final StaffPasswordJpaRepository staffPasswordJpaRepository;
-	private final StaffRoleJpaRepository staffRoleJpaRepository;
 	private final StaffEmailJpaRepository staffEmailJpaRepository;
 	private final StaffPhoneJpaRepository staffPhoneJpaRepository;
 	private final StaffAddressJpaRepository staffAddressJpaRepository;
@@ -57,8 +54,7 @@ public class JpaStaffUpdateGateway implements StaffUpdateGateway{
 	@Override
 	public Staff save(Staff staff){
 		TenantJpa tenant = tenantJpaRepository.getReferenceById(staff.tenantId());
-		StaffRoleJpa role = staffRoleJpaRepository.getReferenceById(staff.role().getValue());
-		StaffJpa saved = staffJpaRepository.save(StaffJpa.construct(staff.id(), staff, tenant, role));
+		StaffJpa saved = staffJpaRepository.save(StaffJpa.construct(staff.id(), staff, tenant, staff.role()));
 		return StaffJpa.construct(saved);
 	}
 

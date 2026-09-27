@@ -14,7 +14,6 @@ import com.ferry.notification.gateway.email.ThymeleafForgottenPasswordEmailCompo
 import com.ferry.notification.gateway.email.ThymeleafTenantRegistrationEmailComposer;
 import com.ferry.notification.gateway.email.entity.EmailNotificationJpa;
 import com.ferry.notification.gateway.email.repository.EmailNotificationJpaRepository;
-import com.ferry.notification.gateway.email.repository.EmailTypeJpaRepository;
 import com.ferry.utils.crypto.AesGcmCryptoTool;
 import com.ferry.utils.crypto.CryptoKeyConfig;
 import com.ferry.utils.crypto.CryptoTool;
@@ -105,10 +104,9 @@ public class NotificationWebConfig{
 
 	@Bean
 	EmailHistoryGateway emailHistoryGateway(EmailNotificationJpaRepository emailNotificationJpaRepository,
-	                                        EmailTypeJpaRepository emailTypeJpaRepository,
 	                                        IdGenerator idGenerator,
 	                                        CryptoTool cryptoTool){
-		return new JpaEmailHistoryGateway(emailNotificationJpaRepository, emailTypeJpaRepository, idGenerator, cryptoTool);
+		return new JpaEmailHistoryGateway(emailNotificationJpaRepository, idGenerator, cryptoTool);
 	}
 
 	@Bean

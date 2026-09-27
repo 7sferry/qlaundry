@@ -8,9 +8,7 @@ import com.ferry.order.domain.common.exception.PromotionUnavailableException;
 import com.ferry.order.domain.order.OrderPromotionSaga;
 import com.ferry.order.domain.order.OrderPromotionSagaStatus;
 import com.ferry.order.gateway.order.entity.OrderPromotionSagaJpa;
-import com.ferry.order.gateway.order.entity.OrderPromotionSagaStatusJpa;
 import com.ferry.order.gateway.order.repository.OrderPromotionSagaJpaRepository;
-import com.ferry.order.gateway.order.repository.OrderPromotionSagaStatusJpaRepository;
 import com.ferry.promotion.client.PromotionRedemptionBatchResult;
 import com.ferry.promotion.client.PromotionRedemptionParams;
 import com.ferry.promotion.client.PromotionRedemptionResult;
@@ -39,18 +37,14 @@ public class HttpOrderPromotionGateway implements OrderPromotionGateway{
 
 	private final PromotionServiceClient promotionServiceClient;
 	private final OrderPromotionSagaJpaRepository orderPromotionSagaJpaRepository;
-	private final OrderPromotionSagaStatusJpaRepository orderPromotionSagaStatusJpaRepository;
 	private final IdGenerator idGenerator;
 	private final PlatformTransactionManager transactionManager;
 
 	@Override
 	public void openSaga(OrderPromotionSaga saga){
 		String id = idGenerator.generateId();
-		newTransaction().executeWithoutResult(_ -> {
-			OrderPromotionSagaStatusJpa status = orderPromotionSagaStatusJpaRepository.getReferenceById(
-					saga.status().getValue());
-			orderPromotionSagaJpaRepository.saveAndFlush(OrderPromotionSagaJpa.construct(id, saga, status));
-		});
+		newTransaction().executeWithoutResult(_ ->
+				orderPromotionSagaJpaRepository.saveAndFlush(OrderPromotionSagaJpa.construct(id, saga)));
 	}
 
 	@Override
@@ -79,9 +73,8 @@ public class HttpOrderPromotionGateway implements OrderPromotionGateway{
 
 	private void transitionFromPending(OrderPromotionSaga saga){
 		newTransaction().executeWithoutResult(_ -> orderPromotionSagaJpaRepository.transition(saga.tenantId(),
-				saga.referenceId(), OrderPromotionSagaStatus.PENDING.getValue(),
-				orderPromotionSagaStatusJpaRepository.getReferenceById(saga.status().getValue()), saga.updatedBy(),
-				saga.updatedAt()));
+				saga.referenceId(), OrderPromotionSagaStatus.PENDING.getValue(), saga.status().getValue(),
+				saga.updatedBy(), saga.updatedAt()));
 	}
 
 	private TransactionTemplate newTransaction(){

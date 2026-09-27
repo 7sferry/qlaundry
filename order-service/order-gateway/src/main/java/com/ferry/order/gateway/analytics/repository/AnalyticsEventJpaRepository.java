@@ -1,7 +1,6 @@
 package com.ferry.order.gateway.analytics.repository;
 
 import com.ferry.order.gateway.analytics.entity.AnalyticsEventJpa;
-import com.ferry.order.gateway.analytics.entity.AnalyticsEventStatusJpa;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -30,13 +29,13 @@ public interface AnalyticsEventJpaRepository extends JpaRepository<AnalyticsEven
 
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query("update AnalyticsEventJpa e " +
-			"set e.status = :status, e.updatedBy = :updatedBy, e.updatedAt = :updatedAt " +
+			"set e.statusId = :statusId, e.updatedBy = :updatedBy, e.updatedAt = :updatedAt " +
 			"where " +
 			"e.id = :id AND " +
 			"e.statusId = :fromStatusId AND " +
 			"e.deleted IS FALSE")
 	int transition(@Param("id") String id, @Param("fromStatusId") short fromStatusId,
-	               @Param("status") AnalyticsEventStatusJpa status, @Param("updatedBy") String updatedBy,
+	               @Param("statusId") short statusId, @Param("updatedBy") String updatedBy,
 	               @Param("updatedAt") Instant updatedAt);
 
 	@Modifying(clearAutomatically = true, flushAutomatically = true)

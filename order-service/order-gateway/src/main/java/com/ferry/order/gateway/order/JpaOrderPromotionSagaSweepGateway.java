@@ -8,7 +8,6 @@ import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.gateway.order.entity.OrderPromotionSagaJpa;
 import com.ferry.order.gateway.order.repository.OrderJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderPromotionSagaJpaRepository;
-import com.ferry.order.gateway.order.repository.OrderPromotionSagaStatusJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -26,7 +25,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JpaOrderPromotionSagaSweepGateway implements OrderPromotionSagaSweepGateway{
 	private final OrderPromotionSagaJpaRepository orderPromotionSagaJpaRepository;
-	private final OrderPromotionSagaStatusJpaRepository orderPromotionSagaStatusJpaRepository;
 	private final OrderJpaRepository orderJpaRepository;
 	private final PlatformTransactionManager transactionManager;
 
@@ -69,8 +67,7 @@ public class JpaOrderPromotionSagaSweepGateway implements OrderPromotionSagaSwee
 		transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
 		transactionTemplate.executeWithoutResult(_ ->
 				orderPromotionSagaJpaRepository.transition(saga.tenantId(), saga.referenceId(),
-						OrderPromotionSagaStatus.PENDING.getValue(),
-						orderPromotionSagaStatusJpaRepository.getReferenceById(saga.status().getValue()),
+						OrderPromotionSagaStatus.PENDING.getValue(), saga.status().getValue(),
 						saga.updatedBy(), saga.updatedAt()));
 	}
 

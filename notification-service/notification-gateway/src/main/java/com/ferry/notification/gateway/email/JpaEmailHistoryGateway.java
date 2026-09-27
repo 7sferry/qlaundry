@@ -6,9 +6,7 @@ import com.ferry.notification.domain.EmailNotification;
 import com.ferry.notification.domain.EmailType;
 import com.ferry.notification.domain.Subject;
 import com.ferry.notification.gateway.email.entity.EmailNotificationJpa;
-import com.ferry.notification.gateway.email.entity.EmailTypeJpa;
 import com.ferry.notification.gateway.email.repository.EmailNotificationJpaRepository;
-import com.ferry.notification.gateway.email.repository.EmailTypeJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
@@ -23,15 +21,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class JpaEmailHistoryGateway implements EmailHistoryGateway{
 	private final EmailNotificationJpaRepository emailNotificationJpaRepository;
-	private final EmailTypeJpaRepository emailTypeJpaRepository;
 	private final IdGenerator idGenerator;
 	private final CryptoTool cryptoTool;
 
 	@Override
 	public EmailNotification save(EmailNotification notification){
 		String id = idGenerator.generateId();
-		EmailTypeJpa type = emailTypeJpaRepository.getReferenceById(notification.typeIdValue());
-		EmailNotificationJpa entity = EmailNotificationJpa.construct(id, notification, type, cryptoTool);
+		EmailNotificationJpa entity = EmailNotificationJpa.construct(id, notification, cryptoTool);
 		EmailNotificationJpa saved = emailNotificationJpaRepository.save(entity);
 		return constructEmailNotificationDomain(saved);
 	}

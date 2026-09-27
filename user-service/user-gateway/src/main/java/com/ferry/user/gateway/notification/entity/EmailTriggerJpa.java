@@ -7,7 +7,6 @@ import com.ferry.user.domain.notification.EmailTriggerType;
 import com.ferry.utils.crypto.CryptoAad;
 import com.ferry.utils.crypto.CryptoTool;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,19 +31,13 @@ public class EmailTriggerJpa{
 	@Id
 	@Column(nullable = false, length = 50)
 	private String id;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private EmailTriggerTypeJpa type;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "type_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short typeId;
 	@Column(name = "recipient", nullable = false, length = 512)
 	private String recipientCipher;
 	@Column(name = "payload", nullable = false, columnDefinition = "text")
 	private String payloadCipher;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private EmailTriggerStatusJpa status;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "status_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short statusId;
 	@Version
 	private Integer version;
@@ -67,16 +60,13 @@ public class EmailTriggerJpa{
 		return new CryptoAad(TABLE, COLUMN_PAYLOAD, id);
 	}
 
-	public static EmailTriggerJpa construct(String id, EmailTrigger trigger, EmailTriggerTypeJpa type,
-	                                               EmailTriggerStatusJpa status, CryptoTool cryptoTool){
+	public static EmailTriggerJpa construct(String id, EmailTrigger trigger, CryptoTool cryptoTool){
 		EmailTriggerJpa entity = new EmailTriggerJpa();
 		entity.id = id;
-		entity.type = type;
-		entity.typeId = type.getId();
+		entity.typeId = trigger.typeIdValue();
 		entity.recipientCipher = cryptoTool.encrypt(trigger.recipientValue(), recipientAad(id));
 		entity.payloadCipher = cryptoTool.encrypt(trigger.payload(), payloadAad(id));
-		entity.status = status;
-		entity.statusId = status.getId();
+		entity.statusId = trigger.statusIdValue();
 		entity.createdBy = trigger.createdBy();
 		entity.createdAt = trigger.createdAt();
 		entity.updatedBy = trigger.updatedBy();

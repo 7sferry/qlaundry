@@ -1,7 +1,6 @@
 package com.ferry.order.gateway.order.repository;
 
 import com.ferry.order.gateway.order.entity.OrderPromotionSagaJpa;
-import com.ferry.order.gateway.order.entity.OrderPromotionSagaStatusJpa;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -30,7 +29,7 @@ public interface OrderPromotionSagaJpaRepository extends JpaRepository<OrderProm
 
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query("update OrderPromotionSagaJpa s " +
-			"set s.status = :status, s.updatedBy = :updatedBy, s.updatedAt = :updatedAt " +
+			"set s.statusId = :statusId, s.updatedBy = :updatedBy, s.updatedAt = :updatedAt " +
 			"where " +
 			"s.tenantId = :tenantId AND " +
 			"s.referenceId = :referenceId AND " +
@@ -38,7 +37,7 @@ public interface OrderPromotionSagaJpaRepository extends JpaRepository<OrderProm
 			"s.deleted IS FALSE")
 	int transition(@Param("tenantId") String tenantId, @Param("referenceId") String referenceId,
 	               @Param("fromStatusId") short fromStatusId,
-	               @Param("status") OrderPromotionSagaStatusJpa status,
+	               @Param("statusId") short statusId,
 	               @Param("updatedBy") String updatedBy, @Param("updatedAt") Instant updatedAt);
 
 	@Modifying(clearAutomatically = true, flushAutomatically = true)

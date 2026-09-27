@@ -26,6 +26,7 @@ public class OrderItemJpa{
 	@Column(nullable = false, length = 50)
 	private String id;
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@Getter(AccessLevel.PRIVATE)
 	private OrderJpa order;
 	@Setter(AccessLevel.PRIVATE)
 	@Column(nullable = false, name = "order_id", insertable = false, updatable = false)

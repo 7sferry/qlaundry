@@ -3,12 +3,8 @@ package com.ferry.order.gateway.analytics;
 import com.ferry.order.core.analytics.AnalyticsEventConfig;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.domain.analytics.AnalyticsEvent;
-import com.ferry.order.gateway.analytics.entity.AnalyticsAggregateJpa;
 import com.ferry.order.gateway.analytics.entity.AnalyticsEventJpa;
-import com.ferry.order.gateway.analytics.entity.AnalyticsEventStatusJpa;
-import com.ferry.order.gateway.analytics.repository.AnalyticsAggregateJpaRepository;
 import com.ferry.order.gateway.analytics.repository.AnalyticsEventJpaRepository;
-import com.ferry.order.gateway.analytics.repository.AnalyticsEventStatusJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
 import com.ferry.utils.json.JsonManager;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +24,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 @RequiredArgsConstructor
 public class RedisOrderAnalyticsPublisher implements OrderAnalyticsPublisher{
 	private final AnalyticsEventJpaRepository analyticsEventJpaRepository;
-	private final AnalyticsAggregateJpaRepository analyticsAggregateJpaRepository;
-	private final AnalyticsEventStatusJpaRepository analyticsEventStatusJpaRepository;
 	private final AnalyticsStreamWriter analyticsStreamWriter;
 	private final IdGenerator idGenerator;
 	private final JsonManager jsonManager;
@@ -44,12 +38,8 @@ public class RedisOrderAnalyticsPublisher implements OrderAnalyticsPublisher{
 		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 		transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
 		return transactionTemplate.execute(_ -> {
-			AnalyticsAggregateJpa aggregate = analyticsAggregateJpaRepository.getReferenceById(
-					event.aggregate().getValue());
-			AnalyticsEventStatusJpa status = analyticsEventStatusJpaRepository.getReferenceById(
-					event.status().getValue());
 			AnalyticsEventJpa saved = analyticsEventJpaRepository.saveAndFlush(
-					AnalyticsEventJpa.construct(id, event, aggregate, status));
+					AnalyticsEventJpa.construct(id, event));
 			return AnalyticsEventJpa.construct(saved);
 		});
 	}

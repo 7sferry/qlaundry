@@ -5,11 +5,7 @@ import com.ferry.user.core.tools.UserEmailPublisher;
 import com.ferry.user.domain.notification.EmailTrigger;
 import com.ferry.user.domain.notification.EmailTriggerStatus;
 import com.ferry.user.gateway.notification.entity.EmailTriggerJpa;
-import com.ferry.user.gateway.notification.entity.EmailTriggerStatusJpa;
-import com.ferry.user.gateway.notification.entity.EmailTriggerTypeJpa;
 import com.ferry.user.gateway.notification.repository.EmailTriggerJpaRepository;
-import com.ferry.user.gateway.notification.repository.EmailTriggerStatusJpaRepository;
-import com.ferry.user.gateway.notification.repository.EmailTriggerTypeJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import com.ferry.utils.json.JsonManager;
@@ -40,8 +36,6 @@ public class RedisUserEmailPublisher implements UserEmailPublisher{
 	private static final String PAYLOAD_FIELD = "payload";
 
 	private final EmailTriggerJpaRepository emailTriggerJpaRepository;
-	private final EmailTriggerTypeJpaRepository emailTriggerTypeJpaRepository;
-	private final EmailTriggerStatusJpaRepository emailTriggerStatusJpaRepository;
 	private final IdGenerator idGenerator;
 	private final JsonManager jsonManager;
 	private final CryptoTool cryptoTool;
@@ -55,10 +49,8 @@ public class RedisUserEmailPublisher implements UserEmailPublisher{
 		EmailTrigger trigger = EmailTrigger.create(config.triggerType(), config.recipient(), jsonPayload,
 				config.userId());
 		String id = idGenerator.generateId();
-		EmailTriggerTypeJpa type = emailTriggerTypeJpaRepository.getReferenceById(trigger.typeIdValue());
-		EmailTriggerStatusJpa status = emailTriggerStatusJpaRepository.getReferenceById(trigger.statusIdValue());
 		EmailTriggerJpa saved = emailTriggerJpaRepository.saveAndFlush(
-				EmailTriggerJpa.construct(id, trigger, type, status, cryptoTool));
+				EmailTriggerJpa.construct(id, trigger, cryptoTool));
 		return EmailTriggerJpa.construct(saved, cryptoTool);
 	}
 
@@ -98,7 +90,7 @@ public class RedisUserEmailPublisher implements UserEmailPublisher{
 		transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
 		transactionTemplate.executeWithoutResult(_ -> emailTriggerJpaRepository.findById(triggerId)
 				.ifPresent(entity -> {
-					entity.setStatus(emailTriggerStatusJpaRepository.getReferenceById(EmailTriggerStatus.PUBLISHED.getValue()));
+					entity.setStatusId(EmailTriggerStatus.PUBLISHED.getValue());
 					entity.setUpdatedAt(Instant.now());
 					emailTriggerJpaRepository.save(entity);
 				}));

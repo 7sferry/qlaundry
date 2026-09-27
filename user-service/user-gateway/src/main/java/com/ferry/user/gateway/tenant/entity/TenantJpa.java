@@ -6,7 +6,6 @@ import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.tenant.Tenant;
 import com.ferry.user.domain.tenant.TenantStatus;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,10 +36,7 @@ public class TenantJpa{
 	private String description;
 	@Column(nullable = false, length = 50)
 	private ZoneId timeZone;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private TenantStatusJpa status;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "status_id", insertable = false, updatable = false, columnDefinition = "SMALLINT DEFAULT 1")
+	@Column(nullable = false, columnDefinition = "SMALLINT DEFAULT 1")
 	private short statusId;
 	@Version
 	private Integer version;
@@ -55,18 +51,13 @@ public class TenantJpa{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
-	public void setStatus(TenantStatusJpa status){
-		this.status = status;
-		this.statusId = status.getId();
-	}
-
 	public static Tenant construct(TenantJpa saved){
 		return new Tenant(saved.id, new Username(saved.username), new FullName(saved.fullName),
 				new Description(saved.description), saved.timeZone, TenantStatus.findByValue(saved.statusId).orElseThrow(),
 				saved.version, saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
 	}
 
-	public static TenantJpa construct(String id, Tenant tenant, TenantStatusJpa status){
+	public static TenantJpa construct(String id, Tenant tenant, TenantStatus status){
 		TenantJpa entity = new TenantJpa();
 		entity.id = id;
 		entity.createdAt = tenant.createdAt();
@@ -77,8 +68,7 @@ public class TenantJpa{
 		entity.description = tenant.descriptionValue();
 		entity.fullName = tenant.fullNameValue();
 		entity.timeZone = tenant.timeZone();
-		entity.status = status;
-		entity.statusId = status.getId();
+		entity.statusId = status.getValue();
 		entity.version = tenant.version();
 		entity.deleted = tenant.deleted();
 		return entity;

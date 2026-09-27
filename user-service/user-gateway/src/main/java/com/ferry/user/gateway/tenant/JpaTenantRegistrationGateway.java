@@ -12,9 +12,7 @@ import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.tenant.entity.TenantJpa;
-import com.ferry.user.gateway.tenant.entity.TenantStatusJpa;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
-import com.ferry.user.gateway.tenant.repository.TenantStatusJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
 
@@ -27,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 public class JpaTenantRegistrationGateway implements TenantRegistrationGateway{
 	private final IdGenerator idGenerator;
 	private final TenantJpaRepository tenantRepository;
-	private final TenantStatusJpaRepository tenantStatusRepository;
 	private final StaffJpaRepository staffRepository;
 	private final StaffRegistrationUseCase staffRegistrationUseCase;
 
@@ -39,8 +36,7 @@ public class JpaTenantRegistrationGateway implements TenantRegistrationGateway{
 	@Override
 	public Tenant save(Tenant tenant){
 		String id = idGenerator.generateId();
-		TenantStatusJpa status = tenantStatusRepository.getReferenceById(TenantStatus.PENDING.getValue());
-		TenantJpa saved = tenantRepository.save(TenantJpa.construct(id, tenant, status));
+		TenantJpa saved = tenantRepository.save(TenantJpa.construct(id, tenant, TenantStatus.PENDING));
 		return TenantJpa.construct(saved);
 	}
 

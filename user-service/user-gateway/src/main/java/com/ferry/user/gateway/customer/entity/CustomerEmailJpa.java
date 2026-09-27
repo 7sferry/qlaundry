@@ -32,6 +32,7 @@ public class CustomerEmailJpa{
 	@Column(nullable = false, length = 50)
 	private String id;
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@Getter(AccessLevel.PRIVATE)
 	private CustomerJpa customer;
 	@Setter(AccessLevel.PRIVATE)
 	@Column(nullable = false, name = "customer_id", insertable = false, updatable = false)

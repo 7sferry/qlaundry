@@ -5,9 +5,7 @@ import com.ferry.user.domain.tenant.Tenant;
 import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.gateway.tenant.entity.TenantJpa;
-import com.ferry.user.gateway.tenant.entity.TenantStatusJpa;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
-import com.ferry.user.gateway.tenant.repository.TenantStatusJpaRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
@@ -20,7 +18,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class JpaTenantConfirmRegistrationGateway implements TenantConfirmRegistrationGateway{
 	private final TenantJpaRepository tenantRepository;
-	private final TenantStatusJpaRepository tenantStatusRepository;
 
 	@Override
 	public Optional<Tenant> findById(TenantId tenantId){
@@ -33,8 +30,7 @@ public class JpaTenantConfirmRegistrationGateway implements TenantConfirmRegistr
 	public Tenant save(Tenant tenant){
 		TenantJpa entity = tenantRepository.findById(tenant.id())
 				.orElseThrow(() -> new IllegalStateException("tenant not found"));
-		TenantStatusJpa status = tenantStatusRepository.getReferenceById(TenantStatus.ACTIVE.getValue());
-		entity.setStatus(status);
+		entity.setStatusId(TenantStatus.ACTIVE.getValue());
 		entity.setUpdatedAt(tenant.updatedAt());
 		TenantJpa saved = tenantRepository.save(entity);
 		return TenantJpa.construct(saved);

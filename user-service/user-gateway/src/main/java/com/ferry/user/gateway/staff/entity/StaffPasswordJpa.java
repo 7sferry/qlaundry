@@ -26,6 +26,7 @@ public class StaffPasswordJpa{
 	@Column(nullable = false, length = 50)
 	private String id;
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@Getter(AccessLevel.PRIVATE)
 	private StaffJpa staff;
 	@Setter(AccessLevel.PRIVATE)
 	@Column(nullable = false, name = "staff_id", insertable = false, updatable = false)

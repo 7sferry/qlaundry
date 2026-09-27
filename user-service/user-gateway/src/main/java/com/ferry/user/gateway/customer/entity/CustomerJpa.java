@@ -28,6 +28,7 @@ public class CustomerJpa{
 	@Column(nullable = false, length = 50)
 	private String id;
 	@ManyToOne(fetch = FetchType.LAZY)
+	@Getter(AccessLevel.PRIVATE)
 	private TenantJpa tenant;
 	@Setter(AccessLevel.PRIVATE)
 	@Column(name = "tenant_id", insertable = false, updatable = false)

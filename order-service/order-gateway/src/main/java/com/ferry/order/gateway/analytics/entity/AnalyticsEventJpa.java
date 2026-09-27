@@ -5,7 +5,6 @@ import com.ferry.order.domain.analytics.AnalyticsEvent;
 import com.ferry.order.domain.analytics.AnalyticsEventStatus;
 import com.ferry.order.domain.analytics.AnalyticsEventType;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,10 +28,7 @@ public class AnalyticsEventJpa{
 	@Id
 	@Column(nullable = false, length = 50)
 	private String id;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private AnalyticsAggregateJpa aggregate;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "aggregate_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short aggregateId;
 	@Column(nullable = false, length = 40)
 	private String type;
@@ -44,10 +40,7 @@ public class AnalyticsEventJpa{
 	private int aggregateVersion;
 	@Column(nullable = false, columnDefinition = "text")
 	private String payload;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private AnalyticsEventStatusJpa status;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "status_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short statusId;
 	@Column(nullable = false)
 	private Instant occurredAt;
@@ -68,30 +61,16 @@ public class AnalyticsEventJpa{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
-	public void setAggregate(AnalyticsAggregateJpa aggregate){
-		this.aggregate = aggregate;
-		this.aggregateId = aggregate.getId();
-	}
-
-	public void setStatus(AnalyticsEventStatusJpa status){
-		this.status = status;
-		this.statusId = status.getId();
-	}
-
-	public static AnalyticsEventJpa construct(String id, AnalyticsEvent event,
-	                                                AnalyticsAggregateJpa aggregate,
-	                                                AnalyticsEventStatusJpa status){
+	public static AnalyticsEventJpa construct(String id, AnalyticsEvent event){
 		AnalyticsEventJpa entity = new AnalyticsEventJpa();
 		entity.id = id;
-		entity.aggregate = aggregate;
-		entity.aggregateId = aggregate.getId();
+		entity.aggregateId = event.aggregate().getValue();
 		entity.type = event.type().name();
 		entity.tenantId = event.tenantId();
 		entity.aggregateRefId = event.aggregateId();
 		entity.aggregateVersion = event.aggregateVersion();
 		entity.payload = event.payload();
-		entity.status = status;
-		entity.statusId = status.getId();
+		entity.statusId = event.status().getValue();
 		entity.occurredAt = event.occurredAt();
 		entity.attempts = event.attempts();
 		entity.lastError = event.lastError();

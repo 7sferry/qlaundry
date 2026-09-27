@@ -4,7 +4,6 @@ import com.ferry.user.domain.session.SessionType;
 import com.ferry.user.domain.session.UserSession;
 import com.ferry.user.gateway.staff.entity.StaffJpa;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,10 +27,7 @@ public class UserSessionJpa{
 	Instant expirationTime;
 	@Column(nullable = false)
 	String userId;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	UserSessionTypeJpa sessionType;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "session_type_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short sessionTypeId;
 	@Version
 	private Integer version;
@@ -40,19 +36,13 @@ public class UserSessionJpa{
 	@Column(nullable = false)
 	private Instant updatedAt;
 
-	public void setStaff(UserSessionTypeJpa typeJpa){
-		this.sessionType = typeJpa;
-		this.sessionTypeId = typeJpa.getId();
-	}
-
-	public static UserSessionJpa construct(UserSession userSession, UserSessionTypeJpa sessionType){
+	public static UserSessionJpa construct(UserSession userSession){
 		UserSessionJpa entity = new UserSessionJpa();
 		entity.id = userSession.id();
 		entity.createdAt = userSession.createdAt();
 		entity.expirationTime = userSession.expirationTime();
 		entity.userId = userSession.userId();
-		entity.sessionType = sessionType;
-		entity.sessionTypeId = sessionType.getId();
+		entity.sessionTypeId = userSession.sessionTypeValue();
 		entity.updatedAt = userSession.updatedAt();
 		entity.version = userSession.version();
 		return entity;

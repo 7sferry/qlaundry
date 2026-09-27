@@ -86,10 +86,7 @@ import com.ferry.user.gateway.customer.repository.CustomerJpaRepository;
 import com.ferry.user.gateway.customer.repository.CustomerPhoneJpaRepository;
 import com.ferry.user.gateway.redis.RedisUserEmailPublisher;
 import com.ferry.user.gateway.notification.repository.EmailTriggerJpaRepository;
-import com.ferry.user.gateway.notification.repository.EmailTriggerStatusJpaRepository;
-import com.ferry.user.gateway.notification.repository.EmailTriggerTypeJpaRepository;
 import com.ferry.user.gateway.session.repository.UserSessionJpaRepository;
-import com.ferry.user.gateway.session.repository.UserSessionTypeJpaRepository;
 import com.ferry.user.gateway.staff.*;
 import com.ferry.user.gateway.staff.repository.*;
 import com.ferry.user.gateway.tenant.CloudflareVerificationGateway;
@@ -100,7 +97,6 @@ import com.ferry.user.gateway.tenant.JpaTenantRegistrationGateway;
 import com.ferry.user.gateway.tenant.JpaTenantResendConfirmationGateway;
 import com.ferry.user.gateway.tenant.JpaTenantUpdateGateway;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
-import com.ferry.user.gateway.tenant.repository.TenantStatusJpaRepository;
 import com.ferry.user.webservice.tenant.expiration.TenantExpirationScheduler;
 import com.ferry.user.webservice.tools.Argon2PasswordTool;
 import com.ferry.user.webservice.tools.DefaultUserCacheManager;
@@ -279,25 +275,21 @@ public class UserWebConfig{
 	@Bean
 	TenantRegistrationGateway tenantRegistrationGateway(IdGenerator idGenerator,
 	                                                    TenantJpaRepository tenantJpaRepository,
-	                                                    TenantStatusJpaRepository tenantStatusJpaRepository,
 	                                                    StaffJpaRepository staffJpaRepository,
 	                                                    StaffRegistrationUseCase staffRegistrationUseCase){
-		return new JpaTenantRegistrationGateway(idGenerator, tenantJpaRepository, tenantStatusJpaRepository,
-				staffJpaRepository, staffRegistrationUseCase);
+		return new JpaTenantRegistrationGateway(idGenerator, tenantJpaRepository, staffJpaRepository,
+				staffRegistrationUseCase);
 	}
 
 	@Bean
 	UserEmailPublisher tenantRegistrationEmailGateway(EmailTriggerJpaRepository emailTriggerJpaRepository,
-	                                                  EmailTriggerTypeJpaRepository emailTriggerTypeJpaRepository,
-	                                                  EmailTriggerStatusJpaRepository emailTriggerStatusJpaRepository,
 	                                                  IdGenerator idGenerator, JsonManager jsonManager,
 	                                                  CryptoTool cryptoTool,
 	                                                  StringRedisTemplate stringRedisTemplate,
 	                                                  PlatformTransactionManager transactionManager,
 	                                                  @Value("${app.notification.stream.email.key}") String streamEmailKey){
-		return new RedisUserEmailPublisher(emailTriggerJpaRepository, emailTriggerTypeJpaRepository,
-				emailTriggerStatusJpaRepository, idGenerator, jsonManager, cryptoTool, stringRedisTemplate,
-				transactionManager, streamEmailKey);
+		return new RedisUserEmailPublisher(emailTriggerJpaRepository, idGenerator, jsonManager, cryptoTool,
+				stringRedisTemplate, transactionManager, streamEmailKey);
 	}
 
 	@Bean
@@ -310,9 +302,8 @@ public class UserWebConfig{
 	}
 
 	@Bean
-	TenantConfirmRegistrationGateway tenantConfirmRegistrationGateway(TenantJpaRepository tenantJpaRepository,
-	                                                                  TenantStatusJpaRepository tenantStatusJpaRepository){
-		return new JpaTenantConfirmRegistrationGateway(tenantJpaRepository, tenantStatusJpaRepository);
+	TenantConfirmRegistrationGateway tenantConfirmRegistrationGateway(TenantJpaRepository tenantJpaRepository){
+		return new JpaTenantConfirmRegistrationGateway(tenantJpaRepository);
 	}
 
 	@Bean
@@ -369,12 +360,10 @@ public class UserWebConfig{
 	                                                  StaffAddressJpaRepository staffAddressJpaRepository,
 	                                                  StaffPhoneJpaRepository staffPhoneJpaRepository,
 													  TenantJpaRepository tenantJpaRepository,
-													  StaffRoleJpaRepository staffRoleJpaRepository,
 	                                                  IdGenerator idGenerator,
 	                                                  CryptoTool cryptoTool){
 		return new JpaStaffRegistrationGateway(staffJpaRepository, staffPasswordJpaRepository, staffEmailJpaRepository,
-				staffAddressJpaRepository, staffPhoneJpaRepository, staffRoleJpaRepository, tenantJpaRepository,
-				idGenerator, cryptoTool);
+				staffAddressJpaRepository, staffPhoneJpaRepository, tenantJpaRepository, idGenerator, cryptoTool);
 	}
 
 	@Bean
@@ -405,10 +394,8 @@ public class UserWebConfig{
 	@Bean
 	StaffLoginGateway staffLoginGateway(StaffJpaRepository staffJpaRepository,
 	                                    UserSessionJpaRepository userSessionJpaRepository,
-	                                    UserSessionTypeJpaRepository userSessionTypeJpaRepository,
 	                                    TenantJpaRepository tenantJpaRepository){
-		return new JpaStaffLoginGateway(staffJpaRepository, userSessionJpaRepository,
-				userSessionTypeJpaRepository, tenantJpaRepository);
+		return new JpaStaffLoginGateway(staffJpaRepository, userSessionJpaRepository, tenantJpaRepository);
 	}
 
 	@Bean
@@ -459,10 +446,8 @@ public class UserWebConfig{
 	@Bean
 	StaffRefreshTokenGateway staffRefreshTokenGateway(StaffJpaRepository staffJpaRepository,
 	                                                  UserSessionJpaRepository userSessionJpaRepository,
-													  UserSessionTypeJpaRepository userSessionTypeJpaRepository,
 	                                                  TenantJpaRepository tenantJpaRepository){
-		return new JpaStaffRefreshTokenGateway(staffJpaRepository, userSessionJpaRepository,
-				userSessionTypeJpaRepository, tenantJpaRepository);
+		return new JpaStaffRefreshTokenGateway(staffJpaRepository, userSessionJpaRepository, tenantJpaRepository);
 	}
 
 	@Bean
@@ -472,9 +457,8 @@ public class UserWebConfig{
 	}
 
 	@Bean
-	StaffLogoutGateway staffLogoutGateway(UserSessionJpaRepository userSessionJpaRepository,
-	                                      UserSessionTypeJpaRepository userSessionTypeJpaRepository){
-		return new JpaStaffLogoutGateway(userSessionJpaRepository, userSessionTypeJpaRepository);
+	StaffLogoutGateway staffLogoutGateway(UserSessionJpaRepository userSessionJpaRepository){
+		return new JpaStaffLogoutGateway(userSessionJpaRepository);
 	}
 
 	@Bean
@@ -516,9 +500,8 @@ public class UserWebConfig{
 
 	@Bean
 	StaffDeleteGateway staffDeleteGateway(StaffJpaRepository staffJpaRepository,
-	                                      StaffRoleJpaRepository staffRoleJpaRepository,
 	                                      TenantJpaRepository tenantJpaRepository){
-		return new JpaStaffDeleteGateway(staffJpaRepository, staffRoleJpaRepository, tenantJpaRepository);
+		return new JpaStaffDeleteGateway(staffJpaRepository, tenantJpaRepository);
 	}
 
 	@Bean
@@ -529,14 +512,13 @@ public class UserWebConfig{
 	@Bean
 	StaffUpdateGateway staffUpdateGateway(StaffJpaRepository staffJpaRepository,
 	                                      StaffPasswordJpaRepository staffPasswordJpaRepository,
-	                                      StaffRoleJpaRepository staffRoleJpaRepository,
 	                                      StaffEmailJpaRepository staffEmailJpaRepository,
 	                                      StaffPhoneJpaRepository staffPhoneJpaRepository,
 	                                      StaffAddressJpaRepository staffAddressJpaRepository,
 	                                      TenantJpaRepository tenantJpaRepository,
 	                                      IdGenerator idGenerator,
 	                                      CryptoTool cryptoTool){
-		return new JpaStaffUpdateGateway(staffJpaRepository, staffPasswordJpaRepository, staffRoleJpaRepository,
+		return new JpaStaffUpdateGateway(staffJpaRepository, staffPasswordJpaRepository,
 				staffEmailJpaRepository, staffPhoneJpaRepository, staffAddressJpaRepository, tenantJpaRepository,
 				idGenerator, cryptoTool);
 	}
@@ -557,9 +539,8 @@ public class UserWebConfig{
 	}
 
 	@Bean
-	TenantUpdateGateway tenantUpdateGateway(TenantJpaRepository tenantJpaRepository,
-	                                        TenantStatusJpaRepository tenantStatusJpaRepository){
-		return new JpaTenantUpdateGateway(tenantJpaRepository, tenantStatusJpaRepository);
+	TenantUpdateGateway tenantUpdateGateway(TenantJpaRepository tenantJpaRepository){
+		return new JpaTenantUpdateGateway(tenantJpaRepository);
 	}
 
 	@Bean

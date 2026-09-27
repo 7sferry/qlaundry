@@ -64,9 +64,7 @@ import com.ferry.order.core.service.update.DefaultLaundryServiceUpdateUseCase;
 import com.ferry.order.core.service.update.LaundryServiceUpdateGateway;
 import com.ferry.order.core.service.update.LaundryServiceUpdateUseCase;
 import com.ferry.order.gateway.analytics.*;
-import com.ferry.order.gateway.analytics.repository.AnalyticsAggregateJpaRepository;
 import com.ferry.order.gateway.analytics.repository.AnalyticsEventJpaRepository;
-import com.ferry.order.gateway.analytics.repository.AnalyticsEventStatusJpaRepository;
 import com.ferry.order.gateway.customer.JpaCustomerOrderTotalsGateway;
 import com.ferry.order.gateway.customer.HttpOrderCustomerGateway;
 import com.ferry.order.gateway.invoice.HtmlInvoiceComposer;
@@ -208,10 +206,9 @@ public class OrderWebConfig{
 	@Bean
 	OrderPromotionGateway orderPromotionGateway(PromotionServiceClient promotionServiceClient,
 	                                            OrderPromotionSagaJpaRepository orderPromotionSagaJpaRepository,
-	                                            OrderPromotionSagaStatusJpaRepository orderPromotionSagaStatusJpaRepository,
 	                                            IdGenerator idGenerator,
 	                                            PlatformTransactionManager transactionManager){
-		return new HttpOrderPromotionGateway(promotionServiceClient, orderPromotionSagaJpaRepository, orderPromotionSagaStatusJpaRepository, idGenerator, transactionManager);
+		return new HttpOrderPromotionGateway(promotionServiceClient, orderPromotionSagaJpaRepository, idGenerator, transactionManager);
 	}
 
 	@Bean
@@ -238,11 +235,10 @@ public class OrderWebConfig{
 	@Bean
 	OrderPromotionSagaSweepGateway orderPromotionSagaSweepGateway(
 			OrderPromotionSagaJpaRepository orderPromotionSagaJpaRepository,
-			OrderPromotionSagaStatusJpaRepository orderPromotionSagaStatusJpaRepository,
 			OrderJpaRepository orderJpaRepository,
 			PlatformTransactionManager transactionManager){
 		return new JpaOrderPromotionSagaSweepGateway(orderPromotionSagaJpaRepository,
-				orderPromotionSagaStatusJpaRepository, orderJpaRepository, transactionManager);
+				orderJpaRepository, transactionManager);
 	}
 
 	@Bean
@@ -490,23 +486,20 @@ public class OrderWebConfig{
 	@Bean
 	AnalyticsStreamWriter analyticsStreamWriter(StringRedisTemplate stringRedisTemplate,
 	                                            AnalyticsEventJpaRepository analyticsEventJpaRepository,
-	                                            AnalyticsEventStatusJpaRepository analyticsEventStatusJpaRepository,
 	                                            PlatformTransactionManager transactionManager,
 	                                            @Value("${app.analytics.stream.event.key}") String streamKeyPrefix){
 		return new DefaultAnalyticsStreamWriter(stringRedisTemplate, analyticsEventJpaRepository,
-				analyticsEventStatusJpaRepository, transactionManager, streamKeyPrefix);
+				transactionManager, streamKeyPrefix);
 	}
 
 	@Bean
 	OrderAnalyticsPublisher analyticsEventPublisher(AnalyticsEventJpaRepository analyticsEventJpaRepository,
-	                                                AnalyticsAggregateJpaRepository analyticsAggregateJpaRepository,
-	                                                AnalyticsEventStatusJpaRepository analyticsEventStatusJpaRepository,
 	                                                AnalyticsStreamWriter analyticsStreamWriter,
 	                                                IdGenerator idGenerator,
 	                                                JsonManager jsonManager,
 	                                                PlatformTransactionManager transactionManager){
-		return new RedisOrderAnalyticsPublisher(analyticsEventJpaRepository, analyticsAggregateJpaRepository,
-				analyticsEventStatusJpaRepository, analyticsStreamWriter, idGenerator, jsonManager, transactionManager);
+		return new RedisOrderAnalyticsPublisher(analyticsEventJpaRepository, analyticsStreamWriter, idGenerator,
+				jsonManager, transactionManager);
 	}
 
 	@Bean

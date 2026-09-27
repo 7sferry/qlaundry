@@ -4,7 +4,6 @@ import com.ferry.notification.domain.EmailNotification;
 import com.ferry.utils.crypto.CryptoAad;
 import com.ferry.utils.crypto.CryptoTool;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,10 +29,7 @@ public class EmailNotificationJpa{
 	private String id;
 	@Column(length = 50, unique = true)
 	private String referenceId;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private EmailTypeJpa type;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "type_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short typeId;
 	@Column(name = "recipient", nullable = false, length = 512)
 	private String recipientCipher;
@@ -51,12 +47,11 @@ public class EmailNotificationJpa{
 	}
 
 	public static EmailNotificationJpa construct(String id, EmailNotification notification,
-	                                                    EmailTypeJpa type, CryptoTool cryptoTool){
+	                                                    CryptoTool cryptoTool){
 		EmailNotificationJpa entity = new EmailNotificationJpa();
 		entity.id = id;
 		entity.referenceId = notification.referenceId();
-		entity.type = type;
-		entity.typeId = type.getId();
+		entity.typeId = notification.typeIdValue();
 		entity.recipientCipher = cryptoTool.encrypt(notification.recipientValue(), recipientAad(id));
 		entity.subject = notification.subjectValue();
 		entity.createdAt = notification.createdAt();

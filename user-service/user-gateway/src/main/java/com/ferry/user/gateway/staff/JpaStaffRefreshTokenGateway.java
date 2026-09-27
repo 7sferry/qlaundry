@@ -6,9 +6,7 @@ import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
 import com.ferry.user.gateway.session.entity.UserSessionJpa;
-import com.ferry.user.gateway.session.entity.UserSessionTypeJpa;
 import com.ferry.user.gateway.session.repository.UserSessionJpaRepository;
-import com.ferry.user.gateway.session.repository.UserSessionTypeJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +22,6 @@ import java.util.Optional;
 public class JpaStaffRefreshTokenGateway implements StaffRefreshTokenGateway{
 	private final StaffJpaRepository staffJpaRepository;
 	private final UserSessionJpaRepository userSessionJpaRepository;
-	private final UserSessionTypeJpaRepository userSessionTypeJpaRepository;
 	private final TenantJpaRepository tenantJpaRepository;
 
 	@Override
@@ -45,8 +42,7 @@ public class JpaStaffRefreshTokenGateway implements StaffRefreshTokenGateway{
 
 	@Override
 	public UserSession save(UserSession userSession){
-		UserSessionTypeJpa sessionType = userSessionTypeJpaRepository.getReferenceById(userSession.sessionTypeValue());
-		UserSessionJpa saved = userSessionJpaRepository.save(UserSessionJpa.construct(userSession, sessionType));
+		UserSessionJpa saved = userSessionJpaRepository.save(UserSessionJpa.construct(userSession));
 		return UserSessionJpa.construct(saved);
 	}
 

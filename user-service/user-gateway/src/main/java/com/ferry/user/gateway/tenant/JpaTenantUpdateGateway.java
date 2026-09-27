@@ -4,9 +4,7 @@ import com.ferry.user.core.tenant.update.TenantUpdateGateway;
 import com.ferry.user.domain.tenant.Tenant;
 import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.gateway.tenant.entity.TenantJpa;
-import com.ferry.user.gateway.tenant.entity.TenantStatusJpa;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
-import com.ferry.user.gateway.tenant.repository.TenantStatusJpaRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
@@ -19,7 +17,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class JpaTenantUpdateGateway implements TenantUpdateGateway{
 	private final TenantJpaRepository tenantJpaRepository;
-	private final TenantStatusJpaRepository tenantStatusJpaRepository;
 
 	@Override
 	public Optional<Tenant> findByTenantId(TenantId tenantId){
@@ -28,8 +25,7 @@ public class JpaTenantUpdateGateway implements TenantUpdateGateway{
 
 	@Override
 	public Tenant save(Tenant tenant){
-		TenantStatusJpa status = tenantStatusJpaRepository.getReferenceById(tenant.status().getValue());
-		TenantJpa saved = tenantJpaRepository.save(TenantJpa.construct(tenant.id(), tenant, status));
+		TenantJpa saved = tenantJpaRepository.save(TenantJpa.construct(tenant.id(), tenant, tenant.status()));
 		return TenantJpa.construct(saved);
 	}
 

@@ -27,7 +27,6 @@ public class JpaStaffRegistrationGateway implements StaffRegistrationGateway{
 	private final StaffEmailJpaRepository staffEmailJpaRepository;
 	private final StaffAddressJpaRepository staffAddressJpaRepository;
 	private final StaffPhoneJpaRepository staffPhoneJpaRepository;
-	private final StaffRoleJpaRepository staffRoleJpaRepository;
 	private final TenantJpaRepository tenantJpaRepository;
 	private final IdGenerator idGenerator;
 	private final CryptoTool cryptoTool;
@@ -36,8 +35,7 @@ public class JpaStaffRegistrationGateway implements StaffRegistrationGateway{
 	public Staff save(Staff register){
 		String id = idGenerator.generateId();
 		TenantJpa tenant = tenantJpaRepository.getReferenceById(register.tenantId());
-		StaffRoleJpa role = staffRoleJpaRepository.getReferenceById(register.role().getValue());
-		StaffJpa entity = StaffJpa.construct(id, register, tenant, role);
+		StaffJpa entity = StaffJpa.construct(id, register, tenant, register.role());
 		StaffJpa saved = staffJpaRepository.save(entity);
 		return StaffJpa.construct(saved);
 	}

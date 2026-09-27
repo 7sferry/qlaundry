@@ -2,11 +2,16 @@ package com.ferry.order.gateway.analytics.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Set;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -24,4 +29,8 @@ public class AnalyticsAggregateJpa{
 
 	@Column(nullable = false, length = 25)
 	private String name;
+
+	@JoinColumn(name = "aggregateId")
+	@OneToMany(fetch = FetchType.LAZY)
+	private Set<AnalyticsEventJpa> events;
 }

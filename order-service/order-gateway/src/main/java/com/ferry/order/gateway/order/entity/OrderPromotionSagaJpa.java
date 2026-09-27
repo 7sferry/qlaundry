@@ -3,7 +3,6 @@ package com.ferry.order.gateway.order.entity;
 import com.ferry.order.domain.order.OrderPromotionSaga;
 import com.ferry.order.domain.order.OrderPromotionSagaStatus;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,10 +30,7 @@ public class OrderPromotionSagaJpa{
 	private String tenantId;
 	@Column(nullable = false, name = "reference_id", unique = true, length = 30)
 	private String referenceId;
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	private OrderPromotionSagaStatusJpa status;
-	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "status_id", insertable = false, updatable = false)
+	@Column(nullable = false)
 	private short statusId;
 	@Column(nullable = false)
 	private int attempts;
@@ -53,19 +49,12 @@ public class OrderPromotionSagaJpa{
 	@Column(nullable = false, name = "updated_at")
 	private Instant updatedAt;
 
-	public void setStatus(OrderPromotionSagaStatusJpa status){
-		this.status = status;
-		this.statusId = status.getId();
-	}
-
-	public static OrderPromotionSagaJpa construct(String id, OrderPromotionSaga saga,
-	                                                    OrderPromotionSagaStatusJpa status){
+	public static OrderPromotionSagaJpa construct(String id, OrderPromotionSaga saga){
 		OrderPromotionSagaJpa entity = new OrderPromotionSagaJpa();
 		entity.id = id;
 		entity.tenantId = saga.tenantId();
 		entity.referenceId = saga.referenceId();
-		entity.status = status;
-		entity.statusId = status.getId();
+		entity.statusId = saga.status().getValue();
 		entity.attempts = saga.attempts();
 		entity.lastError = saga.lastError();
 		entity.createdBy = saga.createdBy();
