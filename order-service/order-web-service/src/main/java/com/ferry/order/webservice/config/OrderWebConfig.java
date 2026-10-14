@@ -186,7 +186,7 @@ public class OrderWebConfig{
 
 	@Bean
 	UserServiceClient userServiceClient(@Value("${app.internal.user-service.base-url}") String baseUrl,
-	                                    @Value("${app.internal.api-key}") String apiKey,
+	                                    @Value("${app.internal.user-service.api-key}") String apiKey,
 	                                    @Value("${app.internal.user-service.timeout:5s}") Duration timeout){
 		return new DefaultUserServiceClient(new UserServiceClientConfig(baseUrl, apiKey, timeout));
 	}
@@ -198,7 +198,7 @@ public class OrderWebConfig{
 
 	@Bean
 	PromotionServiceClient promotionServiceClient(@Value("${app.internal.promotion-service.base-url}") String baseUrl,
-	                                              @Value("${app.internal.promotion-api-key}") String apiKey,
+	                                              @Value("${app.internal.promotion-service.api-key}") String apiKey,
 	                                              @Value("${app.internal.promotion-service.timeout:5s}") Duration timeout){
 		return new DefaultPromotionServiceClient(new PromotionServiceClientConfig(baseUrl, apiKey, timeout));
 	}

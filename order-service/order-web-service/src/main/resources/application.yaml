@@ -56,19 +56,19 @@ app:
       # only read by the analytics-backfill profile; blank means every tenant
       tenant-id: ''
   internal:
-    # credential for the /internal/** call into user-service, as <clientId>:<version>:<secret>. user-service stores
-    # only the SHA-256 of the secret part. Rotating means pointing this at a new version that user-service already
-    # accepts, then restarting — dev-only here, use APP_INTERNAL_API_KEY elsewhere
-    api-key: 'order:v1:dev-internal-2f8c41b9a7d3e56c0b1f9a4d8e7c6b52'
     user-service:
       base-url: 'http://localhost:8101'
       timeout: 5s
-    # promotion-service keeps its own digest set, so this is a second, independent credential — rotating one
-    # never touches the other
-    promotion-api-key: 'order:v1:dev-internal-9c4a71e0f5b2d836a1e74c9b02f6d5a3'
+      # credential for the /internal/** call into user-service, as <clientId>:<version>:<secret>. user-service stores
+      # only the SHA-256 of the secret part. Rotating means pointing this at a new version that user-service already
+      # accepts, then restarting — dev-only here, use APP_INTERNAL_USERSERVICE_APIKEY elsewhere
+      api-key: 'order:v1:dev-internal-2f8c41b9a7d3e56c0b1f9a4d8e7c6b52'
     promotion-service:
       base-url: 'http://localhost:8104'
       timeout: 5s
+      # promotion-service keeps its own digest set, so this is a second, independent credential — rotating one
+      # never touches the other. dev-only here, use APP_INTERNAL_PROMOTIONSERVICE_APIKEY elsewhere
+      api-key: 'order:v1:dev-internal-9c4a71e0f5b2d836a1e74c9b02f6d5a3'
   crypto:
     # dev-only keys, independent from user-service's — the services never read each other's rows
     # (APP_CRYPTO_ACTIVE_KEY_ID, APP_CRYPTO_KEYS_V1, APP_CRYPTO_BLIND_INDEX_KEY, ...); generate with `openssl rand -base64 32`
