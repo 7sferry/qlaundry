@@ -289,7 +289,7 @@ buried in a config file:
 | Prefix | Who can reach it | Enforced by |
 |---|---|---|
 | `/public/**` | anyone, no bearer token | `.requestMatchers("/public/**").permitAll()` — the prefix, never a list of exact paths |
-| `/internal/**` | another backend service, with a versioned API key | an `PromotionInternalApiKeyAuthenticationFilter` that **returns early on any other path**, so a leaked key reaches nothing else |
+| `/internal/**` | another backend service, with a versioned API key | each callee's `*InternalApiKeyAuthenticationFilter` (`UserInternalApiKeyAuthenticationFilter`, `PromotionInternalApiKeyAuthenticationFilter`) that **returns early on any other path**, so a leaked key reaches nothing else |
 | everything else | an authenticated staff principal | `anyRequest().authenticated()` |
 
 Both rules cut both ways: anything mapped under `/public/` **is**

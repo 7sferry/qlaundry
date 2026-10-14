@@ -32,6 +32,7 @@ public class UserInternalApiKeyAuthenticationFilter implements Filter{
 	private static final String TRACE_ID_MDC_KEY = "traceId";
 	private static final String AUTHORITY_PREFIX = "SERVICE_";
 	private static final int CREDENTIAL_PARTS = 3;
+	private static final String UNKNOWN_CLIENT_DIGEST = "0".repeat(64);
 
 	private final UserInternalKeyResolver internalKeyResolver;
 
@@ -71,7 +72,7 @@ public class UserInternalApiKeyAuthenticationFilter implements Filter{
 		String clientId = parts[0];
 		String version = parts[1];
 		String expected = internalKeyResolver.digestOf(clientId, version)
-				.orElseThrow();
+				.orElse(UNKNOWN_CLIENT_DIGEST);
 		if(!matches(parts[2], expected)){
 			log.warn("rejected internal call to {} presenting {}:{}", req.getRequestURI(), clientId, version);
 			chain.doFilter(request, response);
