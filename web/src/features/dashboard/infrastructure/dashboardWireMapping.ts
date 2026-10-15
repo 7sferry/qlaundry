@@ -28,8 +28,13 @@ export interface DashboardSummaryWire {
 
 export interface DashboardReportWire {
 	period: string;
+	totalOrders: number;
+	totalRevenue: number;
+	ordersGrowth: number;
+	revenueGrowth: number;
 	revenueTrend: { period: string; revenue: number; orders: number }[];
 	serviceBreakdown: { serviceId: string; serviceName: string; count: number; revenue: number; percentage: number }[];
+	statusDistribution: { status: string; count: number }[];
 }
 
 export interface OrderScheduleWire {
@@ -74,11 +79,15 @@ const SCHEDULE_TYPE_FROM_WIRE: Record<string, ScheduleType> = {
 	DELIVERY: 'delivery',
 };
 
-export function toDashboardSummary(wire: DashboardSummaryWire): DashboardSummary {
-	const statusDistribution = wire.statusDistribution.flatMap((entry): StatusCount[] => {
+function toStatusCounts(entries: { status: string; count: number }[]): StatusCount[] {
+	return entries.flatMap((entry): StatusCount[] => {
 		const status = ORDER_STATUS_FROM_WIRE[entry.status];
 		return status ? [{status, label: ORDER_STATUS_LABELS[status], count: entry.count}] : [];
 	});
+}
+
+export function toDashboardSummary(wire: DashboardSummaryWire): DashboardSummary {
+	const statusDistribution = toStatusCounts(wire.statusDistribution);
 	return {
 		todayOrders: wire.todayOrders,
 		todayRevenue: wire.todayRevenue,
@@ -96,6 +105,11 @@ export function toDashboardSummary(wire: DashboardSummaryWire): DashboardSummary
 export function toDashboardReport(wire: DashboardReportWire, requested: ReportPeriod): DashboardReport {
 	return {
 		period: REPORT_PERIOD_FROM_WIRE[wire.period] ?? requested,
+		totalOrders: wire.totalOrders,
+		totalRevenue: wire.totalRevenue,
+		ordersGrowth: wire.ordersGrowth,
+		revenueGrowth: wire.revenueGrowth,
+		statusDistribution: toStatusCounts(wire.statusDistribution),
 		revenueTrend: wire.revenueTrend.map((point) => ({
 			period: point.period,
 			revenue: point.revenue,

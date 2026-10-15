@@ -24,8 +24,13 @@ export interface DashboardSummary {
 
 export interface DashboardReport {
 	period: ReportPeriod;
+	totalOrders: number;
+	totalRevenue: number;
+	ordersGrowth: number;
+	revenueGrowth: number;
 	revenueTrend: RevenuePeriod[];
 	serviceBreakdown: ServiceBreakdown[];
+	statusDistribution: StatusCount[];
 }
 
 export interface RevenuePeriod {

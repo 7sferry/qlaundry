@@ -1,7 +1,8 @@
 package com.ferry.analytics.core.customer.top;
 
 import com.ferry.analytics.domain.customer.TopCustomerProjection;
-import com.ferry.analytics.domain.period.MonthToDateWindow;
+import com.ferry.analytics.domain.period.PeriodWindow;
+import com.ferry.analytics.domain.report.ReportPeriod;
 import com.ferry.analytics.domain.staff.StaffRole;
 import com.ferry.analytics.domain.tenant.TenantId;
 import com.ferry.analytics.domain.token.AnalyticsAuthPrincipal;
@@ -15,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 
@@ -41,12 +43,12 @@ class DefaultTopCustomerUseCaseTest{
 	@Mock
 	TopCustomerPresenter presenter;
 	@Captor
-	ArgumentCaptor<MonthToDateWindow> windowCaptor;
+	ArgumentCaptor<PeriodWindow> windowCaptor;
 	@Captor
 	ArgumentCaptor<TopCustomerResponse> responseCaptor;
 
 	@Test
-	void givenThisMonthsSpenders_thenAsksForTheTopFiveAndPassesThemThroughInOrder(){
+	void givenNoPeriod_thenAsksForThisMonthsTopFiveAndPassesThemThroughInOrder(){
 		DefaultTopCustomerUseCase useCase = new DefaultTopCustomerUseCase(gateway,
 				Clock.fixed(Instant.parse("2026-10-20T09:00:00Z"), ZoneOffset.UTC));
 		AnalyticsAuthPrincipal principal = AnalyticsAuthPrincipal.builder()
@@ -58,9 +60,9 @@ class DefaultTopCustomerUseCaseTest{
 				new TopCustomerProjection("01CUSTOMERMEGAWATI0000000", 4L, BigDecimal.valueOf(320000)),
 				new TopCustomerProjection("01CUSTOMERFAJARSIDIK00000", 2L, BigDecimal.valueOf(95000)));
 		willReturn(top).given(gateway)
-				.top(any(TenantId.class), any(MonthToDateWindow.class), anyInt());
+				.top(any(TenantId.class), any(PeriodWindow.class), anyInt());
 
-		useCase.execute(principal, presenter);
+		useCase.execute(new TopCustomerRequest(null), principal, presenter);
 
 		then(gateway).should()
 				.top(eq(new TenantId(TENANT_ID)), windowCaptor.capture(), eq(5));
@@ -71,6 +73,33 @@ class DefaultTopCustomerUseCaseTest{
 			softly.then(windowCaptor.getValue().from()).isEqualTo(Instant.parse("2026-10-01T00:00:00Z"));
 			softly.then(windowCaptor.getValue().to()).isEqualTo(Instant.parse("2026-10-20T09:00:00Z"));
 			softly.then(responseCaptor.getValue().customers()).isEqualTo(top);
+		});
+	}
+
+	@Test
+	void givenYearPeriodInJakarta_thenStartsElevenMonthsBeforeThisMonth(){
+		DefaultTopCustomerUseCase useCase = new DefaultTopCustomerUseCase(gateway,
+				Clock.fixed(Instant.parse("2026-10-20T09:00:00Z"), ZoneOffset.UTC));
+		AnalyticsAuthPrincipal principal = AnalyticsAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.timeZone(ZoneId.of("Asia/Jakarta"))
+				.role(StaffRole.SUPER_STAFF)
+				.build();
+		willReturn(List.of()).given(gateway)
+				.top(any(TenantId.class), any(PeriodWindow.class), anyInt());
+
+		useCase.execute(new TopCustomerRequest(ReportPeriod.YEAR), principal, presenter);
+
+		then(gateway).should()
+				.top(eq(new TenantId(TENANT_ID)), windowCaptor.capture(), eq(5));
+		then(presenter).should()
+				.present(responseCaptor.capture());
+
+		thenSoftly(softly -> {
+			softly.then(windowCaptor.getValue().from()).isEqualTo(Instant.parse("2025-10-31T17:00:00Z"));
+			softly.then(windowCaptor.getValue().to()).isEqualTo(Instant.parse("2026-10-20T09:00:00Z"));
+			softly.then(responseCaptor.getValue().customers()).isEmpty();
 		});
 	}
 

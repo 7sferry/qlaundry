@@ -8,5 +8,5 @@ import com.ferry.analytics.domain.token.AnalyticsAuthPrincipal;
  ************************/
 
 public interface TopCustomerUseCase{
-	void execute(AnalyticsAuthPrincipal principal, TopCustomerPresenter presenter);
+	void execute(TopCustomerRequest request, AnalyticsAuthPrincipal principal, TopCustomerPresenter presenter);
 }

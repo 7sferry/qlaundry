@@ -17,7 +17,7 @@ public class WebCustomerSummaryPresenter implements CustomerSummaryPresenter{
 	@Override
 	public void present(CustomerSummaryResponse response){
 		responseEntity = ResponseEntity.ok(new CustomerSummaryRestResponse(response.totalCustomers(),
-				response.newCustomers(), response.monthSpend(), response.averageSpend()));
+				response.newCustomers(), response.spend(), response.averageSpend()));
 	}
 
 }

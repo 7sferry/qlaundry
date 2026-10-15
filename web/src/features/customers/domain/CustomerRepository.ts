@@ -8,6 +8,8 @@ import type {CreateCustomerInput, Customer, CustomerStats, TopCustomer, UpdateCu
 
 export type CustomerSortBy = 'id' | 'name';
 
+export type CustomerStatsPeriod = 'week' | 'month' | 'quarter' | 'year';
+
 export interface CustomerFilters extends PaginationParams<CustomerSortBy> {
 	search?: string;
 }
@@ -27,7 +29,7 @@ export interface CustomerRepository {
 
 	deleteCustomer(id: string): Promise<void>;
 
-	getCustomerStats(): Promise<CustomerStats>;
+	getCustomerStats(period?: CustomerStatsPeriod): Promise<CustomerStats>;
 
-	getTopCustomers(): Promise<TopCustomer[]>;
+	getTopCustomers(period?: CustomerStatsPeriod): Promise<TopCustomer[]>;
 }

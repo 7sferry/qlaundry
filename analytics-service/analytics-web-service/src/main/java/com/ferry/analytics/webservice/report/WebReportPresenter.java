@@ -3,6 +3,7 @@ package com.ferry.analytics.webservice.report;
 import com.ferry.analytics.core.report.ReportPresenter;
 import com.ferry.analytics.core.report.ReportResponse;
 import com.ferry.analytics.webservice.report.ReportRestResponse.ServiceShare;
+import com.ferry.analytics.webservice.report.ReportRestResponse.StatusCount;
 import com.ferry.analytics.webservice.report.ReportRestResponse.TrendPoint;
 import lombok.Getter;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,12 @@ public class WebReportPresenter implements ReportPresenter{
 				.map(share -> new ServiceShare(share.serviceId(), share.serviceName(), share.count(), share.revenue(),
 						share.percentage()))
 				.toList();
-		responseEntity = ResponseEntity.ok(new ReportRestResponse(response.period(), trend, breakdown));
+		List<StatusCount> distribution = response.statusDistribution().stream()
+				.map(status -> new StatusCount(status.status(), status.count()))
+				.toList();
+		responseEntity = ResponseEntity.ok(new ReportRestResponse(response.period(), response.totalOrders(),
+				response.totalRevenue(), response.ordersGrowth(), response.revenueGrowth(), trend, breakdown,
+				distribution));
 	}
 
 }

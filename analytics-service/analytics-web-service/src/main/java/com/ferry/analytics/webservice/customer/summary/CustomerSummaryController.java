@@ -1,5 +1,6 @@
 package com.ferry.analytics.webservice.customer.summary;
 
+import com.ferry.analytics.core.customer.summary.CustomerSummaryRequest;
 import com.ferry.analytics.core.customer.summary.CustomerSummaryUseCase;
 import com.ferry.analytics.domain.token.AnalyticsAuthPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +20,10 @@ public class CustomerSummaryController{
 	private final CustomerSummaryUseCase customerSummaryUseCase;
 
 	@GetMapping("/analytics/customer")
-	public ResponseEntity<?> getCustomerSummary(@AuthenticationPrincipal AnalyticsAuthPrincipal principal){
+	public ResponseEntity<?> getCustomerSummary(CustomerSummaryRequest request,
+	                                            @AuthenticationPrincipal AnalyticsAuthPrincipal principal){
 		WebCustomerSummaryPresenter presenter = new WebCustomerSummaryPresenter();
-		customerSummaryUseCase.execute(principal, presenter);
+		customerSummaryUseCase.execute(request, principal, presenter);
 		return presenter.getResponseEntity();
 	}
 

@@ -1,7 +1,7 @@
 package com.ferry.analytics.gateway.staff;
 
 import com.ferry.analytics.core.staff.StaffSummaryGateway;
-import com.ferry.analytics.domain.period.MonthToDateWindow;
+import com.ferry.analytics.domain.period.PeriodWindow;
 import com.ferry.analytics.domain.staff.StaffSummaryProjection;
 import com.ferry.analytics.domain.tenant.TenantId;
 import com.ferry.analytics.gateway.common.AnalyticStore;
@@ -29,7 +29,7 @@ public class ClickHouseStaffSummaryGateway implements StaffSummaryGateway{
 	private final AnalyticStore store;
 
 	@Override
-	public StaffSummaryProjection summarize(TenantId tenantId, MonthToDateWindow window){
+	public StaffSummaryProjection summarize(TenantId tenantId, PeriodWindow window){
 		Map<String, Object> params = Map.of(
 				"tenantId", tenantId.value(),
 				"from", store.dateTime(window.from()),

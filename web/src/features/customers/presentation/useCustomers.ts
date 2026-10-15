@@ -4,26 +4,26 @@
  ************************/
 
 import {useCallback} from 'react';
-import {useFetchOnce} from '@/core/hooks/useFetchOnce';
 import {usePaginatedList} from '@/core/hooks/usePaginatedList';
+import {useReloadable} from '@/core/hooks/useReloadable';
 import type {PaginationParams} from '@/core/pagination/Pagination';
 import type {CreateCustomerInput, Customer, UpdateCustomerInput} from '../domain/Customer';
-import type {CustomerFilters} from '../domain/CustomerRepository';
+import type {CustomerFilters, CustomerStatsPeriod} from '../domain/CustomerRepository';
 import {customerUseCases} from '../application/CustomerUseCases';
 import {customerRepository} from '../infrastructure/CustomerRepositoryImpl';
 
 const useCases = customerUseCases(customerRepository);
-const fetchCustomerStats = () => useCases.getStats();
-const fetchTopCustomers = () => useCases.getTopCustomers();
+const fetchCustomerStats = (period?: CustomerStatsPeriod) => useCases.getStats(period);
+const fetchTopCustomers = (period?: CustomerStatsPeriod) => useCases.getTopCustomers(period);
 
 export function useCustomerStats() {
-	const {data: stats, error} = useFetchOnce(fetchCustomerStats, 'Failed to load customer statistics');
-	return {stats, error};
+	const {data: stats, error, reload} = useReloadable(fetchCustomerStats, 'Failed to load customer statistics');
+	return {stats, error, reload};
 }
 
 export function useTopCustomers() {
-	const {data, loading, error} = useFetchOnce(fetchTopCustomers, 'Failed to load top customers');
-	return {topCustomers: data ?? [], loading, error};
+	const {data, loading, error, reload} = useReloadable(fetchTopCustomers, 'Failed to load top customers');
+	return {topCustomers: data ?? [], loading, error, reload};
 }
 
 interface CustomerSearchFilters extends PaginationParams {

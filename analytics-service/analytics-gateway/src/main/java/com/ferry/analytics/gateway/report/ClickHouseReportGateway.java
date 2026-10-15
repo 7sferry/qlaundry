@@ -1,6 +1,8 @@
 package com.ferry.analytics.gateway.report;
 
 import com.ferry.analytics.core.report.ReportGateway;
+import com.ferry.analytics.domain.dashboard.StatusCountProjection;
+import com.ferry.analytics.domain.report.PeriodTotalsProjection;
 import com.ferry.analytics.domain.report.ReportBucket;
 import com.ferry.analytics.domain.report.ReportWindow;
 import com.ferry.analytics.domain.report.RevenueBucketProjection;
@@ -9,6 +11,7 @@ import com.ferry.analytics.domain.tenant.TenantId;
 import com.ferry.analytics.gateway.common.AnalyticStore;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +56,54 @@ public class ClickHouseReportGateway implements ReportGateway{
 			SETTINGS do_not_merge_across_partitions_select_final = 1
 			""";
 
+	private static final String TOTALS_QUERY = """
+			SELECT
+			    toInt64(count()) AS orders,
+			    toDecimal64(sum(total_price), 2) AS revenue
+			FROM orders_current FINAL
+			WHERE tenant_id = {tenantId:String}
+			  AND deleted = 0
+			  AND status != 'CANCELLED'
+			  AND created_at >= {from:DateTime64(3, 'UTC')}
+			  AND created_at < {to:DateTime64(3, 'UTC')}
+			SETTINGS do_not_merge_across_partitions_select_final = 1
+			""";
+
+	private static final String STATUS_DISTRIBUTION_QUERY = """
+			SELECT status, toInt64(count()) AS orders
+			FROM orders_current FINAL
+			WHERE tenant_id = {tenantId:String}
+			  AND deleted = 0
+			  AND created_at >= {from:DateTime64(3, 'UTC')}
+			  AND created_at < {to:DateTime64(3, 'UTC')}
+			GROUP BY status
+			ORDER BY status
+			SETTINGS do_not_merge_across_partitions_select_final = 1
+			""";
+
 	private final AnalyticStore store;
+
+	@Override
+	public PeriodTotalsProjection totals(TenantId tenantId, ReportWindow window){
+		return store.query(TOTALS_QUERY, windowParams(tenantId, window),
+						reader -> new PeriodTotalsProjection(reader.getLong("orders"), reader.getBigDecimal("revenue")))
+				.stream()
+				.findFirst()
+				.orElse(new PeriodTotalsProjection(0L, BigDecimal.ZERO));
+	}
+
+	@Override
+	public List<StatusCountProjection> statusDistribution(TenantId tenantId, ReportWindow window){
+		return store.query(STATUS_DISTRIBUTION_QUERY, windowParams(tenantId, window),
+				reader -> new StatusCountProjection(reader.getString("status"), reader.getLong("orders")));
+	}
+
+	private Map<String, Object> windowParams(TenantId tenantId, ReportWindow window){
+		return Map.of(
+				"tenantId", tenantId.value(),
+				"from", store.dateTime(window.fromInstant()),
+				"to", store.dateTime(window.toExclusiveInstant()));
+	}
 
 	@Override
 	public List<RevenueBucketProjection> revenueTrend(TenantId tenantId, ReportWindow window){

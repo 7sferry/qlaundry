@@ -1,6 +1,6 @@
 package com.ferry.analytics.core.promotion;
 
-import com.ferry.analytics.domain.period.MonthToDateWindow;
+import com.ferry.analytics.domain.period.PeriodWindow;
 import com.ferry.analytics.domain.promotion.PromotionSummaryProjection;
 import com.ferry.analytics.domain.staff.StaffRole;
 import com.ferry.analytics.domain.tenant.TenantId;
@@ -39,7 +39,7 @@ class DefaultPromotionSummaryUseCaseTest{
 	@Mock
 	PromotionSummaryPresenter presenter;
 	@Captor
-	ArgumentCaptor<MonthToDateWindow> windowCaptor;
+	ArgumentCaptor<PeriodWindow> windowCaptor;
 	@Captor
 	ArgumentCaptor<Instant> expiringBeforeCaptor;
 	@Captor
@@ -56,7 +56,7 @@ class DefaultPromotionSummaryUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		willReturn(new PromotionSummaryProjection(11L, 4L, 1L, 23L)).given(gateway)
-				.summarize(any(TenantId.class), any(MonthToDateWindow.class), any(Instant.class));
+				.summarize(any(TenantId.class), any(PeriodWindow.class), any(Instant.class));
 
 		useCase.execute(principal, presenter);
 

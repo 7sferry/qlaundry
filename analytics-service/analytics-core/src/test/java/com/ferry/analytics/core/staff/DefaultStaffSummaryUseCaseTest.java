@@ -1,6 +1,6 @@
 package com.ferry.analytics.core.staff;
 
-import com.ferry.analytics.domain.period.MonthToDateWindow;
+import com.ferry.analytics.domain.period.PeriodWindow;
 import com.ferry.analytics.domain.staff.StaffRole;
 import com.ferry.analytics.domain.staff.StaffSummaryProjection;
 import com.ferry.analytics.domain.tenant.TenantId;
@@ -39,7 +39,7 @@ class DefaultStaffSummaryUseCaseTest{
 	@Mock
 	StaffSummaryPresenter presenter;
 	@Captor
-	ArgumentCaptor<MonthToDateWindow> windowCaptor;
+	ArgumentCaptor<PeriodWindow> windowCaptor;
 	@Captor
 	ArgumentCaptor<StaffSummaryResponse> responseCaptor;
 
@@ -54,7 +54,7 @@ class DefaultStaffSummaryUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		willReturn(new StaffSummaryProjection(7L, 2L)).given(gateway)
-				.summarize(any(TenantId.class), any(MonthToDateWindow.class));
+				.summarize(any(TenantId.class), any(PeriodWindow.class));
 
 		useCase.execute(principal, presenter);
 
@@ -81,7 +81,7 @@ class DefaultStaffSummaryUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		willReturn(new StaffSummaryProjection(3L, 0L)).given(gateway)
-				.summarize(any(TenantId.class), any(MonthToDateWindow.class));
+				.summarize(any(TenantId.class), any(PeriodWindow.class));
 
 		useCase.execute(principal, presenter);
 
@@ -89,7 +89,7 @@ class DefaultStaffSummaryUseCaseTest{
 				.summarize(eq(new TenantId(TENANT_ID)), windowCaptor.capture());
 
 		thenSoftly(softly -> softly.then(windowCaptor.getValue())
-				.isEqualTo(new MonthToDateWindow(Instant.parse("2026-10-01T00:00:00Z"),
+				.isEqualTo(new PeriodWindow(Instant.parse("2026-10-01T00:00:00Z"),
 						Instant.parse("2026-10-15T08:30:00Z"))));
 	}
 

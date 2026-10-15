@@ -1,7 +1,7 @@
 package com.ferry.analytics.gateway.promotion;
 
 import com.ferry.analytics.core.promotion.PromotionSummaryGateway;
-import com.ferry.analytics.domain.period.MonthToDateWindow;
+import com.ferry.analytics.domain.period.PeriodWindow;
 import com.ferry.analytics.domain.promotion.PromotionSummaryProjection;
 import com.ferry.analytics.domain.tenant.TenantId;
 import com.ferry.analytics.gateway.common.AnalyticStore;
@@ -47,7 +47,7 @@ public class ClickHousePromotionSummaryGateway implements PromotionSummaryGatewa
 	private final AnalyticStore store;
 
 	@Override
-	public PromotionSummaryProjection summarize(TenantId tenantId, MonthToDateWindow window, Instant expiringBefore){
+	public PromotionSummaryProjection summarize(TenantId tenantId, PeriodWindow window, Instant expiringBefore){
 		Map<String, Object> countParams = Map.of(
 				"tenantId", tenantId.value(),
 				"now", store.dateTime(window.to()),

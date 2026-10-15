@@ -4,7 +4,7 @@
  ************************/
 
 import type {PaginationParams} from '@/core/pagination/Pagination';
-import type {CustomerFilters, CustomerRepository} from '../domain/CustomerRepository';
+import type {CustomerFilters, CustomerRepository, CustomerStatsPeriod} from '../domain/CustomerRepository';
 import type {CreateCustomerInput, UpdateCustomerInput} from '../domain/Customer';
 
 export const customerUseCases = (repository: CustomerRepository) => ({
@@ -17,6 +17,6 @@ export const customerUseCases = (repository: CustomerRepository) => ({
 	createCustomer: (input: CreateCustomerInput) => repository.createCustomer(input),
 	updateCustomer: (input: UpdateCustomerInput) => repository.updateCustomer(input),
 	deleteCustomer: (id: string) => repository.deleteCustomer(id),
-	getStats: () => repository.getCustomerStats(),
-	getTopCustomers: () => repository.getTopCustomers(),
+	getStats: (period?: CustomerStatsPeriod) => repository.getCustomerStats(period),
+	getTopCustomers: (period?: CustomerStatsPeriod) => repository.getTopCustomers(period),
 });

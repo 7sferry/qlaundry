@@ -37,14 +37,36 @@ const TREND_SUBTITLES: Record<ReportPeriod, string> = {
 	year: 'Monthly revenue for the last 12 months',
 };
 
+const PERIOD_SCOPES: Record<ReportPeriod, string> = {
+	week: 'Last 7 days',
+	month: 'This month',
+	quarter: 'Last 3 months',
+	year: 'Last 12 months',
+};
+
+const PREVIOUS_PERIODS: Record<ReportPeriod, string> = {
+	week: 'previous 7 days',
+	month: 'last month',
+	quarter: 'previous 3 months',
+	year: 'previous 12 months',
+};
+
 const COLORS = ['var(--brand)', 'var(--info)', 'var(--success)', 'var(--warning)', 'var(--danger)'];
 
 export default function ReportsPage() {
 	const {summary, report, period, setPeriod, loading} = useReports();
-	const {stats: customerStats, error: customerStatsError} = useCustomerStats();
-	const {topCustomers, error: topCustomersError} = useTopCustomers();
+	const {stats: customerStats, error: customerStatsError, reload: reloadCustomerStats} = useCustomerStats();
+	const {topCustomers, error: topCustomersError, reload: reloadTopCustomers} = useTopCustomers();
+
+	const changePeriod = (next: ReportPeriod) => {
+		void setPeriod(next);
+		void reloadCustomerStats(next);
+		void reloadTopCustomers(next);
+	};
 
 	if (loading && !summary) return <Loading label="Preparing reports…"/>;
+
+	const scope = PERIOD_SCOPES[period];
 
 	return (
 			<>
@@ -58,7 +80,7 @@ export default function ReportsPage() {
  										<button
  												key={p}
  												className={`period-tab ${period === p ? 'period-tab--active' : ''}`}
- 												onClick={() => void setPeriod(p)}
+ 												onClick={() => changePeriod(p)}
  										>
  											{PERIOD_LABELS[p]}
  										</button>
@@ -74,15 +96,15 @@ export default function ReportsPage() {
 				<div className="grid grid--stats">
 					<StatCard
 							icon={<BarChart2 size={20}/>}
-							value={summary?.monthOrders ?? 0}
+							value={report?.totalOrders ?? 0}
 							label="Total orders"
-							hint={`This month · ${summary?.ordersGrowth ?? 0}% vs last month`}
+							hint={`${scope} · ${report?.ordersGrowth ?? 0}% vs ${PREVIOUS_PERIODS[period]}`}
 					/>
 					<StatCard
 							icon={<TrendingUp size={20}/>}
-							value={formatCurrency(summary?.monthRevenue ?? 0)}
+							value={formatCurrency(report?.totalRevenue ?? 0)}
 							label="Total revenue"
-							hint={`${summary?.revenueGrowth ?? 0}% vs last month`}
+							hint={`${scope} · ${report?.revenueGrowth ?? 0}% vs ${PREVIOUS_PERIODS[period]}`}
 					/>
 					<StatCard
 							icon={<WashingMachine size={20}/>}
@@ -94,7 +116,7 @@ export default function ReportsPage() {
 							icon={<Users size={20}/>}
 							value={customerStats?.totalCustomers ?? '—'}
 							label="Total customers"
-							hint={customerStatsError ?? `${customerStats?.newCustomers ?? 0} new this month`}
+							hint={customerStatsError ?? `${customerStats?.newCustomers ?? 0} new · ${scope}`}
 					/>
 				</div>
 
@@ -240,14 +262,14 @@ export default function ReportsPage() {
 						</div>
 					</Card>
 
-						<Card title="Top customers" subtitle="Top 5 customers by spend this month">
+						<Card title="Top customers" subtitle={`Top 5 customers by spend · ${scope}`}>
 						<div className="top-customers">
 							{topCustomers.map((c, idx) => (
 									<div key={c.customerId} className="top-customer-row">
 										<span className="top-rank">{idx + 1}</span>
 										<div className="top-customer-info">
 											<strong>{c.fullName}</strong>
-  									<span className="muted" style={{fontSize: 12}}>{c.totalOrders} orders this month</span>
+  									<span className="muted" style={{fontSize: 12}}>{c.totalOrders} orders</span>
 										</div>
 										<div style={{textAlign: 'right'}}>
 											<strong style={{display: 'block', fontSize: 14}}>{formatCurrency(c.totalSpend)}</strong>
@@ -257,7 +279,7 @@ export default function ReportsPage() {
 						{!topCustomers.length && (
 								<div className="empty-state" style={{padding: 24}}>
 									<Users size={24}/>
-									<span>{topCustomersError ?? 'No customer orders this month yet'}</span>
+									<span>{topCustomersError ?? `No customer orders · ${scope}`}</span>
 								</div>
 						)}
 						</div>
@@ -265,10 +287,10 @@ export default function ReportsPage() {
 				</div>
 
 				<div className="mt-24">
-						<Card title="Order status summary" subtitle="Orders created this month by status">
+						<Card title="Order status summary" subtitle={`Orders created by status · ${scope}`}>
 						<div style={{height: 60, display: 'flex', gap: 4, borderRadius: 8, overflow: 'hidden'}}>
-							{(summary?.statusDistribution ?? []).filter(s => s.count > 0).map((s, idx) => {
-								const total = (summary?.statusDistribution ?? []).reduce((sum, x) => sum + x.count, 0);
+							{(report?.statusDistribution ?? []).filter(s => s.count > 0).map((s, idx) => {
+								const total = (report?.statusDistribution ?? []).reduce((sum, x) => sum + x.count, 0);
 								const pct = total > 0 ? (s.count / total) * 100 : 0;
 								return (
 										<div
@@ -294,7 +316,7 @@ export default function ReportsPage() {
 							})}
 						</div>
 						<div className="status-dist" style={{marginTop: 16}}>
-							{(summary?.statusDistribution ?? []).filter(s => s.count > 0).map((s, idx) => (
+							{(report?.statusDistribution ?? []).filter(s => s.count > 0).map((s, idx) => (
 									<div key={s.status} className="status-dist__row">
 										<div className="row" style={{gap: 10}}>
 											<span style={{

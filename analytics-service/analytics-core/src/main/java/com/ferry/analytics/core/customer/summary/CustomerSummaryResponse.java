@@ -10,6 +10,6 @@ import java.math.BigDecimal;
 public record CustomerSummaryResponse(
 	long totalCustomers,
 	long newCustomers,
-	BigDecimal monthSpend,
+	BigDecimal spend,
 	BigDecimal averageSpend){
 }

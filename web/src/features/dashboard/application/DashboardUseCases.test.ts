@@ -18,8 +18,13 @@ const mockSummary: DashboardSummary = {
 
 const mockReport: DashboardReport = {
 	period: 'quarter',
+	totalOrders: 11,
+	totalRevenue: 950_000,
+	ordersGrowth: 10,
+	revenueGrowth: 12.5,
 	revenueTrend: [{period: '08 Jun', revenue: 950_000, orders: 11}],
 	serviceBreakdown: [{serviceId: 'svc_1', serviceName: 'Cuci Kering', count: 11, revenue: 950_000, percentage: 100}],
+	statusDistribution: [{status: 'completed', label: 'Completed', count: 11}],
 };
 
 const mockSchedule: ScheduleItem[] = [{

@@ -1,6 +1,6 @@
 package com.ferry.analytics.core.staff;
 
-import com.ferry.analytics.domain.period.MonthToDateWindow;
+import com.ferry.analytics.domain.period.PeriodWindow;
 import com.ferry.analytics.domain.staff.StaffSummaryProjection;
 import com.ferry.analytics.domain.tenant.TenantId;
 
@@ -10,5 +10,5 @@ import com.ferry.analytics.domain.tenant.TenantId;
  ************************/
 
 public interface StaffSummaryGateway{
-	StaffSummaryProjection summarize(TenantId tenantId, MonthToDateWindow window);
+	StaffSummaryProjection summarize(TenantId tenantId, PeriodWindow window);
 }

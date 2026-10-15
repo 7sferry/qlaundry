@@ -10,6 +10,6 @@ import java.math.BigDecimal;
 public record CustomerSummaryProjection(
 	long totalCustomers,
 	long newCustomers,
-	BigDecimal monthSpend,
+	BigDecimal spend,
 	long spendingCustomers){
 }

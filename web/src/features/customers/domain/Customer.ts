@@ -19,7 +19,7 @@ export interface Customer {
 export interface CustomerStats {
 	totalCustomers: number;
 	newCustomers: number;
-	monthSpend: number;
+	spend: number;
 	averageSpend: number;
 }
 

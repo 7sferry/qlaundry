@@ -12,8 +12,18 @@ import java.util.List;
 
 public record ReportRestResponse(
 	ReportPeriod period,
+	long totalOrders,
+	BigDecimal totalRevenue,
+	BigDecimal ordersGrowth,
+	BigDecimal revenueGrowth,
 	List<TrendPoint> revenueTrend,
-	List<ServiceShare> serviceBreakdown){
+	List<ServiceShare> serviceBreakdown,
+	List<StatusCount> statusDistribution){
+
+	public record StatusCount(
+		String status,
+		long count){
+	}
 
 	public record TrendPoint(
 		String period,

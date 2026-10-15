@@ -5,6 +5,7 @@ import com.ferry.analytics.domain.common.exception.InvalidAnalyticStateException
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +38,15 @@ public record ReportWindow(
 
 	public Instant toExclusiveInstant(){
 		return toExclusive.atStartOfDay(zone).toInstant();
+	}
+
+	public ReportWindow previous(){
+		LocalDate previousFrom = switch(period){
+			case MONTH -> from.minusMonths(1);
+			case YEAR -> from.minusMonths(12);
+			case WEEK, QUARTER -> from.minusDays(ChronoUnit.DAYS.between(from, toExclusive));
+		};
+		return new ReportWindow(period, previousFrom, from, zone);
 	}
 
 	public List<LocalDate> bucketStarts(){

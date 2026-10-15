@@ -5,7 +5,7 @@
 
 import {httpClient} from '@/core/http/httpClient';
 import type {Page, PaginationParams} from '@/core/pagination/Pagination';
-import type {CustomerFilters, CustomerRepository} from '../domain/CustomerRepository';
+import type {CustomerFilters, CustomerRepository, CustomerStatsPeriod} from '../domain/CustomerRepository';
 import type {CreateCustomerInput, Customer, CustomerStats, TopCustomer, UpdateCustomerInput} from '../domain/Customer';
 import {CUSTOMER_ENDPOINTS} from './customerEndpoints';
 
@@ -35,6 +35,10 @@ interface TopCustomerApiResponse {
 
 interface CustomerNamesApiResponse {
 	customers: { customerId: string; fullName: string }[];
+}
+
+function periodQuery(period?: CustomerStatsPeriod): string {
+	return period ? `?${new URLSearchParams({period: period.toUpperCase()}).toString()}` : '';
 }
 
 interface CustomerTotals {
@@ -170,12 +174,12 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 		await httpClient.delete(`${CUSTOMER_ENDPOINTS.delete}?customerId=${encodeURIComponent(id)}`);
 	}
 
-	async getCustomerStats(): Promise<CustomerStats> {
-		return httpClient.get<CustomerStats>(CUSTOMER_ENDPOINTS.stats);
+	async getCustomerStats(period?: CustomerStatsPeriod): Promise<CustomerStats> {
+		return httpClient.get<CustomerStats>(`${CUSTOMER_ENDPOINTS.stats}${periodQuery(period)}`);
 	}
 
-	async getTopCustomers(): Promise<TopCustomer[]> {
-		const res = await httpClient.get<TopCustomerApiResponse>(CUSTOMER_ENDPOINTS.top);
+	async getTopCustomers(period?: CustomerStatsPeriod): Promise<TopCustomer[]> {
+		const res = await httpClient.get<TopCustomerApiResponse>(`${CUSTOMER_ENDPOINTS.top}${periodQuery(period)}`);
 		if (res.customers.length === 0) return [];
 		const params = new URLSearchParams();
 		for (const c of res.customers) params.append('customerIds', c.customerId);

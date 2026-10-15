@@ -2,7 +2,7 @@ package com.ferry.analytics.gateway.customer;
 
 import com.ferry.analytics.core.customer.top.TopCustomerGateway;
 import com.ferry.analytics.domain.customer.TopCustomerProjection;
-import com.ferry.analytics.domain.period.MonthToDateWindow;
+import com.ferry.analytics.domain.period.PeriodWindow;
 import com.ferry.analytics.domain.tenant.TenantId;
 import com.ferry.analytics.gateway.common.AnalyticStore;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +43,7 @@ public class ClickHouseTopCustomerGateway implements TopCustomerGateway{
 	private final AnalyticStore store;
 
 	@Override
-	public List<TopCustomerProjection> top(TenantId tenantId, MonthToDateWindow window, int limit){
+	public List<TopCustomerProjection> top(TenantId tenantId, PeriodWindow window, int limit){
 		Map<String, Object> params = Map.of(
 				"tenantId", tenantId.value(),
 				"from", store.dateTime(window.from()),

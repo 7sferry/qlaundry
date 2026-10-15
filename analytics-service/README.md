@@ -16,12 +16,15 @@ GET  /analytics/dashboard   ?date=yyyy-MM-dd (optional, not in the future)
         revenueGrowth, ordersGrowth, statusDistribution: [{status, count}]}
 
 GET  /analytics/report      ?period=WEEK|MONTH|QUARTER|YEAR
-     → {period, revenueTrend: [{period, revenue, orders}],
-        serviceBreakdown: [{serviceId, serviceName, count, revenue, percentage}]}
+     → {period, totalOrders, totalRevenue, ordersGrowth, revenueGrowth,
+        revenueTrend: [{period, revenue, orders}],
+        serviceBreakdown: [{serviceId, serviceName, count, revenue, percentage}],
+        statusDistribution: [{status, count}]}
 
 GET  /analytics/staff             → {totalStaff, newStaff}
-GET  /analytics/customer          → {totalCustomers, newCustomers, monthSpend, averageSpend}
-GET  /analytics/customer/top      → {customers: [{customerId, totalOrders, totalSpend}]}
+GET  /analytics/customer          ?period=WEEK|MONTH|QUARTER|YEAR (optional, default MONTH)
+     → {totalCustomers, newCustomers, spend, averageSpend}
+GET  /analytics/customer/top      ?period=… (optional, default MONTH) → {customers: [{customerId, totalOrders, totalSpend}]}
 GET  /analytics/customer/totals   ?customerIds=a&customerIds=b (max 100)
      → {totals: [{customerId, totalOrders, totalSpend, lastOrderAt}]}
 GET  /analytics/promotion         → {totalPromotions, activePromotions, expiringSoon, monthRedemptions}
@@ -29,7 +32,8 @@ GET  /analytics/service           → {totalServices, activeServices, popularSer
 ```
 
 - **"This month"** means from the 1st, 00:00 in the tenant's time zone, until now. Counts like total staff, customers, services and promotions are tenant-wide totals as of now; "new", spend and redemption numbers cover this month.
-- `averageSpend` is this month's spend divided by the customers who ordered this month. Top customers are the five biggest spenders this month.
+- `averageSpend` is the period's spend divided by the customers who ordered in it. Top customers are the five biggest spenders in the period. Without `period` both mean this month.
+- The report's `totalOrders`/`totalRevenue` cover the selected period; the growth numbers compare it with the period just before (last month, the previous 7 days, the previous ~3 months, the previous 12 months). `statusDistribution` counts orders created in the period, cancelled included.
 - Customer totals are all-time and skip cancelled orders; a customer with no orders is absent.
 - `activePromotions` are switched on and running right now; `expiringSoon` are switched on and end within the next 7 days.
 

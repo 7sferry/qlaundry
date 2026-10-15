@@ -1,5 +1,7 @@
 package com.ferry.analytics.core.report;
 
+import com.ferry.analytics.domain.dashboard.StatusCountProjection;
+import com.ferry.analytics.domain.report.PeriodTotalsProjection;
 import com.ferry.analytics.domain.report.ReportWindow;
 import com.ferry.analytics.domain.report.RevenueBucketProjection;
 import com.ferry.analytics.domain.report.ServiceBreakdownProjection;
@@ -16,4 +18,8 @@ public interface ReportGateway{
 	List<RevenueBucketProjection> revenueTrend(TenantId tenantId, ReportWindow window);
 
 	List<ServiceBreakdownProjection> serviceBreakdown(TenantId tenantId, ReportWindow window);
+
+	PeriodTotalsProjection totals(TenantId tenantId, ReportWindow window);
+
+	List<StatusCountProjection> statusDistribution(TenantId tenantId, ReportWindow window);
 }

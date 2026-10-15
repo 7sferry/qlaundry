@@ -2,6 +2,8 @@ package com.ferry.analytics.core.report;
 
 import com.ferry.analytics.core.report.ReportResponse.ServiceShare;
 import com.ferry.analytics.core.report.ReportResponse.TrendPoint;
+import com.ferry.analytics.domain.dashboard.StatusCountProjection;
+import com.ferry.analytics.domain.report.PeriodTotalsProjection;
 import com.ferry.analytics.domain.report.ReportBucket;
 import com.ferry.analytics.domain.report.ReportPeriod;
 import com.ferry.analytics.domain.report.ReportWindow;
@@ -84,6 +86,8 @@ class DefaultReportUseCaseTest{
 				.revenueTrend(any(TenantId.class), any(ReportWindow.class));
 		willReturn(List.of()).given(gateway)
 				.serviceBreakdown(any(TenantId.class), any(ReportWindow.class));
+		willReturn(new PeriodTotalsProjection(0L, BigDecimal.ZERO)).given(gateway)
+				.totals(any(TenantId.class), any(ReportWindow.class));
 
 		useCase.execute(new ReportRequest(ReportPeriod.WEEK), principal, presenter);
 
@@ -126,6 +130,8 @@ class DefaultReportUseCaseTest{
 				.revenueTrend(any(TenantId.class), any(ReportWindow.class));
 		willReturn(List.of()).given(gateway)
 				.serviceBreakdown(any(TenantId.class), any(ReportWindow.class));
+		willReturn(new PeriodTotalsProjection(0L, BigDecimal.ZERO)).given(gateway)
+				.totals(any(TenantId.class), any(ReportWindow.class));
 
 		useCase.execute(new ReportRequest(ReportPeriod.YEAR), principal, presenter);
 
@@ -162,6 +168,8 @@ class DefaultReportUseCaseTest{
 				.revenueTrend(any(TenantId.class), any(ReportWindow.class));
 		willReturn(List.of()).given(gateway)
 				.serviceBreakdown(any(TenantId.class), any(ReportWindow.class));
+		willReturn(new PeriodTotalsProjection(0L, BigDecimal.ZERO)).given(gateway)
+				.totals(any(TenantId.class), any(ReportWindow.class));
 
 		useCase.execute(new ReportRequest(ReportPeriod.QUARTER), principal, presenter);
 
@@ -195,6 +203,8 @@ class DefaultReportUseCaseTest{
 				new ServiceBreakdownProjection("01SERVICECUCISETRIKA00000", "Cuci Setrika", 5L,
 						BigDecimal.valueOf(100000)))).given(gateway)
 				.serviceBreakdown(any(TenantId.class), any(ReportWindow.class));
+		willReturn(new PeriodTotalsProjection(0L, BigDecimal.ZERO)).given(gateway)
+				.totals(any(TenantId.class), any(ReportWindow.class));
 
 		useCase.execute(new ReportRequest(ReportPeriod.MONTH), principal, presenter);
 
@@ -210,6 +220,82 @@ class DefaultReportUseCaseTest{
 			softly.then(breakdown.getFirst().percentage()).isEqualByComparingTo("66.67");
 			softly.then(breakdown.getLast().percentage()).isEqualByComparingTo("33.33");
 			softly.then(breakdown.getLast().count()).isEqualTo(5L);
+		});
+	}
+
+	@Test
+	void givenWeekPeriod_thenTotalsTheWeekAndComparesItWithTheSevenDaysBefore(){
+		DefaultReportUseCase useCase = new DefaultReportUseCase(gateway,
+				Clock.fixed(Instant.parse("2026-10-14T03:00:00Z"), ZoneOffset.UTC));
+		AnalyticsAuthPrincipal principal = AnalyticsAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		List<StatusCountProjection> distribution = List.of(new StatusCountProjection("COMPLETED", 4L),
+				new StatusCountProjection("CANCELLED", 1L));
+		willReturn(List.of(new RevenueBucketProjection(LocalDate.of(2026, 10, 9), BigDecimal.valueOf(150000), 3L),
+				new RevenueBucketProjection(LocalDate.of(2026, 10, 13), BigDecimal.valueOf(50000), 1L))).given(gateway)
+				.revenueTrend(any(TenantId.class), any(ReportWindow.class));
+		willReturn(List.of()).given(gateway)
+				.serviceBreakdown(any(TenantId.class), any(ReportWindow.class));
+		willReturn(new PeriodTotalsProjection(5L, BigDecimal.valueOf(160000))).given(gateway)
+				.totals(any(TenantId.class), any(ReportWindow.class));
+		willReturn(distribution).given(gateway)
+				.statusDistribution(any(TenantId.class), any(ReportWindow.class));
+
+		useCase.execute(new ReportRequest(ReportPeriod.WEEK), principal, presenter);
+
+		then(gateway).should()
+				.totals(eq(new TenantId(TENANT_ID)), windowCaptor.capture());
+		then(presenter).should()
+				.present(responseCaptor.capture());
+
+		ReportWindow previous = windowCaptor.getValue();
+		ReportResponse response = responseCaptor.getValue();
+
+		thenSoftly(softly -> {
+			softly.then(previous.from()).isEqualTo(LocalDate.of(2026, 10, 1));
+			softly.then(previous.toExclusive()).isEqualTo(LocalDate.of(2026, 10, 8));
+			softly.then(response.totalOrders()).isEqualTo(4L);
+			softly.then(response.totalRevenue()).isEqualByComparingTo("200000");
+			softly.then(response.ordersGrowth()).isEqualByComparingTo("-20.00");
+			softly.then(response.revenueGrowth()).isEqualByComparingTo("25.00");
+			softly.then(response.statusDistribution()).isEqualTo(distribution);
+		});
+	}
+
+	@Test
+	void givenMonthPeriodAndAnEmptyPreviousMonth_thenComparesWithTheWholePreviousCalendarMonthAndGrowthIsZero(){
+		DefaultReportUseCase useCase = new DefaultReportUseCase(gateway,
+				Clock.fixed(Instant.parse("2026-03-10T08:00:00Z"), ZoneOffset.UTC));
+		AnalyticsAuthPrincipal principal = AnalyticsAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.SUPER_STAFF)
+				.build();
+		willReturn(List.of(new RevenueBucketProjection(LocalDate.of(2026, 3, 2), BigDecimal.valueOf(75000), 2L)))
+				.given(gateway)
+				.revenueTrend(any(TenantId.class), any(ReportWindow.class));
+		willReturn(List.of()).given(gateway)
+				.serviceBreakdown(any(TenantId.class), any(ReportWindow.class));
+		willReturn(new PeriodTotalsProjection(0L, null)).given(gateway)
+				.totals(any(TenantId.class), any(ReportWindow.class));
+
+		useCase.execute(new ReportRequest(ReportPeriod.MONTH), principal, presenter);
+
+		then(gateway).should()
+				.totals(eq(new TenantId(TENANT_ID)), windowCaptor.capture());
+		then(presenter).should()
+				.present(responseCaptor.capture());
+
+		thenSoftly(softly -> {
+			softly.then(windowCaptor.getValue().from()).isEqualTo(LocalDate.of(2026, 2, 1));
+			softly.then(windowCaptor.getValue().toExclusive()).isEqualTo(LocalDate.of(2026, 3, 1));
+			softly.then(responseCaptor.getValue().totalOrders()).isEqualTo(2L);
+			softly.then(responseCaptor.getValue().ordersGrowth()).isEqualByComparingTo("0");
+			softly.then(responseCaptor.getValue().revenueGrowth()).isEqualByComparingTo("0");
+			softly.then(responseCaptor.getValue().statusDistribution()).isEmpty();
 		});
 	}
 

@@ -49,12 +49,39 @@ describe('dashboardWireMapping', () => {
 	it('maps the report period back from the wire and keeps the server-made labels', () => {
 		const report = toDashboardReport({
 			period: 'WEEK',
+			totalOrders: 1,
+			totalRevenue: 45_000,
+			ordersGrowth: -50,
+			revenueGrowth: 0,
 			revenueTrend: [{period: 'Mon 14', revenue: 45_000, orders: 1}],
 			serviceBreakdown: [],
+			statusDistribution: [],
 		}, 'month');
 
 		expect(report.period).toBe('week');
 		expect(report.revenueTrend[0].period).toBe('Mon 14');
+	});
+
+	it('carries the period totals and labels the period status distribution like the summary does', () => {
+		const report = toDashboardReport({
+			period: 'YEAR',
+			totalOrders: 93,
+			totalRevenue: 8_740_000,
+			ordersGrowth: 12.5,
+			revenueGrowth: -3.25,
+			revenueTrend: [],
+			serviceBreakdown: [],
+			statusDistribution: [
+				{status: 'READY', count: 4},
+				{status: 'ARCHIVED', count: 2},
+			],
+		}, 'year');
+
+		expect(report.totalOrders).toBe(93);
+		expect(report.totalRevenue).toBe(8_740_000);
+		expect(report.ordersGrowth).toBe(12.5);
+		expect(report.revenueGrowth).toBe(-3.25);
+		expect(report.statusDistribution).toEqual([{status: 'ready', label: 'Ready', count: 4}]);
 	});
 
 	it('turns schedule enums and epoch millis into the UI shape', () => {

@@ -1,5 +1,6 @@
 package com.ferry.analytics.webservice.customer.top;
 
+import com.ferry.analytics.core.customer.top.TopCustomerRequest;
 import com.ferry.analytics.core.customer.top.TopCustomerUseCase;
 import com.ferry.analytics.domain.token.AnalyticsAuthPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +20,10 @@ public class TopCustomerController{
 	private final TopCustomerUseCase topCustomerUseCase;
 
 	@GetMapping("/analytics/customer/top")
-	public ResponseEntity<?> getTopCustomers(@AuthenticationPrincipal AnalyticsAuthPrincipal principal){
+	public ResponseEntity<?> getTopCustomers(TopCustomerRequest request,
+	                                         @AuthenticationPrincipal AnalyticsAuthPrincipal principal){
 		WebTopCustomerPresenter presenter = new WebTopCustomerPresenter();
-		topCustomerUseCase.execute(principal, presenter);
+		topCustomerUseCase.execute(request, principal, presenter);
 		return presenter.getResponseEntity();
 	}
 

@@ -1,7 +1,7 @@
 package com.ferry.analytics.core.customer.summary;
 
 import com.ferry.analytics.domain.customer.CustomerSummaryProjection;
-import com.ferry.analytics.domain.period.MonthToDateWindow;
+import com.ferry.analytics.domain.period.PeriodWindow;
 import com.ferry.analytics.domain.tenant.TenantId;
 
 /************************
@@ -10,5 +10,5 @@ import com.ferry.analytics.domain.tenant.TenantId;
  ************************/
 
 public interface CustomerSummaryGateway{
-	CustomerSummaryProjection summarize(TenantId tenantId, MonthToDateWindow window);
+	CustomerSummaryProjection summarize(TenantId tenantId, PeriodWindow window);
 }

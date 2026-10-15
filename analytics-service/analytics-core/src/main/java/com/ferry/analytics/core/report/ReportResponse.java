@@ -1,5 +1,6 @@
 package com.ferry.analytics.core.report;
 
+import com.ferry.analytics.domain.dashboard.StatusCountProjection;
 import com.ferry.analytics.domain.report.ReportPeriod;
 
 import java.math.BigDecimal;
@@ -13,8 +14,13 @@ import java.util.List;
 
 public record ReportResponse(
 	ReportPeriod period,
+	long totalOrders,
+	BigDecimal totalRevenue,
+	BigDecimal ordersGrowth,
+	BigDecimal revenueGrowth,
 	List<TrendPoint> revenueTrend,
-	List<ServiceShare> serviceBreakdown){
+	List<ServiceShare> serviceBreakdown,
+	List<StatusCountProjection> statusDistribution){
 
 	public record TrendPoint(
 		LocalDate bucketStart,

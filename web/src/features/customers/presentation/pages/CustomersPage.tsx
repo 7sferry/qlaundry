@@ -215,7 +215,7 @@ export default function CustomersPage() {
 				<div className="grid grid--stats">
 					<StatCard icon={<Users size={20}/>} value={stats?.totalCustomers ?? '—'} label="Customers"
 					          hint={statsError ?? `${stats?.newCustomers ?? 0} new this month`}/>
-					<StatCard icon={<Star size={20}/>} value={stats ? formatCurrency(stats.monthSpend) : '—'}
+					<StatCard icon={<Star size={20}/>} value={stats ? formatCurrency(stats.spend) : '—'}
 					          label="Total spend" hint={statsError ?? 'This month'}/>
 					<StatCard
 							icon={<Users size={20}/>}

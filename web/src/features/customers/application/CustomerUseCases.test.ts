@@ -15,7 +15,7 @@ const mockCustomer: Customer = {
 
 const mockCustomerPage = {items: [mockCustomer], nextCursor: null, prevCursor: null};
 
-const mockStats: CustomerStats = {totalCustomers: 120, newCustomers: 7, monthSpend: 4_350_000, averageSpend: 145_000};
+const mockStats: CustomerStats = {totalCustomers: 120, newCustomers: 7, spend: 4_350_000, averageSpend: 145_000};
 
 const mockTopCustomers: TopCustomer[] = [
 	{customerId: 'cust_1', fullName: 'Siti Rahayu', totalOrders: 4, totalSpend: 620_000},
@@ -56,6 +56,17 @@ describe('customerUseCases', () => {
 
 		expect(fns.getTopCustomers).toHaveBeenCalledOnce();
 		expect(result).toEqual(mockTopCustomers);
+	});
+
+	it('getStats and getTopCustomers pass the report period through to the repository', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = customerUseCases(repo);
+
+		await useCases.getStats('quarter');
+		await useCases.getTopCustomers('week');
+
+		expect(fns.getCustomerStats).toHaveBeenCalledWith('quarter');
+		expect(fns.getTopCustomers).toHaveBeenCalledWith('week');
 	});
 
 	it('getTopCustomers propagates errors from the repository', async () => {

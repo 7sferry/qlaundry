@@ -3,6 +3,8 @@ package com.ferry.analytics.core.report;
 import com.ferry.analytics.core.constant.AnalyticsConstant;
 import com.ferry.analytics.core.report.ReportResponse.ServiceShare;
 import com.ferry.analytics.core.report.ReportResponse.TrendPoint;
+import com.ferry.analytics.domain.dashboard.StatusCountProjection;
+import com.ferry.analytics.domain.report.PeriodTotalsProjection;
 import com.ferry.analytics.domain.report.ReportWindow;
 import com.ferry.analytics.domain.report.RevenueBucketProjection;
 import com.ferry.analytics.domain.report.ServiceBreakdownProjection;
@@ -37,7 +39,22 @@ public class DefaultReportUseCase implements ReportUseCase{
 		ReportWindow window = request.period().windowFor(today, zone);
 		List<TrendPoint> trend = fillBuckets(window, gateway.revenueTrend(tenantId, window));
 		List<ServiceShare> breakdown = shares(gateway.serviceBreakdown(tenantId, window));
-		presenter.present(new ReportResponse(request.period(), trend, breakdown));
+		long totalOrders = trend.stream().mapToLong(TrendPoint::orders).sum();
+		BigDecimal totalRevenue = trend.stream().map(TrendPoint::revenue).reduce(BigDecimal.ZERO, BigDecimal::add);
+		PeriodTotalsProjection previous = gateway.totals(tenantId, window.previous());
+		List<StatusCountProjection> distribution = gateway.statusDistribution(tenantId, window);
+		presenter.present(new ReportResponse(request.period(), totalOrders, totalRevenue,
+				growth(BigDecimal.valueOf(totalOrders), BigDecimal.valueOf(previous.orders())),
+				growth(totalRevenue, orZero(previous.revenue())), trend, breakdown, distribution));
+	}
+
+	private BigDecimal growth(BigDecimal current, BigDecimal previous){
+		if(previous.signum() == 0){
+			return BigDecimal.ZERO;
+		}
+		return current.subtract(previous)
+				.multiply(HUNDRED)
+				.divide(previous, AnalyticsConstant.PERCENTAGE_SCALE, AnalyticsConstant.PERCENTAGE_ROUNDING);
 	}
 
 	private List<TrendPoint> fillBuckets(ReportWindow window, List<RevenueBucketProjection> buckets){
