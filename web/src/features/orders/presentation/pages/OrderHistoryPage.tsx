@@ -22,7 +22,6 @@ import {
 } from '@/core/ui';
 import {DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS, type SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency, formatDate, formatRelative} from '@/core/utils/format';
-import {PopupBlockedError} from '@/core/utils/openUrlInNewTab';
 import {useOrders} from '../useOrders';
 import type {Order, OrderStatus} from '../../domain/Order';
 import {CLOTHING_TYPE_LABELS, ORDER_STATUS_LABELS} from '../../domain/Order';
@@ -121,8 +120,8 @@ export default function OrderHistoryPage() {
 			if (selectedOrder?.id === order.id) {
 				setSelectedOrder((prev) => prev ? {...prev, status: next} : null);
 			}
-		} catch {
-			toast.error('Failed to update status.');
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Failed to update status.');
 		}
 	};
 
@@ -131,7 +130,7 @@ export default function OrderHistoryPage() {
 		try {
 			await viewInvoice(order);
 		} catch (error) {
-			toast.error(error instanceof PopupBlockedError ? error.message : 'Failed to generate invoice PDF.');
+			toast.error(error instanceof Error ? error.message : 'Failed to generate invoice PDF.');
 		} finally {
 			setOpeningInvoice(false);
 		}
@@ -143,8 +142,8 @@ export default function OrderHistoryPage() {
 			await cancelOrder(order.id, 'Cancelled by operator');
 			toast.success(`Order ${order.orderNumber} cancelled.`);
 			setSelectedOrder(null);
-		} catch {
-			toast.error('Failed to cancel order.');
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Failed to cancel order.');
 		}
 	};
 

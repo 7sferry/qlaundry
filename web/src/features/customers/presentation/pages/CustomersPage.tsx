@@ -173,8 +173,8 @@ export default function CustomersPage() {
 				setShowAddModal(false);
 			}
 			setForm(emptyForm);
-		} catch {
-			toast.error('Something went wrong. Please try again.');
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
 		} finally {
 			setSaving(false);
 		}
@@ -186,8 +186,8 @@ export default function CustomersPage() {
 			await deleteCustomer(c.id);
 			toast.success(`${c.fullName} deleted.`);
 			setSelectedCustomer(null);
-		} catch {
-			toast.error('Failed to delete customer.');
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Failed to delete customer.');
 		}
 	};
 

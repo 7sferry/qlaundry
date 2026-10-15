@@ -6,6 +6,7 @@
 import {env} from '@/core/config/env';
 import {getAccessToken, isAccessTokenExpired} from '@/core/auth/tokenStore';
 import {refreshAccessToken} from '@/core/auth/refreshAccessToken';
+import {HttpError} from '@/core/http/HttpError';
 
 export interface RequestOptions {
 	method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -25,6 +26,22 @@ async function resolveAccessToken(path: string): Promise<string | null> {
 	const token = getAccessToken();
 	if (token && !isAccessTokenExpired(token)) return token;
 	return refreshAccessToken();
+}
+
+async function readErrorDetail(response: Response): Promise<string | undefined> {
+	const text = await response.text().catch(() => '');
+	try {
+		const body = JSON.parse(text) as Record<string, unknown>;
+		const detail = body.detail ?? body.message;
+		return typeof detail === 'string' && detail.trim() !== '' ? detail : undefined;
+	} catch {
+		return undefined;
+	}
+}
+
+function errorMessage(status: number, detail: string | undefined): string {
+	if (status >= 400 && status < 500) return detail ?? `Permintaan ditolak (${status}).`;
+	return `Terjadi kesalahan pada server (${status}). Coba lagi.`;
 }
 
 /**
@@ -56,13 +73,7 @@ async function request<T>(path: string, options: RequestOptions = {}, isRetry = 
 		}
 
 		if (!response.ok) {
-			let message = ((await response.json()) as Record<string, string>).message;
-			if (message){
-				console.log(`Request to ${path} failed with status ${response.status}`)
-				throw new Error(message);
-			} else {
-				throw new Error(`Request to ${path} failed with status ${response.status}`);
-			}
+			throw new HttpError(response.status, errorMessage(response.status, await readErrorDetail(response)));
 		}
 
 		return (await response.json()) as T;

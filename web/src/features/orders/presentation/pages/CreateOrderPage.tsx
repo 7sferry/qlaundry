@@ -22,7 +22,7 @@ import {
 	X,
 	Zap,
 } from 'lucide-react';
-import {Badge, Button, Card, Field, Input, Modal, PageHeader, Pagination, Select, Textarea} from '@/core/ui';
+import {Badge, Button, Card, Field, Input, Modal, PageHeader, Pagination, Select, Textarea, useToast} from '@/core/ui';
 import {formatCurrency} from '@/core/utils/format';
 import {usePlaceOrder, useServices} from '../useOrders';
 import {useCustomerSearch} from '@/features/customers/presentation/useCustomers';
@@ -61,6 +61,7 @@ function initials(fullName: string): string {
 
 export default function CreateOrderPage() {
 	const navigate = useNavigate();
+	const toast = useToast();
 	const {placeOrder} = usePlaceOrder();
 	const {services, loading: servicesLoading} = useServices();
 	const {matches: customerMatches, searching: searchingCustomers, hasNext, hasPrev, search, goNext, goPrevious} =
@@ -315,7 +316,8 @@ export default function CreateOrderPage() {
 			});
 			setSuccess(true);
 			setTimeout(() => navigate('/orders/history'), 1200);
-		} catch {
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Gagal membuat order. Coba lagi.');
 			setSubmitting(false);
 		}
 	};

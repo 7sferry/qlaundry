@@ -1,0 +1,14 @@
+/************************
+ * Made by [MR Ferry™]  *
+ * on Oktober 2026      *
+ ************************/
+
+export class HttpError extends Error {
+	readonly status: number;
+
+	constructor(status: number, message: string) {
+		super(message);
+		this.name = 'HttpError';
+		this.status = status;
+	}
+}

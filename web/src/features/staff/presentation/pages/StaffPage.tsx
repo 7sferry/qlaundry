@@ -103,8 +103,8 @@ export default function StaffPage() {
 			await deleteStaff(s.id);
 			toast.success(`${s.fullName} deleted.`);
 			setSelectedStaff(null);
-		} catch {
-			toast.error('Failed to delete staff.');
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Failed to delete staff.');
 		}
 	};
 
