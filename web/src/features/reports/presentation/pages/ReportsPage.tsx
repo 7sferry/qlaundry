@@ -3,7 +3,7 @@
  * on Juli 2026         *
  ************************/
 
-import {BarChart2, Download, TrendingUp, Users, WashingMachine,} from 'lucide-react';
+import {BarChart2, TrendingUp, Users, WashingMachine,} from 'lucide-react';
 import {
 	Bar,
 	BarChart,
@@ -17,7 +17,7 @@ import {
 	XAxis,
 	YAxis,
 } from 'recharts';
-import {Button, Card, Loading, PageHeader, StatCard} from '@/core/ui';
+import {Card, Loading, PageHeader, StatCard} from '@/core/ui';
 import {formatCurrency} from '@/core/utils/format';
 import {REPORT_PERIODS, type ReportPeriod} from '@/features/dashboard/domain/Dashboard';
 import {useReports} from '@/features/dashboard/presentation/useReports';
@@ -74,21 +74,16 @@ export default function ReportsPage() {
 						title="Reports & analytics"
 						description="Monitor overall performance of your laundry business."
 						actions={
-							<div className="row" style={{gap: 10}}>
 								<div className="period-tabs">
- 								{REPORT_PERIODS.map((p) => (
- 										<button
- 												key={p}
- 												className={`period-tab ${period === p ? 'period-tab--active' : ''}`}
- 												onClick={() => changePeriod(p)}
- 										>
- 											{PERIOD_LABELS[p]}
- 										</button>
- 								))}
-								</div>
-  						<Button variant="ghost">
-  							<Download size={15}/> Export
-  						</Button>
+								{REPORT_PERIODS.map((p) => (
+										<button
+												key={p}
+												className={`period-tab ${period === p ? 'period-tab--active' : ''}`}
+												onClick={() => changePeriod(p)}
+										>
+											{PERIOD_LABELS[p]}
+										</button>
+								))}
 							</div>
 						}
 				/>
