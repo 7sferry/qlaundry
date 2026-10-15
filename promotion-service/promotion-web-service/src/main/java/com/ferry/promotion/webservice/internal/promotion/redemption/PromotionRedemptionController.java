@@ -1,6 +1,6 @@
 package com.ferry.promotion.webservice.internal.promotion.redemption;
 
-import com.ferry.promotion.client.InternalPromotionPaths;
+import com.ferry.promotion.client.PromotionServiceClient;
 import com.ferry.promotion.core.promotion.redemption.PromotionRedemptionRequest;
 import com.ferry.promotion.core.promotion.redemption.PromotionRedemptionUseCase;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class PromotionRedemptionController{
 	private final PromotionRedemptionUseCase promotionRedemptionUseCase;
 
 	@Transactional(isolation = Isolation.READ_COMMITTED)
-	@PostMapping(InternalPromotionPaths.REDEMPTION_PATH)
+	@PostMapping(PromotionServiceClient.REDEMPTION_PATH)
 	public ResponseEntity<?> redeem(@RequestBody PromotionRedemptionRequest request){
 		WebPromotionRedemptionPresenter presenter = new WebPromotionRedemptionPresenter();
 		promotionRedemptionUseCase.execute(request, presenter);

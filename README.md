@@ -18,7 +18,7 @@ Laundry management system — monorepo with a React frontend and a Java/Spring B
 | `promotion-service` | 8104 | Per-tenant promo codes + their redemption during ordering — REST API, verifies user-service's JWT (Redis only for internal API keys) |
 | `analytics-service` | 8105 | Dashboard + reports numbers — Redis Stream consumer into ClickHouse, plus `GET /analytics/dashboard` and `/analytics/report`; verifies user-service's JWT, **no Postgres, no PII** |
 
-Every screen calls a real backend — there is no mock data left in the frontend. The dashboard and reports pages read `analytics-service` (ClickHouse, fed from order-service over `analytics:event:*` Redis streams) plus `GET /order/schedule` for today's pickups/deliveries, which stays in order-service because it shows customer names and ClickHouse holds no PII. `promotion-service` has no frontend yet.
+Every screen calls a real backend. The dashboard and reports pages read `analytics-service` (ClickHouse, fed from order-service over `analytics:event:*` Redis streams) plus `GET /order/schedule` for today's pickups/deliveries, which stays in order-service because it shows customer names and ClickHouse holds no PII. `promotion-service` has no frontend yet.
 
 Customers live in `user-service` (`customers` + the `customer_emails` / `customer_phones` / `customer_addresses` child tables); `order-service` only stores a `customer_id` plus the name/phone/email/address snapshot the invoice was raised with, and never reads user-service's schema. Payments are **cash only** for now.
 
@@ -26,7 +26,7 @@ Promo codes live in `promotion-service`: a promotion is `PERCENTAGE`, `FIXED_AMO
 
 An applied promotion is stored as a row in `order_promotions`, a child of `orders` — not as columns on the order. The API and the web UI are many-valued: `promoCodes` on the request, `promotions: [{promotionId, code, discountAmount}]` on the response. `orders.discount` remains the **total** discount (manual + every promo), so `total_price = subtotal − discount` holds; `order_promotions.discount_amount` says what each code granted.
 
-Phone numbers are normalised before validation, so `0812…`, `62812…` or `+62 812…` all store as `+62812…` (Indonesia is the default dial code). user-service's active encryption key id is read from Redis (`user:encrypt:version`) on every write, so a key rotation needs no restart — see `CLAUDE.md`, "PII encryption at rest". A fresh Redis has no entry, which just falls back to `app.crypto.active-key-id` in yaml (`v1`), so seeding it is optional — do it only when rolling onto a new key without a redeploy:
+Phone numbers are normalized before validation, so `0812…`, `62812…` or `+62 812…` all store as `+62812…` (Indonesia is the default dial code). user-service's active encryption key id is read from Redis (`user:encrypt:version`) on every write, so a key rotation needs no restart — see `CLAUDE.md`, "PII encryption at rest". A fresh Redis has no entry, which just falls back to `app.crypto.active-key-id` in yaml (`v1`), so seeding it is optional — do it only when rolling onto a new key without a redeploy:
 
 ```bash
 redis-cli -a 12345 SET user:encrypt:version v1
@@ -194,6 +194,8 @@ POST   /internal/promotion/redemption/release → promotion-service :8104, {tena
                                             → {referenceId, released: [{promotionId, code, discountAmount}, ...]}
 ```
 
+Each callee publishes a `<service>-client` module (`user-client`, `promotion-client`) holding a Spring HTTP interface whose path constants the callee's own controller maps, so client and server can't drift. order-service registers those interfaces with `@ImportHttpServices` (`OrderHttpServiceConfig`) and configures them under `spring.http.serviceclient.<group>` (base URL, timeouts, `redirects: dont-follow`, and the API-key header from `app.internal.<group>.api-key`). Redirects are followed by order-service's own interceptor, never by the JDK client, and never carry the API key to another origin. Every failure — any non-2xx final status including an unfollowed 3xx, unreachable, timed out, interrupted — is an `HttpClientException` carrying a trace id, which order-service answers with a 503.
+
 `POST /order/create` calls the first before saving whenever the request carries a `customerId`, so an order can never be raised against another tenant's customer, and the second **once per order**, not once per code — the whole `promoCodes` set is redeemed in a single call, in the order submitted, and the response carries one outcome per code. Both are authenticated with `X-Internal-Api-Key: <clientId>:<version>:<secret>` rather than a staff token — order-service holds one credential per callee (`app.internal.user-service.api-key` and `app.internal.promotion-service.api-key`), so rotating one never touches the other.
 
 The redemption call is a write: it claims a usage slot per code with a single conditional `UPDATE` (guard in the `WHERE` clause, so concurrent orders can't both take the last slot) and records a `promotion_redemptions` row per code keyed by the order number under `UNIQUE (tenant_id, reference_id, code)` — a retried `/order/create` replays those redemptions instead of burning a second slot. A code that is unknown, inactive, not started, expired or exhausted comes back as `applied: false` with a message (order-service turns it into a 400), never as an HTTP error; only a transport failure is a 503. If any code in the batch is rejected, promotion-service rolls back the whole call — a code redeemed earlier in the same batch never stays claimed against an order that ultimately fails. Because it writes, it takes a `redeemedBy` staff id in the body for the audit columns — audit only, never an authorization input.
@@ -206,12 +208,29 @@ Each callee stores only `SHA-256(secret)` — never the secret — and looks it 
 
 Seed the baseline keys once per environment, alongside the `init.sql` lookup tables — until you do, orders that carry a `customerId` or `promoCodes` fail with 503 while plain walk-in orders work:
 
+### Rotating an internal key
+
+**Invariant: the new version is accepted before it is sent; the old is removed only after nobody sends it.**
+
 ```bash
 redis-cli -a 12345 SET user:internal:key:order:v1 \
     e24b5b12e47219f45c43ce3c999d69cd3c5478b6d2fed822cd0cf4e3ea345b5e
 redis-cli -a 12345 SET promotion:internal:key:order:v1 \
     0ad6b70012fc50e0f74531ea48191e1c911623cc73f614f99c273265e403c5a4
 ```
+
+```bash
+SECRET=$(openssl rand -base64 32); printf '%s' "$SECRET" | sha256sum        # 1. new secret + digest
+redis-cli -a 12345 SET user:internal:key:order:v2 <digest>                  # 2. accept v2 (no restart)
+# 3. APP_INTERNAL_USERSERVICE_APIKEY=order:v2:$SECRET, restart order-service
+# 4. grep 'authenticated as order using key v1' logs/user-web-service.log   (all instances)
+redis-cli -a 12345 DEL user:internal:key:order:v1                           # 5. close the window
+```
+
+- Step 2 before 3, always; rollback is free until step 5.
+- The yaml baseline can't be `DEL`ed: `SET` its successor, move the caller, promote it into `UserInternalKeysProperties` at the next deploy.
+- Emergency: `DEL` the compromised version immediately (blast radius: creates with `customerId` → 503).
+- **Never reuse a version id** (same as crypto key ids and lookup ids).
 
 The key only works under `/internal/` — user-service's filter ignores it on every other path, so a leaked key can reach nothing but the service-to-service endpoints. nginx deliberately does **not** proxy `/internal/*`, so it is reachable only from inside the network.
 

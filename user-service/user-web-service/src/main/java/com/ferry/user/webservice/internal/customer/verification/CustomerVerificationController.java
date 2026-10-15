@@ -1,5 +1,6 @@
 package com.ferry.user.webservice.internal.customer.verification;
 
+import com.ferry.user.client.UserServiceClient;
 import com.ferry.user.core.customer.verification.CustomerVerificationRequest;
 import com.ferry.user.core.customer.verification.CustomerVerificationUseCase;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class CustomerVerificationController{
 	private final CustomerVerificationUseCase customerVerificationUseCase;
 
 	@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
-	@GetMapping("/internal/customer/verification")
+	@GetMapping(UserServiceClient.VERIFICATION_PATH)
 	public ResponseEntity<?> verify(CustomerVerificationRequest request){
 		WebCustomerVerificationPresenter presenter = new WebCustomerVerificationPresenter();
 		customerVerificationUseCase.execute(request, presenter);

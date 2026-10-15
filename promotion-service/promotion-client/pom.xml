@@ -34,9 +34,8 @@
 	</properties>
 	<dependencies>
 		<dependency>
-			<groupId>com.ferry</groupId>
-			<artifactId>http-client</artifactId>
-			<version>1.0.0</version>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
 		</dependency>
 	</dependencies>
 

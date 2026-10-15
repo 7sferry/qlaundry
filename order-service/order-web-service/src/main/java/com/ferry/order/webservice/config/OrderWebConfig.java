@@ -79,12 +79,8 @@ import com.ferry.order.gateway.service.JpaLaundryServiceUpdateGateway;
 import com.ferry.order.gateway.service.repository.LaundryServiceJpaRepository;
 import com.ferry.order.webservice.analytics.sweep.AnalyticsOutboxScheduler;
 import com.ferry.order.webservice.order.saga.OrderPromotionSagaScheduler;
-import com.ferry.promotion.client.DefaultPromotionServiceClient;
 import com.ferry.promotion.client.PromotionServiceClient;
-import com.ferry.promotion.client.PromotionServiceClientConfig;
-import com.ferry.user.client.DefaultUserServiceClient;
 import com.ferry.user.client.UserServiceClient;
-import com.ferry.user.client.UserServiceClientConfig;
 import com.ferry.utils.crypto.AesGcmCryptoTool;
 import com.ferry.utils.crypto.CryptoKeyConfig;
 import com.ferry.utils.crypto.CryptoTool;
@@ -185,22 +181,8 @@ public class OrderWebConfig{
 	}
 
 	@Bean
-	UserServiceClient userServiceClient(@Value("${app.internal.user-service.base-url}") String baseUrl,
-	                                    @Value("${app.internal.user-service.api-key}") String apiKey,
-	                                    @Value("${app.internal.user-service.timeout:5s}") Duration timeout){
-		return new DefaultUserServiceClient(new UserServiceClientConfig(baseUrl, apiKey, timeout));
-	}
-
-	@Bean
 	OrderCustomerGateway customerVerificationGateway(UserServiceClient userServiceClient){
 		return new HttpOrderCustomerGateway(userServiceClient);
-	}
-
-	@Bean
-	PromotionServiceClient promotionServiceClient(@Value("${app.internal.promotion-service.base-url}") String baseUrl,
-	                                              @Value("${app.internal.promotion-service.api-key}") String apiKey,
-	                                              @Value("${app.internal.promotion-service.timeout:5s}") Duration timeout){
-		return new DefaultPromotionServiceClient(new PromotionServiceClientConfig(baseUrl, apiKey, timeout));
 	}
 
 	@Bean

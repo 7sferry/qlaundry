@@ -22,6 +22,25 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  http:
+    clients:
+      imperative:
+        factory: jdk
+    serviceclient:
+      user-service:
+        base-url: 'http://localhost:8101'
+        connect-timeout: 10s
+        read-timeout: 5s
+        redirects: dont-follow
+        default-header:
+          '[X-Internal-Api-Key]': ${app.internal.user-service.api-key}
+      promotion-service:
+        base-url: 'http://localhost:8104'
+        connect-timeout: 10s
+        read-timeout: 5s
+        redirects: dont-follow
+        default-header:
+          '[X-Internal-Api-Key]': ${app.internal.promotion-service.api-key}
 
 server:
   port: 8103
@@ -57,15 +76,11 @@ app:
       tenant-id: ''
   internal:
     user-service:
-      base-url: 'http://localhost:8101'
-      timeout: 5s
       # credential for the /internal/** call into user-service, as <clientId>:<version>:<secret>. user-service stores
       # only the SHA-256 of the secret part. Rotating means pointing this at a new version that user-service already
       # accepts, then restarting — dev-only here, use APP_INTERNAL_USERSERVICE_APIKEY elsewhere
       api-key: 'order:v1:dev-internal-2f8c41b9a7d3e56c0b1f9a4d8e7c6b52'
     promotion-service:
-      base-url: 'http://localhost:8104'
-      timeout: 5s
       # promotion-service keeps its own digest set, so this is a second, independent credential — rotating one
       # never touches the other. dev-only here, use APP_INTERNAL_PROMOTIONSERVICE_APIKEY elsewhere
       api-key: 'order:v1:dev-internal-9c4a71e0f5b2d836a1e74c9b02f6d5a3'

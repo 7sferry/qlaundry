@@ -2,7 +2,7 @@ package com.ferry.order.gateway.customer;
 
 import com.ferry.order.core.order.create.OrderCustomerGateway;
 import com.ferry.order.core.order.create.CustomerVerificationHttpRequest;
-import com.ferry.user.client.CustomerVerificationParams;
+import com.ferry.user.client.CustomerVerificationClientResponse;
 import com.ferry.user.client.UserServiceClient;
 
 /************************
@@ -20,8 +20,9 @@ public class HttpOrderCustomerGateway implements OrderCustomerGateway{
 
 	@Override
 	public boolean belongsToTenant(CustomerVerificationHttpRequest request){
-		CustomerVerificationParams params = new CustomerVerificationParams(request.customerId(), request.tenantId());
-		return userServiceClient.verifyCustomer(params);
+		CustomerVerificationClientResponse response = userServiceClient.verifyCustomer(request.customerId(),
+				request.tenantId());
+		return response != null && response.valid();
 	}
 
 }

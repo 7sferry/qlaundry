@@ -5,7 +5,7 @@ package com.ferry.user.client;
  * on Agustus 2026      *
  ************************/
 
-record CustomerVerificationClientResponse(
+public record CustomerVerificationClientResponse(
 	String customerId,
 	String tenantId,
 	boolean valid){

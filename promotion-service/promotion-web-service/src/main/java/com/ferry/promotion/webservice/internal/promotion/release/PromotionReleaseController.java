@@ -1,6 +1,6 @@
 package com.ferry.promotion.webservice.internal.promotion.release;
 
-import com.ferry.promotion.client.InternalPromotionPaths;
+import com.ferry.promotion.client.PromotionServiceClient;
 import com.ferry.promotion.core.promotion.release.PromotionReleaseRequest;
 import com.ferry.promotion.core.promotion.release.PromotionReleaseUseCase;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class PromotionReleaseController{
 	private final PromotionReleaseUseCase promotionReleaseUseCase;
 
 	@Transactional(isolation = Isolation.READ_COMMITTED)
-	@PostMapping(InternalPromotionPaths.RELEASE_PATH)
+	@PostMapping(PromotionServiceClient.RELEASE_PATH)
 	public ResponseEntity<?> release(@RequestBody PromotionReleaseRequest request){
 		WebPromotionReleasePresenter presenter = new WebPromotionReleasePresenter();
 		promotionReleaseUseCase.execute(request, presenter);
