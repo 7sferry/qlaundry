@@ -119,7 +119,7 @@ export default function CreateOrderPage() {
 	};
 
 	const service = useMemo(
-		() => services.find((s) => s.id === selectedServiceId) ?? services[0],
+		() => services.find((s) => s.id === selectedServiceId),
 		[services, selectedServiceId],
 	);
 
@@ -673,7 +673,7 @@ export default function CreateOrderPage() {
 							<div className="summary-line">
 								<span>Unit price</span>
 								<span>
-                  {service ? formatCurrency(service.pricePerUnit * (priority === 'express' ? service.expressMultiplier : 1)) : '—'} / {service?.unit}
+                  {service ? `${formatCurrency(service.pricePerUnit * (priority === 'express' ? service.expressMultiplier : 1))} / ${service.unit}` : '—'}
                 </span>
 							</div>
 							<div className="summary-line">
@@ -723,7 +723,7 @@ export default function CreateOrderPage() {
 								Mark as picked up immediately
 							</label>
 
-							<Button block type="submit" disabled={submitting || !form.customerName}
+							<Button block type="submit" disabled={submitting || !service || !form.customerName}
 							        style={{marginTop: 12}}>
 								{submitting ? 'Creating order…' : <><Check size={16}/> Create order <ArrowRight
 									size={16}/></>}
