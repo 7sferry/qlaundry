@@ -1,117 +1,99 @@
-# QLaundry
+# QLaundry — web
 
-Aplikasi manajemen laundry berbasis web untuk mengelola order, pelanggan, jadwal, dan laporan bisnis laundry.
+Aplikasi web QLaundry untuk mengelola order, pelanggan, layanan, promo, staf, dan laporan bisnis laundry. This is the React frontend of the monorepo; the backend, gateway and full local setup are described in the [root README](../README.md).
 
-## Tech Stack
+## Tech stack
 
-| Layer     | Library / Tool                              |
-|-----------|---------------------------------------------|
-| Framework | React 19 + TypeScript 6                     |
-| Build     | Vite 8 + Bun                                |
-| Routing   | React Router v7                             |
-| Charts    | Recharts 3                                  |
-| Icons     | Lucide React                                |
-| Styling   | Custom CSS (CSS variables, dark/light mode) |
+| Layer | Library / Tool |
+|---|---|
+| Framework | React 19 + TypeScript 6 (strict) |
+| Build | Vite 8 + Bun |
+| Routing | React Router 7 |
+| Charts | Recharts 3 |
+| Icons | Lucide React |
+| Styling | One global CSS file with CSS variables (dark/light theme), no Tailwind / CSS-in-JS |
+| Tests | Vitest 4 (pure-logic unit tests, co-located `*.test.ts`) |
+| Captcha | Cloudflare Turnstile (tenant registration) |
+
+## Features
+
+| Path | Page |
+|---|---|
+| `/register` | Register a laundry (tenant) + its super-staff account |
+| `/confirm-registration` | Landing page of the confirmation email; activates the tenant, offers a resend on failure |
+| `/login` | Login |
+| `/forgot-password` | Reset password: username → emailed OTP → new password |
+| `/dashboard` | Today's and this month's numbers, growth, status distribution, today's pickups/deliveries |
+| `/orders/new` | Create an order: customer search, items, weight, priority, promo codes, "picked up immediately" |
+| `/orders/history` | Order list with filters, status changes, payment, "view invoice" (opens the PDF in a new tab) |
+| `/customers` | Customer book with order count, total spend and tier |
+| `/services` | Laundry service price list (editing is super-staff only) |
+| `/promotions` | Promo codes: create, edit, pause/resume (super-staff only) |
+| `/staff` | Staff accounts and roles |
+| `/reports` | Revenue trend by week/month/quarter/year and per-service breakdown |
+| `/settings` | Your own account |
+| `/tenant-settings` | Business name, description and time zone (super-staff only) |
+
+All UI text is Indonesian; money is IDR (`formatCurrency`, `id-ID` locale).
 
 ## Architecture
 
-Screaming architecture + clean architecture, per-feature:
+Screaming architecture + clean architecture: every feature is a self-contained vertical slice.
 
 ```
 src/
-├── app/styles/          # Global CSS design system
+├── app/styles/       global.css — the design system (CSS variables, themes)
 ├── core/
-│   ├── config/          # env.ts — typed env access
-│   ├── http/            # httpClient with withFallback()
-│   ├── theme/           # ThemeProvider, themeContext, useTheme
-│   └── ui/              # Shared UI components (Button, Card, Modal, Drawer, Toast…)
-├── features/
-│   ├── auth/            # Login, register, session
-│   ├── customers/       # Customer CRUD + tier system
-│   ├── dashboard/       # Stats, trends, schedule
-│   ├── orders/          # Create order, history, status workflow
-│   └── reports/         # Revenue charts, service breakdown
-└── shared/
-    └── components/      # Sidebar, Topbar
+│   ├── auth/         in-memory token store, session events
+│   ├── config/       env.ts — typed env access (never read import.meta.env elsewhere)
+│   ├── hooks/        shared hooks (useOnceEffect, usePaginatedList, …)
+│   ├── http/         httpClient (get/post/put/delete, token refresh)
+│   ├── pagination/   cursor pagination types (after/before, pageSize)
+│   ├── theme/        ThemeProvider, useTheme
+│   ├── ui/           shared components (Button, Card, Modal, Drawer, PhoneInput, Toast, …)
+│   └── utils/        format.ts, openUrlInNewTab.ts
+├── features/         auth · customers · dashboard · orders · promotions · reports · services · staff · tenant
+└── shared/components Sidebar, Topbar
 ```
 
-Each feature follows four layers:
+Each feature has four layers:
 
 ```
-domain/          ← interfaces & types only (no deps)
-infrastructure/  ← API calls + fallback data
-application/     ← use cases (orchestration)
-presentation/    ← React hooks & pages
+domain/          types & repository interfaces (no deps)
+infrastructure/  repository implementations: API call ⇄ wire format
+application/     use cases (orchestration, no React)
+presentation/    React hooks (use*) + pages
 ```
 
-## Routes
+- **Live-only**: every screen calls the real backend and surfaces errors. There is no mock or fallback data.
+- **Auth**: the access token lives only in memory. A reload restores the session through the `refresh_token` httpOnly cookie, and a 401 from refresh logs you out.
+- **Time zone**: the browser's zone is sent once, at tenant registration. After that, "today" and every report bucket follow the tenant's zone from the token, and no request carries a zone.
+- **Lists** are cursor-paginated (`after`/`before`). A page-size picker (3/5/10/20/50) sits in each page's filter row.
 
-| Path              | Page                |
-|-------------------|---------------------|
-| `/login`          | Login               |
-| `/register`       | Register            |
-| `/dashboard`      | Dashboard           |
-| `/orders/new`     | Buat order baru     |
-| `/orders/history` | Riwayat order       |
-| `/customers`      | Manajemen pelanggan |
-| `/reports`        | Laporan & analitik  |
+## Getting started
 
-## Getting Started
+Run it behind the gateway as described in the [root README](../README.md), then open https://localhost:8100.
 
 ```bash
-# Install dependencies
 bun install
-
-# Copy env file
-cp .env.example .env
-
-# Start dev server
-bun dev
+cp .env.example .env      # then set VITE_TURNSTILE_SITE_KEY
+bun dev                   # Vite on :5173 (reached through the gateway)
 ```
 
 ## Environment
 
-```env
-VITE_API_BASE_URL=http://localhost:7777
-```
-
-The app calls the backend first and falls back to bundled mock data automatically on network error, timeout (4s), or
-HTTP error — so the UI always works without a running backend.
-
-## API Endpoints
-
-All endpoints are prefixed with the value of `VITE_API_BASE_URL`.
-
-| Method   | Path                          | Description                            |
-|----------|-------------------------------|----------------------------------------|
-| `POST`   | `/api/auth/login`             | Login, returns `{ accessToken, user }` |
-| `POST`   | `/api/auth/register`          | Register new user                      |
-| `GET`    | `/api/auth/me`                | Get current user profile               |
-| `POST`   | `/api/auth/logout`            | Logout                                 |
-| `GET`    | `/api/orders`                 | List orders (supports filters)         |
-| `POST`   | `/api/orders`                 | Create order                           |
-| `PATCH`  | `/api/orders/:id/status`      | Advance order status                   |
-| `DELETE` | `/api/orders/:id`             | Cancel order                           |
-| `GET`    | `/api/services`               | List laundry services                  |
-| `GET`    | `/api/customers`              | List customers                         |
-| `POST`   | `/api/customers`              | Create customer                        |
-| `PATCH`  | `/api/customers/:id`          | Update customer                        |
-| `DELETE` | `/api/customers/:id`          | Delete customer                        |
-| `GET`    | `/api/customers/phone/:phone` | Lookup customer by phone               |
-| `GET`    | `/api/dashboard/summary`      | Dashboard stats + schedule             |
-
-## Demo Credentials
-
-```
-Username : admin
-Password : admin123
-```
+| Variable | `.env.example` | Meaning |
+|---|---|---|
+| `VITE_API_BASE_URL` | `/api` | Backend base URL. `/api` is the gateway's same-origin prefix, so there is no CORS. |
+| `VITE_TURNSTILE_SITE_KEY` | — | Cloudflare Turnstile site key for the registration captcha |
 
 ## Scripts
 
 ```bash
-bun dev        # Dev server (http://localhost:5173)
-bun build      # Production build (tsc + vite)
-bun lint       # ESLint
-bun preview    # Preview production build
+bun dev            # dev server
+bun run build      # tsc -b && vite build
+bun lint           # ESLint
+bun test           # Vitest, single pass
+bun test:watch     # Vitest, watch mode
+bun preview        # preview the production build
 ```

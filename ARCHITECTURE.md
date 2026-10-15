@@ -1,11 +1,13 @@
 # Architecture
 
-QLaundry is a monorepo: a React SPA, four independent Java/Spring Boot backend
+QLaundry is a monorepo: a React SPA, five independent Java/Spring Boot backend
 services, and an nginx gateway that puts them on one origin. This document
-describes the shape of the system and why it's organized this way. For
-command-by-command specifics (build commands, ESLint gotchas, test
-conventions, code style), see the root [`CLAUDE.md`](CLAUDE.md) and
-[`web/CLAUDE.md`](web/CLAUDE.md) — this file is the map, those are the manual.
+describes the shape of the system and why it's organized this way. For setup
+see the root [`README.md`](README.md); each service's API and runbooks are in
+its own README ([user](user-service/README.md), [order](order-service/README.md),
+[promotion](promotion-service/README.md), [notification](notification-service/README.md),
+[analytics](analytics-service/README.md), [web](web/README.md)) — this file is
+the map, those are the manuals.
 
 ## System overview
 
@@ -59,7 +61,7 @@ flowchart LR
     PSAPI --> PG
     PSAPI --> Redis
     OSAPI -->|"GET /internal/customer/verification"| USAPI
-    OSAPI -->|"POST /internal/promotion/redemption"| PSAPI
+    OSAPI -->|"POST /internal/promotion/redemption (+ /release)"| PSAPI
     USAPI -->|"publishes email jobs"| Redis
     NSC -->|"consumes email jobs"| Redis
     NSC --> PG
@@ -93,10 +95,9 @@ flowchart LR
   the caller must have an answer to *before* it can commit goes over a
   synchronous `/internal/**` HTTP call (customer verification, promo
   redemption). See [Service-to-service calls](#service-to-service-calls).
-- Every screen has a backend now — the dashboard and reports pages read
+- Every screen has a backend — the dashboard and reports pages read
   `analytics-service` (see [OLTP → OLAP](#oltp--olap-analytics-events)), and
-  the last frontend mock is gone. `promotion-service` is the reverse case — a
-  backend with no frontend yet.
+  there is no frontend mock data left.
 
 ## Backend: Clean Architecture, one Maven module per layer
 
@@ -144,7 +145,9 @@ Controllers stay thin: build a `XxxWebPresenter`, call
 `presenter.getResponseEntity()`. There are no `@Service`/`@Component`
 annotations on use cases or gateways — every bean is wired explicitly in each
 service's web config (`UserWebConfig`, `OrderWebConfig`, `PromotionWebConfig`,
-`NotificationWebConfig`).
+`NotificationWebConfig`, `AnalyticsWebConfig`). The one exception is
+order-service's internal HTTP clients, which Spring registers from
+`@ImportHttpServices` on `OrderHttpServiceConfig`.
 
 **Duplication between sibling features is the design, not an oversight.** The
 seven order status transitions each own a full six-file slice with nothing
@@ -160,13 +163,15 @@ user-service (user-core/.../core)
 ├── staff/     login · logout · registration · list · detail · delete · update
 │              refreshtoken · forgotpassword · submitotp · resetpassword
 ├── tenant/    registration · confirmregistration · resendconfirmation · expiration
+│              detail · update
 ├── customer/  registration · list · detail · update · delete · verification (internal)
 └── notification/   (UserEmailPublisher port — see email flow)
 
 order-service (order-core/.../core)
 ├── service/   create · list · update · delete          (the per-tenant price list)
-├── order/     create · list · detail · payment · schedule
+├── order/     create · list · detail · payment · schedule · saga (promo sweeper)
 │              confirm · pickup · process · ready · deliver · complete · cancel
+├── customer/  totals                                   (per-customer order rollup)
 ├── invoice/   link (mint a presigned URL) · pdf (render it)
 └── analytics/ sweep (republish the outbox) · backfill (replay every row)
 
@@ -176,7 +181,8 @@ analytics-service (analytics-core/.../core)
 └── report/    period trend + service breakdown
 
 promotion-service (promotion-core/.../core)
-└── promotion/ create · list · detail · update · toggle · redemption (internal)
+└── promotion/ create · list · detail · update · toggle · preview
+               redemption · release (internal)
 
 notification-service (notification-core/.../core)
 └── email/
@@ -195,13 +201,14 @@ change.
 
 Any column with a small closed set of values (tenant status, staff role,
 session type, email trigger type/status, email type, order status/priority,
-payment method/status, clothing type, service unit/category, promotion type)
-is a real FK to its own tiny table, never a plain `VARCHAR`/`@Enumerated`
-column. The domain-layer enum carries the numeric id (`short value` +
-`fromValue(short)`); the owning JPA entity has both the real
-`@ManyToOne(LAZY)` relation *and* a shadow `insertable = false,
-updatable = false` id column, so the domain can be reconstructed from the raw
-id without forcing the lazy proxy to load. Lookup rows are seeded via each
+payment method/status, clothing type, service unit/category, promotion type,
+saga status, analytics aggregate/event status) is a real FK to its own tiny
+table, never a plain `VARCHAR`/`@Enumerated` column. The domain-layer enum
+carries the numeric id (`short value` + `fromValue(short)`); the owning JPA
+entity holds only the raw `short xxxId` column, set from the enum, with no
+relation at all. The lookup entity keeps a never-called unidirectional
+`@OneToMany` with a `@JoinColumn` purely so the FK still exists in the schema.
+Lookup rows are seeded via each
 service's `init.sql`, not Flyway. JPA otherwise runs with `ddl-auto: update` —
 no migration tool, `sql/migration.sql` is reference documentation only.
 
@@ -209,7 +216,16 @@ Lookup ids are **never renumbered or recycled**: rows point at them.
 
 IDs are ULIDs (`utils/identity-generator`'s `UlidGenerator`), generated by the
 gateway, never DB-generated. Order numbers are separate and human-facing:
-`INV-<yyyyMMdd Asia/Jakarta>-<6 Crockford chars>`, unique-constrained.
+`INV-<yyyyMMdd in the tenant's time zone>-<millis-of-day + random Crockford chars>`,
+unique-constrained.
+
+**Tenant time zone.** "Today", the dashboard's day/month buckets, the
+schedule's day and the order number's date follow the *tenant's* business
+day, not the viewer's device. The zone is stored on `tenants.time_zone`
+(captured from the browser at registration, editable in tenant settings) and
+travels in the access token's `timeZone` claim, so no endpoint takes a `zone`
+parameter and two staff of one laundry can never disagree about which day an
+order belongs to.
 
 ### Money vs measurements
 
@@ -220,10 +236,11 @@ percentage discount or a split bill produces fractions that must not be
 silently rounded away mid-calculation.
 
 Anything *measured* rather than exact — `orders.weight_kg`,
-`laundry_services.express_multiplier`, `promotions.percentage` — is a plain
-`double` pinned to 2 decimals via `Decimals.scaled(...)`. The multiplication
-into a price always happens in `BigDecimal`, so no amount is ever a binary
-float approximation.
+`laundry_services.express_multiplier` — is a plain `double` pinned to 2
+decimals via `Decimals.scaled(...)`. The multiplication into a price always
+happens in `BigDecimal`, so no amount is ever a binary float approximation.
+`promotions.percentage` is a `BigDecimal` (`NUMERIC(5,2)`): it is never a
+measurement, it only ever feeds price maths.
 
 ### Cursor pagination
 
@@ -232,15 +249,18 @@ List endpoints are cursor-paginated, not offset-paginated, through the shared
 `PageDirection`, `SortBy`/`SortDirection`, `CursorFetch<T>` (a page of rows +
 a `hasMore` flag the gateway returns) and `CursorPaginator`/`CursorPage`.
 
-The gateway fetches `PAGE_SIZE + 1` rows with a keyset predicate
-(`id > cursor` / `(name, id) > (cursor.sortValue, cursor.id)`); the use case
-turns `hasMore` plus the requested direction into `nextCursor`/`prevCursor`.
-`hasMore` alone is never enough — which cursor it implies depends on whether
-the caller asked for `NEXT` or `PREV`.
+On the wire, `?after=<token>` pages forward and `?before=<token>` pages back;
+`pageSize` is the client's choice (default 3), silently clamped to 50. The
+gateway fetches `pageSize + 1` rows with a keyset predicate (`id > cursor`, or
+for a non-unique sort column the hand-expanded
+`name > :x or (name = :x and id > :id)` — HQL's row-value form mis-binds with
+these queries' SpEL parameters); the use case turns `hasMore` plus the
+requested direction into `nextCursor`/`prevCursor`. `hasMore` alone is never
+enough — which cursor it implies depends on the direction.
 
 ## Auth model
 
-RS256 JWT access tokens, short-lived, cached in Redis. Opaque refresh tokens,
+Ed25519-signed JWT access tokens, short-lived, cached in Redis. Opaque refresh tokens,
 hashed, session persisted in Postgres (`UserSession`) and mirrored in
 Redis with a capped TTL. Passwords hashed with Argon2 (`password4j`) and kept
 in their own `staff_passwords` history table — `staffs` has no password
@@ -265,8 +285,8 @@ sequenceDiagram
     US-->>B: new access token
 ```
 
-**Only `user-service` can mint a token.** `order-service` and
-`promotion-service` hold just the *public* half of the RS256 key pair
+**Only `user-service` can mint a token.** `order-service`,
+`promotion-service` and `analytics-service` hold just the *public* half of the Ed25519 key pair
 (`app.token.public-key`) and are verify-only: their JWT filters rebuild a
 principal from the claims and have no `/auth` endpoints at all. Each
 duplicates `StaffRole`/`SessionType` and its own `*AuthPrincipal` into its
@@ -335,9 +355,10 @@ crypto config, no `CryptoTool` bean, and nothing to backfill.
 
 ## Service-to-service calls
 
-`order-service` is the only service that calls others synchronously, and it
-does so through exactly two endpoints — one per callee, both under
-`/internal/`, neither reachable from the browser.
+`order-service` is the only service that calls others synchronously, all
+under `/internal/` and none reachable from the browser: customer
+verification on user-service, and promo redemption plus its compensating
+release on promotion-service.
 
 ```mermaid
 sequenceDiagram
@@ -354,15 +375,22 @@ sequenceDiagram
     end
     Note over OS: price the order, generate the order number
     opt request carries promoCodes
-        loop each code, in order submitted
-            OS->>PS: POST /internal/promotion/redemption {code, subtotal, discountSoFar, multipleCodes, referenceId}
-            PS->>PS: claim a usage slot (conditional UPDATE)
-            PS-->>OS: {applied, message, discountAmount}
-            Note over OS: applied=false → 400 with the message, whole call fails
-        end
+        OS->>PG: saga row PENDING (own transaction)
+        OS->>PS: POST /internal/promotion/redemption {codes[], subtotal, referenceId}
+        PS->>PS: claim each slot (conditional UPDATE), all-or-nothing
+        PS-->>OS: {redemptions: [{applied, message, discountAmount}, ...]}
+        Note over OS: any applied=false → 400, whole call fails
     end
-    OS->>PG: save the order (+ items)
+    OS->>PG: save the order (+ items, promotions)
+    Note over OS,PG: after commit: saga row → COMMITTED
 ```
+
+Each callee publishes its contract as a Spring HTTP interface in a
+`*-client` module, whose path constants its own controller maps, so client
+and server can't drift. order-service turns those interfaces into beans with
+`@ImportHttpServices`, and an interceptor in `utils/http-client` adds the
+trace id, follows redirects itself (dropping the API key on a cross-origin
+hop) and turns every failure into one `HttpClientException`.
 
 - **The `/internal/` prefix is what bounds the key.** The filter returns early
   on any other URI, so presenting the key on `/customer/detail` does nothing.
@@ -402,11 +430,12 @@ Pricing is computed server-side and never trusted from the client.
    `expressMultiplier` for `EXPRESS` orders → **subtotal**.
 2. The manual `discount` a staff member grants is subtracted;
    `Money.minus` rejects a discount larger than the subtotal.
-3. If `promoCodes` was supplied, each code is redeemed in turn against
-   `promotion-service` and `Order.applyPromotionDiscount(...)` folds its
-   granted amount in *on top of* the manual discount and every code redeemed
-   before it, before the next code is redeemed — so a later code's cap
-   (`discountRoom()`) already reflects everything applied so far.
+3. If `promoCodes` was supplied, the whole set is redeemed in **one** call to
+   `promotion-service`, which applies the codes in the order submitted, each
+   one seeing what the earlier ones granted. order-service caps each returned
+   amount at the order's `discountRoom()` (which also accounts for the manual
+   discount promotion-service knows nothing about) and folds it in with
+   `Order.applyPromotionDiscount(...)`.
 
 `orders.discount` stays the **combined total**, so `total_price = subtotal −
 discount` holds unchanged and nothing that reads a total had to move. What
@@ -419,8 +448,8 @@ retire the promotion afterwards.
 
 Whether a code's own discount is computed off the *remaining* amount (after
 earlier codes on the same order) or off the *original* subtotal depends on its
-`PromotionType`: `PERCENTAGE` and `FIXED_AMOUNT` chain off the remainder;
-`NON_CUMULATIVE_PERCENTAGE` always uses the original subtotal. A promotion
+`PromotionType`: `CUMULATIVE_PERCENTAGE` and `FIXED_AMOUNT` chain off the
+remainder; `NON_CUMULATIVE_PERCENTAGE` always uses the original subtotal. A promotion
 flagged `combinable = false` can only be redeemed alone — submitting it
 alongside any other code rejects the whole `/order/create` call.
 
@@ -433,18 +462,24 @@ other services' schemas — never foreign keys.
 
 ### Promotion types and the usage limit
 
-A promotion is one of `PERCENTAGE`, `FIXED_AMOUNT` or
+A promotion is one of `CUMULATIVE_PERCENTAGE`, `FIXED_AMOUNT` or
 `NON_CUMULATIVE_PERCENTAGE`; the type decides which of `percentage` and
-`amount` are required, enforced in `Promotion`'s compact constructor.
-`maxDiscountAmount` (caps the grant) and `minSubtotal` (eligibility floor) are
-optional on every type now, and `combinable` (default `true`) gates whether a
-code can be stacked with others on the same order.
-`discountFor(initialSubtotal, discountSoFar)` is the only place a discount is
-computed, and it always ends `.min(basis)`. `basis` is the order's original
-subtotal for `NON_CUMULATIVE_PERCENTAGE`, or `initialSubtotal − discountSoFar`
-(whatever earlier codes on the same order already granted) for `PERCENTAGE`
-and `FIXED_AMOUNT` — that chaining is the entire difference the type name
-refers to.
+`amount` are required, enforced in `Promotion`'s compact constructor, and
+every promotion has a required `startAt`/`endAt` window.
+`maxDiscountAmount` (caps the grant) and `minSubtotal` (eligibility floor,
+always checked against the original subtotal) are optional on every type, and
+`combinable` (default `true`) gates whether a code can be stacked with others
+on the same order.
+
+The discount is computed by a visitor pair: `DiscountStrategyFactory` maps
+each promotion to a `DiscountStrategy`, and one `DiscountCalculator` per call
+carries the original subtotal plus the running total granted so far. `basis`
+is the original subtotal for `NON_CUMULATIVE_PERCENTAGE`, or what is left
+after earlier codes for `CUMULATIVE_PERCENTAGE` and `FIXED_AMOUNT` — that
+chaining is the entire difference the type name refers to — and every
+result ends `.min(maxDiscountAmount).min(basis)`. `POST /promotion/preview`
+runs the same calculator over promotions the caller sends, touching no data,
+so the order-create screen can show the discount before anything is claimed.
 
 Two mechanisms make "limited usage" actually hold under concurrency:
 
@@ -462,7 +497,33 @@ Two mechanisms make "limited usage" actually hold under concurrency:
 A code that is unknown, inactive, not yet started, expired or exhausted comes
 back as `applied: false` plus a `PromotionRejection` message — never an HTTP
 error. Only `order-service` turns that into a 400 for the staff member. This
-mirrors how customer verification answers a yes/no rather than a 404.
+mirrors how customer verification answers a yes/no rather than a 404. A batch
+is **all-or-nothing**: if any code is rejected, promotion-service rolls back
+every claim made earlier in the same call.
+
+### The redemption saga
+
+The redemption commits in promotion-service *before* order-service has saved
+anything, so the two are a saga, not one transaction. order-service is the
+orchestrator and keeps a durable record of it in `order_promotion_sagas`:
+
+1. Before redeeming, it commits a `PENDING` row keyed by the order number, in
+   its own transaction, so the record survives whatever happens next.
+2. If saving the order fails, it calls `POST /internal/promotion/redemption/release`
+   (soft-deletes the redemption rows and gives each slot back with a guarded
+   `used_count - 1`) and marks the row `RELEASED`.
+3. Once the order's transaction commits, an `afterCommit` hook marks the row
+   `COMMITTED`.
+4. An hourly sweeper picks up rows still `PENDING` after a 90-minute grace
+   period: if the order exists it marks `COMMITTED`, otherwise it releases.
+
+That last step covers what the synchronous path can't see — order-service
+dying mid-request, promotion-service being down at release time, a redeem
+that committed but whose reply timed out, a commit failing after the use case
+returned. Release is idempotent, so the sync path and the sweeper racing is
+harmless. A business rejection needs no release, because of the
+all-or-nothing batch above. Design notes and the alternatives considered are
+in `order-service/todo/promo-saga-*.md`.
 
 ## Invoice flow (presigned link)
 
@@ -631,9 +692,10 @@ src/features/<feature>/
 └── presentation/    React hooks (use*) + page components
 ```
 
-Features today: `auth`, `staff`, `orders`, `customers`, `dashboard`,
-`reports`. Cross-feature code lives in `src/core/` (ui, theme, http, auth,
-config, utils) and `src/shared/` (Sidebar, Topbar).
+Features today: `auth`, `staff`, `orders`, `customers`, `services`,
+`promotions`, `tenant`, `dashboard`, `reports`. Cross-feature code lives in
+`src/core/` (ui, theme, http, auth, config, hooks, pagination, utils) and
+`src/shared/` (Sidebar, Topbar).
 
 Every feature calls its backend live-only and propagates errors to the UI.
 The old `withFallback(live, fallback)` seam — bundled mock data for screens
@@ -641,8 +703,8 @@ whose backend didn't exist yet — was deleted together with its last caller,
 the dashboard, once `analytics-service` landed.
 
 The access token lives only in JS memory; session survives a reload via the
-`refresh_token` httpOnly cookie. See `web/CLAUDE.md` for the full state/auth
-notes, ESLint gotchas, and styling conventions.
+`refresh_token` httpOnly cookie. See [`web/README.md`](web/README.md) for the
+pages, layout and scripts.
 
 ## Utils modules
 
@@ -658,7 +720,7 @@ Shared, framework-light libraries consumed by the backend services
 | `internal-commons` | `CrockfordBase32` (used by ULID generation) · `EnumParser` (lenient name→enum lookup, used by every JWT filter) |
 | `crypto-tools` | `CryptoTool`/`AesGcmCryptoTool` — AES-256-GCM field encryption + HMAC blind index, JDK-only |
 | `pagination-tools` | cursor pagination primitives shared by every list use case |
-| `http-client` | fluent JDK `HttpClient` wrapper with automatic trace-id propagation |
+| `http-client` | `InternalServiceClientConfigurer` + interceptor for the internal HTTP-interface clients (trace id, redirect policy, buffering, one exception type); plus a fluent JDK `HttpClient` wrapper for ad-hoc calls |
 | `link-signer` | `LinkSigner`/`HmacLinkSigner` — generic HMAC-signed, expiring, self-contained link tokens |
 
 Plus the per-service client modules (`user-client`, `promotion-client`), which
@@ -672,13 +734,15 @@ shape.
   is testable with plain JUnit + Mockito and unaware of transport or
   persistence concerns. The tradeoff is more files per feature (six, always)
   in exchange for every feature looking identical regardless of who wrote it.
-- **Four services, split along failure boundaries rather than by entity size.**
+- **Five services, split along failure boundaries rather than by entity size.**
   `notification-service` is isolated behind Redis Streams rather than called
   synchronously, so a slow or down SMTP server can never make tenant
   registration or a password reset fail — the outbox + afterCommit publish
   means the worst case is a delayed email. `promotion-service` is separate
   because promo rules churn on their own schedule and its outage should cost
-  you promo codes, not orders.
+  you promo codes, not orders. `analytics-service` is separate because
+  aggregate queries belong in a column store, not on the database that takes
+  the writes — and it is rebuildable from order-service at any time.
 - **Customers live in `user-service`, not `order-service`.** They are
   accounts-in-waiting (a self-service customer login is the reason
   `customers.tenant_id` is nullable), and keeping their PII in one service
@@ -697,7 +761,7 @@ shape.
   reverse proxy in production, so dev and prod topology stay close. Routing is
   per-resource rather than one blanket `/api/` → one upstream, so a service
   can be moved without rewriting every client path.
-- **`withFallback` on the frontend.** It let the whole SPA — including screens
-  with no backend yet — be built, demoed and unit-tested against realistic
-  data without blocking on backend sequencing, and what still uses it is an
-  honest to-do list.
+- **Live-only frontend.** The SPA was first built against bundled mock data
+  (`withFallback`) so screens didn't wait on backend sequencing; each mock was
+  deleted as its endpoint landed, the last one with `analytics-service`. A new
+  screen gets a real endpoint, not new mock data.
