@@ -240,13 +240,11 @@ export default function CreateOrderPage() {
 		[service, priority],
 	);
 
+	const resetEstimatedDelivery = () => setForm((prev) => ({...prev, estimatedDelivery: ''}));
+
 	const handlePickupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const val = e.target.value;
-		setForm((prev) => ({
-			...prev,
-			pickupDate: val,
-			estimatedDelivery: autoDelivery(val),
-		}));
+		setForm((prev) => ({...prev, pickupDate: val, estimatedDelivery: ''}));
 	};
 
 	const addItem = () =>
@@ -360,10 +358,7 @@ export default function CreateOrderPage() {
 										className={`service-card ${service?.id === s.id ? 'service-card--selected' : ''}`}
 										onClick={() => {
 											setSelectedServiceId(s.id);
-											setForm((prev) => ({
-												...prev,
-												estimatedDelivery: autoDelivery(prev.pickupDate),
-											}));
+											resetEstimatedDelivery();
 										}}
 									>
 										<div className="service-card__top">
@@ -390,14 +385,20 @@ export default function CreateOrderPage() {
 									<button
 										type="button"
 										className={`priority-btn ${priority === 'normal' ? 'priority-btn--active' : ''}`}
-										onClick={() => setPriority('normal')}
+										onClick={() => {
+											setPriority('normal');
+											resetEstimatedDelivery();
+										}}
 									>
 										<WashingMachine size={14}/> Normal
 									</button>
 									<button
 										type="button"
 										className={`priority-btn priority-btn--express ${priority === 'express' ? 'priority-btn--active priority-btn--express-active' : ''}`}
-										onClick={() => setPriority('express')}
+										onClick={() => {
+											setPriority('express');
+											resetEstimatedDelivery();
+										}}
 									>
 										<Zap size={14}/> Express
 										{service && (
