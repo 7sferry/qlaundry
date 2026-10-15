@@ -20,7 +20,7 @@ import {
 import {Button, Card, Loading, PageHeader, StatCard} from '@/core/ui';
 import {formatCurrency} from '@/core/utils/format';
 import {REPORT_PERIODS, type ReportPeriod} from '@/features/dashboard/domain/Dashboard';
-import {useDashboard} from '@/features/dashboard/presentation/useDashboard';
+import {useReports} from '@/features/dashboard/presentation/useReports';
 import {useCustomerStats, useTopCustomers} from '@/features/customers/presentation/useCustomers';
 
 const PERIOD_LABELS: Record<ReportPeriod, string> = {
@@ -40,7 +40,7 @@ const TREND_SUBTITLES: Record<ReportPeriod, string> = {
 const COLORS = ['var(--brand)', 'var(--info)', 'var(--success)', 'var(--warning)', 'var(--danger)'];
 
 export default function ReportsPage() {
-	const {summary, report, period, setPeriod, loading} = useDashboard();
+	const {summary, report, period, setPeriod, loading} = useReports();
 	const {stats: customerStats, error: customerStatsError} = useCustomerStats();
 	const {topCustomers, error: topCustomersError} = useTopCustomers();
 
