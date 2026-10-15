@@ -66,6 +66,7 @@ presentation/    React hooks (use*) + pages
 ```
 
 - **Live-only**: every screen calls the real backend and surfaces errors. There is no mock or fallback data.
+- **Endpoint paths** live in one `infrastructure/<feature>Endpoints.ts` per feature (`ORDER_ENDPOINTS`, `CUSTOMER_ENDPOINTS`, …). Repositories never inline a path string.
 - **Errors**: a 4xx shows the backend's reason (the `detail` of its `ProblemDetail` body) in the toast or inline error; a 5xx shows a generic server-error message with the status code.
 - **Auth**: the access token lives only in memory. A reload restores the session through the `refresh_token` httpOnly cookie, and a 401 from refresh logs you out.
 - **Time zone**: the browser's zone is sent once, at tenant registration. After that, "today" and every report bucket follow the tenant's zone from the token, and no request carries a zone.

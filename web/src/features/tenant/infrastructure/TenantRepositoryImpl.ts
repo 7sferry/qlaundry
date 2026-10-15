@@ -6,6 +6,7 @@
 import {httpClient} from '@/core/http/httpClient';
 import type {TenantRepository} from '../domain/TenantRepository';
 import type {Tenant, UpdateTenantInput} from '../domain/Tenant';
+import {TENANT_ENDPOINTS} from './tenantEndpoints';
 
 interface TenantApiResponse {
 	tenantName: string;
@@ -23,12 +24,12 @@ function toTenant(res: TenantApiResponse): Tenant {
 
 export class TenantRepositoryImpl implements TenantRepository {
 	async getTenant(): Promise<Tenant> {
-		const res = await httpClient.get<TenantApiResponse>('/tenant/detail');
+		const res = await httpClient.get<TenantApiResponse>(TENANT_ENDPOINTS.detail);
 		return toTenant(res);
 	}
 
 	async updateTenant(input: UpdateTenantInput): Promise<Tenant> {
-		const res = await httpClient.put<TenantApiResponse>('/tenant/update', {
+		const res = await httpClient.put<TenantApiResponse>(TENANT_ENDPOINTS.update, {
 			tenantName: input.tenantName,
 			description: input.description || undefined,
 			timeZone: input.timeZone,

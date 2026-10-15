@@ -6,6 +6,7 @@
 import {httpClient} from '@/core/http/httpClient';
 import type {DashboardReport, DashboardSummary, ReportPeriod, ScheduleItem} from '../domain/Dashboard';
 import type {DashboardRepository} from '../domain/DashboardRepository';
+import {DASHBOARD_ENDPOINTS} from './dashboardEndpoints';
 import {
 	type DashboardReportWire,
 	type DashboardSummaryWire,
@@ -18,17 +19,17 @@ import {
 
 export class DashboardRepositoryImpl implements DashboardRepository {
 	async getSummary(): Promise<DashboardSummary> {
-		return toDashboardSummary(await httpClient.get<DashboardSummaryWire>('/analytics/dashboard'));
+		return toDashboardSummary(await httpClient.get<DashboardSummaryWire>(DASHBOARD_ENDPOINTS.summary));
 	}
 
 	async getReport(period: ReportPeriod): Promise<DashboardReport> {
 		const params = new URLSearchParams({period: REPORT_PERIOD_TO_WIRE[period]});
-		const wire = await httpClient.get<DashboardReportWire>(`/analytics/report?${params}`);
+		const wire = await httpClient.get<DashboardReportWire>(`${DASHBOARD_ENDPOINTS.report}?${params}`);
 		return toDashboardReport(wire, period);
 	}
 
 	async getTodaySchedule(): Promise<ScheduleItem[]> {
-		return toScheduleItems(await httpClient.get<OrderScheduleWire>('/order/schedule'));
+		return toScheduleItems(await httpClient.get<OrderScheduleWire>(DASHBOARD_ENDPOINTS.schedule));
 	}
 }
 

@@ -13,6 +13,7 @@ import type {
 	PromotionType,
 	UpdatePromotionInput,
 } from '../domain/Promotion';
+import {PROMOTION_ENDPOINTS} from './promotionEndpoints';
 
 interface PromotionApiItem {
 	id: string;
@@ -142,17 +143,17 @@ function toPromotionBody(input: CreatePromotionInput) {
 
 export class PromotionRepositoryImpl implements PromotionRepository {
 	async getPromotions(filters?: PromotionFilters): Promise<Page<Promotion>> {
-		const res = await httpClient.get<PromotionListApiResponse>(`/promotion/list${buildPromotionQuery(filters)}`);
+		const res = await httpClient.get<PromotionListApiResponse>(`${PROMOTION_ENDPOINTS.list}${buildPromotionQuery(filters)}`);
 		return {items: res.promotions.map(toPromotion), nextCursor: res.nextCursor, prevCursor: res.prevCursor};
 	}
 
 	async createPromotion(input: CreatePromotionInput): Promise<Promotion> {
-		const res = await httpClient.post<PromotionApiItem>('/promotion/create', toPromotionBody(input));
+		const res = await httpClient.post<PromotionApiItem>(PROMOTION_ENDPOINTS.create, toPromotionBody(input));
 		return toPromotion(res);
 	}
 
 	async updatePromotion(input: UpdatePromotionInput): Promise<Promotion> {
-		const res = await httpClient.put<PromotionApiItem>('/promotion/update', {
+		const res = await httpClient.put<PromotionApiItem>(PROMOTION_ENDPOINTS.update, {
 			promotionId: input.id,
 			...toPromotionBody(input),
 			active: input.active,
@@ -161,12 +162,12 @@ export class PromotionRepositoryImpl implements PromotionRepository {
 	}
 
 	async togglePromotion(id: string, active: boolean): Promise<{ id: string; active: boolean }> {
-		const res = await httpClient.patch<PromotionToggleApiResponse>('/promotion/toggle', {promotionId: id, active});
+		const res = await httpClient.patch<PromotionToggleApiResponse>(PROMOTION_ENDPOINTS.toggle, {promotionId: id, active});
 		return {id: res.id, active: res.active};
 	}
 
 	async previewPromotions(promotions: Promotion[], subtotal: number): Promise<PromotionPreviewResult[]> {
-		const res = await httpClient.post<PromotionPreviewApiResponse>('/promotion/preview', {
+		const res = await httpClient.post<PromotionPreviewApiResponse>(PROMOTION_ENDPOINTS.preview, {
 			promotions: promotions.map(toPromotionSnapshot),
 			subtotal,
 		});

@@ -18,6 +18,7 @@ import type {StaffRole} from '@/features/staff/domain/Staff';
 import type {AuthRepository} from '../domain/AuthRepository';
 import {ResetSessionExpiredError} from '../domain/errors';
 import type {AuthSession, LoginCredentials, RegisterData, User} from '../domain/User';
+import {AUTH_ENDPOINTS} from './authEndpoints';
 
 interface LoginApiResponse {
 	accessToken: string;
@@ -58,7 +59,7 @@ function resolveTimeZone(): string | undefined {
 
 function fetchStaffDetail(username: string): Promise<User> {
 	return httpClient
-			.get<StaffDetailApiResponse>(`/staff/detail?username=${encodeURIComponent(username)}`)
+			.get<StaffDetailApiResponse>(`${AUTH_ENDPOINTS.staffDetail}?username=${encodeURIComponent(username)}`)
 			.then(toUser);
 }
 
@@ -66,7 +67,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 	async login(credentials: LoginCredentials): Promise<AuthSession> {
 		let tokens: LoginApiResponse;
 		try {
-			tokens = await httpClient.post<LoginApiResponse>('/auth/staff/login', {
+			tokens = await httpClient.post<LoginApiResponse>(AUTH_ENDPOINTS.login, {
 				username: credentials.username,
 				password: credentials.password,
 			});
@@ -80,7 +81,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 	}
 
 	async register(data: RegisterData): Promise<void> {
-		await httpClient.post<{ tenantName: string; username: string }>('/auth/tenant/registration', {
+		await httpClient.post<{ tenantName: string; username: string }>(AUTH_ENDPOINTS.tenantRegistration, {
 			fullName: data.fullName,
 			tenantName: data.outletName,
 			timeZone: resolveTimeZone(),
@@ -95,7 +96,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 
 	async logout(): Promise<void> {
 		try {
-			await httpClient.delete<{ message: string }>('/auth/staff/logout');
+			await httpClient.delete<{ message: string }>(AUTH_ENDPOINTS.logout);
 		} finally {
 			setAccessToken(null);
 			clearRefreshTokenCookie();
@@ -104,7 +105,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 
 	async requestPasswordReset(username: string): Promise<string> {
 		try {
-			const response = await httpClient.post<{ email: string }>('/auth/staff/forgottenPassword', {username});
+			const response = await httpClient.post<{ email: string }>(AUTH_ENDPOINTS.forgottenPassword, {username});
 			return response.email;
 		} catch {
 			throw new Error('Failed to send verification code. Please try again later.');
@@ -113,7 +114,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 
 	async submitOtp(username: string, otp: string): Promise<string> {
 		try {
-			const response = await httpClient.post<{ resetToken: string }>('/auth/staff/submitOtp', {username, otp});
+			const response = await httpClient.post<{ resetToken: string }>(AUTH_ENDPOINTS.submitOtp, {username, otp});
 			return response.resetToken;
 		} catch {
 			throw new Error('The verification code is incorrect or has expired.');
@@ -122,7 +123,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 
 	async resetPassword(username: string, password: string, resetToken: string): Promise<void> {
 		try {
-			await httpClient.post<{ message: string }>('/auth/staff/resetPassword', {username, password, resetToken});
+			await httpClient.post<{ message: string }>(AUTH_ENDPOINTS.resetPassword, {username, password, resetToken});
 		} catch {
 			// The backend only rejects this call when the single-use token is
 			// expired or already consumed — the flow must restart from the top.
@@ -132,12 +133,12 @@ export class AuthRepositoryImpl implements AuthRepository {
 
 	async confirmTenantRegistration(tenantId: string, token: string): Promise<void> {
 		await httpClient.get<{ message: string }>(
-				`/auth/tenant/confirmRegistration?tenantId=${encodeURIComponent(tenantId)}&token=${encodeURIComponent(token)}`,
+				`${AUTH_ENDPOINTS.confirmTenantRegistration}?tenantId=${encodeURIComponent(tenantId)}&token=${encodeURIComponent(token)}`,
 		);
 	}
 
 	async resendTenantConfirmation(tenantId: string): Promise<string> {
-		const response = await httpClient.post<{ message: string }>('/auth/tenant/resendConfirmation', {tenantId});
+		const response = await httpClient.post<{ message: string }>(AUTH_ENDPOINTS.resendTenantConfirmation, {tenantId});
 		return response.message;
 	}
 

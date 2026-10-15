@@ -8,6 +8,7 @@ import type {Page} from '@/core/pagination/Pagination';
 import type {StaffFilters, StaffRepository} from '../domain/StaffRepository';
 import type {CreateStaffInput, Staff, StaffRole, UpdateStaffInput} from '../domain/Staff';
 import {fallbackStaff} from './staffFallbackData';
+import {STAFF_ENDPOINTS} from './staffEndpoints';
 
 let localStaff: Staff[] = [...fallbackStaff];
 
@@ -68,19 +69,19 @@ function newStaffFromInput(input: CreateStaffInput): Staff {
 
 export class StaffRepositoryImpl implements StaffRepository {
 	async getStaffList(filters?: StaffFilters): Promise<Page<Staff>> {
-		const res = await httpClient.get<StaffListApiResponse>(`/staff/list${buildStaffListQuery(filters)}`);
+		const res = await httpClient.get<StaffListApiResponse>(`${STAFF_ENDPOINTS.list}${buildStaffListQuery(filters)}`);
 		return {items: res.staffs.map(toStaff), nextCursor: res.nextCursor, prevCursor: res.prevCursor};
 	}
 
 	async getStaffById(id: string): Promise<Staff> {
 		const res = await httpClient.get<StaffListApiResponse['staffs'][number]>(
-				`/staff/detail?username=${encodeURIComponent(id)}`,
+				`${STAFF_ENDPOINTS.detail}?username=${encodeURIComponent(id)}`,
 		);
 		return toStaff(res);
 	}
 
 	async createStaff(input: CreateStaffInput): Promise<Staff> {
-		await httpClient.post<{ username: string }>('/staff/registration', {
+		await httpClient.post<{ username: string }>(STAFF_ENDPOINTS.registration, {
 			username: input.username,
 			password: input.password,
 			fullName: input.fullName,
@@ -96,7 +97,7 @@ export class StaffRepositoryImpl implements StaffRepository {
 	}
 
 	async updateStaff(input: UpdateStaffInput): Promise<Staff> {
-		const res = await httpClient.put<StaffListApiResponse['staffs'][number]>('/staff/profile', {
+		const res = await httpClient.put<StaffListApiResponse['staffs'][number]>(STAFF_ENDPOINTS.profile, {
 			fullName: input.fullName,
 			description: input.description,
 			currentPassword: input.currentPassword,
@@ -109,7 +110,7 @@ export class StaffRepositoryImpl implements StaffRepository {
 	}
 
 	async deleteStaff(id: string): Promise<void> {
-		await httpClient.delete(`/staff/delete?username=${encodeURIComponent(id)}`);
+		await httpClient.delete(`${STAFF_ENDPOINTS.delete}?username=${encodeURIComponent(id)}`);
 		localStaff = localStaff.filter((s) => s.id !== id);
 	}
 }

@@ -7,6 +7,7 @@ import {httpClient} from '@/core/http/httpClient';
 import type {Page} from '@/core/pagination/Pagination';
 import type {ServiceFilters, ServiceRepository} from '../domain/ServiceRepository';
 import type {CreateServiceInput, LaundryService, ServiceCategory, ServiceUnit, UpdateServiceInput} from '../domain/Service';
+import {SERVICE_ENDPOINTS} from './serviceEndpoints';
 
 interface ServiceApiItem {
 	id: string;
@@ -58,12 +59,12 @@ function buildServiceQuery(filters?: ServiceFilters): string {
 
 export class ServiceRepositoryImpl implements ServiceRepository {
 	async getServices(filters?: ServiceFilters): Promise<Page<LaundryService>> {
-		const res = await httpClient.get<ServiceListApiResponse>(`/service/list${buildServiceQuery(filters)}`);
+		const res = await httpClient.get<ServiceListApiResponse>(`${SERVICE_ENDPOINTS.list}${buildServiceQuery(filters)}`);
 		return {items: res.services.map(toService), nextCursor: res.nextCursor, prevCursor: res.prevCursor};
 	}
 
 	async createService(input: CreateServiceInput): Promise<LaundryService> {
-		const res = await httpClient.post<ServiceApiItem>('/service/create', {
+		const res = await httpClient.post<ServiceApiItem>(SERVICE_ENDPOINTS.create, {
 			name: input.name,
 			description: input.description,
 			pricePerUnit: input.pricePerUnit,
@@ -77,7 +78,7 @@ export class ServiceRepositoryImpl implements ServiceRepository {
 	}
 
 	async updateService(input: UpdateServiceInput): Promise<LaundryService> {
-		const res = await httpClient.put<ServiceApiItem>('/service/update', {
+		const res = await httpClient.put<ServiceApiItem>(SERVICE_ENDPOINTS.update, {
 			serviceId: input.id,
 			name: input.name,
 			description: input.description,
@@ -93,7 +94,7 @@ export class ServiceRepositoryImpl implements ServiceRepository {
 	}
 
 	async deleteService(id: string): Promise<void> {
-		await httpClient.delete(`/service/delete?serviceId=${encodeURIComponent(id)}`);
+		await httpClient.delete(`${SERVICE_ENDPOINTS.delete}?serviceId=${encodeURIComponent(id)}`);
 	}
 }
 

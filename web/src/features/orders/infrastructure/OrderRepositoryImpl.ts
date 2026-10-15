@@ -19,6 +19,7 @@ import type {
 } from '../domain/Order';
 import {CLOTHING_TYPE_LABELS} from '../domain/Order';
 import type {LaundryService, ServiceCategory, ServiceUnit} from '../domain/Service';
+import {ORDER_ENDPOINTS} from './orderEndpoints';
 
 /**
  * order-service speaks exact enum names (`IN_PROGRESS`) and epoch millis; the UI speaks lower_snake and ISO
@@ -84,13 +85,13 @@ interface ServiceListApiResponse {
 
 /** Every transition has its own endpoint — the URL is the intent, so there is no generic "set status" call. */
 const STATUS_ENDPOINT: Partial<Record<OrderStatus, string>> = {
-	confirmed: '/order/confirm',
-	picked_up: '/order/pickup',
-	in_progress: '/order/process',
-	ready: '/order/ready',
-	out_for_delivery: '/order/deliver',
-	completed: '/order/complete',
-	cancelled: '/order/cancel',
+	confirmed: ORDER_ENDPOINTS.confirm,
+	picked_up: ORDER_ENDPOINTS.pickup,
+	in_progress: ORDER_ENDPOINTS.process,
+	ready: ORDER_ENDPOINTS.ready,
+	out_for_delivery: ORDER_ENDPOINTS.deliver,
+	completed: ORDER_ENDPOINTS.complete,
+	cancelled: ORDER_ENDPOINTS.cancel,
 };
 
 function toIso(epochMillis: number): string {
@@ -177,20 +178,20 @@ function toService(s: ServiceListApiResponse['services'][number]): LaundryServic
 
 export class OrderRepositoryImpl implements OrderRepository {
 	async getOrders(filters?: OrderFilters): Promise<Page<Order>> {
-		const res = await httpClient.get<OrderListApiResponse>(`/order/list${buildOrderQuery(filters)}`);
+		const res = await httpClient.get<OrderListApiResponse>(`${ORDER_ENDPOINTS.list}${buildOrderQuery(filters)}`);
 		return {items: res.orders.map(toOrder), nextCursor: res.nextCursor, prevCursor: res.prevCursor};
 	}
 
 	async getOrderById(id: string): Promise<Order> {
-		const res = await httpClient.get<OrderApiItem>(`/order/detail?orderId=${encodeURIComponent(id)}`);
+		const res = await httpClient.get<OrderApiItem>(`${ORDER_ENDPOINTS.detail}?orderId=${encodeURIComponent(id)}`);
 		return toOrder(res);
 	}
 
 	async getInvoiceLink(id: string): Promise<InvoiceLink> {
 		const res = await httpClient.get<InvoiceLinkApiResponse>(
-				`/invoice/link?orderId=${encodeURIComponent(id)}`);
+				`${ORDER_ENDPOINTS.invoiceLink}?orderId=${encodeURIComponent(id)}`);
 		return {
-			url: `${env.apiBaseUrl}/public/invoice/pdf?token=${encodeURIComponent(res.token)}`,
+			url: `${env.apiBaseUrl}${ORDER_ENDPOINTS.invoicePdf}?token=${encodeURIComponent(res.token)}`,
 			expiresAt: res.expiresAt,
 		};
 	}
@@ -203,7 +204,7 @@ export class OrderRepositoryImpl implements OrderRepository {
 		for (;;) {
 			const params = new URLSearchParams({activeOnly: 'true'});
 			if (cursor) params.set('after', cursor);
-			const res = await httpClient.get<ServiceListApiResponse>(`/service/list?${params.toString()}`);
+			const res = await httpClient.get<ServiceListApiResponse>(`${ORDER_ENDPOINTS.serviceList}?${params.toString()}`);
 			services.push(...res.services.map(toService));
 			if (!res.nextCursor) break;
 			cursor = res.nextCursor;
@@ -213,7 +214,7 @@ export class OrderRepositoryImpl implements OrderRepository {
 
 	async createOrder(input: CreateOrderInput): Promise<Order> {
 		// pricing is the backend's job — quantity/weight go up, the priced order comes back
-		const res = await httpClient.post<OrderApiItem>('/order/create', {
+		const res = await httpClient.post<OrderApiItem>(ORDER_ENDPOINTS.create, {
 			customerId: input.customerId,
 			customerName: input.customerName,
 			customerPhone: input.customerPhone,

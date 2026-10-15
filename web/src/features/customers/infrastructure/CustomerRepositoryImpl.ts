@@ -7,6 +7,7 @@ import {httpClient} from '@/core/http/httpClient';
 import type {Page, PaginationParams} from '@/core/pagination/Pagination';
 import type {CustomerFilters, CustomerRepository} from '../domain/CustomerRepository';
 import type {CreateCustomerInput, Customer, UpdateCustomerInput} from '../domain/Customer';
+import {CUSTOMER_ENDPOINTS} from './customerEndpoints';
 
 interface CustomerApiItem {
 	id: string;
@@ -47,7 +48,7 @@ async function fetchTotals(customerIds: string[]): Promise<Map<string, CustomerT
 	if (customerIds.length === 0) return totals;
 	const params = new URLSearchParams();
 	for (const id of customerIds) params.append('customerIds', id);
-	const res = await httpClient.get<CustomerOrderTotalsApiResponse>(`/order/customer-totals?${params.toString()}`);
+	const res = await httpClient.get<CustomerOrderTotalsApiResponse>(`${CUSTOMER_ENDPOINTS.orderTotals}?${params.toString()}`);
 	for (const t of res.totals) {
 		totals.set(t.customerId, {
 			totalOrders: t.totalOrders,
@@ -99,7 +100,7 @@ function buildCustomerQuery(filters?: CustomerFilters): string {
 
 export class CustomerRepositoryImpl implements CustomerRepository {
 	async getCustomers(filters?: CustomerFilters): Promise<Page<Customer>> {
-		const res = await httpClient.get<CustomerListApiResponse>(`/customer/list${buildCustomerQuery(filters)}`);
+		const res = await httpClient.get<CustomerListApiResponse>(`${CUSTOMER_ENDPOINTS.list}${buildCustomerQuery(filters)}`);
 		const totals = await fetchTotals(res.customers.map((c) => c.id));
 		const customers = res.customers.map((c) => toCustomer(c, totals.get(c.id) ?? NO_TOTALS));
 		return {items: customers, nextCursor: res.nextCursor, prevCursor: res.prevCursor};
@@ -107,7 +108,7 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 
 	async getCustomerById(id: string): Promise<Customer> {
 		const [res, totals] = await Promise.all([
-			httpClient.get<CustomerApiItem>(`/customer/detail?customerId=${encodeURIComponent(id)}`),
+			httpClient.get<CustomerApiItem>(`${CUSTOMER_ENDPOINTS.detail}?customerId=${encodeURIComponent(id)}`),
 			fetchTotals([id]),
 		]);
 		return toCustomer(res, totals.get(id) ?? NO_TOTALS);
@@ -116,7 +117,7 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 	async searchCustomersByPhone(phone: string, pagination?: PaginationParams): Promise<Page<Customer>> {
 		const params = new URLSearchParams({phone});
 		appendPaginationParams(params, pagination);
-		const res = await httpClient.get<CustomerListApiResponse>(`/customer/list?${params.toString()}`);
+		const res = await httpClient.get<CustomerListApiResponse>(`${CUSTOMER_ENDPOINTS.list}?${params.toString()}`);
 		return {
 			items: res.customers.map((c) => toCustomer(c, NO_TOTALS)),
 			nextCursor: res.nextCursor,
@@ -127,7 +128,7 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 	async searchCustomersByName(namePrefix: string, pagination?: PaginationParams): Promise<Page<Customer>> {
 		const params = new URLSearchParams({fullName: namePrefix});
 		appendPaginationParams(params, pagination);
-		const res = await httpClient.get<CustomerListApiResponse>(`/customer/list?${params.toString()}`);
+		const res = await httpClient.get<CustomerListApiResponse>(`${CUSTOMER_ENDPOINTS.list}?${params.toString()}`);
 		return {
 			items: res.customers.map((c) => toCustomer(c, NO_TOTALS)),
 			nextCursor: res.nextCursor,
@@ -136,7 +137,7 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 	}
 
 	async createCustomer(input: CreateCustomerInput): Promise<Customer> {
-		const res = await httpClient.post<CustomerApiItem>('/customer/registration', {
+		const res = await httpClient.post<CustomerApiItem>(CUSTOMER_ENDPOINTS.registration, {
 			fullName: input.fullName,
 			phone: input.phone,
 			email: input.email,
@@ -151,7 +152,7 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 		if (!input.fullName || !input.phone) {
 			throw new Error('Full name and phone are required to update a customer');
 		}
-		const res = await httpClient.put<CustomerApiItem>('/customer/update', {
+		const res = await httpClient.put<CustomerApiItem>(CUSTOMER_ENDPOINTS.update, {
 			customerId: input.id,
 			fullName: input.fullName,
 			phone: input.phone,
@@ -164,7 +165,7 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 	}
 
 	async deleteCustomer(id: string): Promise<void> {
-		await httpClient.delete(`/customer/delete?customerId=${encodeURIComponent(id)}`);
+		await httpClient.delete(`${CUSTOMER_ENDPOINTS.delete}?customerId=${encodeURIComponent(id)}`);
 	}
 }
 

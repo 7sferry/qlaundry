@@ -12,6 +12,8 @@ interface RefreshResponse {
 	refreshToken: string;
 }
 
+const REFRESH_ENDPOINT = '/auth/staff/refresh';
+
 let refreshInFlight: Promise<string | null> | null = null;
 
 /**
@@ -38,7 +40,7 @@ async function doRefresh(): Promise<string | null> {
 	const timeout = setTimeout(() => controller.abort(), env.apiTimeoutMs);
 
 	try {
-		const response = await fetch(`${env.apiBaseUrl}/auth/staff/refresh`, {
+		const response = await fetch(`${env.apiBaseUrl}${REFRESH_ENDPOINT}`, {
 			method: 'POST',
 			credentials: 'include',
 			signal: controller.signal,
