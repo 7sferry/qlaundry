@@ -70,7 +70,7 @@ class DefaultLaundryServiceCreateUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		LaundryServiceCreateRequest request = new LaundryServiceCreateRequest(SERVICE_NAME, "wash and iron", new BigDecimal("9000"),
-				ServiceUnit.KG, ServiceCategory.WASH, 24, 1.75d, true);
+				ServiceUnit.KG, ServiceCategory.WASH, 24, 12, 1.75d, true);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(OrderForbiddenActionException.class)
@@ -92,7 +92,7 @@ class DefaultLaundryServiceCreateUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		LaundryServiceCreateRequest request = new LaundryServiceCreateRequest(SERVICE_NAME, "wash and iron", pricePerUnit,
-				ServiceUnit.KG, ServiceCategory.WASH, 24, 1.75d, true);
+				ServiceUnit.KG, ServiceCategory.WASH, 24, 12, 1.75d, true);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(ConstraintViolationException.class));
@@ -108,7 +108,7 @@ class DefaultLaundryServiceCreateUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		LaundryServiceCreateRequest request = new LaundryServiceCreateRequest(SERVICE_NAME, "wash and iron", new BigDecimal("9000"),
-				ServiceUnit.KG, ServiceCategory.WASH, 24, 1.75d, true);
+				ServiceUnit.KG, ServiceCategory.WASH, 24, 12, 1.75d, true);
 		willReturn(true).given(gateway)
 				.existsByName(anyString(), any(TenantId.class));
 
@@ -128,7 +128,7 @@ class DefaultLaundryServiceCreateUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		LaundryServiceCreateRequest request = new LaundryServiceCreateRequest(SERVICE_NAME, "wash and iron", new BigDecimal("9000"),
-				ServiceUnit.KG, ServiceCategory.WASH, 24, 1.75d, true);
+				ServiceUnit.KG, ServiceCategory.WASH, 24, 12, 1.75d, true);
 		willReturn(false).given(gateway)
 				.existsByName(anyString(), any(TenantId.class));
 		willAnswer(invocation -> invocation.<LaundryService>getArgument(0)).given(gateway)
@@ -162,6 +162,7 @@ class DefaultLaundryServiceCreateUseCaseTest{
 			softly.then(saved.unit()).isEqualTo(ServiceUnit.KG);
 			softly.then(saved.category()).isEqualTo(ServiceCategory.WASH);
 			softly.then(saved.pricePerUnit().value()).isEqualByComparingTo(new BigDecimal("9000.00"));
+			softly.then(saved.expressHours()).isEqualTo(12);
 			softly.then(saved.expressMultiplier()).isEqualTo(1.75d);
 			softly.then(saved.active()).isTrue();
 			softly.then(saved.deleted()).isFalse();
@@ -171,14 +172,14 @@ class DefaultLaundryServiceCreateUseCaseTest{
 	}
 
 	@Test
-	void givenMissingExpressMultiplier_thenDefaultsToOne(){
+	void givenNoExpressHoursAndMultiplier_thenSavesAServiceWithoutExpress(){
 		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
 				.userId(STAFF_ID)
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		LaundryServiceCreateRequest request = new LaundryServiceCreateRequest("Cuci Sepatu", null, new BigDecimal("25000"), ServiceUnit.SET,
-				ServiceCategory.SPECIALTY, 72, null, false);
+				ServiceCategory.SPECIALTY, 72, null, null, false);
 		willReturn(false).given(gateway)
 				.existsByName(anyString(), any(TenantId.class));
 		willAnswer(invocation -> invocation.<LaundryService>getArgument(0)).given(gateway)
@@ -189,7 +190,51 @@ class DefaultLaundryServiceCreateUseCaseTest{
 		then(gateway).should()
 				.save(serviceCaptor.capture());
 
-		thenSoftly(softly -> softly.then(serviceCaptor.getValue().expressMultiplier()).isEqualTo(1.0d));
+		thenSoftly(softly -> {
+			softly.then(serviceCaptor.getValue().offersExpress()).isFalse();
+			softly.then(serviceCaptor.getValue().expressHours()).isNull();
+			softly.then(serviceCaptor.getValue().expressMultiplier()).isNull();
+		});
+	}
+
+	@Test
+	void givenExpressHoursWithoutMultiplier_thenThrowsInvalidOrderStateException(){
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.SUPER_STAFF)
+				.build();
+		LaundryServiceCreateRequest request = new LaundryServiceCreateRequest("Cuci Boneka", null, new BigDecimal("20000"), ServiceUnit.ITEM,
+				ServiceCategory.SPECIALTY, 48, 24, null, false);
+		willReturn(false).given(gateway)
+				.existsByName(anyString(), any(TenantId.class));
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(InvalidOrderStateException.class)
+				.hasMessage("Express hours and express multiplier must be set together"));
+
+		then(gateway).should(never())
+				.save(any(LaundryService.class));
+	}
+
+	@Test
+	void givenExpressHoursAboveEstimatedHours_thenThrowsInvalidOrderStateException(){
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.SUPER_STAFF)
+				.build();
+		LaundryServiceCreateRequest request = new LaundryServiceCreateRequest("Cuci Gorden", "curtains", new BigDecimal("30000"), ServiceUnit.KG,
+				ServiceCategory.SPECIALTY, 48, 60, 1.5d, true);
+		willReturn(false).given(gateway)
+				.existsByName(anyString(), any(TenantId.class));
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(InvalidOrderStateException.class)
+				.hasMessage("Express hours must be between 1 and the estimated hours"));
+
+		then(gateway).should(never())
+				.save(any(LaundryService.class));
 	}
 
 }

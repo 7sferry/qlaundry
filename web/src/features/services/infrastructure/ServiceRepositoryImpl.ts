@@ -24,7 +24,8 @@ interface ServiceApiItem {
 	unit: string;
 	category: string;
 	estimatedHours: number;
-	expressMultiplier: number;
+	expressHours: number | null;
+	expressMultiplier: number | null;
 	popular: boolean;
 	active: boolean;
 }
@@ -43,7 +44,9 @@ function toService(item: ServiceApiItem): LaundryService {
 		pricePerUnit: item.pricePerUnit,
 		unit: item.unit.toLowerCase() as ServiceUnit,
 		estimatedHours: item.estimatedHours,
-		expressMultiplier: item.expressMultiplier,
+		express: item.expressHours != null && item.expressMultiplier != null
+			? {hours: item.expressHours, multiplier: item.expressMultiplier}
+			: null,
 		popular: item.popular,
 		active: item.active,
 		category: item.category.toLowerCase() as ServiceCategory,
@@ -78,7 +81,8 @@ export class ServiceRepositoryImpl implements ServiceRepository {
 			unit: input.unit.toUpperCase(),
 			category: input.category.toUpperCase(),
 			estimatedHours: input.estimatedHours,
-			expressMultiplier: input.expressMultiplier,
+			expressHours: input.express?.hours ?? null,
+			expressMultiplier: input.express?.multiplier ?? null,
 			popular: input.popular,
 		});
 		return toService(res);
@@ -93,7 +97,8 @@ export class ServiceRepositoryImpl implements ServiceRepository {
 			unit: input.unit.toUpperCase(),
 			category: input.category.toUpperCase(),
 			estimatedHours: input.estimatedHours,
-			expressMultiplier: input.expressMultiplier,
+			expressHours: input.express?.hours ?? null,
+			expressMultiplier: input.express?.multiplier ?? null,
 			popular: input.popular,
 			active: input.active,
 		});

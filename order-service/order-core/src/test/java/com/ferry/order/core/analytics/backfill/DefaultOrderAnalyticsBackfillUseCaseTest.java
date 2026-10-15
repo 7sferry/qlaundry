@@ -78,6 +78,7 @@ class DefaultOrderAnalyticsBackfillUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.SPECIALTY)
 				.estimatedHours(48)
+				.expressHours(24)
 				.expressMultiplier(1.5d)
 				.popular(true)
 				.active(true)

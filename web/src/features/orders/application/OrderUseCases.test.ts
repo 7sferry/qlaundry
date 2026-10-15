@@ -34,7 +34,7 @@ const mockService: LaundryService = {
 	pricePerUnit: 10_000,
 	unit: 'kg',
 	estimatedHours: 24,
-	expressMultiplier: 1.5,
+	express: {hours: 14, multiplier: 1.5},
 	popular: true,
 	active: true,
 	category: 'wash',

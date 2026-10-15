@@ -426,7 +426,9 @@ Pricing is computed server-side and never trusted from the client.
 
 1. `LaundryService.priceFor(quantity, weightKg, priority)` multiplies
    `pricePerUnit` by the weight (per-kg services) or the quantity, then by
-   `expressMultiplier` for `EXPRESS` orders → **subtotal**.
+   `expressMultiplier` for `EXPRESS` orders → **subtotal**. Express is optional
+   per service (`expressHours` + `expressMultiplier`, both or neither); an
+   `EXPRESS` order on a service without it is rejected.
 2. The manual `discount` a staff member grants is subtracted;
    `Money.minus` rejects a discount larger than the subtotal.
 3. If `promoCodes` was supplied, the whole set is redeemed in **one** call to

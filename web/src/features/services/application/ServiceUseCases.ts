@@ -10,8 +10,12 @@ function validate(input: CreateServiceInput): void {
 	if (!input.name.trim()) throw new Error('Service name is required.');
 	if (!(input.pricePerUnit > 0)) throw new Error('Price per unit must be greater than zero.');
 	if (!(input.estimatedHours > 0)) throw new Error('Estimated hours must be greater than zero.');
-	if (input.expressMultiplier !== undefined && !(input.expressMultiplier > 0)) {
-		throw new Error('Express multiplier must be greater than zero.');
+	if (input.express) {
+		const {hours, multiplier} = input.express;
+		if (!Number.isInteger(hours) || hours < 1 || hours > input.estimatedHours) {
+			throw new Error('Express hours must be a whole number between 1 and the estimated hours.');
+		}
+		if (!(multiplier >= 1)) throw new Error('Express multiplier must be at least 1.');
 	}
 }
 

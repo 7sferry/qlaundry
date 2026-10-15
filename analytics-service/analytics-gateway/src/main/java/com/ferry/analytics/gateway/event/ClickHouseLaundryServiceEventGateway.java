@@ -54,6 +54,7 @@ public class ClickHouseLaundryServiceEventGateway implements LaundryServiceEvent
 		row.put("unit", service.unit());
 		row.put("price_per_unit", service.pricePerUnit());
 		row.put("estimated_hours", service.estimatedHours());
+		row.put("express_hours", service.expressHours());
 		row.put("express_multiplier", service.expressMultiplier());
 		row.put("popular", store.flag(service.popular()));
 		row.put("active", store.flag(service.active()));

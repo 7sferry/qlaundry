@@ -6,6 +6,11 @@
 export type ServiceUnit = 'kg' | 'item' | 'load' | 'set';
 export type ServiceCategory = 'wash' | 'dry_clean' | 'iron' | 'specialty';
 
+export interface ServiceExpress {
+	hours: number;
+	multiplier: number;
+}
+
 export interface LaundryService {
 	id: string;
 	name: string;
@@ -13,7 +18,7 @@ export interface LaundryService {
 	pricePerUnit: number;
 	unit: ServiceUnit;
 	estimatedHours: number;
-	expressMultiplier: number;
+	express: ServiceExpress | null;
 	popular: boolean;
 	active: boolean;
 	category: ServiceCategory;
@@ -26,7 +31,7 @@ export interface CreateServiceInput {
 	unit: ServiceUnit;
 	category: ServiceCategory;
 	estimatedHours: number;
-	expressMultiplier?: number;
+	express: ServiceExpress | null;
 	popular: boolean;
 }
 

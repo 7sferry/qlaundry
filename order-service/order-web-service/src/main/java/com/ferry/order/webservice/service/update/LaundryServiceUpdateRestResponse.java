@@ -8,6 +8,6 @@ import java.math.BigDecimal;
  ************************/
 
 public record LaundryServiceUpdateRestResponse(String id, String name, String description, BigDecimal pricePerUnit,
-                                              String unit, String category, int estimatedHours,
-                                              double expressMultiplier, boolean popular, boolean active){
+                                              String unit, String category, int estimatedHours, Integer expressHours,
+                                              Double expressMultiplier, boolean popular, boolean active){
 }

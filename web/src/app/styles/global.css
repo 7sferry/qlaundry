@@ -1380,6 +1380,11 @@ button.user-chip--trigger:hover {
     color: var(--warning);
 }
 
+.priority-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
 /* ── Phone search ── */
 .phone-search {
     display: flex;

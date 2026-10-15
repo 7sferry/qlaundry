@@ -22,8 +22,6 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class DefaultLaundryServiceUpdateUseCase implements LaundryServiceUpdateUseCase{
-	private static final double DEFAULT_EXPRESS_MULTIPLIER = 1.0d;
-
 	private final LaundryServiceUpdateGateway gateway;
 	private final OrderAnalyticsPublisher publisher;
 
@@ -38,12 +36,10 @@ public class DefaultLaundryServiceUpdateUseCase implements LaundryServiceUpdateU
 		TenantId tenantId = new TenantId(principal.tenantId());
 		LaundryService service = gateway.findById(serviceId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Service Not Found"));
-		double expressMultiplier = request.expressMultiplier() == null
-				? DEFAULT_EXPRESS_MULTIPLIER : request.expressMultiplier();
 		boolean active = request.active() == null || request.active();
 		LaundryService saved = gateway.save(service.update(request.name(),
 				new Note(request.description()), new Money(request.pricePerUnit()), request.unit(),
-				request.category(), request.estimatedHours(), expressMultiplier, request.popular(), active,
+				request.category(), request.estimatedHours(), request.expressHours(), request.expressMultiplier(), request.popular(), active,
 				principal.userId()));
 		publisher.publish(publisher.save(OrderAnalyticsEventConfig.laundryService(OrderAnalyticsEventType.LAUNDRY_SERVICE_UPDATED,
 				LaundryServiceAnalyticsMessage.from(saved), principal.userId())));

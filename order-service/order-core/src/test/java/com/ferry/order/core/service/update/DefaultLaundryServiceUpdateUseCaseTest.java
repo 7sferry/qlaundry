@@ -75,7 +75,7 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		LaundryServiceUpdateRequest request = new LaundryServiceUpdateRequest(SERVICE_ID, SERVICE_NAME,
-				"iron within the day", new BigDecimal("6000"), ServiceUnit.ITEM, ServiceCategory.IRON, 12, 1.5d,
+				"iron within the day", new BigDecimal("6000"), ServiceUnit.ITEM, ServiceCategory.IRON, 12, 6, 1.5d,
 				true, true);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
@@ -98,7 +98,7 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		LaundryServiceUpdateRequest request = new LaundryServiceUpdateRequest(SERVICE_ID, SERVICE_NAME,
-				"iron within the day", pricePerUnit, ServiceUnit.ITEM, ServiceCategory.IRON, 12, 1.5d, true, true);
+				"iron within the day", pricePerUnit, ServiceUnit.ITEM, ServiceCategory.IRON, 12, 6, 1.5d, true, true);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(ConstraintViolationException.class));
@@ -114,7 +114,7 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				.role(StaffRole.SUPER_STAFF)
 				.build();
 		LaundryServiceUpdateRequest request = new LaundryServiceUpdateRequest(SERVICE_ID, SERVICE_NAME,
-				"iron within the day", new BigDecimal("6000"), ServiceUnit.ITEM, ServiceCategory.IRON, 12, 1.5d,
+				"iron within the day", new BigDecimal("6000"), ServiceUnit.ITEM, ServiceCategory.IRON, 12, 6, 1.5d,
 				true, true);
 		willReturn(Optional.empty()).given(gateway)
 				.findById(any(LaundryServiceId.class), any(TenantId.class));
@@ -144,6 +144,7 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
+				.expressHours(12)
 				.expressMultiplier(1.0d)
 				.popular(false)
 				.active(true)
@@ -154,7 +155,7 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				.updatedBy("01STAFFPREVIOUSOWNER000000")
 				.build();
 		LaundryServiceUpdateRequest request = new LaundryServiceUpdateRequest(SERVICE_ID, SERVICE_NAME,
-				"iron within the day", new BigDecimal("6000"), ServiceUnit.ITEM, ServiceCategory.IRON, 12, 1.5d,
+				"iron within the day", new BigDecimal("6000"), ServiceUnit.ITEM, ServiceCategory.IRON, 12, 6, 1.5d,
 				true, true);
 		willReturn(Optional.of(existing)).given(gateway)
 				.findById(any(LaundryServiceId.class), any(TenantId.class));
@@ -190,6 +191,7 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 			softly.then(saved.descriptionValue()).isEqualTo("iron within the day");
 			softly.then(saved.pricePerUnit().value()).isEqualByComparingTo(new BigDecimal("6000.00"));
 			softly.then(saved.estimatedHours()).isEqualTo(12);
+			softly.then(saved.expressHours()).isEqualTo(6);
 			softly.then(saved.expressMultiplier()).isEqualTo(1.5d);
 			softly.then(saved.popular()).isTrue();
 			softly.then(saved.active()).isTrue();
@@ -199,7 +201,7 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 	}
 
 	@Test
-	void givenNullExpressMultiplier_thenDefaultsToOne(){
+	void givenNullExpressHoursAndMultiplier_thenTurnsExpressOff(){
 		Instant now = Instant.now();
 		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
 				.userId(STAFF_ID)
@@ -215,6 +217,7 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
+				.expressHours(12)
 				.expressMultiplier(1.0d)
 				.popular(false)
 				.active(true)
@@ -226,7 +229,7 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				.build();
 		LaundryServiceUpdateRequest request = new LaundryServiceUpdateRequest(SERVICE_ID, SERVICE_NAME,
 				"iron within the day", new BigDecimal("6000"), ServiceUnit.ITEM, ServiceCategory.IRON, 12, null,
-				true, true);
+				null, true, true);
 		willReturn(Optional.of(existing)).given(gateway)
 				.findById(any(LaundryServiceId.class), any(TenantId.class));
 		willAnswer(invocation -> invocation.<LaundryService>getArgument(0)).given(gateway)
@@ -237,7 +240,11 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 		then(gateway).should()
 				.save(serviceCaptor.capture());
 
-		thenSoftly(softly -> softly.then(serviceCaptor.getValue().expressMultiplier()).isEqualTo(1.0d));
+		thenSoftly(softly -> {
+			softly.then(serviceCaptor.getValue().offersExpress()).isFalse();
+			softly.then(serviceCaptor.getValue().expressHours()).isNull();
+			softly.then(serviceCaptor.getValue().expressMultiplier()).isNull();
+		});
 	}
 
 	@Test
@@ -257,6 +264,7 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
+				.expressHours(12)
 				.expressMultiplier(1.0d)
 				.popular(false)
 				.active(false)
@@ -267,7 +275,7 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		LaundryServiceUpdateRequest request = new LaundryServiceUpdateRequest(SERVICE_ID, SERVICE_NAME,
-				"iron within the day", new BigDecimal("6000"), ServiceUnit.ITEM, ServiceCategory.IRON, 12, 1.2d,
+				"iron within the day", new BigDecimal("6000"), ServiceUnit.ITEM, ServiceCategory.IRON, 12, 6, 1.2d,
 				true, null);
 		willReturn(Optional.of(existing)).given(gateway)
 				.findById(any(LaundryServiceId.class), any(TenantId.class));

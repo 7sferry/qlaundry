@@ -7,7 +7,7 @@ A multi-tenant laundry management system: each laundry business (a *tenant*) man
 - **Tenant onboarding** — a laundry registers itself (with a Cloudflare Turnstile captcha), confirms by email, and its first account becomes the super-staff. Unconfirmed registrations expire after 30 days.
 - **Staff accounts** — `STAFF` and `SUPER_STAFF` roles, self-service profile, password reset by emailed OTP, and no password reuse within 90 days.
 - **Customers** — a per-tenant customer book with phone/email/address. Phone numbers are normalised (`0812…`, `62812…`, `+62 812…` are the same number).
-- **Price list** — laundry services priced per kg or per unit, with categories, estimated hours and an express multiplier.
+- **Price list** — laundry services priced per kg or per unit, with categories, estimated hours and an optional express option (its own hours and price multiplier).
 - **Orders** — walk-in or registered customers, itemised clothing, express priority, pickup and delivery times, a status workflow (confirm → pickup → process → ready → deliver → complete, or cancel), and cash payment.
 - **Daily schedule** — today's due pickups and deliveries.
 - **Invoices** — a PDF per order, opened in the browser through a 1-hour signed link.

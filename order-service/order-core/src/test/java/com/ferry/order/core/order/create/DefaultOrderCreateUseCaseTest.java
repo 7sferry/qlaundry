@@ -151,6 +151,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
+				.expressHours(12)
 				.expressMultiplier(1.0d)
 				.popular(false)
 				.active(false)
@@ -190,6 +191,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(48)
+				.expressHours(24)
 				.expressMultiplier(1.5d)
 				.popular(true)
 				.active(true)
@@ -229,6 +231,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(48)
+				.expressHours(24)
 				.expressMultiplier(1.5d)
 				.popular(true)
 				.active(true)
@@ -292,6 +295,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(36)
+				.expressHours(18)
 				.expressMultiplier(1.75d)
 				.popular(false)
 				.active(true)
@@ -337,6 +341,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(48)
+				.expressHours(24)
 				.expressMultiplier(1.5d)
 				.popular(true)
 				.active(true)
@@ -381,8 +386,96 @@ class DefaultOrderCreateUseCaseTest{
 			softly.then(saved.unitPrice().value()).isEqualByComparingTo(new BigDecimal("7000.00"));
 			softly.then(saved.customerEmailValue()).isEqualTo("intan@laundry.test");
 			softly.then(saved.orderNumberValue()).startsWith("INV-");
-			softly.then(saved.estimatedDeliveryAt()).isEqualTo(saved.pickupAt().plusSeconds(48 * 3600L));
+			softly.then(saved.estimatedDeliveryAt()).isEqualTo(saved.pickupAt().plusSeconds(24 * 3600L));
 			softly.then(responseCaptor.getValue().order().id()).isEqualTo(ORDER_ID);
+		});
+	}
+
+	@Test
+	void givenExpressOrderOnServiceWithoutExpress_thenThrowsInvalidOrderStateException(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		LaundryService service = LaundryService.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Cuci Karpet")
+				.description(new Note("carpet wash, no rush option"))
+				.pricePerUnit(Money.of(15000L))
+				.unit(ServiceUnit.ITEM)
+				.category(ServiceCategory.SPECIALTY)
+				.estimatedHours(96)
+				.popular(false)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, "dimas anggara", "+6281399907777", null, null,
+				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.OTHER, "Karpet", 1)), 1, null, null,
+				OrderPriority.EXPRESS, PaymentMethod.CASH, null, null, null, null, null);
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(InvalidOrderStateException.class)
+				.hasMessage("This service does not offer express"));
+
+		then(gateway).should(never())
+				.save(any(Order.class));
+	}
+
+	@Test
+	void givenNormalOrderOnServiceWithoutExpress_thenUsesTheEstimatedHours(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		LaundryService service = LaundryService.builder()
+				.id(SERVICE_ID)
+				.tenantId(TENANT_ID)
+				.name("Cuci Karpet")
+				.description(new Note("carpet wash, no rush option"))
+				.pricePerUnit(Money.of(15000L))
+				.unit(ServiceUnit.ITEM)
+				.category(ServiceCategory.SPECIALTY)
+				.estimatedHours(96)
+				.popular(false)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderCreateRequest request = new OrderCreateRequest(null, "dimas anggara", "+6281399907777", null, null,
+				SERVICE_ID, List.of(new OrderCreateRequest.Item(ClothingType.OTHER, "Karpet", 1)), 2, null, null,
+				OrderPriority.NORMAL, PaymentMethod.CASH, null, null, null, null, null);
+		willReturn(Optional.of(service)).given(gateway)
+				.findServiceById(any(LaundryServiceId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Order>getArgument(0).toBuilder().id(ORDER_ID).build())
+				.given(gateway)
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<OrderItem>getArgument(0)).given(gateway)
+				.save(any(OrderItem.class));
+
+		useCase.execute(request, principal, presenter);
+
+		then(gateway).should()
+				.save(orderCaptor.capture());
+
+		Order saved = orderCaptor.getValue();
+
+		thenSoftly(softly -> {
+			softly.then(saved.subtotal().value()).isEqualByComparingTo(new BigDecimal("30000.00"));
+			softly.then(saved.estimatedDeliveryAt()).isEqualTo(saved.pickupAt().plusSeconds(96 * 3600L));
 		});
 	}
 
@@ -403,6 +496,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(48)
+				.expressHours(24)
 				.expressMultiplier(1.5d)
 				.popular(true)
 				.active(true)
@@ -459,6 +553,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(48)
+				.expressHours(24)
 				.expressMultiplier(1.5d)
 				.popular(true)
 				.active(true)
@@ -533,6 +628,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
+				.expressHours(12)
 				.expressMultiplier(1.0d)
 				.popular(false)
 				.active(true)
@@ -593,6 +689,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
+				.expressHours(12)
 				.expressMultiplier(1.0d)
 				.popular(false)
 				.active(true)
@@ -637,6 +734,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.DRY_CLEAN)
 				.estimatedHours(72)
+				.expressHours(36)
 				.expressMultiplier(2.0d)
 				.popular(false)
 				.active(true)
@@ -699,6 +797,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(36)
+				.expressHours(18)
 				.expressMultiplier(1.75d)
 				.popular(false)
 				.active(true)
@@ -763,6 +862,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(36)
+				.expressHours(18)
 				.expressMultiplier(1.75d)
 				.popular(false)
 				.active(true)
@@ -804,6 +904,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(48)
+				.expressHours(24)
 				.expressMultiplier(1.5d)
 				.popular(true)
 				.active(true)
@@ -868,6 +969,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.SPECIALTY)
 				.estimatedHours(72)
+				.expressHours(36)
 				.expressMultiplier(1.5d)
 				.popular(false)
 				.active(true)
@@ -932,6 +1034,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(36)
+				.expressHours(18)
 				.expressMultiplier(1.75d)
 				.popular(false)
 				.active(true)
@@ -989,6 +1092,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
+				.expressHours(12)
 				.expressMultiplier(1.0d)
 				.popular(false)
 				.active(true)
@@ -1040,6 +1144,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
+				.expressHours(12)
 				.expressMultiplier(1.0d)
 				.popular(false)
 				.active(true)
@@ -1081,6 +1186,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.KG)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(48)
+				.expressHours(24)
 				.expressMultiplier(1.5d)
 				.popular(true)
 				.active(true)
@@ -1154,6 +1260,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.IRON)
 				.estimatedHours(24)
+				.expressHours(12)
 				.expressMultiplier(1.0d)
 				.popular(false)
 				.active(true)
@@ -1206,6 +1313,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.SPECIALTY)
 				.estimatedHours(96)
+				.expressHours(48)
 				.expressMultiplier(1.25d)
 				.popular(false)
 				.active(true)
@@ -1255,6 +1363,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(36)
+				.expressHours(18)
 				.expressMultiplier(1.75d)
 				.popular(false)
 				.active(true)
@@ -1321,6 +1430,7 @@ class DefaultOrderCreateUseCaseTest{
 				.unit(ServiceUnit.ITEM)
 				.category(ServiceCategory.WASH)
 				.estimatedHours(36)
+				.expressHours(18)
 				.expressMultiplier(1.75d)
 				.popular(false)
 				.active(true)

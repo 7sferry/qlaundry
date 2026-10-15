@@ -43,6 +43,8 @@ interface ServiceFormData {
 	unit: ServiceUnit;
 	pricePerUnit: string;
 	estimatedHours: string;
+	express: boolean;
+	expressHours: string;
 	expressMultiplier: string;
 	popular: boolean;
 	active: boolean;
@@ -55,6 +57,8 @@ const emptyForm: ServiceFormData = {
 	unit: 'kg',
 	pricePerUnit: '',
 	estimatedHours: '',
+	express: false,
+	expressHours: '',
 	expressMultiplier: '1.5',
 	popular: false,
 	active: true,
@@ -71,7 +75,7 @@ interface ServiceFormProps {
 	update: (key: keyof ServiceFormData) => (
 			e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
 	) => void;
-	toggle: (key: 'popular' | 'active') => (e: React.ChangeEvent<HTMLInputElement>) => void;
+	toggle: (key: 'popular' | 'active' | 'express') => (e: React.ChangeEvent<HTMLInputElement>) => void;
 	onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
 	onCancel: () => void;
 	saving: boolean;
@@ -115,11 +119,26 @@ function ServiceForm({form, update, toggle, onSubmit, onCancel, saving, editMode
 						       onChange={update('estimatedHours')} placeholder="24"/>
 					</Field>
 				</div>
-				<Field label="Express multiplier" htmlFor="svMultiplier"
-				       hint="Applied to the price when a customer orders express priority">
-					<Input id="svMultiplier" type="number" min="1" step="0.1" value={form.expressMultiplier}
-					       onChange={update('expressMultiplier')} placeholder="1.5"/>
-				</Field>
+				<label className="row" style={{gap: 6, fontSize: 13, marginBottom: 12}}>
+					<input type="checkbox" checked={form.express} onChange={toggle('express')}/>
+					Offer express
+				</label>
+				{form.express && (
+						<div className="row" style={{gap: 12}}>
+							<Field label="Express hours" htmlFor="svExpressHours"
+							       hint="Turnaround when a customer orders express">
+								<Input id="svExpressHours" type="number" min="1" max={form.estimatedHours || undefined}
+								       step="1" required value={form.expressHours} onChange={update('expressHours')}
+								       placeholder="12"/>
+							</Field>
+							<Field label="Express multiplier" htmlFor="svMultiplier"
+							       hint="Applied to the price for express orders">
+								<Input id="svMultiplier" type="number" min="1" step="0.1" required
+								       value={form.expressMultiplier} onChange={update('expressMultiplier')}
+								       placeholder="1.5"/>
+							</Field>
+						</div>
+				)}
 				<div className="row" style={{gap: 16, marginTop: 4, marginBottom: 8}}>
 					<label className="row" style={{gap: 6, fontSize: 13}}>
 						<input type="checkbox" checked={form.popular} onChange={toggle('popular')}/>
@@ -205,7 +224,9 @@ export default function ServicesPage() {
 			unit: s.unit,
 			pricePerUnit: String(s.pricePerUnit),
 			estimatedHours: String(s.estimatedHours),
-			expressMultiplier: String(s.expressMultiplier),
+			express: s.express !== null,
+			expressHours: s.express ? String(s.express.hours) : '',
+			expressMultiplier: s.express ? String(s.express.multiplier) : emptyForm.expressMultiplier,
 			popular: s.popular,
 			active: s.active,
 		});
@@ -224,7 +245,9 @@ export default function ServicesPage() {
 				unit: form.unit,
 				category: form.category,
 				estimatedHours: Number(form.estimatedHours),
-				expressMultiplier: form.expressMultiplier ? Number(form.expressMultiplier) : undefined,
+				express: form.express
+						? {hours: Number(form.expressHours), multiplier: Number(form.expressMultiplier)}
+						: null,
 				popular: form.popular,
 			};
 			if (editMode && selectedService) {
@@ -260,7 +283,7 @@ export default function ServicesPage() {
 			e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
 	) => setForm((prev) => ({...prev, [key]: e.target.value}));
 
-	const toggle = (key: 'popular' | 'active') => (e: React.ChangeEvent<HTMLInputElement>) =>
+	const toggle = (key: 'popular' | 'active' | 'express') => (e: React.ChangeEvent<HTMLInputElement>) =>
 			setForm((prev) => ({...prev, [key]: e.target.checked}));
 
 	const handleCancel = () => {
@@ -370,6 +393,9 @@ export default function ServicesPage() {
 											<div className="row" style={{gap: 4}}>
 												<Clock size={13}/> {s.estimatedHours}h
 											</div>
+											<span className="table-sub">
+												{s.express ? `Express ${s.express.hours}h · ×${s.express.multiplier}` : 'No express'}
+											</span>
 										</td>
 										<td>
 											<Badge tone={s.active ? 'success' : 'neutral'}>{s.active ? 'Active' : 'Inactive'}</Badge>

@@ -83,8 +83,9 @@ public class LaundryServiceEventAnalyticsListener implements AnalyticsListener{
 				value.get(AnalyticsStreamConstant.PAYLOAD_FIELD), LaundryServiceAnalyticsMessage.class);
 		LaundryServiceSnapshot service = new LaundryServiceSnapshot(message.tenantId(),
 				message.serviceId(), message.name(), message.category(), message.unit(), message.pricePerUnit(),
-				message.estimatedHours(), message.expressMultiplier(), message.popular(), message.active(),
-				message.deleted(), message.version(), instant(message.createdAt()), instant(message.updatedAt()));
+				message.estimatedHours(), message.expressHours(), message.expressMultiplier(), message.popular(),
+				message.active(), message.deleted(), message.version(), instant(message.createdAt()),
+				instant(message.updatedAt()));
 		return new LaundryServiceEvent(value.get(AnalyticsStreamConstant.EVENT_ID_FIELD),
 				value.get(AnalyticsStreamConstant.TYPE_FIELD), service);
 	}

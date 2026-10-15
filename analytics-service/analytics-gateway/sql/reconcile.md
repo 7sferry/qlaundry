@@ -106,6 +106,13 @@ Simpler when there are many: delete the DLQ entries and rerun the backfill for t
 3. Deploy the producer that sends the field.
 4. Backfill if history needs the value.
 
+Laundry-service express fields (express is optional, so both are nullable), before order-service sends `expressHours`:
+
+```sql
+ALTER TABLE qlaundry_analytics.laundry_services_current ADD COLUMN IF NOT EXISTS express_hours Nullable(UInt32) AFTER estimated_hours;
+ALTER TABLE qlaundry_analytics.laundry_services_current MODIFY COLUMN express_multiplier Nullable(Float64);
+```
+
 ## Full rebuild
 
 `TRUNCATE TABLE` every table (or `docker compose down -v && docker compose up -d` in dev), then run the backfill.

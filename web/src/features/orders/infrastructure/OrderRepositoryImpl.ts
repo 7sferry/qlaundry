@@ -76,7 +76,8 @@ interface ServiceListApiResponse {
 		unit: string;
 		category: string;
 		estimatedHours: number;
-		expressMultiplier: number;
+		expressHours: number | null;
+		expressMultiplier: number | null;
 		popular: boolean;
 		active: boolean;
 	}[];
@@ -169,7 +170,9 @@ function toService(s: ServiceListApiResponse['services'][number]): LaundryServic
 		pricePerUnit: s.pricePerUnit,
 		unit: s.unit.toLowerCase() as ServiceUnit,
 		estimatedHours: s.estimatedHours,
-		expressMultiplier: s.expressMultiplier,
+		express: s.expressHours != null && s.expressMultiplier != null
+			? {hours: s.expressHours, multiplier: s.expressMultiplier}
+			: null,
 		popular: s.popular,
 		active: s.active,
 		category: s.category.toLowerCase() as ServiceCategory,

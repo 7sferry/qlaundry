@@ -42,8 +42,10 @@ public class LaundryServiceJpa{
 	private short categoryId;
 	@Column(nullable = false)
 	private int estimatedHours;
-	@Column(nullable = false)
-	private double expressMultiplier;
+	@Column
+	private Integer expressHours;
+	@Column
+	private Double expressMultiplier;
 	@Column(nullable = false)
 	private boolean popular;
 	@Column(nullable = false)
@@ -71,6 +73,7 @@ public class LaundryServiceJpa{
 		entity.unitId = service.unit().getValue();
 		entity.categoryId = service.category().getValue();
 		entity.estimatedHours = service.estimatedHours();
+		entity.expressHours = service.expressHours();
 		entity.expressMultiplier = service.expressMultiplier();
 		entity.popular = service.popular();
 		entity.active = service.active();
@@ -87,7 +90,7 @@ public class LaundryServiceJpa{
 		return new LaundryService(saved.id, saved.tenantId, saved.name, new Note(saved.description),
 				new Money(saved.pricePerUnit), ServiceUnit.fromValue(saved.unitId).orElseThrow(),
 				ServiceCategory.fromValue(saved.categoryId).orElseThrow(), saved.estimatedHours,
-				saved.expressMultiplier, saved.popular, saved.active, saved.version, saved.deleted, saved.createdAt,
+				saved.expressHours, saved.expressMultiplier, saved.popular, saved.active, saved.version, saved.deleted, saved.createdAt,
 				saved.createdBy, saved.updatedAt, saved.updatedBy);
 	}
 

@@ -13,11 +13,13 @@ Paths as the controllers map them; through the gateway, prefix them with `/api`.
 ### Price list
 
 ```
-POST   /service/create   {name, description, pricePerUnit, unit, category, estimatedHours, expressMultiplier, popular}   super-staff
+POST   /service/create   {name, description, pricePerUnit, unit, category, estimatedHours, expressHours?, expressMultiplier?, popular}   super-staff
 GET    /service/list     ?name=&category=&activeOnly=&after=&before=&sortBy=&sortDir=&pageSize=   (activeOnly defaults to true)
 PUT    /service/update   {serviceId, ...same fields..., active}                                                         super-staff
 DELETE /service/delete   ?serviceId=   super-staff; refused while the service still has open orders
 ```
+
+Express is optional per service: send `expressHours` (1 to `estimatedHours`) and `expressMultiplier` (at least 1) together, or leave both out for a service that offers no express. Without `estimatedDeliveryAt`, an order is due `expressHours` after pickup for `EXPRESS` and `estimatedHours` otherwise.
 
 ### Orders
 
@@ -45,7 +47,7 @@ PUT    /order/payment           {orderId, paymentMethod?}   records cash receive
 ```
 
 - **Customer**: leave `customerId` empty for a walk-in. A given `customerId` is checked with user-service and must belong to your tenant (else 404). The customer's name and contact details, and the service's name and price, are copied onto the order so the invoice never changes afterwards.
-- **Price** is always computed by the server: price per unit × weight (per-kg services, `weightKg` required) or × quantity, × the express multiplier for `EXPRESS` orders, minus `discount` and any promo codes. The total can't go below zero.
+- **Price** is always computed by the server: price per unit × weight (per-kg services, `weightKg` required) or × quantity, × the express multiplier for `EXPRESS` orders (a service without express rejects them with a 400), minus `discount` and any promo codes. The total can't go below zero.
 - **Payment** is cash only for now. Any other `paymentMethod` is a 400.
 - **Promo codes**: `promoCodes` is a set, so several codes can be stacked. They are redeemed in one call to promotion-service. Any rejected code fails the whole order (400), and promotion-service being unreachable is a 503. Responses list what each code granted under `promotions: [{promotionId, code, discountAmount}]`, and `discount` is the total of the manual discount plus every promo.
 - **`pickedUpImmediately: true`** creates the order and moves it straight to `PICKED_UP` (through `CONFIRMED`) in the same request.

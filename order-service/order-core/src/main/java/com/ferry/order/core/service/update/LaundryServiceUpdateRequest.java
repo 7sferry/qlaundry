@@ -17,6 +17,6 @@ import java.math.BigDecimal;
 public record LaundryServiceUpdateRequest(@NotBlank String serviceId, @NotBlank String name, String description,
                                           @NotNull @Positive BigDecimal pricePerUnit, @NotNull ServiceUnit unit,
                                           @NotNull ServiceCategory category, @Positive int estimatedHours,
-                                          Double expressMultiplier, boolean popular,
+                                          @Positive Integer expressHours, Double expressMultiplier, boolean popular,
                                           Boolean active) implements OrderValidation{
 }

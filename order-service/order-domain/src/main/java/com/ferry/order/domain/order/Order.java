@@ -83,7 +83,7 @@ public record Order(
 		Instant now = Instant.now();
 		Money subtotal = service.priceFor(quantity, weightKg, priority);
 		Money appliedDiscount = discount == null ? Money.ZERO : discount;
-		Instant deliveryAt = estimatedDeliveryAt == null ? service.estimatedDeliveryFrom(pickupAt) : estimatedDeliveryAt;
+		Instant deliveryAt = estimatedDeliveryAt == null ? service.estimatedDeliveryFrom(pickupAt, priority) : estimatedDeliveryAt;
 		return new Order(null, OrderNumber.generate(tenantZone), tenantId, customerId, customerName,
 				customerPhone, customerEmail, customerAddress, service.id(), service.name(), service.unit(),
 				service.pricePerUnit(), quantity, weightKg, subtotal, appliedDiscount,

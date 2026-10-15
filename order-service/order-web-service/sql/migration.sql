@@ -35,6 +35,15 @@ CREATE SCHEMA IF NOT EXISTS orders;
 -- fractions that must not be rounded away mid-calculation even though IDR has no minor unit today.
 -- Measured values (`orders.weight_kg`, `laundry_services.express_multiplier`) are DOUBLE PRECISION: a scale
 -- reading and a factor do not need exact decimal arithmetic, the domain just pins them to 2 decimals.
+--
+-- Express is optional per service: `express_hours` and `express_multiplier` are both NULL (no express) or both
+-- set. ddl-auto adds `express_hours` but never drops the old NOT NULL on `express_multiplier`, and existing rows
+-- need hours to keep offering express (the web used to show 60% of `estimated_hours`):
+--
+-- ALTER TABLE orders.laundry_services ADD COLUMN IF NOT EXISTS express_hours integer;
+-- UPDATE orders.laundry_services SET express_hours = greatest(1, round(estimated_hours * 0.6))
+--  WHERE express_hours IS NULL AND express_multiplier IS NOT NULL;
+-- ALTER TABLE orders.laundry_services ALTER COLUMN express_multiplier DROP NOT NULL;
 -- PII columns (`orders.customer_phone`, `customer_email`, `customer_address`) are AES-GCM ciphertext in the
 -- `<keyId>:<base64url(nonce||ciphertext||tag)>` wire format, bound to the order row id as AAD, and the columns
 -- are sized for ciphertext from the start.

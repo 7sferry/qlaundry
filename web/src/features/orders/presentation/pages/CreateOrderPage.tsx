@@ -122,6 +122,8 @@ export default function CreateOrderPage() {
 		() => services.find((s) => s.id === selectedServiceId),
 		[services, selectedServiceId],
 	);
+	const express = priority === 'express' ? service?.express ?? null : null;
+	const turnaroundHours = service ? express?.hours ?? service.estimatedHours : 0;
 
 	const totalQty = useMemo(
 		() => items.reduce((sum, i) => sum + i.quantity, 0),
@@ -131,9 +133,8 @@ export default function CreateOrderPage() {
 	const subtotal = useMemo(() => {
 		if (!service) return 0;
 		const qty = service.unit === 'kg' ? Number(weightKg) || totalQty : totalQty;
-		const multiplier = priority === 'express' ? service.expressMultiplier : 1;
-		return Math.round(service.pricePerUnit * multiplier * qty);
-	}, [service, weightKg, totalQty, priority]);
+		return Math.round(service.pricePerUnit * (express?.multiplier ?? 1) * qty);
+	}, [service, weightKg, totalQty, express]);
 
 	const selectedPromoCodes = useMemo(() => selectedPromotions.map((p) => p.code), [selectedPromotions]);
 	const draftPromoSet = useMemo(() => new Set(draftPromotions.map((p) => p.code)), [draftPromotions]);
@@ -232,12 +233,11 @@ export default function CreateOrderPage() {
 	const autoDelivery = useCallback(
 		(pickup: string) => {
 			if (!service || !pickup) return '';
-			const hours = service.estimatedHours * (priority === 'express' ? 0.6 : 1);
 			const d = parseLocalDate(pickup);
-			d.setHours(d.getHours() + Math.round(hours));
+			d.setHours(d.getHours() + turnaroundHours);
 			return toLocalDateString(d);
 		},
-		[service, priority],
+		[service, turnaroundHours],
 	);
 
 	const resetEstimatedDelivery = () => setForm((prev) => ({...prev, estimatedDelivery: ''}));
@@ -304,7 +304,7 @@ export default function CreateOrderPage() {
 				items,
 				quantity: totalQty,
 				weightKg: weightKg === '' ? undefined : Number(weightKg),
-				priority,
+				priority: express ? 'express' : 'normal',
 				paymentMethod,
 				pickupDate: form.pickupDate,
 				estimatedDelivery: form.estimatedDelivery || autoDelivery(form.pickupDate),
@@ -358,6 +358,7 @@ export default function CreateOrderPage() {
 										className={`service-card ${service?.id === s.id ? 'service-card--selected' : ''}`}
 										onClick={() => {
 											setSelectedServiceId(s.id);
+											if (!s.express) setPriority('normal');
 											resetEstimatedDelivery();
 										}}
 									>
@@ -371,7 +372,9 @@ export default function CreateOrderPage() {
                       <span className="service-card__price">
                         {formatCurrency(s.pricePerUnit)}<small> / {s.unit}</small>
                       </span>
-											<span className="muted" style={{fontSize: 11}}>~{s.estimatedHours}h</span>
+											<span className="muted" style={{fontSize: 11}}>
+												~{s.estimatedHours}h{s.express && ` · ⚡ ~${s.express.hours}h`}
+											</span>
 										</div>
 									</button>
 								))}
@@ -384,7 +387,7 @@ export default function CreateOrderPage() {
 								<div className="priority-toggle">
 									<button
 										type="button"
-										className={`priority-btn ${priority === 'normal' ? 'priority-btn--active' : ''}`}
+										className={`priority-btn ${express ? '' : 'priority-btn--active'}`}
 										onClick={() => {
 											setPriority('normal');
 											resetEstimatedDelivery();
@@ -394,15 +397,17 @@ export default function CreateOrderPage() {
 									</button>
 									<button
 										type="button"
-										className={`priority-btn priority-btn--express ${priority === 'express' ? 'priority-btn--active priority-btn--express-active' : ''}`}
+										className={`priority-btn priority-btn--express ${express ? 'priority-btn--active priority-btn--express-active' : ''}`}
+										disabled={!!service && !service.express}
+										title={service && !service.express ? 'This service does not offer express' : undefined}
 										onClick={() => {
 											setPriority('express');
 											resetEstimatedDelivery();
 										}}
 									>
 										<Zap size={14}/> Express
-										{service && (
-											<Badge tone="warning">×{service.expressMultiplier}</Badge>
+										{service?.express && (
+											<Badge tone="warning">×{service.express.multiplier}</Badge>
 										)}
 									</button>
 								</div>
@@ -664,8 +669,7 @@ export default function CreateOrderPage() {
 									<div>
 										<strong>{service.name}</strong>
 										<span>
-                      {priority === 'express' ? '⚡ Express' : 'Normal'} · ~
-											{Math.round(service.estimatedHours * (priority === 'express' ? 0.6 : 1))}h
+                      {express ? '⚡ Express' : 'Normal'} · ~{turnaroundHours}h
                     </span>
 									</div>
 								</div>
@@ -674,7 +678,7 @@ export default function CreateOrderPage() {
 							<div className="summary-line">
 								<span>Unit price</span>
 								<span>
-                  {service ? `${formatCurrency(service.pricePerUnit * (priority === 'express' ? service.expressMultiplier : 1))} / ${service.unit}` : '—'}
+                  {service ? `${formatCurrency(service.pricePerUnit * (express?.multiplier ?? 1))} / ${service.unit}` : '—'}
                 </span>
 							</div>
 							<div className="summary-line">

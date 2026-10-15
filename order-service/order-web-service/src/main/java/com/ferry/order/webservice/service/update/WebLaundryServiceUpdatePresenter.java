@@ -20,8 +20,8 @@ public class WebLaundryServiceUpdatePresenter implements LaundryServiceUpdatePre
 		LaundryService service = response.service();
 		responseEntity = ResponseEntity.ok(new LaundryServiceUpdateRestResponse(service.id(), service.name(),
 				service.descriptionValue(), service.pricePerUnit().value(), service.unit().name(),
-				service.category().name(), service.estimatedHours(), service.expressMultiplier(), service.popular(),
-				service.active()));
+				service.category().name(), service.estimatedHours(), service.expressHours(), service.expressMultiplier(),
+				service.popular(), service.active()));
 	}
 
 }

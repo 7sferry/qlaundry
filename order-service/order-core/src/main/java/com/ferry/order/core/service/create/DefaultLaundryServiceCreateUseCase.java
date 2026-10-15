@@ -21,8 +21,6 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class DefaultLaundryServiceCreateUseCase implements LaundryServiceCreateUseCase{
-	private static final double DEFAULT_EXPRESS_MULTIPLIER = 1.0d;
-
 	private final LaundryServiceCreateGateway gateway;
 	private final OrderAnalyticsPublisher publisher;
 
@@ -34,14 +32,12 @@ public class DefaultLaundryServiceCreateUseCase implements LaundryServiceCreateU
 		}
 		request.validate();
 		TenantId tenantId = new TenantId(principal.tenantId());
-		double expressMultiplier = request.expressMultiplier() == null
-				? DEFAULT_EXPRESS_MULTIPLIER : request.expressMultiplier();
 		if(gateway.existsByName(request.name(), tenantId)){
 			throw new InvalidOrderStateException("Service name already exists");
 		}
 		LaundryService saved = gateway.save(LaundryService.create(tenantId.value(), request.name(),
 				new Note(request.description()), new Money(request.pricePerUnit()), request.unit(),
-				request.category(), request.estimatedHours(), expressMultiplier, request.popular(),
+				request.category(), request.estimatedHours(), request.expressHours(), request.expressMultiplier(), request.popular(),
 				principal.userId()));
 		publisher.publish(publisher.save(OrderAnalyticsEventConfig.laundryService(OrderAnalyticsEventType.LAUNDRY_SERVICE_CREATED,
 				LaundryServiceAnalyticsMessage.from(saved), principal.userId())));

@@ -19,7 +19,8 @@ public record LaundryServiceAnalyticsMessage(
 	ServiceUnit unit,
 	BigDecimal pricePerUnit,
 	int estimatedHours,
-	double expressMultiplier,
+	Integer expressHours,
+	Double expressMultiplier,
 	boolean popular,
 	boolean active,
 	boolean deleted,
@@ -29,7 +30,8 @@ public record LaundryServiceAnalyticsMessage(
 
 	public static LaundryServiceAnalyticsMessage from(LaundryService service){
 		return new LaundryServiceAnalyticsMessage(service.tenantId(), service.id(), service.name(), service.category(),
-				service.unit(), service.pricePerUnit().value(), service.estimatedHours(), service.expressMultiplier(),
+				service.unit(), service.pricePerUnit().value(), service.estimatedHours(), service.expressHours(),
+				service.expressMultiplier(),
 				service.popular(), service.active(), service.deleted(),
 				service.version() == null ? 0 : service.version(),
 				service.createdAt() == null ? null : service.createdAt().toEpochMilli(),

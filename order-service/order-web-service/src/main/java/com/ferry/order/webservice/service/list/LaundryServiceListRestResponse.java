@@ -11,7 +11,7 @@ import java.util.List;
 public record LaundryServiceListRestResponse(List<Service> services, String nextCursor, String prevCursor){
 
 	public record Service(String id, String name, String description, BigDecimal pricePerUnit, String unit, String category,
-	                      int estimatedHours, double expressMultiplier, boolean popular, boolean active){
+	                      int estimatedHours, Integer expressHours, Double expressMultiplier, boolean popular, boolean active){
 
 	}
 

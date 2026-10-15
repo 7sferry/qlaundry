@@ -18,8 +18,8 @@ import java.time.Instant;
 @Builder(toBuilder = true)
 public record LaundryService(String id, String tenantId, String name, Note description,
                                    Money pricePerUnit, ServiceUnit unit, ServiceCategory category,
-                                   int estimatedHours, double expressMultiplier, boolean popular, boolean active,
-                                   Integer version, boolean deleted, Instant createdAt, String createdBy,
+                                   int estimatedHours, Integer expressHours, Double expressMultiplier,
+                                   boolean popular, boolean active, Integer version, boolean deleted, Instant createdAt, String createdBy,
                                    Instant updatedAt, String updatedBy){
 	private static final double MIN_EXPRESS_MULTIPLIER = 1.0d;
 
@@ -36,7 +36,13 @@ public record LaundryService(String id, String tenantId, String name, Note descr
 		if(estimatedHours <= 0){
 			throw new InvalidOrderStateException("Estimated hours must be greater than zero");
 		}
-		if(expressMultiplier < MIN_EXPRESS_MULTIPLIER){
+		if((expressHours == null) != (expressMultiplier == null)){
+			throw new InvalidOrderStateException("Express hours and express multiplier must be set together");
+		}
+		if(expressHours != null && (expressHours <= 0 || expressHours > estimatedHours)){
+			throw new InvalidOrderStateException("Express hours must be between 1 and the estimated hours");
+		}
+		if(expressMultiplier != null && expressMultiplier < MIN_EXPRESS_MULTIPLIER){
 			throw new InvalidOrderStateException("Express multiplier must be at least 1");
 		}
 		expressMultiplier = Decimals.scaled(expressMultiplier);
@@ -44,16 +50,16 @@ public record LaundryService(String id, String tenantId, String name, Note descr
 
 	public static LaundryService create(String tenantId, String name, Note description,
 	                                          Money pricePerUnit, ServiceUnit unit, ServiceCategory category,
-	                                          int estimatedHours, double expressMultiplier, boolean popular,
-	                                          String createdBy){
+	                                          int estimatedHours, Integer expressHours, Double expressMultiplier,
+	                                          boolean popular, String createdBy){
 		Instant now = Instant.now();
 		return new LaundryService(null, tenantId, name, description, pricePerUnit, unit, category,
-				estimatedHours, expressMultiplier, popular, true, null, false, now, createdBy, now, createdBy);
+				estimatedHours, expressHours, expressMultiplier, popular, true, null, false, now, createdBy, now, createdBy);
 	}
 
 	public LaundryService update(String name, Note description, Money pricePerUnit, ServiceUnit unit,
-	                                   ServiceCategory category, int estimatedHours, double expressMultiplier,
-	                                   boolean popular, boolean active, String updatedBy){
+	                                   ServiceCategory category, int estimatedHours, Integer expressHours,
+	                                   Double expressMultiplier, boolean popular, boolean active, String updatedBy){
 		return toBuilder()
 				.name(name)
 				.description(description)
@@ -61,6 +67,7 @@ public record LaundryService(String id, String tenantId, String name, Note descr
 				.unit(unit)
 				.category(category)
 				.estimatedHours(estimatedHours)
+				.expressHours(expressHours)
 				.expressMultiplier(expressMultiplier)
 				.popular(popular)
 				.active(active)
@@ -73,6 +80,10 @@ public record LaundryService(String id, String tenantId, String name, Note descr
 		return toBuilder().deleted(true).active(false).updatedBy(updatedBy).updatedAt(Instant.now()).build();
 	}
 
+	public boolean offersExpress(){
+		return expressHours != null;
+	}
+
 	public String descriptionValue(){
 		return description == null ? null : description.value();
 	}
@@ -80,8 +91,7 @@ public record LaundryService(String id, String tenantId, String name, Note descr
 	public Money priceFor(int quantity, Double weightKg, OrderPriority priority){
 		BigDecimal units = unit.isWeighed()
 				? BigDecimal.valueOf(weight(weightKg)) : BigDecimal.valueOf(quantity);
-		BigDecimal multiplier = priority == OrderPriority.EXPRESS
-				? BigDecimal.valueOf(expressMultiplier) : BigDecimal.ONE;
+		BigDecimal multiplier = express(priority) ? BigDecimal.valueOf(expressMultiplier) : BigDecimal.ONE;
 		return pricePerUnit.multiply(units).multiply(multiplier);
 	}
 
@@ -92,8 +102,19 @@ public record LaundryService(String id, String tenantId, String name, Note descr
 		return Decimals.scaled(weightKg.doubleValue());
 	}
 
-	public Instant estimatedDeliveryFrom(Instant pickupAt){
-		return pickupAt.plusSeconds(estimatedHours * 3600L);
+	public Instant estimatedDeliveryFrom(Instant pickupAt, OrderPriority priority){
+		int hours = express(priority) ? expressHours : estimatedHours;
+		return pickupAt.plusSeconds(hours * 3600L);
+	}
+
+	private boolean express(OrderPriority priority){
+		if(priority != OrderPriority.EXPRESS){
+			return false;
+		}
+		if(!offersExpress()){
+			throw new InvalidOrderStateException("This service does not offer express");
+		}
+		return true;
 	}
 
 }

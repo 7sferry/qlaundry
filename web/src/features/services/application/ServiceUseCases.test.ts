@@ -10,7 +10,7 @@ const mockService: LaundryService = {
 	pricePerUnit: 8000,
 	unit: 'kg',
 	estimatedHours: 24,
-	expressMultiplier: 1.5,
+	express: {hours: 14, multiplier: 1.5},
 	popular: true,
 	active: true,
 	category: 'wash',
@@ -79,7 +79,7 @@ describe('serviceUseCases', () => {
 			unit: 'item',
 			category: 'specialty',
 			estimatedHours: 72,
-			expressMultiplier: 2.0,
+			express: {hours: 36, multiplier: 2.0},
 			popular: true,
 		};
 
@@ -98,11 +98,50 @@ describe('serviceUseCases', () => {
 			unit: 'item',
 			category: 'wash',
 			estimatedHours: 1,
+			express: null,
 			popular: false,
 		};
 
 		await expect(useCases.createService(input)).rejects.toThrow('Price per unit must be greater than zero.');
 		expect(fns.createService).not.toHaveBeenCalled();
+	});
+
+	it('createService rejects express hours above the estimated hours without calling the repository', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = serviceUseCases(repo);
+		const input: CreateServiceInput = {
+			name: 'Dry Cleaning',
+			pricePerUnit: 35000,
+			unit: 'item',
+			category: 'dry_clean',
+			estimatedHours: 48,
+			express: {hours: 60, multiplier: 1.5},
+			popular: false,
+		};
+
+		await expect(useCases.createService(input)).rejects.toThrow(
+			'Express hours must be a whole number between 1 and the estimated hours.',
+		);
+		expect(fns.createService).not.toHaveBeenCalled();
+	});
+
+	it('updateService rejects an express multiplier below 1 without calling the repository', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = serviceUseCases(repo);
+		const input: UpdateServiceInput = {
+			id: 'svc-iron-only',
+			name: 'Iron Only',
+			pricePerUnit: 5000,
+			unit: 'item',
+			category: 'iron',
+			estimatedHours: 12,
+			express: {hours: 6, multiplier: 0.8},
+			popular: false,
+			active: true,
+		};
+
+		await expect(useCases.updateService(input)).rejects.toThrow('Express multiplier must be at least 1.');
+		expect(fns.updateService).not.toHaveBeenCalled();
 	});
 
 	it('updateService delegates to repository.updateService with the input', async () => {
@@ -115,6 +154,7 @@ describe('serviceUseCases', () => {
 			unit: 'kg',
 			category: 'wash',
 			estimatedHours: 24,
+			express: null,
 			popular: true,
 			active: false,
 		};

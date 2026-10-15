@@ -21,7 +21,7 @@ public class WebLaundryServiceListPresenter implements LaundryServiceListPresent
 	public void present(LaundryServiceListResponse response){
 		List<Service> services = response.services().stream()
 				.map(o -> new Service(o.id(), o.name(), o.descriptionValue(), o.pricePerUnit().value(),
-						o.unit().name(), o.category().name(), o.estimatedHours(), o.expressMultiplier(), o.popular(),
+						o.unit().name(), o.category().name(), o.estimatedHours(), o.expressHours(), o.expressMultiplier(), o.popular(),
 						o.active()))
 				.toList();
 		responseEntity = ResponseEntity.ok(new LaundryServiceListRestResponse(services, response.nextCursor(), response.prevCursor()));
