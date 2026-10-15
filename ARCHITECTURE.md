@@ -96,8 +96,7 @@ flowchart LR
   synchronous `/internal/**` HTTP call (customer verification, promo
   redemption). See [Service-to-service calls](#service-to-service-calls).
 - Every screen has a backend — the dashboard and reports pages read
-  `analytics-service` (see [OLTP → OLAP](#oltp--olap-analytics-events)), and
-  there is no frontend mock data left.
+  `analytics-service` (see [OLTP → OLAP](#oltp--olap-analytics-events))
 
 ## Backend: Clean Architecture, one Maven module per layer
 

@@ -26,7 +26,7 @@ Aplikasi web QLaundry untuk mengelola order, pelanggan, layanan, promo, staf, da
 | `/dashboard` | Today's and this month's numbers, growth, status distribution, today's pickups/deliveries |
 | `/orders/new` | Create an order: customer search, items, weight, priority, promo codes, "picked up immediately" |
 | `/orders/history` | Order list with filters, status changes, payment, "view invoice" (opens the PDF in a new tab) |
-| `/customers` | Customer book with order count, total spend and tier |
+| `/customers` | Customer book with order count, total spend and last order |
 | `/services` | Laundry service price list (editing is super-staff only) |
 | `/promotions` | Promo codes: create, edit, pause/resume (super-staff only) |
 | `/staff` | Staff accounts and roles |
@@ -93,7 +93,7 @@ bun dev                   # Vite on :5173 (reached through the gateway)
 bun dev            # dev server
 bun run build      # tsc -b && vite build
 bun lint           # ESLint
-bun test           # Vitest, single pass
-bun test:watch     # Vitest, watch mode
+bun run test       # Vitest, single pass
+bun run test:watch # Vitest, watch mode
 bun preview        # preview the production build
 ```
