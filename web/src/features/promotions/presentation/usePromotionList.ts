@@ -4,6 +4,7 @@
  ************************/
 
 import {useCallback} from 'react';
+import {useFetchOnce} from '@/core/hooks/useFetchOnce';
 import {usePaginatedList} from '@/core/hooks/usePaginatedList';
 import type {CreatePromotionInput, Promotion, UpdatePromotionInput} from '../domain/Promotion';
 import type {PromotionFilters} from '../domain/PromotionRepository';
@@ -11,6 +12,12 @@ import {promotionUseCases} from '../application/PromotionUseCases';
 import {promotionRepository} from '../infrastructure/PromotionRepositoryImpl';
 
 const useCases = promotionUseCases(promotionRepository);
+const fetchPromotionStats = () => useCases.getStats();
+
+export function usePromotionStats() {
+	const {data: stats, error} = useFetchOnce(fetchPromotionStats, 'Failed to load promotion statistics');
+	return {stats, error};
+}
 
 /** The management page's paginated, mutable list — distinct from `usePromotions()`, which the order-create picker uses to eager-load every active promotion. */
 export function usePromotionList() {

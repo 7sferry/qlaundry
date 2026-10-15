@@ -29,9 +29,10 @@ public class JpaStaffDeleteGateway implements StaffDeleteGateway{
 	}
 
 	@Override
-	public void save(Staff staff){
+	public Staff save(Staff staff){
 		TenantJpa tenant = tenantJpaRepository.getReferenceById(staff.tenantId());
-		staffJpaRepository.save(StaffJpa.construct(staff.id(), staff, tenant, staff.role()));
+		StaffJpa saved = staffJpaRepository.saveAndFlush(StaffJpa.construct(staff.id(), staff, tenant, staff.role()));
+		return StaffJpa.construct(saved);
 	}
 
 }

@@ -21,6 +21,15 @@ public interface StaffJpaRepository extends JpaRepository<StaffJpa, String>{
 	boolean existsByUsername(String username);
 
 	@Query("select s " +
+			"from StaffJpa s " +
+			"where " +
+			"(:tenantId is null or s.tenantId = :tenantId) AND " +
+			"(:afterId is null or s.id > :afterId) " +
+			"order by s.id asc")
+	List<StaffJpa> findBackfillPage(@Param("tenantId") String tenantId, @Param("afterId") String afterId,
+	                                Pageable pageable);
+
+	@Query("select s " +
 			"FROM StaffJpa s " +
 			"WHERE exists(SELECT 1 FROM TenantJpa t WHERE t.id = s.tenantId AND t.deleted IS FALSE) " +
 			"AND s.deleted IS FALSE " +

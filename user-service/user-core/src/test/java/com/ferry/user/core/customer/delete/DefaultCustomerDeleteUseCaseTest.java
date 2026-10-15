@@ -1,5 +1,9 @@
 package com.ferry.user.core.customer.delete;
 
+import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.CustomerAnalyticsMessage;
+import com.ferry.user.core.analytics.UserAnalyticsPublisher;
+import com.ferry.user.domain.analytics.UserAnalyticsEventType;
 import com.ferry.user.domain.common.Description;
 import com.ferry.user.domain.common.FullName;
 import com.ferry.user.domain.common.exception.ForbiddenActionException;
@@ -24,6 +28,7 @@ import java.util.Optional;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willAnswer;
 import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
@@ -43,6 +48,8 @@ class DefaultCustomerDeleteUseCaseTest{
 
 	@Mock
 	CustomerDeleteGateway gateway;
+	@Mock
+	UserAnalyticsPublisher analyticsPublisher;
 	@InjectMocks
 	DefaultCustomerDeleteUseCase useCase;
 	@Mock
@@ -51,6 +58,8 @@ class DefaultCustomerDeleteUseCaseTest{
 	ArgumentCaptor<Customer> customerCaptor;
 	@Captor
 	ArgumentCaptor<CustomerDeleteResponse> responseCaptor;
+	@Captor
+	ArgumentCaptor<UserAnalyticsEventConfig> analyticsCaptor;
 
 	@Test
 	void givenNonSuperStaffRole_thenThrowsForbiddenActionException(){
@@ -138,6 +147,8 @@ class DefaultCustomerDeleteUseCaseTest{
 				.toBuilder().id(CUSTOMER_ID).build();
 		willReturn(Optional.of(existing)).given(gateway)
 				.findById(any(CustomerId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Customer>getArgument(0).toBuilder().version(3).build()).given(gateway)
+				.save(any(Customer.class));
 
 		useCase.execute(new CustomerDeleteRequest(CUSTOMER_ID), principal, presenter);
 
@@ -147,13 +158,20 @@ class DefaultCustomerDeleteUseCaseTest{
 				.save(customerCaptor.capture());
 		then(gateway).should()
 				.deleteContacts(CUSTOMER_ID, PRINCIPAL_ID);
+		then(analyticsPublisher).should()
+				.save(analyticsCaptor.capture());
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
 		Customer saved = customerCaptor.getValue();
 		CustomerDeleteResponse response = responseCaptor.getValue();
+		UserAnalyticsEventConfig analytics = analyticsCaptor.getValue();
 
 		thenSoftly(softly -> {
+			softly.then(analytics.type()).isEqualTo(UserAnalyticsEventType.CUSTOMER_DELETED);
+			softly.then(analytics.tenantId()).isEqualTo(TENANT_ID);
+			softly.then(analytics.aggregateVersion()).isEqualTo(3);
+			softly.then(((CustomerAnalyticsMessage) analytics.payload()).deleted()).isTrue();
 			softly.then(saved.deleted()).isTrue();
 			softly.then(saved.id()).isEqualTo(CUSTOMER_ID);
 			softly.then(saved.updatedBy()).isEqualTo(PRINCIPAL_ID);

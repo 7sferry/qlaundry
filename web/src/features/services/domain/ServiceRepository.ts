@@ -4,7 +4,7 @@
  ************************/
 
 import type {Page, PaginationParams} from '@/core/pagination/Pagination';
-import type {CreateServiceInput, LaundryService, ServiceCategory, UpdateServiceInput} from './Service';
+import type {CreateServiceInput, LaundryService, ServiceCategory, ServiceStats, UpdateServiceInput} from './Service';
 
 export type ServiceSortBy = 'id' | 'name';
 
@@ -22,4 +22,6 @@ export interface ServiceRepository {
 	updateService(input: UpdateServiceInput): Promise<LaundryService>;
 
 	deleteService(id: string): Promise<void>;
+
+	getServiceStats(): Promise<ServiceStats>;
 }

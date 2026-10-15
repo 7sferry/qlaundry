@@ -16,6 +16,20 @@ export interface Customer {
 	lastOrderAt?: string;
 }
 
+export interface CustomerStats {
+	totalCustomers: number;
+	newCustomers: number;
+	monthSpend: number;
+	averageSpend: number;
+}
+
+export interface TopCustomer {
+	customerId: string;
+	fullName: string;
+	totalOrders: number;
+	totalSpend: number;
+}
+
 export interface CreateCustomerInput {
 	fullName: string;
 	phone: string;

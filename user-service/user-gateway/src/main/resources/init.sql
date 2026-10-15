@@ -17,3 +17,9 @@ INSERT INTO email_trigger_statuses (id, name) VALUES (2, 'PUBLISHED');
 
 INSERT INTO tenant_statuses (id, name) VALUES (0, 'PENDING');
 INSERT INTO tenant_statuses (id, name) VALUES (1, 'ACTIVE');
+
+INSERT INTO analytics_aggregates (id, name) VALUES (1, 'STAFF');
+INSERT INTO analytics_aggregates (id, name) VALUES (2, 'CUSTOMER');
+
+INSERT INTO analytics_event_statuses (id, name) VALUES (1, 'CREATED');
+INSERT INTO analytics_event_statuses (id, name) VALUES (2, 'PUBLISHED');

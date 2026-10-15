@@ -1,6 +1,6 @@
 # promotion-service
 
-Port **8104** · Postgres schema `promotions` · Redis (internal API keys only)
+Port **8104** · Postgres schema `promotions` · Redis (internal API keys, analytics stream)
 
 Manages each laundry's promo codes and redeems them while an order is created. It verifies user-service's tokens, is called by [order-service](../order-service/README.md) over `/internal/`, and backs the web app's promotions page and the promo picker on order creation.
 
@@ -54,9 +54,20 @@ POST   /internal/promotion/redemption/release   {tenantId, referenceId, released
 - `release` gives back every slot claimed under a `referenceId`. order-service calls it when an order fails after redemption. It is safe to call repeatedly.
 - Both require `X-Internal-Api-Key` (authority `SERVICE_ORDER`), checked against `SHA-256(secret)` in Redis under `promotion:internal:key:<clientId>:<version>`. Rotation works the same way as user-service's (see its README), with this key prefix.
 
+## Analytics events
+
+Creating, updating or toggling a promotion also writes an `analytics_events` row in the same transaction, published to the `analytics:event:PROMOTION` Redis stream after commit for [analytics-service](../analytics-service/README.md) (the promotions page's stat cards). If Redis is down the promotion still saves and a sweeper republishes the event later (`app.analytics.outbox.*`, same defaults as order-service). Redemptions are counted from orders, so usage counts are not part of the event.
+
+Load existing promotions into analytics (safe to rerun):
+
+```bash
+cd promotion-web-service
+./mvnw spring-boot:run -Dspring-boot.run.profiles=analytics-backfill
+```
+
 ## Setup notes
 
-- **Seed data**: `promotion-gateway/sql/init.sql` (promotion types).
+- **Seed data**: `promotion-gateway/sql/init.sql` (promotion types, analytics aggregates/statuses).
 - This service stores no personal data, so it has no encryption config.
 - `promotion-web-service/sql/migration.sql` documents manual changes for older databases, e.g. backfilling promotions that had no end date before `endAt` became required.
 

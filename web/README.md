@@ -71,6 +71,7 @@ presentation/    React hooks (use*) + pages
 - **Auth**: the access token lives only in memory. A reload restores the session through the `refresh_token` httpOnly cookie, and a 401 from refresh logs you out.
 - **Time zone**: the browser's zone is sent once, at tenant registration. After that, "today" and every report bucket follow the tenant's zone from the token, and no request carries a zone.
 - **Lists** are cursor-paginated (`after`/`before`). A page-size picker (3/5/10/20/50) sits in each page's filter row.
+- **Stat cards** on every page (staff, customers, services, promotions, reports, dashboard) come from analytics-service and cover the whole laundry, not just the rows on screen. Head-counts are totals; "new", spend and redemptions cover this month (from the 1st in the laundry's time zone). The customer list's orders/spend/last-order columns come from analytics too.
 
 ## Getting started
 

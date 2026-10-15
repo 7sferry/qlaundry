@@ -38,7 +38,7 @@ public class JpaCustomerDeleteGateway implements CustomerDeleteGateway{
 	public Customer save(Customer customer){
 		TenantJpa tenant = customer.tenantId() == null
 				? null : tenantJpaRepository.getReferenceById(customer.tenantId());
-		CustomerJpa saved = customerJpaRepository.save(
+		CustomerJpa saved = customerJpaRepository.saveAndFlush(
 				CustomerJpa.construct(customer.id(), customer, tenant));
 		return CustomerJpa.construct(saved);
 	}

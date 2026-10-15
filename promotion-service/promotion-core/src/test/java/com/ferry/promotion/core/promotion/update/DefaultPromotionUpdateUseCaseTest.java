@@ -1,5 +1,9 @@
 package com.ferry.promotion.core.promotion.update;
 
+import com.ferry.promotion.core.analytics.PromotionAnalyticsEventConfig;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsMessage;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsPublisher;
+import com.ferry.promotion.domain.analytics.PromotionAnalyticsEventType;
 import com.ferry.promotion.domain.common.Money;
 import com.ferry.promotion.domain.common.Note;
 import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
@@ -45,12 +49,16 @@ class DefaultPromotionUpdateUseCaseTest{
 
 	@Mock
 	PromotionUpdateGateway gateway;
+	@Mock
+	PromotionAnalyticsPublisher publisher;
 	@InjectMocks
 	DefaultPromotionUpdateUseCase useCase;
 	@Mock
 	PromotionUpdatePresenter presenter;
 	@Captor
 	ArgumentCaptor<Promotion> promotionCaptor;
+	@Captor
+	ArgumentCaptor<PromotionAnalyticsEventConfig> analyticsCaptor;
 
 	@Test
 	void givenNonSuperStaffRole_thenThrowsForbiddenActionException(){
@@ -182,10 +190,16 @@ class DefaultPromotionUpdateUseCaseTest{
 
 		then(gateway).should()
 				.save(promotionCaptor.capture());
+		then(publisher).should()
+				.save(analyticsCaptor.capture());
 
 		Promotion saved = promotionCaptor.getValue();
+		PromotionAnalyticsEventConfig analytics = analyticsCaptor.getValue();
 
 		thenSoftly(softly -> {
+			softly.then(analytics.type()).isEqualTo(PromotionAnalyticsEventType.PROMOTION_UPDATED);
+			softly.then(analytics.aggregateId()).isEqualTo(PROMOTION_ID);
+			softly.then(((PromotionAnalyticsMessage) analytics.payload()).active()).isFalse();
 			softly.then(saved.codeValue()).isEqualTo("AWALBULAN");
 			softly.then(saved.type()).isEqualTo(PromotionType.CUMULATIVE_PERCENTAGE);
 			softly.then(saved.percentage()).isEqualByComparingTo(new BigDecimal("12.5"));

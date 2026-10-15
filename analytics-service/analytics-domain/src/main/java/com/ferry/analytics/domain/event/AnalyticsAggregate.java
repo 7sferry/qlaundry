@@ -8,4 +8,7 @@ package com.ferry.analytics.domain.event;
 public enum AnalyticsAggregate{
 	ORDER,
 	LAUNDRY_SERVICE,
+	STAFF,
+	CUSTOMER,
+	PROMOTION,
 }

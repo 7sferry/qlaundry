@@ -77,6 +77,45 @@ CREATE TABLE IF NOT EXISTS qlaundry_analytics.laundry_services_current (
 ) ENGINE = ReplacingMergeTree(version)
 ORDER BY (tenant_id, service_id);
 
+CREATE TABLE IF NOT EXISTS qlaundry_analytics.staffs_current (
+    tenant_id  String,
+    staff_id   String,
+    role       LowCardinality(String),
+    deleted    UInt8,
+    version    UInt32,
+    created_at DateTime64(3, 'UTC'),
+    updated_at DateTime64(3, 'UTC')
+) ENGINE = ReplacingMergeTree(version)
+ORDER BY (tenant_id, staff_id);
+
+CREATE TABLE IF NOT EXISTS qlaundry_analytics.customers_current (
+    tenant_id   String,
+    customer_id String,
+    deleted     UInt8,
+    version     UInt32,
+    created_at  DateTime64(3, 'UTC'),
+    updated_at  DateTime64(3, 'UTC')
+) ENGINE = ReplacingMergeTree(version)
+ORDER BY (tenant_id, customer_id);
+
+CREATE TABLE IF NOT EXISTS qlaundry_analytics.promotions_current (
+    tenant_id    String,
+    promotion_id String,
+    code         String,
+    name         String,
+    type         LowCardinality(String),
+    combinable   UInt8,
+    usage_limit  Nullable(UInt32),
+    start_at     DateTime64(3, 'UTC'),
+    end_at       DateTime64(3, 'UTC'),
+    active       UInt8,
+    deleted      UInt8,
+    version      UInt32,
+    created_at   DateTime64(3, 'UTC'),
+    updated_at   DateTime64(3, 'UTC')
+) ENGINE = ReplacingMergeTree(version)
+ORDER BY (tenant_id, promotion_id);
+
 CREATE TABLE IF NOT EXISTS qlaundry_analytics.consumed_events (
     event_id     String,
     aggregate    LowCardinality(String),

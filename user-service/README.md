@@ -53,6 +53,7 @@ Both always act on the caller's own tenant. The time zone (an IANA id such as `A
 POST   /customer/registration   {fullName, phone, email, address, notes}
 GET    /customer/list           ?fullName=&phone=&after=&before=&sortBy=&sortDir=&pageSize=
 GET    /customer/detail         ?customerId=
+GET    /customer/names          ?customerIds=a&customerIds=b   → {customers: [{customerId, fullName}]}   names only, up to 100 ids
 PUT    /customer/update         {customerId, fullName, phone, email, address, notes}
 DELETE /customer/delete         ?customerId=   super-staff only (soft delete)
 ```
@@ -74,7 +75,8 @@ List endpoints are cursor-paginated: pass the `after` token from a response to g
 
 ## Setup notes
 
-- **Seed data**: `user-gateway/src/main/resources/init.sql` (roles, session types, tenant statuses, email trigger types/statuses).
+- **Seed data**: `user-gateway/src/main/resources/init.sql` (roles, session types, tenant statuses, email trigger types/statuses, analytics aggregates/statuses).
+- **Analytics events**: registering or deleting a staff member or customer writes an `analytics_events` row and publishes it to `analytics:event:STAFF` / `analytics:event:CUSTOMER` after commit (ids, role and timestamps only — no names or contacts). A sweeper republishes anything Redis missed. Load existing rows into analytics with `./mvnw spring-boot:run -Dspring-boot.run.profiles=analytics-backfill` from `user-web-service` (safe to rerun).
 - **Captcha**: registration is verified with Cloudflare Turnstile. Set `app.turnstile.secret-key` here and `VITE_TURNSTILE_SITE_KEY` in `web/.env`.
 - **Emails** go out through the `notification:email:*` Redis streams, so notification-service and an SMTP catcher must be running to receive them.
 - **Encryption**: staff and customer contact details are stored AES-256-GCM-encrypted, with keys under `app.crypto.*`. To move new writes onto another key without a restart, add it to `app.crypto.keys` and `SET user:encrypt:version v2` in Redis. Never remove a key that was ever used.

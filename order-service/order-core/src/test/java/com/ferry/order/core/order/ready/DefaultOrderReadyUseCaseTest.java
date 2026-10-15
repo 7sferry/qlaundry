@@ -1,11 +1,11 @@
 package com.ferry.order.core.order.ready;
 
-import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
-import com.ferry.order.domain.analytics.AnalyticsAggregate;
-import com.ferry.order.domain.analytics.AnalyticsEvent;
-import com.ferry.order.domain.analytics.AnalyticsEventType;
+import com.ferry.order.domain.analytics.OrderAnalyticsAggregate;
+import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
+import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
 import com.ferry.order.domain.common.FullName;
 import com.ferry.order.domain.common.Money;
 import com.ferry.order.domain.common.Phone;
@@ -60,7 +60,7 @@ class DefaultOrderReadyUseCaseTest{
 	@Mock
 	OrderAnalyticsPublisher publisher;
 	@Captor
-	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<OrderAnalyticsEventConfig> analyticsCaptor;
 	@InjectMocks
 	DefaultOrderReadyUseCase useCase;
 	@Mock
@@ -190,16 +190,16 @@ class DefaultOrderReadyUseCaseTest{
 				.findById(any(OrderId.class), any(TenantId.class));
 		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
 				.save(any(Order.class));
-		willReturn(AnalyticsEvent.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_STATUS_CHANGED,
+		willReturn(OrderAnalyticsEvent.create(OrderAnalyticsAggregate.ORDER, OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
 				TENANT_ID, ORDER_ID, 1, "{}", STAFF_ID)).given(publisher)
-				.save(any(AnalyticsEventConfig.class));
+				.save(any(OrderAnalyticsEventConfig.class));
 
 		useCase.execute(new OrderReadyRequest(ORDER_ID, "dried and folded"), principal, presenter);
 
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(AnalyticsEvent.class));
+				.publish(any(OrderAnalyticsEvent.class));
 		then(gateway).should()
 				.findById(eq(new OrderId(ORDER_ID)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
@@ -210,8 +210,8 @@ class DefaultOrderReadyUseCaseTest{
 		Order saved = orderCaptor.getValue();
 
 		thenSoftly(softly -> {
-			softly.then(analyticsCaptor.getValue().type()).isEqualTo(AnalyticsEventType.ORDER_STATUS_CHANGED);
-			softly.then(analyticsCaptor.getValue().aggregate()).isEqualTo(AnalyticsAggregate.ORDER);
+			softly.then(analyticsCaptor.getValue().type()).isEqualTo(OrderAnalyticsEventType.ORDER_STATUS_CHANGED);
+			softly.then(analyticsCaptor.getValue().aggregate()).isEqualTo(OrderAnalyticsAggregate.ORDER);
 			softly.then(((OrderAnalyticsMessage) analyticsCaptor.getValue().payload()).status())
 					.isEqualTo(OrderStatus.READY);
 			softly.then(saved.status()).isEqualTo(OrderStatus.READY);

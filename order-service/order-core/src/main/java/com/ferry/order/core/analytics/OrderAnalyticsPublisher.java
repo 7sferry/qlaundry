@@ -1,6 +1,6 @@
 package com.ferry.order.core.analytics;
 
-import com.ferry.order.domain.analytics.AnalyticsEvent;
+import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -8,7 +8,7 @@ import com.ferry.order.domain.analytics.AnalyticsEvent;
  ************************/
 
 public interface OrderAnalyticsPublisher{
-	AnalyticsEvent save(AnalyticsEventConfig config);
+	OrderAnalyticsEvent save(OrderAnalyticsEventConfig config);
 
-	void publish(AnalyticsEvent event);
+	void publish(OrderAnalyticsEvent event);
 }

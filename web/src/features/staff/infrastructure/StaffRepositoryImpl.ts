@@ -6,7 +6,7 @@
 import {httpClient} from '@/core/http/httpClient';
 import type {Page} from '@/core/pagination/Pagination';
 import type {StaffFilters, StaffRepository} from '../domain/StaffRepository';
-import type {CreateStaffInput, Staff, StaffRole, UpdateStaffInput} from '../domain/Staff';
+import type {CreateStaffInput, Staff, StaffRole, StaffStats, UpdateStaffInput} from '../domain/Staff';
 import {fallbackStaff} from './staffFallbackData';
 import {STAFF_ENDPOINTS} from './staffEndpoints';
 
@@ -112,6 +112,10 @@ export class StaffRepositoryImpl implements StaffRepository {
 	async deleteStaff(id: string): Promise<void> {
 		await httpClient.delete(`${STAFF_ENDPOINTS.delete}?username=${encodeURIComponent(id)}`);
 		localStaff = localStaff.filter((s) => s.id !== id);
+	}
+
+	async getStaffStats(): Promise<StaffStats> {
+		return httpClient.get<StaffStats>(STAFF_ENDPOINTS.stats);
 	}
 }
 

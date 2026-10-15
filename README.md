@@ -39,14 +39,14 @@ A multi-tenant laundry management system: each laundry business (a *tenant*) man
 | `notification-service` | 8102 | Registration and OTP emails (stream consumer, no REST API) | Postgres `notif`, Redis | [README](notification-service/README.md) |
 | `order-service` | 8103 | Price list, orders, schedule, invoices | Postgres `orders`, Redis | [README](order-service/README.md) |
 | `promotion-service` | 8104 | Promo codes and their redemption | Postgres `promotions`, Redis | [README](promotion-service/README.md) |
-| `analytics-service` | 8105 | Dashboard and report numbers | ClickHouse, Redis | [README](analytics-service/README.md) |
+| `analytics-service` | 8105 | Every stat card: dashboard, reports, staff, customers, services, promotions | ClickHouse, Redis | [README](analytics-service/README.md) |
 
 ```
 Browser ──https──▶ nginx gateway :8100 ──/api/*──▶ user / order / promotion / analytics services
                                       └──/*─────▶ Vite dev server :5173
 
 user-service ──Redis Stream──▶ notification-service ──SMTP──▶ email
-order-service ──Redis Stream──▶ analytics-service ──▶ ClickHouse
+order / user / promotion-service ──Redis Streams──▶ analytics-service ──▶ ClickHouse
 order-service ──HTTP /internal──▶ user-service (customer check), promotion-service (redeem / release)
 ```
 

@@ -1,12 +1,18 @@
 package com.ferry.analytics.webservice.config;
 
+import com.ferry.analytics.core.event.customer.CustomerEventUseCase;
 import com.ferry.analytics.core.event.laundryservice.LaundryServiceEventUseCase;
 import com.ferry.analytics.core.event.order.OrderEventUseCase;
+import com.ferry.analytics.core.event.promotion.PromotionEventUseCase;
+import com.ferry.analytics.core.event.staff.StaffEventUseCase;
 import com.ferry.analytics.domain.event.AnalyticsAggregate;
 import com.ferry.analytics.webservice.event.AnalyticsListener;
 import com.ferry.analytics.webservice.event.AnalyticsStreamConstant;
+import com.ferry.analytics.webservice.event.customer.CustomerEventAnalyticsListener;
 import com.ferry.analytics.webservice.event.laundryservice.LaundryServiceEventAnalyticsListener;
 import com.ferry.analytics.webservice.event.order.OrderEventAnalyticsListener;
+import com.ferry.analytics.webservice.event.promotion.PromotionEventAnalyticsListener;
+import com.ferry.analytics.webservice.event.staff.StaffEventAnalyticsListener;
 import com.ferry.analytics.webservice.event.poll.AnalyticsStreamPoller;
 import com.ferry.analytics.webservice.event.reclaim.AnalyticsPelReclaimScheduler;
 import com.ferry.analytics.webservice.event.streamtrim.AnalyticsStreamTrimScheduler;
@@ -50,6 +56,84 @@ public class AnalyticsStreamConfig{
 				streamKeyPrefix + AnalyticsAggregate.LAUNDRY_SERVICE.name(), group);
 	}
 
+	@Bean
+	StaffEventAnalyticsListener staffEventStreamListener(StaffEventUseCase staffEventUseCase,
+	                                                     JsonManager jsonManager,
+	                                                     StringRedisTemplate stringRedisTemplate,
+	                                                     @Value("${app.analytics.stream.event.key}") String streamKeyPrefix,
+	                                                     @Value("${app.analytics.stream.event.group}") String group){
+		return new StaffEventAnalyticsListener(staffEventUseCase, jsonManager, stringRedisTemplate,
+				streamKeyPrefix + AnalyticsAggregate.STAFF.name(), group);
+	}
+
+	@Bean
+	CustomerEventAnalyticsListener customerEventStreamListener(CustomerEventUseCase customerEventUseCase,
+	                                                           JsonManager jsonManager,
+	                                                           StringRedisTemplate stringRedisTemplate,
+	                                                           @Value("${app.analytics.stream.event.key}") String streamKeyPrefix,
+	                                                           @Value("${app.analytics.stream.event.group}") String group){
+		return new CustomerEventAnalyticsListener(customerEventUseCase, jsonManager, stringRedisTemplate,
+				streamKeyPrefix + AnalyticsAggregate.CUSTOMER.name(), group);
+	}
+
+	@Bean
+	PromotionEventAnalyticsListener promotionEventStreamListener(PromotionEventUseCase promotionEventUseCase,
+	                                                             JsonManager jsonManager,
+	                                                             StringRedisTemplate stringRedisTemplate,
+	                                                             @Value("${app.analytics.stream.event.key}") String streamKeyPrefix,
+	                                                             @Value("${app.analytics.stream.event.group}") String group){
+		return new PromotionEventAnalyticsListener(promotionEventUseCase, jsonManager, stringRedisTemplate,
+				streamKeyPrefix + AnalyticsAggregate.PROMOTION.name(), group);
+	}
+
+	@Bean(destroyMethod = "stop")
+	AnalyticsStreamPoller staffEventStreamPoller(StringRedisTemplate stringRedisTemplate,
+	                                             StaffEventAnalyticsListener staffEventStreamListener,
+	                                             @Value("${app.analytics.stream.event.key}") String streamKeyPrefix,
+	                                             @Value("${app.analytics.stream.event.group}") String group,
+	                                             @Value("${app.analytics.stream.event.consumer}") String consumer,
+	                                             @Value("${app.analytics.stream.event.poll.batch-size}") int batchSize,
+	                                             @Value("${app.analytics.stream.event.poll.timeout}") Duration pollTimeout,
+	                                             @Value("${app.analytics.stream.event.poll.shutdown-timeout}") Duration shutdownTimeout){
+		AnalyticsStreamPoller poller = new AnalyticsStreamPoller(stringRedisTemplate,
+				streamKeyPrefix + AnalyticsAggregate.STAFF.name(), group, consumer, staffEventStreamListener, batchSize,
+				pollTimeout, shutdownTimeout);
+		poller.start();
+		return poller;
+	}
+
+	@Bean(destroyMethod = "stop")
+	AnalyticsStreamPoller customerEventStreamPoller(StringRedisTemplate stringRedisTemplate,
+	                                                CustomerEventAnalyticsListener customerEventStreamListener,
+	                                                @Value("${app.analytics.stream.event.key}") String streamKeyPrefix,
+	                                                @Value("${app.analytics.stream.event.group}") String group,
+	                                                @Value("${app.analytics.stream.event.consumer}") String consumer,
+	                                                @Value("${app.analytics.stream.event.poll.batch-size}") int batchSize,
+	                                                @Value("${app.analytics.stream.event.poll.timeout}") Duration pollTimeout,
+	                                                @Value("${app.analytics.stream.event.poll.shutdown-timeout}") Duration shutdownTimeout){
+		AnalyticsStreamPoller poller = new AnalyticsStreamPoller(stringRedisTemplate,
+				streamKeyPrefix + AnalyticsAggregate.CUSTOMER.name(), group, consumer, customerEventStreamListener,
+				batchSize, pollTimeout, shutdownTimeout);
+		poller.start();
+		return poller;
+	}
+
+	@Bean(destroyMethod = "stop")
+	AnalyticsStreamPoller promotionEventStreamPoller(StringRedisTemplate stringRedisTemplate,
+	                                                 PromotionEventAnalyticsListener promotionEventStreamListener,
+	                                                 @Value("${app.analytics.stream.event.key}") String streamKeyPrefix,
+	                                                 @Value("${app.analytics.stream.event.group}") String group,
+	                                                 @Value("${app.analytics.stream.event.consumer}") String consumer,
+	                                                 @Value("${app.analytics.stream.event.poll.batch-size}") int batchSize,
+	                                                 @Value("${app.analytics.stream.event.poll.timeout}") Duration pollTimeout,
+	                                                 @Value("${app.analytics.stream.event.poll.shutdown-timeout}") Duration shutdownTimeout){
+		AnalyticsStreamPoller poller = new AnalyticsStreamPoller(stringRedisTemplate,
+				streamKeyPrefix + AnalyticsAggregate.PROMOTION.name(), group, consumer, promotionEventStreamListener,
+				batchSize, pollTimeout, shutdownTimeout);
+		poller.start();
+		return poller;
+	}
+
 	@Bean(destroyMethod = "stop")
 	AnalyticsStreamPoller orderEventStreamPoller(StringRedisTemplate stringRedisTemplate,
 	                                             OrderEventAnalyticsListener orderEventStreamListener,
@@ -86,6 +170,9 @@ public class AnalyticsStreamConfig{
 	AnalyticsPelReclaimScheduler analyticsPelReclaimScheduler(StringRedisTemplate stringRedisTemplate,
 	                                                          OrderEventAnalyticsListener orderEventStreamListener,
 	                                                          LaundryServiceEventAnalyticsListener laundryServiceEventStreamListener,
+	                                                          StaffEventAnalyticsListener staffEventStreamListener,
+	                                                          CustomerEventAnalyticsListener customerEventStreamListener,
+	                                                          PromotionEventAnalyticsListener promotionEventStreamListener,
 	                                                          @Value("${app.analytics.stream.event.key}") String streamKeyPrefix,
 	                                                          @Value("${app.analytics.stream.event.group}") String group,
 	                                                          @Value("${app.analytics.stream.event.consumer}") String consumer,
@@ -96,6 +183,9 @@ public class AnalyticsStreamConfig{
 		listenersByStream.put(streamKeyPrefix + AnalyticsAggregate.ORDER.name(), orderEventStreamListener);
 		listenersByStream.put(streamKeyPrefix + AnalyticsAggregate.LAUNDRY_SERVICE.name(),
 				laundryServiceEventStreamListener);
+		listenersByStream.put(streamKeyPrefix + AnalyticsAggregate.STAFF.name(), staffEventStreamListener);
+		listenersByStream.put(streamKeyPrefix + AnalyticsAggregate.CUSTOMER.name(), customerEventStreamListener);
+		listenersByStream.put(streamKeyPrefix + AnalyticsAggregate.PROMOTION.name(), promotionEventStreamListener);
 		return new AnalyticsPelReclaimScheduler(stringRedisTemplate, listenersByStream, group, consumer,
 				maxDeliveries, reclaimMinIdle, reclaimBatchSize);
 	}

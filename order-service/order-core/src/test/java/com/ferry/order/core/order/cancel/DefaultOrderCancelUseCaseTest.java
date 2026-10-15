@@ -1,11 +1,11 @@
 package com.ferry.order.core.order.cancel;
 
-import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
-import com.ferry.order.domain.analytics.AnalyticsAggregate;
-import com.ferry.order.domain.analytics.AnalyticsEvent;
-import com.ferry.order.domain.analytics.AnalyticsEventType;
+import com.ferry.order.domain.analytics.OrderAnalyticsAggregate;
+import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
+import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
 import com.ferry.order.domain.common.FullName;
 import com.ferry.order.domain.common.Money;
 import com.ferry.order.domain.common.Note;
@@ -60,7 +60,7 @@ class DefaultOrderCancelUseCaseTest{
 	@Mock
 	OrderAnalyticsPublisher publisher;
 	@Captor
-	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<OrderAnalyticsEventConfig> analyticsCaptor;
 	@InjectMocks
 	DefaultOrderCancelUseCase useCase;
 	@Mock
@@ -107,16 +107,16 @@ class DefaultOrderCancelUseCaseTest{
 				.findById(any(OrderId.class), any(TenantId.class));
 		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
 				.save(any(Order.class));
-		willReturn(AnalyticsEvent.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_STATUS_CHANGED,
+		willReturn(OrderAnalyticsEvent.create(OrderAnalyticsAggregate.ORDER, OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
 				TENANT_ID, ORDER_ID, 1, "{}", STAFF_ID)).given(publisher)
-				.save(any(AnalyticsEventConfig.class));
+				.save(any(OrderAnalyticsEventConfig.class));
 
 		useCase.execute(new OrderCancelRequest(ORDER_ID, "customer changed their mind"), principal, presenter);
 
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(AnalyticsEvent.class));
+				.publish(any(OrderAnalyticsEvent.class));
 		then(gateway).should()
 				.save(orderCaptor.capture());
 		then(presenter).should()
@@ -125,8 +125,8 @@ class DefaultOrderCancelUseCaseTest{
 		Order saved = orderCaptor.getValue();
 
 		thenSoftly(softly -> {
-			softly.then(analyticsCaptor.getValue().type()).isEqualTo(AnalyticsEventType.ORDER_STATUS_CHANGED);
-			softly.then(analyticsCaptor.getValue().aggregate()).isEqualTo(AnalyticsAggregate.ORDER);
+			softly.then(analyticsCaptor.getValue().type()).isEqualTo(OrderAnalyticsEventType.ORDER_STATUS_CHANGED);
+			softly.then(analyticsCaptor.getValue().aggregate()).isEqualTo(OrderAnalyticsAggregate.ORDER);
 			softly.then(((OrderAnalyticsMessage) analyticsCaptor.getValue().payload()).status())
 					.isEqualTo(OrderStatus.CANCELLED);
 			softly.then(saved.status()).isEqualTo(OrderStatus.CANCELLED);

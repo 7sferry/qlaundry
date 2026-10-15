@@ -1,5 +1,9 @@
 package com.ferry.promotion.core.promotion.toggle;
 
+import com.ferry.promotion.core.analytics.PromotionAnalyticsEventConfig;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsMessage;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsPublisher;
+import com.ferry.promotion.domain.analytics.PromotionAnalyticsEventType;
 import com.ferry.promotion.domain.common.exception.NotFoundException;
 import com.ferry.promotion.domain.common.exception.PromotionForbiddenActionException;
 import com.ferry.promotion.domain.promotion.Promotion;
@@ -17,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DefaultPromotionToggleUseCase implements PromotionToggleUseCase{
 	private final PromotionToggleGateway gateway;
+	private final PromotionAnalyticsPublisher publisher;
 
 	@Override
 	public void execute(PromotionToggleRequest request, PromotionAuthPrincipal principal,
@@ -30,6 +35,8 @@ public class DefaultPromotionToggleUseCase implements PromotionToggleUseCase{
 		Promotion promotion = gateway.findById(promotionId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Promotion Not Found"));
 		Promotion saved = gateway.save(promotion.changeActive(request.active(), principal.userId()));
+		publisher.publish(publisher.save(PromotionAnalyticsEventConfig.promotion(PromotionAnalyticsEventType.PROMOTION_TOGGLED,
+				PromotionAnalyticsMessage.from(saved), principal.userId())));
 		presenter.present(new PromotionToggleResponse(saved));
 	}
 

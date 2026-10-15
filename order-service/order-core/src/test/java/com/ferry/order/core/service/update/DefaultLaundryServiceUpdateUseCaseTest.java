@@ -1,11 +1,11 @@
 package com.ferry.order.core.service.update;
 
-import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
-import com.ferry.order.domain.analytics.AnalyticsAggregate;
-import com.ferry.order.domain.analytics.AnalyticsEvent;
-import com.ferry.order.domain.analytics.AnalyticsEventType;
+import com.ferry.order.domain.analytics.OrderAnalyticsAggregate;
+import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
+import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
 import com.ferry.order.domain.common.Money;
 import com.ferry.order.domain.common.Note;
 import com.ferry.order.domain.common.exception.NotFoundException;
@@ -59,7 +59,7 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 	@Mock
 	OrderAnalyticsPublisher publisher;
 	@Captor
-	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<OrderAnalyticsEventConfig> analyticsCaptor;
 	@InjectMocks
 	DefaultLaundryServiceUpdateUseCase useCase;
 	@Mock
@@ -160,16 +160,16 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 				.findById(any(LaundryServiceId.class), any(TenantId.class));
 		willAnswer(invocation -> invocation.<LaundryService>getArgument(0)).given(gateway)
 				.save(any(LaundryService.class));
-		willReturn(AnalyticsEvent.create(AnalyticsAggregate.LAUNDRY_SERVICE, AnalyticsEventType.LAUNDRY_SERVICE_UPDATED,
+		willReturn(OrderAnalyticsEvent.create(OrderAnalyticsAggregate.LAUNDRY_SERVICE, OrderAnalyticsEventType.LAUNDRY_SERVICE_UPDATED,
 				TENANT_ID, SERVICE_ID, 1, "{}", STAFF_ID)).given(publisher)
-				.save(any(AnalyticsEventConfig.class));
+				.save(any(OrderAnalyticsEventConfig.class));
 
 		useCase.execute(request, principal, presenter);
 
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(AnalyticsEvent.class));
+				.publish(any(OrderAnalyticsEvent.class));
 		then(gateway).should()
 				.findById(eq(new LaundryServiceId(SERVICE_ID)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
@@ -181,8 +181,8 @@ class DefaultLaundryServiceUpdateUseCaseTest{
 
 		thenSoftly(softly -> {
 			softly.then(analyticsCaptor.getValue().type())
-					.isEqualTo(AnalyticsEventType.LAUNDRY_SERVICE_UPDATED);
-			softly.then(analyticsCaptor.getValue().aggregate()).isEqualTo(AnalyticsAggregate.LAUNDRY_SERVICE);
+					.isEqualTo(OrderAnalyticsEventType.LAUNDRY_SERVICE_UPDATED);
+			softly.then(analyticsCaptor.getValue().aggregate()).isEqualTo(OrderAnalyticsAggregate.LAUNDRY_SERVICE);
 			softly.then(((LaundryServiceAnalyticsMessage) analyticsCaptor.getValue().payload()).serviceId())
 					.isEqualTo(SERVICE_ID);
 			softly.then(saved.id()).isEqualTo(SERVICE_ID);

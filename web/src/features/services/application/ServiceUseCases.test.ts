@@ -1,6 +1,6 @@
 import {describe, expect, it, vi} from 'vitest';
 import type {ServiceRepository} from '../domain/ServiceRepository';
-import type {CreateServiceInput, LaundryService, UpdateServiceInput} from '../domain/Service';
+import type {CreateServiceInput, LaundryService, ServiceStats, UpdateServiceInput} from '../domain/Service';
 import {serviceUseCases} from './ServiceUseCases';
 
 const mockService: LaundryService = {
@@ -18,17 +18,38 @@ const mockService: LaundryService = {
 
 const mockServicePage = {items: [mockService], nextCursor: null, prevCursor: null};
 
+const mockStats: ServiceStats = {totalServices: 6, activeServices: 5, popularServices: 2, averagePrice: 12500};
+
 function makeRepo(): { repo: ServiceRepository; fns: Record<string, ReturnType<typeof vi.fn>> } {
 	const fns = {
 		getServices: vi.fn().mockResolvedValue(mockServicePage),
 		createService: vi.fn().mockResolvedValue(mockService),
 		updateService: vi.fn().mockResolvedValue(mockService),
 		deleteService: vi.fn().mockResolvedValue(undefined),
+		getServiceStats: vi.fn().mockResolvedValue(mockStats),
 	};
 	return {repo: fns as unknown as ServiceRepository, fns};
 }
 
 describe('serviceUseCases', () => {
+	it('getStats delegates to repository.getServiceStats', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = serviceUseCases(repo);
+
+		const result = await useCases.getStats();
+
+		expect(fns.getServiceStats).toHaveBeenCalledOnce();
+		expect(result).toBe(mockStats);
+	});
+
+	it('getStats propagates errors from the repository', async () => {
+		const {repo, fns} = makeRepo();
+		fns.getServiceStats.mockRejectedValue(new Error('Analytics are unavailable. Please try again.'));
+		const useCases = serviceUseCases(repo);
+
+		await expect(useCases.getStats()).rejects.toThrow('Analytics are unavailable. Please try again.');
+	});
+
 	it('listServices delegates to repository.getServices', async () => {
 		const {repo, fns} = makeRepo();
 		const useCases = serviceUseCases(repo);

@@ -1,10 +1,10 @@
 package com.ferry.order.gateway.analytics;
 
-import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
-import com.ferry.order.domain.analytics.AnalyticsEvent;
-import com.ferry.order.gateway.analytics.entity.AnalyticsEventJpa;
-import com.ferry.order.gateway.analytics.repository.AnalyticsEventJpaRepository;
+import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
+import com.ferry.order.gateway.analytics.entity.OrderAnalyticsEventJpa;
+import com.ferry.order.gateway.analytics.repository.OrderAnalyticsEventJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
 import com.ferry.utils.json.JsonManager;
 import lombok.RequiredArgsConstructor;
@@ -23,29 +23,29 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Slf4j
 @RequiredArgsConstructor
 public class RedisOrderAnalyticsPublisher implements OrderAnalyticsPublisher{
-	private final AnalyticsEventJpaRepository analyticsEventJpaRepository;
-	private final AnalyticsStreamWriter analyticsStreamWriter;
+	private final OrderAnalyticsEventJpaRepository analyticsEventJpaRepository;
+	private final OrderAnalyticsStreamWriter analyticsStreamWriter;
 	private final IdGenerator idGenerator;
 	private final JsonManager jsonManager;
 	private final PlatformTransactionManager transactionManager;
 
 	@Override
-	public AnalyticsEvent save(AnalyticsEventConfig config){
+	public OrderAnalyticsEvent save(OrderAnalyticsEventConfig config){
 		String payload = jsonManager.writeValueAsString(config.payload());
-		AnalyticsEvent event = AnalyticsEvent.create(config.aggregate(), config.type(), config.tenantId(),
+		OrderAnalyticsEvent event = OrderAnalyticsEvent.create(config.aggregate(), config.type(), config.tenantId(),
 				config.aggregateId(), config.aggregateVersion(), payload, config.actor());
 		String id = idGenerator.generateId();
 		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 		transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
 		return transactionTemplate.execute(_ -> {
-			AnalyticsEventJpa saved = analyticsEventJpaRepository.saveAndFlush(
-					AnalyticsEventJpa.construct(id, event));
-			return AnalyticsEventJpa.construct(saved);
+			OrderAnalyticsEventJpa saved = analyticsEventJpaRepository.saveAndFlush(
+					OrderAnalyticsEventJpa.construct(id, event));
+			return OrderAnalyticsEventJpa.construct(saved);
 		});
 	}
 
 	@Override
-	public void publish(AnalyticsEvent event){
+	public void publish(OrderAnalyticsEvent event){
 		if(TransactionSynchronizationManager.isSynchronizationActive()){
 			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization(){
 				@Override
@@ -58,7 +58,7 @@ public class RedisOrderAnalyticsPublisher implements OrderAnalyticsPublisher{
 		publishToStream(event);
 	}
 
-	private void publishToStream(AnalyticsEvent event){
+	private void publishToStream(OrderAnalyticsEvent event){
 		try{
 			analyticsStreamWriter.append(event);
 		}catch(RuntimeException e){

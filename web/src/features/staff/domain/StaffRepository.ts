@@ -4,7 +4,7 @@
  ************************/
 
 import type {Page, PaginationParams} from '@/core/pagination/Pagination';
-import type {CreateStaffInput, Staff, UpdateStaffInput} from './Staff';
+import type {CreateStaffInput, Staff, StaffStats, UpdateStaffInput} from './Staff';
 
 export type StaffSortBy = 'id' | 'name';
 
@@ -22,4 +22,6 @@ export interface StaffRepository {
 	updateStaff(input: UpdateStaffInput): Promise<Staff>;
 
 	deleteStaff(id: string): Promise<void>;
+
+	getStaffStats(): Promise<StaffStats>;
 }

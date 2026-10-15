@@ -13,5 +13,5 @@ import java.util.Optional;
 
 public interface StaffDeleteGateway{
 	Optional<Staff> findByUsername(Username username, TenantId tenantId);
-	void save(Staff staff);
+	Staff save(Staff staff);
 }

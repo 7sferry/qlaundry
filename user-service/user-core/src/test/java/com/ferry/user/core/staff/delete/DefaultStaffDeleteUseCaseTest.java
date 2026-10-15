@@ -1,5 +1,10 @@
 package com.ferry.user.core.staff.delete;
 
+import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.StaffAnalyticsMessage;
+import com.ferry.user.core.analytics.UserAnalyticsPublisher;
+import com.ferry.user.domain.analytics.UserAnalyticsAggregate;
+import com.ferry.user.domain.analytics.UserAnalyticsEventType;
 import com.ferry.user.domain.common.Description;
 import com.ferry.user.domain.common.FullName;
 import com.ferry.user.domain.common.Username;
@@ -26,6 +31,7 @@ import java.util.Optional;
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willAnswer;
 import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
@@ -45,6 +51,8 @@ class DefaultStaffDeleteUseCaseTest{
 
 	@Mock
 	StaffDeleteGateway gateway;
+	@Mock
+	UserAnalyticsPublisher analyticsPublisher;
 	@InjectMocks
 	DefaultStaffDeleteUseCase useCase;
 	@Mock
@@ -53,6 +61,8 @@ class DefaultStaffDeleteUseCaseTest{
 	ArgumentCaptor<StaffDeleteResponse> responseCaptor;
 	@Captor
 	ArgumentCaptor<Staff> staffCaptor;
+	@Captor
+	ArgumentCaptor<UserAnalyticsEventConfig> analyticsCaptor;
 
 	private UserAuthPrincipal superStaffPrincipal(String tenantId){
 		return UserAuthPrincipal.builder()
@@ -175,6 +185,8 @@ class DefaultStaffDeleteUseCaseTest{
 		Staff target = staff(TARGET_ID);
 		willReturn(Optional.of(target)).given(gateway)
 				.findByUsername(any(Username.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Staff>getArgument(0).toBuilder().version(1).build()).given(gateway)
+				.save(any(Staff.class));
 
 		useCase.execute(new StaffDeleteRequest(USERNAME), principal, presenter);
 
@@ -182,13 +194,21 @@ class DefaultStaffDeleteUseCaseTest{
 				.findByUsername(eq(new Username(USERNAME)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
 				.save(staffCaptor.capture());
+		then(analyticsPublisher).should()
+				.save(analyticsCaptor.capture());
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
 		Staff saved = staffCaptor.getValue();
 		StaffDeleteResponse response = responseCaptor.getValue();
+		UserAnalyticsEventConfig analytics = analyticsCaptor.getValue();
 
 		thenSoftly(softly -> {
+			softly.then(analytics.aggregate()).isEqualTo(UserAnalyticsAggregate.STAFF);
+			softly.then(analytics.type()).isEqualTo(UserAnalyticsEventType.STAFF_DELETED);
+			softly.then(analytics.aggregateId()).isEqualTo(TARGET_ID);
+			softly.then(analytics.aggregateVersion()).isEqualTo(1);
+			softly.then(((StaffAnalyticsMessage) analytics.payload()).deleted()).isTrue();
 			softly.then(saved.deleted()).isTrue();
 			softly.then(saved.id()).isEqualTo(TARGET_ID);
 			softly.then(saved.updatedBy()).isEqualTo(PRINCIPAL_ID);
@@ -202,6 +222,8 @@ class DefaultStaffDeleteUseCaseTest{
 		Staff target = staff(TARGET_ID);
 		willReturn(Optional.of(target)).given(gateway)
 				.findByUsername(any(Username.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Staff>getArgument(0)).given(gateway)
+				.save(any(Staff.class));
 
 		useCase.execute(new StaffDeleteRequest("  DaDaNg  "), principal, presenter);
 

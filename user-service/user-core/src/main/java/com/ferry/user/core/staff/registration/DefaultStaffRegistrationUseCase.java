@@ -1,6 +1,10 @@
 package com.ferry.user.core.staff.registration;
 
+import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.StaffAnalyticsMessage;
+import com.ferry.user.core.analytics.UserAnalyticsPublisher;
 import com.ferry.user.core.tools.PasswordTool;
+import com.ferry.user.domain.analytics.UserAnalyticsEventType;
 import com.ferry.user.domain.common.*;
 import com.ferry.user.domain.common.exception.ForbiddenActionException;
 import com.ferry.user.domain.common.exception.InvalidUserStateException;
@@ -20,6 +24,7 @@ import java.util.List;
 public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase{
 	private final StaffRegistrationGateway gateway;
 	private final PasswordTool passwordTool;
+	private final UserAnalyticsPublisher analyticsPublisher;
 
 	@Override
 	public void execute(StaffRegistrationRequest request, UserAuthPrincipal principal, StaffRegistrationPresenter presenter){
@@ -31,6 +36,8 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 		saveEmail(request, registeredUser, principal);
 		saveAddress(request, registeredUser, principal);
 		savePhone(request, registeredUser, principal);
+		analyticsPublisher.publish(analyticsPublisher.save(UserAnalyticsEventConfig.staff(
+				UserAnalyticsEventType.STAFF_REGISTERED, StaffAnalyticsMessage.from(registeredUser), principal.userId())));
 		presenter.present(new StaffRegistrationResponse(registeredUser));
 	}
 

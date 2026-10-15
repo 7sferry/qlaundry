@@ -1,5 +1,9 @@
 package com.ferry.promotion.core.promotion.toggle;
 
+import com.ferry.promotion.core.analytics.PromotionAnalyticsEventConfig;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsMessage;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsPublisher;
+import com.ferry.promotion.domain.analytics.PromotionAnalyticsEventType;
 import com.ferry.promotion.domain.common.Money;
 import com.ferry.promotion.domain.common.Note;
 import com.ferry.promotion.domain.common.exception.NotFoundException;
@@ -45,12 +49,16 @@ class DefaultPromotionToggleUseCaseTest{
 
 	@Mock
 	PromotionToggleGateway gateway;
+	@Mock
+	PromotionAnalyticsPublisher publisher;
 	@InjectMocks
 	DefaultPromotionToggleUseCase useCase;
 	@Mock
 	PromotionTogglePresenter presenter;
 	@Captor
 	ArgumentCaptor<Promotion> promotionCaptor;
+	@Captor
+	ArgumentCaptor<PromotionAnalyticsEventConfig> analyticsCaptor;
 
 	@Test
 	void givenNonSuperStaffRole_thenThrowsForbiddenActionException(){
@@ -139,12 +147,18 @@ class DefaultPromotionToggleUseCaseTest{
 
 		then(gateway).should()
 				.save(promotionCaptor.capture());
+		then(publisher).should()
+				.save(analyticsCaptor.capture());
 		then(presenter).should()
 				.present(any(PromotionToggleResponse.class));
 
 		Promotion saved = promotionCaptor.getValue();
+		PromotionAnalyticsEventConfig analytics = analyticsCaptor.getValue();
 
 		thenSoftly(softly -> {
+			softly.then(analytics.type()).isEqualTo(PromotionAnalyticsEventType.PROMOTION_TOGGLED);
+			softly.then(((PromotionAnalyticsMessage) analytics.payload()).active()).isFalse();
+			softly.then(((PromotionAnalyticsMessage) analytics.payload()).code()).isEqualTo("CASHBACKSABTU");
 			softly.then(saved.active()).isFalse();
 			softly.then(saved.deleted()).isFalse();
 			softly.then(saved.usedCount()).isEqualTo(19);

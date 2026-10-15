@@ -1,6 +1,6 @@
 import {describe, expect, it, vi} from 'vitest';
 import type {CustomerRepository} from '../domain/CustomerRepository';
-import type {CreateCustomerInput, Customer, UpdateCustomerInput} from '../domain/Customer';
+import type {CreateCustomerInput, Customer, CustomerStats, TopCustomer, UpdateCustomerInput} from '../domain/Customer';
 import {customerUseCases} from './CustomerUseCases';
 
 const mockCustomer: Customer = {
@@ -15,6 +15,13 @@ const mockCustomer: Customer = {
 
 const mockCustomerPage = {items: [mockCustomer], nextCursor: null, prevCursor: null};
 
+const mockStats: CustomerStats = {totalCustomers: 120, newCustomers: 7, monthSpend: 4_350_000, averageSpend: 145_000};
+
+const mockTopCustomers: TopCustomer[] = [
+	{customerId: 'cust_1', fullName: 'Siti Rahayu', totalOrders: 4, totalSpend: 620_000},
+	{customerId: 'cust_9', fullName: 'Joko Widodo', totalOrders: 2, totalSpend: 210_000},
+];
+
 function makeRepo(): { repo: CustomerRepository; fns: Record<string, ReturnType<typeof vi.fn>> } {
 	const fns = {
 		getCustomers: vi.fn().mockResolvedValue(mockCustomerPage),
@@ -24,11 +31,41 @@ function makeRepo(): { repo: CustomerRepository; fns: Record<string, ReturnType<
 		createCustomer: vi.fn().mockResolvedValue(mockCustomer),
 		updateCustomer: vi.fn().mockResolvedValue(mockCustomer),
 		deleteCustomer: vi.fn().mockResolvedValue(undefined),
+		getCustomerStats: vi.fn().mockResolvedValue(mockStats),
+		getTopCustomers: vi.fn().mockResolvedValue(mockTopCustomers),
 	};
 	return {repo: fns as unknown as CustomerRepository, fns};
 }
 
 describe('customerUseCases', () => {
+	it('getStats delegates to repository.getCustomerStats', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = customerUseCases(repo);
+
+		const result = await useCases.getStats();
+
+		expect(fns.getCustomerStats).toHaveBeenCalledOnce();
+		expect(result).toBe(mockStats);
+	});
+
+	it('getTopCustomers delegates to repository.getTopCustomers', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = customerUseCases(repo);
+
+		const result = await useCases.getTopCustomers();
+
+		expect(fns.getTopCustomers).toHaveBeenCalledOnce();
+		expect(result).toEqual(mockTopCustomers);
+	});
+
+	it('getTopCustomers propagates errors from the repository', async () => {
+		const {repo, fns} = makeRepo();
+		fns.getTopCustomers.mockRejectedValue(new Error('Customer Not Found'));
+		const useCases = customerUseCases(repo);
+
+		await expect(useCases.getTopCustomers()).rejects.toThrow('Customer Not Found');
+	});
+
 	it('listCustomers delegates to repository.getCustomers', async () => {
 		const {repo, fns} = makeRepo();
 		const useCases = customerUseCases(repo);

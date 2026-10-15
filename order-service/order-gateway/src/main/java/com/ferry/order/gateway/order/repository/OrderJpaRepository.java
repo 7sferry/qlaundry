@@ -1,6 +1,5 @@
 package com.ferry.order.gateway.order.repository;
 
-import com.ferry.order.domain.customer.totals.CustomerOrderTotalsProjection;
 import com.ferry.order.domain.order.OrderFilter;
 import com.ferry.order.domain.order.schedule.OrderScheduleProjection;
 import com.ferry.order.gateway.order.entity.OrderJpa;
@@ -102,14 +101,6 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpa, String>{
 			"and o.statusId not in :closedStatusIds and o.deleted is false")
 	boolean hasOpenOrders(@Param("serviceId") String serviceId, @Param("tenantId") String tenantId,
 	                      @Param("closedStatusIds") Collection<Short> closedStatusIds);
-
-	@Query("select new com.ferry.order.domain.customer.totals.CustomerOrderTotalsProjection(" +
-			"o.customerId, count(o), sum(o.totalPrice), max(o.createdAt)) " +
-			"from OrderJpa o " +
-			"where o.tenantId = :tenantId and o.customerId in :customerIds and o.deleted is false " +
-			"group by o.customerId")
-	List<CustomerOrderTotalsProjection> findTotalsByCustomerIds(@Param("tenantId") String tenantId,
-	                                                             @Param("customerIds") Collection<String> customerIds);
 
 	@Query("select new com.ferry.order.domain.order.schedule.OrderScheduleProjection(" +
 			"o.id, o.orderNumber, o.customerName, o.pickupAt, o.statusId) " +

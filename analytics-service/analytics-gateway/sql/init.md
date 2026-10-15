@@ -22,6 +22,9 @@ docker exec -it clickhouse clickhouse-client --user analytics --password 12345
 | `order_items` | `ReplacingMergeTree(version)` | `(tenant_id, order_id, item_id)` | garment lines |
 | `order_promotions` | `ReplacingMergeTree(version)` | `(tenant_id, order_id, promotion_id)` | applied promo codes |
 | `laundry_services_current` | `ReplacingMergeTree(version)` | `(tenant_id, service_id)` | the price list, current name/category |
+| `staffs_current` | `ReplacingMergeTree(version)` | `(tenant_id, staff_id)` | staff ids, role, timestamps (user-service) |
+| `customers_current` | `ReplacingMergeTree(version)` | `(tenant_id, customer_id)` | customer ids and timestamps only (user-service) |
+| `promotions_current` | `ReplacingMergeTree(version)` | `(tenant_id, promotion_id)` | promo code, type, window, active flag (promotion-service) |
 | `consumed_events` | `MergeTree`, 30-day TTL | `(event_id)` | the consumer's audit of what it applied — not a dedupe gate |
 
 - `version` is the OLTP row's JPA `@Version`, carried in every event. Inserts are append-only; `ReplacingMergeTree`
@@ -30,8 +33,8 @@ docker exec -it clickhouse clickhouse-client --user analytics --password 12345
   partitions (a `ReplacingMergeTree` only dedupes inside a partition).
 - Lookup values (`status`, `unit`, `priority`, …) are stored as their **enum names**, never order-service's `short`
   lookup ids.
-- **No PII**: no customer name/phone/email/address, no `notes`/`staff_notes`. Rows are never deleted; order-service
-  soft-deletes, so `deleted = 1` rows stay and every query filters them out.
+- **No PII**: no staff or customer name/username/phone/email/address, no `notes`/`staff_notes`. Rows are never
+  deleted; every producer soft-deletes, so `deleted = 1` rows stay and every query filters them out.
 
 ## Query conventions
 
@@ -44,9 +47,10 @@ docker exec -it clickhouse clickhouse-client --user analytics --password 12345
   partitions; wrapping the column (`toDate(created_at, tz) >= ...`) is not guaranteed to, and without pruning a
   query reads the tenant's entire history on every dashboard load. The `tenant_id` prefix of the sorting key keeps a
   query off other tenants' rows, so cost grows with one tenant's history, never with the table's total.
-- The only query that legitimately reads all of a tenant's history is the dashboard's open-work count
-  (`PENDING`/`IN_PROGRESS`/`READY`) — an order from months ago can still be open. Keep it a separate, narrow query;
-  don't fold it back into the period query, or the period query loses its pruning.
+- Only two order queries legitimately read all of a tenant's history: the dashboard's open-work count
+  (`PENDING`/`IN_PROGRESS`/`READY`) — an order from months ago can still be open — and per-customer totals
+  (`/analytics/customer/totals`, narrowed by the page's customer ids). Keep both separate and narrow; don't fold them
+  into a period query, or the period query loses its pruning.
 - Every `FINAL` read carries `SETTINGS do_not_merge_across_partitions_select_final = 1`, so `FINAL` merges each
   partition on its own and in parallel. It is safe **only because `created_at` never changes** (see above): all
   versions of an order sit in one partition. If the partition key ever moves to a mutable column, drop the setting.
@@ -58,8 +62,7 @@ docker exec -it clickhouse clickhouse-client --user analytics --password 12345
   safe under `FINAL` for the same reason `deleted = 0` is: a `WHERE` on a column outside the sorting key is applied
   after `FINAL` picks the latest version (`optimize_move_to_prewhere_if_final` stays at its default `0` — never
   enable it), so an order whose newest version is `CANCELLED` can't fall back to an older non-cancelled version.
-  This differs
-  from order-service's `GET /order/customer-totals`, which counts cancelled orders on purpose — don't align them.
+  Customer spend and customer totals follow the same rule.
 - Parameterised queries only (`{name:Type}` server-side parameters), never string concatenation of a value. The
   only concatenated fragment is the bucket expression, chosen from a closed enum in the gateway (the zone inside it
   is still a `{zone:String}` parameter).

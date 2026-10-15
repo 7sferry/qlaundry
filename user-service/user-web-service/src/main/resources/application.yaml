@@ -60,6 +60,22 @@ app:
     stream:
       email:
         key: 'notification:email:'
+  analytics:
+    stream:
+      event:
+        # must match analytics-service's app.analytics.stream.event.key; full stream name is key + AGGREGATE
+        key: 'analytics:event:'
+    outbox:
+      # how long a CREATED (not-yet-published) analytics_events row sits before the sweeper republishes it —
+      # long enough that an in-flight afterCommit publish is never raced
+      grace-period: 2m
+      sweep-batch-size: 200
+      # @Scheduled reads this as a plain number of minutes (see AnalyticsOutboxScheduler)
+      sweep-interval-minutes: 5
+      backfill-batch-size: 500
+    backfill:
+      # only read by the analytics-backfill profile; blank means every tenant
+      tenant-id: ''
   turnstile:
     secret-key: 'xxx'
     verify-url: 'https://challenges.cloudflare.com/turnstile/v0/siteverify'

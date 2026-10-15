@@ -4,6 +4,7 @@
  ************************/
 
 import {useCallback} from 'react';
+import {useFetchOnce} from '@/core/hooks/useFetchOnce';
 import {usePaginatedList} from '@/core/hooks/usePaginatedList';
 import type {CreateServiceInput, LaundryService, UpdateServiceInput} from '../domain/Service';
 import type {ServiceFilters} from '../domain/ServiceRepository';
@@ -11,6 +12,12 @@ import {serviceUseCases} from '../application/ServiceUseCases';
 import {serviceRepository} from '../infrastructure/ServiceRepositoryImpl';
 
 const useCases = serviceUseCases(serviceRepository);
+const fetchServiceStats = () => useCases.getStats();
+
+export function useServiceStats() {
+	const {data: stats, error} = useFetchOnce(fetchServiceStats, 'Failed to load service statistics');
+	return {stats, error};
+}
 
 export function useServices() {
 	const fetchServicePage = useCallback((filters?: ServiceFilters) => useCases.listServices(filters), []);

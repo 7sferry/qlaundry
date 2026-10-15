@@ -1,6 +1,6 @@
 import {describe, expect, it, vi} from 'vitest';
 import type {PromotionFilters, PromotionRepository} from '../domain/PromotionRepository';
-import type {CreatePromotionInput, Promotion, UpdatePromotionInput} from '../domain/Promotion';
+import type {CreatePromotionInput, Promotion, PromotionStats, UpdatePromotionInput} from '../domain/Promotion';
 import {promotionUseCases} from './PromotionUseCases';
 
 const mockPromotion: Promotion = {
@@ -19,6 +19,8 @@ const mockPromotion: Promotion = {
 
 const mockPromotionPage = {items: [mockPromotion], nextCursor: null, prevCursor: null};
 
+const mockStats: PromotionStats = {totalPromotions: 8, activePromotions: 3, expiringSoon: 1, monthRedemptions: 42};
+
 function makeRepo(): { repo: PromotionRepository; fns: Record<string, ReturnType<typeof vi.fn>> } {
 	const fns = {
 		getPromotions: vi.fn().mockResolvedValue(mockPromotionPage),
@@ -28,11 +30,30 @@ function makeRepo(): { repo: PromotionRepository; fns: Record<string, ReturnType
 		previewPromotions: vi.fn().mockResolvedValue([
 			{code: mockPromotion.code, applied: true, message: 'Promotion applied', discountAmount: 25000},
 		]),
+		getPromotionStats: vi.fn().mockResolvedValue(mockStats),
 	};
 	return {repo: fns as unknown as PromotionRepository, fns};
 }
 
 describe('promotionUseCases', () => {
+	it('getStats delegates to repository.getPromotionStats', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = promotionUseCases(repo);
+
+		const result = await useCases.getStats();
+
+		expect(fns.getPromotionStats).toHaveBeenCalledOnce();
+		expect(result).toBe(mockStats);
+	});
+
+	it('getStats propagates errors from the repository', async () => {
+		const {repo, fns} = makeRepo();
+		fns.getPromotionStats.mockRejectedValue(new Error('Terjadi kesalahan pada server (503). Coba lagi.'));
+		const useCases = promotionUseCases(repo);
+
+		await expect(useCases.getStats()).rejects.toThrow('Terjadi kesalahan pada server (503). Coba lagi.');
+	});
+
 	it('listPromotions passes filters through to the repository', async () => {
 		const {repo, fns} = makeRepo();
 		const useCases = promotionUseCases(repo);

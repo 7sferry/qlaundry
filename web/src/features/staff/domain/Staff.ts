@@ -33,6 +33,11 @@ export interface CreateStaffInput {
 	addresses: string[];
 }
 
+export interface StaffStats {
+	totalStaff: number;
+	newStaff: number;
+}
+
 export interface UpdateStaffInput extends Partial<Omit<CreateStaffInput, 'username' | 'password'>> {
 	id: string;
 	currentPassword?: string;

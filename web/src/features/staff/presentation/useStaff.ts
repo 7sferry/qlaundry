@@ -4,6 +4,7 @@
  ************************/
 
 import {useCallback} from 'react';
+import {useFetchOnce} from '@/core/hooks/useFetchOnce';
 import {usePaginatedList} from '@/core/hooks/usePaginatedList';
 import type {CreateStaffInput, Staff, UpdateStaffInput} from '../domain/Staff';
 import type {StaffFilters} from '../domain/StaffRepository';
@@ -11,12 +12,20 @@ import {ListStaffUseCase} from '../application/ListStaffUseCase';
 import {CreateStaffUseCase} from '../application/CreateStaffUseCase';
 import {UpdateStaffUseCase} from '../application/UpdateStaffUseCase';
 import {DeleteStaffUseCase} from '../application/DeleteStaffUseCase';
+import {GetStaffStatsUseCase} from '../application/GetStaffStatsUseCase';
 import {staffRepository} from '../infrastructure/StaffRepositoryImpl';
 
 const listStaffUseCase = new ListStaffUseCase(staffRepository);
 const createStaffUseCase = new CreateStaffUseCase(staffRepository);
 const updateStaffUseCase = new UpdateStaffUseCase(staffRepository);
 const deleteStaffUseCase = new DeleteStaffUseCase(staffRepository);
+const getStaffStatsUseCase = new GetStaffStatsUseCase(staffRepository);
+const fetchStaffStats = () => getStaffStatsUseCase.execute();
+
+export function useStaffStats() {
+	const {data: stats, error} = useFetchOnce(fetchStaffStats, 'Failed to load staff statistics');
+	return {stats, error};
+}
 
 export function useStaff() {
 	const fetchStaffPage = useCallback((filters?: StaffFilters) => listStaffUseCase.execute(filters), []);

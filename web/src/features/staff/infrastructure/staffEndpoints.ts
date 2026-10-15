@@ -9,4 +9,5 @@ export const STAFF_ENDPOINTS = {
 	registration: '/staff/registration',
 	profile: '/staff/profile',
 	delete: '/staff/delete',
+	stats: '/analytics/staff',
 } as const;

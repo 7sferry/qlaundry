@@ -21,7 +21,7 @@ import {Button, Card, Loading, PageHeader, StatCard} from '@/core/ui';
 import {formatCurrency} from '@/core/utils/format';
 import {REPORT_PERIODS, type ReportPeriod} from '@/features/dashboard/domain/Dashboard';
 import {useDashboard} from '@/features/dashboard/presentation/useDashboard';
-import {useCustomers} from '@/features/customers/presentation/useCustomers';
+import {useCustomerStats, useTopCustomers} from '@/features/customers/presentation/useCustomers';
 
 const PERIOD_LABELS: Record<ReportPeriod, string> = {
 	week: 'Week',
@@ -41,13 +41,10 @@ const COLORS = ['var(--brand)', 'var(--info)', 'var(--success)', 'var(--warning)
 
 export default function ReportsPage() {
 	const {summary, report, period, setPeriod, loading} = useDashboard();
-	const {customers} = useCustomers();
+	const {stats: customerStats, error: customerStatsError} = useCustomerStats();
+	const {topCustomers, error: topCustomersError} = useTopCustomers();
 
 	if (loading && !summary) return <Loading label="Preparing reports…"/>;
-
-	const topCustomers = [...customers]
-			.sort((a, b) => b.totalSpend - a.totalSpend)
-			.slice(0, 5);
 
 	return (
 			<>
@@ -95,9 +92,9 @@ export default function ReportsPage() {
 					/>
 					<StatCard
 							icon={<Users size={20}/>}
-							value={customers.length}
+							value={customerStats?.totalCustomers ?? '—'}
 							label="Total customers"
-							hint="Registered"
+							hint={customerStatsError ?? `${customerStats?.newCustomers ?? 0} new this month`}
 					/>
 				</div>
 
@@ -243,14 +240,14 @@ export default function ReportsPage() {
 						</div>
 					</Card>
 
-						<Card title="Top customers" subtitle="Top 5 customers by spend">
+						<Card title="Top customers" subtitle="Top 5 customers by spend this month">
 						<div className="top-customers">
 							{topCustomers.map((c, idx) => (
-									<div key={c.id} className="top-customer-row">
+									<div key={c.customerId} className="top-customer-row">
 										<span className="top-rank">{idx + 1}</span>
 										<div className="top-customer-info">
 											<strong>{c.fullName}</strong>
-  									<span className="muted" style={{fontSize: 12}}>{c.totalOrders} orders</span>
+  									<span className="muted" style={{fontSize: 12}}>{c.totalOrders} orders this month</span>
 										</div>
 										<div style={{textAlign: 'right'}}>
 											<strong style={{display: 'block', fontSize: 14}}>{formatCurrency(c.totalSpend)}</strong>
@@ -260,7 +257,7 @@ export default function ReportsPage() {
 						{!topCustomers.length && (
 								<div className="empty-state" style={{padding: 24}}>
 									<Users size={24}/>
-									<span>No customer data yet</span>
+									<span>{topCustomersError ?? 'No customer orders this month yet'}</span>
 								</div>
 						)}
 						</div>

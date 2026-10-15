@@ -55,6 +55,13 @@ export interface PromotionPreviewResult {
 	remainingUsage?: number;
 }
 
+export interface PromotionStats {
+	totalPromotions: number;
+	activePromotions: number;
+	expiringSoon: number;
+	monthRedemptions: number;
+}
+
 export const PROMOTION_TYPE_LABELS: Record<PromotionType, string> = {
 	cumulative_percentage: 'Cumulative percentage off',
 	fixed_amount: 'Fixed amount off',

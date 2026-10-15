@@ -45,4 +45,5 @@ export const promotionUseCases = (repository: PromotionRepository) => ({
 	togglePromotion: (id: string, active: boolean) => repository.togglePromotion(id, active),
 	previewPromotions: (promotions: Promotion[], subtotal: number): Promise<PromotionPreviewResult[]> =>
 		repository.previewPromotions(promotions, subtotal),
+	getStats: () => repository.getPromotionStats(),
 });

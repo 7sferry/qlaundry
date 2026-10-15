@@ -24,7 +24,7 @@ import {
 import {DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS, type SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency} from '@/core/utils/format';
 import {useAuth} from '@/features/auth/presentation/useAuth';
-import {useServices} from '../useServices';
+import {useServices, useServiceStats} from '../useServices';
 import type {LaundryService, ServiceCategory, ServiceUnit} from '../../domain/Service';
 import {SERVICE_CATEGORY_LABELS, SERVICE_UNIT_LABELS} from '../../domain/Service';
 import type {ServiceSortBy} from '../../domain/ServiceRepository';
@@ -146,6 +146,7 @@ export default function ServicesPage() {
 	const {
 		services, loading, hasNext, hasPrev, refresh, goNext, goPrevious, createService, updateService, deleteService,
 	} = useServices();
+	const {stats, error: statsError} = useServiceStats();
 	const {user} = useAuth();
 	const toast = useToast();
 	const canManage = user?.staffRole === 'SUPER_STAFF';
@@ -190,12 +191,6 @@ export default function ServicesPage() {
 	}, []);
 
 	if (loading && services.length === 0) return <Loading label="Loading services…"/>;
-
-	const activeCount = services.filter((s) => s.active).length;
-	const popularCount = services.filter((s) => s.popular).length;
-	const avgPrice = services.length
-			? Math.round(services.reduce((sum, s) => sum + s.pricePerUnit, 0) / services.length)
-			: 0;
 
 	const openAdd = () => {
 		setForm(emptyForm);
@@ -290,13 +285,15 @@ export default function ServicesPage() {
 				/>
 
 				<div className="grid grid--stats">
-					<StatCard icon={<ListChecks size={20}/>} value={services.length} label="Services"
-					          hint="On this page"/>
-					<StatCard icon={<WashingMachine size={20}/>} value={activeCount} label="Active"
-					          hint="On this page"/>
-					<StatCard icon={<Star size={20}/>} value={popularCount} label="Popular" hint="On this page"/>
-					<StatCard icon={<Sparkles size={20}/>} value={formatCurrency(avgPrice)} label="Average price"
-					          hint="On this page"/>
+					<StatCard icon={<ListChecks size={20}/>} value={stats?.totalServices ?? '—'} label="Services"
+					          hint={statsError ?? 'In the catalog'}/>
+					<StatCard icon={<WashingMachine size={20}/>} value={stats?.activeServices ?? '—'} label="Active"
+					          hint={statsError ?? 'Offered now'}/>
+					<StatCard icon={<Star size={20}/>} value={stats?.popularServices ?? '—'} label="Popular"
+					          hint={statsError ?? 'Marked popular'}/>
+					<StatCard icon={<Sparkles size={20}/>}
+					          value={stats ? formatCurrency(Math.round(stats.averagePrice)) : '—'}
+					          label="Average price" hint={statsError ?? 'Across active services'}/>
 				</div>
 
 				<Card style={{marginTop: 24, marginBottom: 20}}>

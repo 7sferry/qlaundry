@@ -1,11 +1,23 @@
 package com.ferry.user.webservice.config;
 
+import com.ferry.user.core.analytics.UserAnalyticsPublisher;
+import com.ferry.user.core.analytics.backfill.UserAnalyticsBackfillGateway;
+import com.ferry.user.core.analytics.backfill.UserAnalyticsBackfillRequest;
+import com.ferry.user.core.analytics.backfill.UserAnalyticsBackfillResponse;
+import com.ferry.user.core.analytics.backfill.UserAnalyticsBackfillUseCase;
+import com.ferry.user.core.analytics.backfill.DefaultUserAnalyticsBackfillUseCase;
+import com.ferry.user.core.analytics.sweep.UserAnalyticsOutboxSweepGateway;
+import com.ferry.user.core.analytics.sweep.UserAnalyticsOutboxSweepUseCase;
+import com.ferry.user.core.analytics.sweep.DefaultUserAnalyticsOutboxSweepUseCase;
 import com.ferry.user.core.customer.delete.CustomerDeleteGateway;
 import com.ferry.user.core.customer.delete.CustomerDeleteUseCase;
 import com.ferry.user.core.customer.delete.DefaultCustomerDeleteUseCase;
 import com.ferry.user.core.customer.detail.CustomerDetailGateway;
 import com.ferry.user.core.customer.detail.CustomerDetailUseCase;
 import com.ferry.user.core.customer.detail.DefaultCustomerDetailUseCase;
+import com.ferry.user.core.customer.names.CustomerNamesGateway;
+import com.ferry.user.core.customer.names.CustomerNamesUseCase;
+import com.ferry.user.core.customer.names.DefaultCustomerNamesUseCase;
 import com.ferry.user.core.customer.verification.CustomerVerificationGateway;
 import com.ferry.user.core.customer.verification.CustomerVerificationUseCase;
 import com.ferry.user.core.customer.verification.DefaultCustomerVerificationUseCase;
@@ -74,8 +86,15 @@ import com.ferry.user.core.tools.CryptoConstant;
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
+import com.ferry.user.gateway.analytics.UserAnalyticsStreamWriter;
+import com.ferry.user.gateway.analytics.DefaultUserAnalyticsStreamWriter;
+import com.ferry.user.gateway.analytics.JpaUserAnalyticsBackfillGateway;
+import com.ferry.user.gateway.analytics.JpaUserAnalyticsOutboxSweepGateway;
+import com.ferry.user.gateway.analytics.RedisUserAnalyticsPublisher;
+import com.ferry.user.gateway.analytics.repository.UserAnalyticsEventJpaRepository;
 import com.ferry.user.gateway.customer.JpaCustomerDeleteGateway;
 import com.ferry.user.gateway.customer.JpaCustomerDetailGateway;
+import com.ferry.user.gateway.customer.JpaCustomerNamesGateway;
 import com.ferry.user.gateway.customer.JpaCustomerVerificationGateway;
 import com.ferry.user.gateway.customer.JpaCustomerListGateway;
 import com.ferry.user.gateway.customer.JpaCustomerRegistrationGateway;
@@ -97,6 +116,7 @@ import com.ferry.user.gateway.tenant.JpaTenantRegistrationGateway;
 import com.ferry.user.gateway.tenant.JpaTenantResendConfirmationGateway;
 import com.ferry.user.gateway.tenant.JpaTenantUpdateGateway;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
+import com.ferry.user.webservice.analytics.sweep.UserAnalyticsOutboxScheduler;
 import com.ferry.user.webservice.tenant.expiration.TenantExpirationScheduler;
 import com.ferry.user.webservice.tools.Argon2PasswordTool;
 import com.ferry.user.webservice.tools.DefaultUserCacheManager;
@@ -122,6 +142,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Profile;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password4j.Argon2Password4jPasswordEncoder;
@@ -195,8 +216,9 @@ public class UserWebConfig{
 	}
 
 	@Bean
-	CustomerRegistrationUseCase customerRegistrationUseCase(CustomerRegistrationGateway customerRegistrationGateway){
-		return new DefaultCustomerRegistrationUseCase(customerRegistrationGateway);
+	CustomerRegistrationUseCase customerRegistrationUseCase(CustomerRegistrationGateway customerRegistrationGateway,
+	                                                        UserAnalyticsPublisher userAnalyticsPublisher){
+		return new DefaultCustomerRegistrationUseCase(customerRegistrationGateway, userAnalyticsPublisher);
 	}
 
 	@Bean
@@ -230,6 +252,16 @@ public class UserWebConfig{
 	}
 
 	@Bean
+	CustomerNamesGateway customerNamesGateway(CustomerJpaRepository customerJpaRepository){
+		return new JpaCustomerNamesGateway(customerJpaRepository);
+	}
+
+	@Bean
+	CustomerNamesUseCase customerNamesUseCase(CustomerNamesGateway customerNamesGateway){
+		return new DefaultCustomerNamesUseCase(customerNamesGateway);
+	}
+
+	@Bean
 	CustomerUpdateGateway customerUpdateGateway(CustomerJpaRepository customerJpaRepository,
 	                                            CustomerEmailJpaRepository customerEmailJpaRepository,
 	                                            CustomerPhoneJpaRepository customerPhoneJpaRepository,
@@ -258,8 +290,9 @@ public class UserWebConfig{
 	}
 
 	@Bean
-	CustomerDeleteUseCase customerDeleteUseCase(CustomerDeleteGateway customerDeleteGateway){
-		return new DefaultCustomerDeleteUseCase(customerDeleteGateway);
+	CustomerDeleteUseCase customerDeleteUseCase(CustomerDeleteGateway customerDeleteGateway,
+	                                            UserAnalyticsPublisher userAnalyticsPublisher){
+		return new DefaultCustomerDeleteUseCase(customerDeleteGateway, userAnalyticsPublisher);
 	}
 
 	@Bean
@@ -368,8 +401,9 @@ public class UserWebConfig{
 
 	@Bean
 	StaffRegistrationUseCase staffRegistrationUseCase(StaffRegistrationGateway staffRegistrationGateway,
-	                                                  PasswordTool passwordTool){
-		return new DefaultStaffRegistrationUseCase(staffRegistrationGateway, passwordTool);
+	                                                  PasswordTool passwordTool,
+	                                                  UserAnalyticsPublisher userAnalyticsPublisher){
+		return new DefaultStaffRegistrationUseCase(staffRegistrationGateway, passwordTool, userAnalyticsPublisher);
 	}
 
 	@Bean
@@ -505,8 +539,9 @@ public class UserWebConfig{
 	}
 
 	@Bean
-	StaffDeleteUseCase staffDeleteUseCase(StaffDeleteGateway staffDeleteGateway){
-		return new DefaultStaffDeleteUseCase(staffDeleteGateway);
+	StaffDeleteUseCase staffDeleteUseCase(StaffDeleteGateway staffDeleteGateway,
+	                                      UserAnalyticsPublisher userAnalyticsPublisher){
+		return new DefaultStaffDeleteUseCase(staffDeleteGateway, userAnalyticsPublisher);
 	}
 
 	@Bean
@@ -546,6 +581,74 @@ public class UserWebConfig{
 	@Bean
 	TenantUpdateUseCase tenantUpdateUseCase(TenantUpdateGateway tenantUpdateGateway){
 		return new DefaultTenantUpdateUseCase(tenantUpdateGateway);
+	}
+
+	@Bean
+	UserAnalyticsStreamWriter analyticsStreamWriter(StringRedisTemplate stringRedisTemplate,
+	                                                UserAnalyticsEventJpaRepository analyticsEventJpaRepository,
+	                                                PlatformTransactionManager transactionManager,
+	                                                @Value("${app.analytics.stream.event.key}") String streamKeyPrefix){
+		return new DefaultUserAnalyticsStreamWriter(stringRedisTemplate, analyticsEventJpaRepository,
+				transactionManager, streamKeyPrefix);
+	}
+
+	@Bean
+	UserAnalyticsPublisher userAnalyticsPublisher(UserAnalyticsEventJpaRepository analyticsEventJpaRepository,
+	                                              UserAnalyticsStreamWriter analyticsStreamWriter,
+	                                              IdGenerator idGenerator,
+	                                              JsonManager jsonManager,
+	                                              PlatformTransactionManager transactionManager){
+		return new RedisUserAnalyticsPublisher(analyticsEventJpaRepository, analyticsStreamWriter, idGenerator,
+				jsonManager, transactionManager);
+	}
+
+	@Bean
+	UserAnalyticsOutboxSweepGateway analyticsOutboxSweepGateway(UserAnalyticsEventJpaRepository analyticsEventJpaRepository,
+	                                                            UserAnalyticsStreamWriter analyticsStreamWriter,
+	                                                            PlatformTransactionManager transactionManager){
+		return new JpaUserAnalyticsOutboxSweepGateway(analyticsEventJpaRepository, analyticsStreamWriter,
+				transactionManager);
+	}
+
+	@Bean
+	UserAnalyticsOutboxSweepUseCase analyticsOutboxSweepUseCase(UserAnalyticsOutboxSweepGateway analyticsOutboxSweepGateway,
+	                                                            @Value("${app.analytics.outbox.grace-period}") Duration gracePeriod,
+	                                                            @Value("${app.analytics.outbox.sweep-batch-size}") int sweepBatchSize){
+		return new DefaultUserAnalyticsOutboxSweepUseCase(analyticsOutboxSweepGateway, gracePeriod, sweepBatchSize);
+	}
+
+	@Bean
+	@Lazy(false)
+	UserAnalyticsOutboxScheduler analyticsOutboxScheduler(UserAnalyticsOutboxSweepUseCase analyticsOutboxSweepUseCase){
+		UserAnalyticsOutboxScheduler scheduler = new UserAnalyticsOutboxScheduler(analyticsOutboxSweepUseCase);
+		Thread.startVirtualThread(scheduler::sweep);
+		return scheduler;
+	}
+
+	@Bean
+	UserAnalyticsBackfillGateway analyticsBackfillGateway(StaffJpaRepository staffJpaRepository,
+	                                                      CustomerJpaRepository customerJpaRepository){
+		return new JpaUserAnalyticsBackfillGateway(staffJpaRepository, customerJpaRepository);
+	}
+
+	@Bean
+	UserAnalyticsBackfillUseCase analyticsBackfillUseCase(UserAnalyticsBackfillGateway analyticsBackfillGateway,
+	                                                      UserAnalyticsPublisher userAnalyticsPublisher,
+	                                                      @Value("${app.analytics.outbox.backfill-batch-size}") int backfillBatchSize){
+		return new DefaultUserAnalyticsBackfillUseCase(analyticsBackfillGateway, userAnalyticsPublisher,
+				backfillBatchSize);
+	}
+
+//	@Bean
+//	@Lazy(false)
+//	@Profile("analytics-backfill")
+	ApplicationRunner analyticsBackfillRunner(UserAnalyticsBackfillUseCase analyticsBackfillUseCase,
+	                                          @Value("${app.analytics.backfill.tenant-id:}") String tenantId){
+		return _ -> {
+			UserAnalyticsBackfillResponse response = analyticsBackfillUseCase.execute(new UserAnalyticsBackfillRequest(tenantId));
+			log.info("Analytics backfill done: {} staff, {} customer(s) published", response.staffs(),
+					response.customers());
+		};
 	}
 
 }

@@ -1,9 +1,9 @@
 package com.ferry.order.core.order.cancel;
 
-import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
-import com.ferry.order.domain.analytics.AnalyticsEventType;
+import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
 import com.ferry.order.domain.common.Note;
 import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.order.Order;
@@ -34,7 +34,7 @@ public class DefaultOrderCancelUseCase implements OrderCancelUseCase{
 				? null : new Note(request.staffNotes());
 		Order saved = gateway.save(order.changeStatus(OrderStatus.CANCELLED, staffNotes,
 				principal.userId()));
-		publisher.publish(publisher.save(AnalyticsEventConfig.order(AnalyticsEventType.ORDER_STATUS_CHANGED,
+		publisher.publish(publisher.save(OrderAnalyticsEventConfig.order(OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
 				OrderAnalyticsMessage.from(saved, gateway.findItemsByOrderId(orderId),
 						gateway.findPromotionsByOrderId(orderId)), principal.userId())));
 		presenter.present(new OrderCancelResponse(saved));

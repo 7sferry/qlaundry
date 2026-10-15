@@ -1,5 +1,9 @@
 package com.ferry.promotion.core.promotion.update;
 
+import com.ferry.promotion.core.analytics.PromotionAnalyticsEventConfig;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsMessage;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsPublisher;
+import com.ferry.promotion.domain.analytics.PromotionAnalyticsEventType;
 import com.ferry.promotion.domain.common.Money;
 import com.ferry.promotion.domain.common.Note;
 import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
@@ -24,6 +28,7 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class DefaultPromotionUpdateUseCase implements PromotionUpdateUseCase{
 	private final PromotionUpdateGateway gateway;
+	private final PromotionAnalyticsPublisher publisher;
 
 	@Override
 	public void execute(PromotionUpdateRequest request, PromotionAuthPrincipal principal,
@@ -46,6 +51,8 @@ public class DefaultPromotionUpdateUseCase implements PromotionUpdateUseCase{
 				new Note(request.description()), request.type(), request.percentage(), money(request.amount()),
 				money(request.maxDiscountAmount()), money(request.minSubtotal()), combinable, request.usageLimit(),
 				instant(request.startAt()), instant(request.endAt()), active, principal.userId()));
+		publisher.publish(publisher.save(PromotionAnalyticsEventConfig.promotion(PromotionAnalyticsEventType.PROMOTION_UPDATED,
+				PromotionAnalyticsMessage.from(saved), principal.userId())));
 		presenter.present(new PromotionUpdateResponse(saved));
 	}
 

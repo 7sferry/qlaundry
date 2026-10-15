@@ -35,6 +35,13 @@ export interface UpdateServiceInput extends CreateServiceInput {
 	active: boolean;
 }
 
+export interface ServiceStats {
+	totalServices: number;
+	activeServices: number;
+	popularServices: number;
+	averagePrice: number;
+}
+
 export const SERVICE_UNIT_LABELS: Record<ServiceUnit, string> = {
 	kg: 'Per kg',
 	item: 'Per item',

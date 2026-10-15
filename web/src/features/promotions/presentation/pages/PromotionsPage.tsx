@@ -24,7 +24,7 @@ import {
 import {DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS, type SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency, formatDatetime} from '@/core/utils/format';
 import {useAuth} from '@/features/auth/presentation/useAuth';
-import {usePromotionList} from '../usePromotionList';
+import {usePromotionList, usePromotionStats} from '../usePromotionList';
 import type {Promotion, PromotionType} from '../../domain/Promotion';
 import {PROMOTION_TYPE_LABELS} from '../../domain/Promotion';
 import type {PromotionSortBy} from '../../domain/PromotionRepository';
@@ -95,12 +95,6 @@ function toDatetimeLocalValue(iso: string): string {
 	const d = new Date(iso);
 	const pad = (n: number) => String(n).padStart(2, '0');
 	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function isExpiringSoon(p: Promotion): boolean {
-	if (!p.active || !p.endAt) return false;
-	const msLeft = new Date(p.endAt).getTime() - Date.now();
-	return msLeft > 0 && msLeft <= 7 * 24 * 60 * 60 * 1000;
 }
 
 interface PromotionFormProps {
@@ -206,6 +200,7 @@ export default function PromotionsPage() {
 		promotions, loading, hasNext, hasPrev, refresh, goNext, goPrevious,
 		createPromotion, updatePromotion, togglePromotion,
 	} = usePromotionList();
+	const {stats, error: statsError} = usePromotionStats();
 	const {user} = useAuth();
 	const toast = useToast();
 	const canManage = user?.staffRole === 'SUPER_STAFF';
@@ -257,10 +252,6 @@ export default function PromotionsPage() {
 	}, []);
 
 	if (loading && promotions.length === 0) return <Loading label="Loading promotions…"/>;
-
-	const activeCount = promotions.filter((p) => p.active).length;
-	const expiringSoonCount = promotions.filter(isExpiringSoon).length;
-	const totalRedemptions = promotions.reduce((sum, p) => sum + p.usedCount, 0);
 
 	const openAdd = () => {
 		setForm(emptyForm);
@@ -367,11 +358,14 @@ export default function PromotionsPage() {
 			/>
 
 			<div className="grid grid--stats">
-				<StatCard icon={<Ticket size={20}/>} value={promotions.length} label="Promotions" hint="On this page"/>
-				<StatCard icon={<Percent size={20}/>} value={activeCount} label="Active" hint="On this page"/>
-				<StatCard icon={<Clock size={20}/>} value={expiringSoonCount} label="Expiring soon"
-				          hint="Within 7 days"/>
-				<StatCard icon={<Users size={20}/>} value={totalRedemptions} label="Redemptions" hint="On this page"/>
+				<StatCard icon={<Ticket size={20}/>} value={stats?.totalPromotions ?? '—'} label="Promotions"
+				          hint={statsError ?? 'Total'}/>
+				<StatCard icon={<Percent size={20}/>} value={stats?.activePromotions ?? '—'} label="Active"
+				          hint={statsError ?? 'Running now'}/>
+				<StatCard icon={<Clock size={20}/>} value={stats?.expiringSoon ?? '—'} label="Expiring soon"
+				          hint={statsError ?? 'Within 7 days'}/>
+				<StatCard icon={<Users size={20}/>} value={stats?.monthRedemptions ?? '—'} label="Redemptions"
+				          hint={statsError ?? 'This month'}/>
 			</div>
 
 			<Card style={{marginTop: 24, marginBottom: 20}}>

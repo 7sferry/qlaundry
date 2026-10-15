@@ -2,12 +2,9 @@ package com.ferry.order.webservice.config;
 
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.backfill.*;
-import com.ferry.order.core.analytics.sweep.AnalyticsOutboxSweepGateway;
-import com.ferry.order.core.analytics.sweep.AnalyticsOutboxSweepUseCase;
-import com.ferry.order.core.analytics.sweep.DefaultAnalyticsOutboxSweepUseCase;
-import com.ferry.order.core.customer.totals.CustomerOrderTotalsGateway;
-import com.ferry.order.core.customer.totals.CustomerOrderTotalsUseCase;
-import com.ferry.order.core.customer.totals.DefaultCustomerOrderTotalsUseCase;
+import com.ferry.order.core.analytics.sweep.OrderAnalyticsOutboxSweepGateway;
+import com.ferry.order.core.analytics.sweep.OrderAnalyticsOutboxSweepUseCase;
+import com.ferry.order.core.analytics.sweep.DefaultOrderAnalyticsOutboxSweepUseCase;
 import com.ferry.order.core.invoice.link.DefaultInvoiceLinkUseCase;
 import com.ferry.order.core.invoice.link.InvoiceLinkUseCase;
 import com.ferry.order.core.invoice.pdf.DefaultInvoicePdfUseCase;
@@ -64,8 +61,7 @@ import com.ferry.order.core.service.update.DefaultLaundryServiceUpdateUseCase;
 import com.ferry.order.core.service.update.LaundryServiceUpdateGateway;
 import com.ferry.order.core.service.update.LaundryServiceUpdateUseCase;
 import com.ferry.order.gateway.analytics.*;
-import com.ferry.order.gateway.analytics.repository.AnalyticsEventJpaRepository;
-import com.ferry.order.gateway.customer.JpaCustomerOrderTotalsGateway;
+import com.ferry.order.gateway.analytics.repository.OrderAnalyticsEventJpaRepository;
 import com.ferry.order.gateway.customer.HttpOrderCustomerGateway;
 import com.ferry.order.gateway.invoice.HtmlInvoiceComposer;
 import com.ferry.order.gateway.invoice.JpaInvoicePdfGateway;
@@ -77,7 +73,7 @@ import com.ferry.order.gateway.service.JpaLaundryServiceDeleteGateway;
 import com.ferry.order.gateway.service.JpaLaundryServiceListGateway;
 import com.ferry.order.gateway.service.JpaLaundryServiceUpdateGateway;
 import com.ferry.order.gateway.service.repository.LaundryServiceJpaRepository;
-import com.ferry.order.webservice.analytics.sweep.AnalyticsOutboxScheduler;
+import com.ferry.order.webservice.analytics.sweep.OrderAnalyticsOutboxScheduler;
 import com.ferry.order.webservice.order.saga.OrderPromotionSagaScheduler;
 import com.ferry.promotion.client.PromotionServiceClient;
 import com.ferry.user.client.UserServiceClient;
@@ -285,16 +281,6 @@ public class OrderWebConfig{
 	}
 
 	@Bean
-	CustomerOrderTotalsGateway customerOrderTotalsGateway(OrderJpaRepository orderJpaRepository){
-		return new JpaCustomerOrderTotalsGateway(orderJpaRepository);
-	}
-
-	@Bean
-	CustomerOrderTotalsUseCase customerOrderTotalsUseCase(CustomerOrderTotalsGateway customerOrderTotalsGateway){
-		return new DefaultCustomerOrderTotalsUseCase(customerOrderTotalsGateway);
-	}
-
-	@Bean
 	ITemplateEngine invoiceTemplateEngine(){
 		ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
 		templateResolver.setPrefix("templates/invoice/");
@@ -466,17 +452,17 @@ public class OrderWebConfig{
 	}
 
 	@Bean
-	AnalyticsStreamWriter analyticsStreamWriter(StringRedisTemplate stringRedisTemplate,
-	                                            AnalyticsEventJpaRepository analyticsEventJpaRepository,
-	                                            PlatformTransactionManager transactionManager,
-	                                            @Value("${app.analytics.stream.event.key}") String streamKeyPrefix){
-		return new DefaultAnalyticsStreamWriter(stringRedisTemplate, analyticsEventJpaRepository,
+	OrderAnalyticsStreamWriter analyticsStreamWriter(StringRedisTemplate stringRedisTemplate,
+	                                                 OrderAnalyticsEventJpaRepository analyticsEventJpaRepository,
+	                                                 PlatformTransactionManager transactionManager,
+	                                                 @Value("${app.analytics.stream.event.key}") String streamKeyPrefix){
+		return new DefaultOrderAnalyticsStreamWriter(stringRedisTemplate, analyticsEventJpaRepository,
 				transactionManager, streamKeyPrefix);
 	}
 
 	@Bean
-	OrderAnalyticsPublisher analyticsEventPublisher(AnalyticsEventJpaRepository analyticsEventJpaRepository,
-	                                                AnalyticsStreamWriter analyticsStreamWriter,
+	OrderAnalyticsPublisher analyticsEventPublisher(OrderAnalyticsEventJpaRepository analyticsEventJpaRepository,
+	                                                OrderAnalyticsStreamWriter analyticsStreamWriter,
 	                                                IdGenerator idGenerator,
 	                                                JsonManager jsonManager,
 	                                                PlatformTransactionManager transactionManager){
@@ -485,51 +471,51 @@ public class OrderWebConfig{
 	}
 
 	@Bean
-	AnalyticsOutboxSweepGateway analyticsOutboxSweepGateway(AnalyticsEventJpaRepository analyticsEventJpaRepository,
-	                                                        AnalyticsStreamWriter analyticsStreamWriter,
-	                                                        PlatformTransactionManager transactionManager){
-		return new JpaAnalyticsOutboxSweepGateway(analyticsEventJpaRepository, analyticsStreamWriter,
+	OrderAnalyticsOutboxSweepGateway analyticsOutboxSweepGateway(OrderAnalyticsEventJpaRepository analyticsEventJpaRepository,
+	                                                             OrderAnalyticsStreamWriter analyticsStreamWriter,
+	                                                             PlatformTransactionManager transactionManager){
+		return new JpaOrderAnalyticsOutboxSweepGateway(analyticsEventJpaRepository, analyticsStreamWriter,
 				transactionManager);
 	}
 
 	@Bean
-	AnalyticsOutboxSweepUseCase analyticsOutboxSweepUseCase(AnalyticsOutboxSweepGateway analyticsOutboxSweepGateway,
-	                                                        @Value("${app.analytics.outbox.grace-period}") Duration gracePeriod,
-	                                                        @Value("${app.analytics.outbox.sweep-batch-size}") int sweepBatchSize){
-		return new DefaultAnalyticsOutboxSweepUseCase(analyticsOutboxSweepGateway, gracePeriod, sweepBatchSize);
+	OrderAnalyticsOutboxSweepUseCase analyticsOutboxSweepUseCase(OrderAnalyticsOutboxSweepGateway analyticsOutboxSweepGateway,
+	                                                             @Value("${app.analytics.outbox.grace-period}") Duration gracePeriod,
+	                                                             @Value("${app.analytics.outbox.sweep-batch-size}") int sweepBatchSize){
+		return new DefaultOrderAnalyticsOutboxSweepUseCase(analyticsOutboxSweepGateway, gracePeriod, sweepBatchSize);
 	}
 
 	@Bean
 	@Lazy(false)
-	AnalyticsOutboxScheduler analyticsOutboxScheduler(AnalyticsOutboxSweepUseCase analyticsOutboxSweepUseCase){
-		AnalyticsOutboxScheduler scheduler = new AnalyticsOutboxScheduler(analyticsOutboxSweepUseCase);
+	OrderAnalyticsOutboxScheduler analyticsOutboxScheduler(OrderAnalyticsOutboxSweepUseCase analyticsOutboxSweepUseCase){
+		OrderAnalyticsOutboxScheduler scheduler = new OrderAnalyticsOutboxScheduler(analyticsOutboxSweepUseCase);
 		Thread.startVirtualThread(scheduler::sweep);
 		return scheduler;
 	}
 
 	@Bean
-	AnalyticsBackfillGateway analyticsBackfillGateway(OrderJpaRepository orderJpaRepository,
-	                                                  OrderItemJpaRepository orderItemJpaRepository,
-	                                                  OrderPromotionJpaRepository orderPromotionJpaRepository,
-	                                                  LaundryServiceJpaRepository laundryServiceJpaRepository,
-	                                                  CryptoTool cryptoTool){
-		return new JpaAnalyticsBackfillGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
+	OrderAnalyticsBackfillGateway analyticsBackfillGateway(OrderJpaRepository orderJpaRepository,
+	                                                       OrderItemJpaRepository orderItemJpaRepository,
+	                                                       OrderPromotionJpaRepository orderPromotionJpaRepository,
+	                                                       LaundryServiceJpaRepository laundryServiceJpaRepository,
+	                                                       CryptoTool cryptoTool){
+		return new JpaOrderAnalyticsBackfillGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
 				laundryServiceJpaRepository, cryptoTool);
 	}
 
 	@Bean
-	AnalyticsBackfillUseCase analyticsBackfillUseCase(AnalyticsBackfillGateway analyticsBackfillGateway,
-	                                                  OrderAnalyticsPublisher analyticsEventPublisher,
-	                                                  @Value("${app.analytics.outbox.backfill-batch-size}") int backfillBatchSize){
-		return new DefaultAnalyticsBackfillUseCase(analyticsBackfillGateway, analyticsEventPublisher, backfillBatchSize);
+	OrderAnalyticsBackfillUseCase analyticsBackfillUseCase(OrderAnalyticsBackfillGateway analyticsBackfillGateway,
+	                                                       OrderAnalyticsPublisher analyticsEventPublisher,
+	                                                       @Value("${app.analytics.outbox.backfill-batch-size}") int backfillBatchSize){
+		return new DefaultOrderAnalyticsBackfillUseCase(analyticsBackfillGateway, analyticsEventPublisher, backfillBatchSize);
 	}
 
 //	@Bean
 //	@Lazy(false)
-	ApplicationRunner analyticsBackfillRunner(AnalyticsBackfillUseCase analyticsBackfillUseCase,
+	ApplicationRunner analyticsBackfillRunner(OrderAnalyticsBackfillUseCase analyticsBackfillUseCase,
 	                                          @Value("${app.analytics.backfill.tenant-id:}") String tenantId){
 		return _ -> {
-			AnalyticsBackfillResponse response = analyticsBackfillUseCase.execute(new AnalyticsBackfillRequest(tenantId));
+			OrderAnalyticsBackfillResponse response = analyticsBackfillUseCase.execute(new OrderAnalyticsBackfillRequest(tenantId));
 			log.info("Analytics backfill done: {} laundry service(s), {} order(s) published", response.services(),
 					response.orders());
 		};

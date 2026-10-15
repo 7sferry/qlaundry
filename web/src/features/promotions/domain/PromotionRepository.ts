@@ -8,6 +8,7 @@ import type {
 	CreatePromotionInput,
 	Promotion,
 	PromotionPreviewResult,
+	PromotionStats,
 	PromotionType,
 	UpdatePromotionInput,
 } from './Promotion';
@@ -39,4 +40,6 @@ export interface PromotionRepository {
 	 * again, since the caller already has them in hand.
 	 */
 	previewPromotions(promotions: Promotion[], subtotal: number): Promise<PromotionPreviewResult[]>;
+
+	getPromotionStats(): Promise<PromotionStats>;
 }

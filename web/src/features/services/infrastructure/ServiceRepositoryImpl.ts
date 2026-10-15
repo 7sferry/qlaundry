@@ -6,7 +6,14 @@
 import {httpClient} from '@/core/http/httpClient';
 import type {Page} from '@/core/pagination/Pagination';
 import type {ServiceFilters, ServiceRepository} from '../domain/ServiceRepository';
-import type {CreateServiceInput, LaundryService, ServiceCategory, ServiceUnit, UpdateServiceInput} from '../domain/Service';
+import type {
+	CreateServiceInput,
+	LaundryService,
+	ServiceCategory,
+	ServiceStats,
+	ServiceUnit,
+	UpdateServiceInput,
+} from '../domain/Service';
 import {SERVICE_ENDPOINTS} from './serviceEndpoints';
 
 interface ServiceApiItem {
@@ -95,6 +102,10 @@ export class ServiceRepositoryImpl implements ServiceRepository {
 
 	async deleteService(id: string): Promise<void> {
 		await httpClient.delete(`${SERVICE_ENDPOINTS.delete}?serviceId=${encodeURIComponent(id)}`);
+	}
+
+	async getServiceStats(): Promise<ServiceStats> {
+		return httpClient.get<ServiceStats>(SERVICE_ENDPOINTS.stats);
 	}
 }
 

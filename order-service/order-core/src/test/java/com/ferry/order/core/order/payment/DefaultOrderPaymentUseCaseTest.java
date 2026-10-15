@@ -1,11 +1,11 @@
 package com.ferry.order.core.order.payment;
 
-import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
-import com.ferry.order.domain.analytics.AnalyticsAggregate;
-import com.ferry.order.domain.analytics.AnalyticsEvent;
-import com.ferry.order.domain.analytics.AnalyticsEventType;
+import com.ferry.order.domain.analytics.OrderAnalyticsAggregate;
+import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
+import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
 import com.ferry.order.domain.common.FullName;
 import com.ferry.order.domain.common.Money;
 import com.ferry.order.domain.common.Phone;
@@ -61,7 +61,7 @@ class DefaultOrderPaymentUseCaseTest{
 	@Mock
 	OrderAnalyticsPublisher publisher;
 	@Captor
-	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<OrderAnalyticsEventConfig> analyticsCaptor;
 	@InjectMocks
 	DefaultOrderPaymentUseCase useCase;
 	@Mock
@@ -218,16 +218,16 @@ class DefaultOrderPaymentUseCaseTest{
 				.findById(any(OrderId.class), any(TenantId.class));
 		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
 				.save(any(Order.class));
-		willReturn(AnalyticsEvent.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_PAID,
+		willReturn(OrderAnalyticsEvent.create(OrderAnalyticsAggregate.ORDER, OrderAnalyticsEventType.ORDER_PAID,
 				TENANT_ID, ORDER_ID, 1, "{}", STAFF_ID)).given(publisher)
-				.save(any(AnalyticsEventConfig.class));
+				.save(any(OrderAnalyticsEventConfig.class));
 
 		useCase.execute(new OrderPaymentRequest(ORDER_ID, PaymentMethod.CASH), principal, presenter);
 
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(AnalyticsEvent.class));
+				.publish(any(OrderAnalyticsEvent.class));
 		then(gateway).should()
 				.findById(eq(new OrderId(ORDER_ID)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
@@ -238,8 +238,8 @@ class DefaultOrderPaymentUseCaseTest{
 		Order saved = orderCaptor.getValue();
 
 		thenSoftly(softly -> {
-			softly.then(analyticsCaptor.getValue().type()).isEqualTo(AnalyticsEventType.ORDER_PAID);
-			softly.then(analyticsCaptor.getValue().aggregate()).isEqualTo(AnalyticsAggregate.ORDER);
+			softly.then(analyticsCaptor.getValue().type()).isEqualTo(OrderAnalyticsEventType.ORDER_PAID);
+			softly.then(analyticsCaptor.getValue().aggregate()).isEqualTo(OrderAnalyticsAggregate.ORDER);
 			softly.then(((OrderAnalyticsMessage) analyticsCaptor.getValue().payload()).paymentStatus())
 					.isEqualTo(PaymentStatus.PAID);
 			softly.then(saved.paymentStatus()).isEqualTo(PaymentStatus.PAID);

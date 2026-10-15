@@ -22,7 +22,7 @@ import {
 } from '@/core/ui';
 import {DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS, type SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency, formatDate} from '@/core/utils/format';
-import {useCustomers} from '../useCustomers';
+import {useCustomers, useCustomerStats} from '../useCustomers';
 import type {Customer} from '../../domain/Customer';
 import type {CustomerSortBy} from '../../domain/CustomerRepository';
 
@@ -103,6 +103,7 @@ export default function CustomersPage() {
 	const {
 		customers, loading, hasNext, hasPrev, refresh, goNext, goPrevious, createCustomer, updateCustomer, deleteCustomer,
 	} = useCustomers();
+	const {stats, error: statsError} = useCustomerStats();
 	const toast = useToast();
 
 	const [search, setSearch] = useState('');
@@ -138,8 +139,6 @@ export default function CustomersPage() {
 	}, []);
 
 	if (loading && customers.length === 0) return <Loading label="Loading customers…"/>;
-
-	const totalSpend = customers.reduce((s, c) => s + c.totalSpend, 0);
 
 	const openAdd = () => {
 		setForm(emptyForm);
@@ -214,14 +213,15 @@ export default function CustomersPage() {
 				/>
 
 				<div className="grid grid--stats">
-					<StatCard icon={<Users size={20}/>} value={customers.length} label="Customers" hint="On this page"/>
-					<StatCard icon={<Star size={20}/>} value={formatCurrency(totalSpend)} label="Total spend"
-					          hint="On this page"/>
+					<StatCard icon={<Users size={20}/>} value={stats?.totalCustomers ?? '—'} label="Customers"
+					          hint={statsError ?? `${stats?.newCustomers ?? 0} new this month`}/>
+					<StatCard icon={<Star size={20}/>} value={stats ? formatCurrency(stats.monthSpend) : '—'}
+					          label="Total spend" hint={statsError ?? 'This month'}/>
 					<StatCard
 							icon={<Users size={20}/>}
-							value={customers.length > 0 ? formatCurrency(Math.round(totalSpend / customers.length)) : 'Rp0'}
+							value={stats ? formatCurrency(Math.round(stats.averageSpend)) : '—'}
 							label="Average spend"
-							hint="On this page"
+							hint={statsError ?? 'Per ordering customer, this month'}
 					/>
 				</div>
 

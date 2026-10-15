@@ -1,6 +1,10 @@
 package com.ferry.user.core.staff.registration;
 
+import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.StaffAnalyticsMessage;
+import com.ferry.user.core.analytics.UserAnalyticsPublisher;
 import com.ferry.user.core.tools.PasswordTool;
+import com.ferry.user.domain.analytics.UserAnalyticsEventType;
 import com.ferry.user.domain.common.HashedPassword;
 import com.ferry.user.domain.common.RawPassword;
 import com.ferry.user.domain.common.Username;
@@ -55,6 +59,8 @@ class DefaultStaffRegistrationUseCaseTest{
 	StaffRegistrationGateway gateway;
 	@Mock
 	PasswordTool passwordTool;
+	@Mock
+	UserAnalyticsPublisher analyticsPublisher;
 	@InjectMocks
 	DefaultStaffRegistrationUseCase useCase;
 	@Mock
@@ -63,6 +69,8 @@ class DefaultStaffRegistrationUseCaseTest{
 	ArgumentCaptor<StaffRegistrationResponse> responseCaptor;
 	@Captor
 	ArgumentCaptor<Staff> staffCaptor;
+	@Captor
+	ArgumentCaptor<UserAnalyticsEventConfig> analyticsCaptor;
 
 	@ParameterizedTest
 	@NullAndEmptySource
@@ -293,12 +301,18 @@ class DefaultStaffRegistrationUseCaseTest{
 		then(gateway).should(times(2)).save(any(StaffEmail.class));
 		then(gateway).should(times(1)).save(any(StaffPhone.class));
 		then(gateway).should(times(1)).save(any(StaffAddress.class));
+		then(analyticsPublisher).should().save(analyticsCaptor.capture());
 		then(presenter).should().present(responseCaptor.capture());
 
 		Staff saved = staffCaptor.getValue();
 		StaffRegistrationResponse response = responseCaptor.getValue();
+		UserAnalyticsEventConfig analytics = analyticsCaptor.getValue();
 
 		thenSoftly(softly -> {
+			softly.then(analytics.type()).isEqualTo(UserAnalyticsEventType.STAFF_REGISTERED);
+			softly.then(analytics.aggregateId()).isEqualTo(GENERATED_ID);
+			softly.then(analytics.tenantId()).isEqualTo(TENANT_ID);
+			softly.then(((StaffAnalyticsMessage) analytics.payload()).role()).isEqualTo(StaffRole.STAFF);
 			softly.then(saved.id()).isNull();
 			softly.then(saved.usernameValue()).isEqualTo(USERNAME);
 			softly.then(saved.tenantId()).isEqualTo(TENANT_ID);

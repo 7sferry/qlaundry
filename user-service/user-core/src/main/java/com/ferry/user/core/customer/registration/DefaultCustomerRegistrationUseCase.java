@@ -1,5 +1,9 @@
 package com.ferry.user.core.customer.registration;
 
+import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.CustomerAnalyticsMessage;
+import com.ferry.user.core.analytics.UserAnalyticsPublisher;
+import com.ferry.user.domain.analytics.UserAnalyticsEventType;
 import com.ferry.user.domain.common.AddressLine;
 import com.ferry.user.domain.common.Description;
 import com.ferry.user.domain.common.Email;
@@ -23,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DefaultCustomerRegistrationUseCase implements CustomerRegistrationUseCase{
 	private final CustomerRegistrationGateway gateway;
+	private final UserAnalyticsPublisher analyticsPublisher;
 
 	@Override
 	public void execute(CustomerRegistrationRequest request, UserAuthPrincipal principal,
@@ -37,6 +42,8 @@ public class DefaultCustomerRegistrationUseCase implements CustomerRegistrationU
 				new Phone(request.phone()), principal.userId())));
 		List<CustomerEmail> emails = saveEmail(request, saved, principal);
 		List<CustomerAddress> addresses = saveAddress(request, saved, principal);
+		analyticsPublisher.publish(analyticsPublisher.save(UserAnalyticsEventConfig.customer(
+				UserAnalyticsEventType.CUSTOMER_REGISTERED, CustomerAnalyticsMessage.from(saved), principal.userId())));
 		presenter.present(new CustomerRegistrationResponse(saved, emails, phones, addresses));
 	}
 

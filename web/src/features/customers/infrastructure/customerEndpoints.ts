@@ -9,5 +9,8 @@ export const CUSTOMER_ENDPOINTS = {
 	registration: '/customer/registration',
 	update: '/customer/update',
 	delete: '/customer/delete',
-	orderTotals: '/order/customer-totals',
+	names: '/customer/names',
+	stats: '/analytics/customer',
+	top: '/analytics/customer/top',
+	totals: '/analytics/customer/totals',
 } as const;

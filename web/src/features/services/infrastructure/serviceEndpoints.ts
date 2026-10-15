@@ -8,4 +8,5 @@ export const SERVICE_ENDPOINTS = {
 	create: '/service/create',
 	update: '/service/update',
 	delete: '/service/delete',
+	stats: '/analytics/service',
 } as const;

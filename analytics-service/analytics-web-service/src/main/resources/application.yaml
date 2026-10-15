@@ -31,12 +31,13 @@ app:
   analytics:
     stream:
       event:
-        # must match order-service's app.analytics.stream.event.key; full stream name is key + AGGREGATE
+        # must match app.analytics.stream.event.key in order-, user- and promotion-service; full stream name is
+        # key + AGGREGATE
         key: 'analytics:event:'
         group: analytics-service
         consumer: analytics-1
         retention-days: 7
-        # daily XTRIM MINID cron for both event streams and both DLQs (see AnalyticsStreamTrimScheduler)
+        # daily XTRIM MINID cron for every event stream and its DLQ (see AnalyticsStreamTrimScheduler)
         trim-cron: '0 45 3 * * *'
         poll:
           # XREADGROUP COUNT — one ClickHouse insert per table carries up to this many events

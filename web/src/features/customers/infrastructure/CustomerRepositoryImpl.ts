@@ -6,7 +6,7 @@
 import {httpClient} from '@/core/http/httpClient';
 import type {Page, PaginationParams} from '@/core/pagination/Pagination';
 import type {CustomerFilters, CustomerRepository} from '../domain/CustomerRepository';
-import type {CreateCustomerInput, Customer, UpdateCustomerInput} from '../domain/Customer';
+import type {CreateCustomerInput, Customer, CustomerStats, TopCustomer, UpdateCustomerInput} from '../domain/Customer';
 import {CUSTOMER_ENDPOINTS} from './customerEndpoints';
 
 interface CustomerApiItem {
@@ -25,8 +25,16 @@ interface CustomerListApiResponse {
 	prevCursor: string | null;
 }
 
-interface CustomerOrderTotalsApiResponse {
+interface CustomerTotalsApiResponse {
 	totals: { customerId: string; totalOrders: number; totalSpend: number; lastOrderAt: number }[];
+}
+
+interface TopCustomerApiResponse {
+	customers: { customerId: string; totalOrders: number; totalSpend: number }[];
+}
+
+interface CustomerNamesApiResponse {
+	customers: { customerId: string; fullName: string }[];
 }
 
 interface CustomerTotals {
@@ -37,18 +45,12 @@ interface CustomerTotals {
 
 const NO_TOTALS: CustomerTotals = {totalOrders: 0, totalSpend: 0};
 
-/**
- * user-service owns the customer, order-service owns the orders, and neither reads the other's tables — so
- * "how much has this customer spent" is a join that only exists here. `/order/customer-totals` computes the
- * rollup server-side (one grouped SQL query) so this is always a single request, regardless of how many
- * orders a customer has.
- */
 async function fetchTotals(customerIds: string[]): Promise<Map<string, CustomerTotals>> {
 	const totals = new Map<string, CustomerTotals>();
 	if (customerIds.length === 0) return totals;
 	const params = new URLSearchParams();
 	for (const id of customerIds) params.append('customerIds', id);
-	const res = await httpClient.get<CustomerOrderTotalsApiResponse>(`${CUSTOMER_ENDPOINTS.orderTotals}?${params.toString()}`);
+	const res = await httpClient.get<CustomerTotalsApiResponse>(`${CUSTOMER_ENDPOINTS.totals}?${params.toString()}`);
 	for (const t of res.totals) {
 		totals.set(t.customerId, {
 			totalOrders: t.totalOrders,
@@ -166,6 +168,27 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 
 	async deleteCustomer(id: string): Promise<void> {
 		await httpClient.delete(`${CUSTOMER_ENDPOINTS.delete}?customerId=${encodeURIComponent(id)}`);
+	}
+
+	async getCustomerStats(): Promise<CustomerStats> {
+		return httpClient.get<CustomerStats>(CUSTOMER_ENDPOINTS.stats);
+	}
+
+	async getTopCustomers(): Promise<TopCustomer[]> {
+		const res = await httpClient.get<TopCustomerApiResponse>(CUSTOMER_ENDPOINTS.top);
+		if (res.customers.length === 0) return [];
+		const params = new URLSearchParams();
+		for (const c of res.customers) params.append('customerIds', c.customerId);
+		const names = await httpClient.get<CustomerNamesApiResponse>(`${CUSTOMER_ENDPOINTS.names}?${params.toString()}`);
+		const nameById = new Map(names.customers.map((n) => [n.customerId, n.fullName]));
+		return res.customers
+				.filter((c) => nameById.has(c.customerId))
+				.map((c) => ({
+					customerId: c.customerId,
+					fullName: nameById.get(c.customerId) as string,
+					totalOrders: c.totalOrders,
+					totalSpend: c.totalSpend,
+				}));
 	}
 }
 

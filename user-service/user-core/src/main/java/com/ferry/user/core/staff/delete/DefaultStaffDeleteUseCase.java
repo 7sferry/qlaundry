@@ -1,5 +1,9 @@
 package com.ferry.user.core.staff.delete;
 
+import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.StaffAnalyticsMessage;
+import com.ferry.user.core.analytics.UserAnalyticsPublisher;
+import com.ferry.user.domain.analytics.UserAnalyticsEventType;
 import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.common.exception.ForbiddenActionException;
 import com.ferry.user.domain.common.exception.NotFoundException;
@@ -17,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DefaultStaffDeleteUseCase implements StaffDeleteUseCase{
 	private final StaffDeleteGateway gateway;
+	private final UserAnalyticsPublisher analyticsPublisher;
 
 	@Override
 	public void execute(StaffDeleteRequest request, UserAuthPrincipal principal, StaffDeletePresenter presenter){
@@ -31,7 +36,9 @@ public class DefaultStaffDeleteUseCase implements StaffDeleteUseCase{
 		if(target.id().equals(principal.userId())){
 			throw new ForbiddenActionException("Cannot delete your own account");
 		}
-		gateway.save(target.markDeleted(principal.userId()));
+		Staff deleted = gateway.save(target.markDeleted(principal.userId()));
+		analyticsPublisher.publish(analyticsPublisher.save(UserAnalyticsEventConfig.staff(UserAnalyticsEventType.STAFF_DELETED,
+				StaffAnalyticsMessage.from(deleted), principal.userId())));
 		presenter.present(new StaffDeleteResponse(target.usernameValue()));
 	}
 

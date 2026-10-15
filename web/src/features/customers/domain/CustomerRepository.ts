@@ -4,7 +4,7 @@
  ************************/
 
 import type {Page, PaginationParams} from '@/core/pagination/Pagination';
-import type {CreateCustomerInput, Customer, UpdateCustomerInput} from './Customer';
+import type {CreateCustomerInput, Customer, CustomerStats, TopCustomer, UpdateCustomerInput} from './Customer';
 
 export type CustomerSortBy = 'id' | 'name';
 
@@ -26,4 +26,8 @@ export interface CustomerRepository {
 	updateCustomer(input: UpdateCustomerInput): Promise<Customer>;
 
 	deleteCustomer(id: string): Promise<void>;
+
+	getCustomerStats(): Promise<CustomerStats>;
+
+	getTopCustomers(): Promise<TopCustomer[]>;
 }

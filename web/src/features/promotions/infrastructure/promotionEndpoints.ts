@@ -9,4 +9,5 @@ export const PROMOTION_ENDPOINTS = {
 	update: '/promotion/update',
 	toggle: '/promotion/toggle',
 	preview: '/promotion/preview',
+	stats: '/analytics/promotion',
 } as const;

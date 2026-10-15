@@ -4,6 +4,7 @@
  ************************/
 
 import {useCallback} from 'react';
+import {useFetchOnce} from '@/core/hooks/useFetchOnce';
 import {usePaginatedList} from '@/core/hooks/usePaginatedList';
 import type {PaginationParams} from '@/core/pagination/Pagination';
 import type {CreateCustomerInput, Customer, UpdateCustomerInput} from '../domain/Customer';
@@ -12,6 +13,18 @@ import {customerUseCases} from '../application/CustomerUseCases';
 import {customerRepository} from '../infrastructure/CustomerRepositoryImpl';
 
 const useCases = customerUseCases(customerRepository);
+const fetchCustomerStats = () => useCases.getStats();
+const fetchTopCustomers = () => useCases.getTopCustomers();
+
+export function useCustomerStats() {
+	const {data: stats, error} = useFetchOnce(fetchCustomerStats, 'Failed to load customer statistics');
+	return {stats, error};
+}
+
+export function useTopCustomers() {
+	const {data, loading, error} = useFetchOnce(fetchTopCustomers, 'Failed to load top customers');
+	return {topCustomers: data ?? [], loading, error};
+}
 
 interface CustomerSearchFilters extends PaginationParams {
 	phone?: string;

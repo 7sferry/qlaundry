@@ -17,4 +17,6 @@ export const customerUseCases = (repository: CustomerRepository) => ({
 	createCustomer: (input: CreateCustomerInput) => repository.createCustomer(input),
 	updateCustomer: (input: UpdateCustomerInput) => repository.updateCustomer(input),
 	deleteCustomer: (id: string) => repository.deleteCustomer(id),
+	getStats: () => repository.getCustomerStats(),
+	getTopCustomers: () => repository.getTopCustomers(),
 });

@@ -26,7 +26,6 @@ POST   /order/create            see below
 GET    /order/list              ?status=&priority=&customerId=&orderNumber=&from=&to=&after=&before=&sortBy=&sortDir=&pageSize=
 GET    /order/detail            ?orderId=
 GET    /order/schedule          ?date=yyyy-MM-dd   → today's (or that day's) due pickups and deliveries
-GET    /order/customer-totals   ?customerIds=a&customerIds=b   → {totals: [{customerId, totalOrders, totalSpend, lastOrderAt}]}
 PATCH  /order/confirm           {orderId, staffNotes?}
 PATCH  /order/pickup            {orderId, staffNotes?}
 PATCH  /order/process           {orderId, staffNotes?}
@@ -64,7 +63,7 @@ An illegal move is a 400. `COMPLETED` and `CANCELLED` are final.
 
 **Order numbers** look like `INV-20261015-…`, dated in the tenant's time zone.
 
-**Customer totals** count every order (cancelled included) and skip walk-ins. A customer with no orders is simply absent from the response.
+**Customer totals** (orders, spend, last order per customer) are served by [analytics-service](../analytics-service/README.md), not here.
 
 ### Invoices
 

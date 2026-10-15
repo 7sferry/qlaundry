@@ -1,11 +1,11 @@
 package com.ferry.order.core.service.delete;
 
-import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
-import com.ferry.order.domain.analytics.AnalyticsAggregate;
-import com.ferry.order.domain.analytics.AnalyticsEvent;
-import com.ferry.order.domain.analytics.AnalyticsEventType;
+import com.ferry.order.domain.analytics.OrderAnalyticsAggregate;
+import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
+import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
 import com.ferry.order.domain.common.Money;
 import com.ferry.order.domain.common.Note;
 import com.ferry.order.domain.common.exception.NotFoundException;
@@ -54,7 +54,7 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 	@Mock
 	OrderAnalyticsPublisher publisher;
 	@Captor
-	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<OrderAnalyticsEventConfig> analyticsCaptor;
 	@InjectMocks
 	DefaultLaundryServiceDeleteUseCase useCase;
 	@Mock
@@ -188,16 +188,16 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 				.hasOpenOrders(any(LaundryServiceId.class), any(TenantId.class));
 		willAnswer(invocation -> invocation.<LaundryService>getArgument(0)).given(gateway)
 				.save(any(LaundryService.class));
-		willReturn(AnalyticsEvent.create(AnalyticsAggregate.LAUNDRY_SERVICE, AnalyticsEventType.LAUNDRY_SERVICE_DELETED,
+		willReturn(OrderAnalyticsEvent.create(OrderAnalyticsAggregate.LAUNDRY_SERVICE, OrderAnalyticsEventType.LAUNDRY_SERVICE_DELETED,
 				TENANT_ID, SERVICE_ID, 1, "{}", STAFF_ID)).given(publisher)
-				.save(any(AnalyticsEventConfig.class));
+				.save(any(OrderAnalyticsEventConfig.class));
 
 		useCase.execute(new LaundryServiceDeleteRequest(SERVICE_ID), principal, presenter);
 
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(AnalyticsEvent.class));
+				.publish(any(OrderAnalyticsEvent.class));
 		then(gateway).should()
 				.hasOpenOrders(eq(new LaundryServiceId(SERVICE_ID)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
@@ -209,8 +209,8 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 
 		thenSoftly(softly -> {
 			softly.then(analyticsCaptor.getValue().type())
-					.isEqualTo(AnalyticsEventType.LAUNDRY_SERVICE_DELETED);
-			softly.then(analyticsCaptor.getValue().aggregate()).isEqualTo(AnalyticsAggregate.LAUNDRY_SERVICE);
+					.isEqualTo(OrderAnalyticsEventType.LAUNDRY_SERVICE_DELETED);
+			softly.then(analyticsCaptor.getValue().aggregate()).isEqualTo(OrderAnalyticsAggregate.LAUNDRY_SERVICE);
 			softly.then(((LaundryServiceAnalyticsMessage) analyticsCaptor.getValue().payload()).deleted())
 					.isTrue();
 			softly.then(saved.deleted()).isTrue();

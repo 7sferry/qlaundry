@@ -10,6 +10,7 @@ import type {
 	CreatePromotionInput,
 	Promotion,
 	PromotionPreviewResult,
+	PromotionStats,
 	PromotionType,
 	UpdatePromotionInput,
 } from '../domain/Promotion';
@@ -180,6 +181,10 @@ export class PromotionRepositoryImpl implements PromotionRepository {
 			discountAmount: p.discountAmount,
 			remainingUsage: p.remainingUsage ?? undefined,
 		}));
+	}
+
+	async getPromotionStats(): Promise<PromotionStats> {
+		return httpClient.get<PromotionStats>(PROMOTION_ENDPOINTS.stats);
 	}
 }
 

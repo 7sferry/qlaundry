@@ -1,11 +1,11 @@
 package com.ferry.order.core.order.create;
 
-import com.ferry.order.core.analytics.AnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
-import com.ferry.order.domain.analytics.AnalyticsAggregate;
-import com.ferry.order.domain.analytics.AnalyticsEvent;
-import com.ferry.order.domain.analytics.AnalyticsEventType;
+import com.ferry.order.domain.analytics.OrderAnalyticsAggregate;
+import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
+import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
 import com.ferry.order.domain.common.Money;
 import com.ferry.order.domain.common.Note;
 import com.ferry.order.domain.common.exception.InvalidOrderStateException;
@@ -80,7 +80,7 @@ class DefaultOrderCreateUseCaseTest{
 	@Captor
 	ArgumentCaptor<Order> orderCaptor;
 	@Captor
-	ArgumentCaptor<AnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<OrderAnalyticsEventConfig> analyticsCaptor;
 	@Captor
 	ArgumentCaptor<OrderItem> itemCaptor;
 	@Captor
@@ -892,7 +892,7 @@ class DefaultOrderCreateUseCaseTest{
 		willAnswer(invocation -> invocation.<OrderPromotion>getArgument(0)).given(gateway)
 				.save(any(OrderPromotion.class));
 		willThrow(new IllegalStateException("analytics_events insert failed")).given(publisher)
-				.save(any(AnalyticsEventConfig.class));
+				.save(any(OrderAnalyticsEventConfig.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(IllegalStateException.class)
@@ -905,7 +905,7 @@ class DefaultOrderCreateUseCaseTest{
 		then(promotionGateway).should(never())
 				.markSagaCommittedAfterCommit(any(OrderPromotionSaga.class));
 		then(publisher).should(never())
-				.publish(any(AnalyticsEvent.class));
+				.publish(any(OrderAnalyticsEvent.class));
 		then(presenter).should(never())
 				.present(any(OrderCreateResponse.class));
 
@@ -1278,9 +1278,9 @@ class DefaultOrderCreateUseCaseTest{
 						.build())
 				.given(gateway)
 				.markPickedUp(any(Order.class), any(OrderAuthPrincipal.class));
-		willReturn(AnalyticsEvent.create(AnalyticsAggregate.ORDER, AnalyticsEventType.ORDER_CREATED,
+		willReturn(OrderAnalyticsEvent.create(OrderAnalyticsAggregate.ORDER, OrderAnalyticsEventType.ORDER_CREATED,
 				TENANT_ID, ORDER_ID, 0, "{}", STAFF_ID)).given(publisher)
-				.save(any(AnalyticsEventConfig.class));
+				.save(any(OrderAnalyticsEventConfig.class));
 
 		useCase.execute(request, principal, presenter);
 
@@ -1289,7 +1289,7 @@ class DefaultOrderCreateUseCaseTest{
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(AnalyticsEvent.class));
+				.publish(any(OrderAnalyticsEvent.class));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
@@ -1297,7 +1297,7 @@ class DefaultOrderCreateUseCaseTest{
 			softly.then(orderCaptor.getValue().id()).isEqualTo(ORDER_ID);
 			softly.then(orderCaptor.getValue().status()).isEqualTo(OrderStatus.PENDING);
 			softly.then(responseCaptor.getValue().order().status()).isEqualTo(OrderStatus.PICKED_UP);
-			softly.then(analyticsCaptor.getValue().type()).isEqualTo(AnalyticsEventType.ORDER_CREATED);
+			softly.then(analyticsCaptor.getValue().type()).isEqualTo(OrderAnalyticsEventType.ORDER_CREATED);
 			softly.then(analyticsCaptor.getValue().aggregateId()).isEqualTo(ORDER_ID);
 			softly.then(((OrderAnalyticsMessage) analyticsCaptor.getValue().payload()).status())
 					.isEqualTo(OrderStatus.PICKED_UP);

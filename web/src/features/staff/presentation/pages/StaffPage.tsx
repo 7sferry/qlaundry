@@ -8,7 +8,7 @@ import {UserPlus, Users} from 'lucide-react';
 import {Button, Loading, Modal, PageHeader, StatCard, useToast} from '@/core/ui';
 import {useAuth} from '@/features/auth/presentation/useAuth';
 import {DEFAULT_PAGE_SIZE, type SortDirection} from '@/core/pagination/Pagination';
-import {useStaff} from '../useStaff';
+import {useStaff, useStaffStats} from '../useStaff';
 import StaffForm from '../components/StaffForm';
 import {type StaffFormData, emptyStaffForm} from '../components/staffFormData';
 import StaffTable from '../components/StaffTable';
@@ -18,6 +18,7 @@ import type {StaffSortBy} from '../../domain/StaffRepository';
 
 export default function StaffPage() {
 	const {staff, loading, hasNext, hasPrev, refresh, goNext, goPrevious, createStaff, deleteStaff} = useStaff();
+	const {stats, error: statsError} = useStaffStats();
 	const {user} = useAuth();
 	const toast = useToast();
 
@@ -56,12 +57,6 @@ export default function StaffPage() {
 	}, []);
 
 	if (loading && staff.length === 0) return <Loading label="Loading staff…"/>;
-
-	const now = new Date();
-	const newThisMonth = staff.filter((s) => {
-		const joined = new Date(s.joinedAt);
-		return joined.getMonth() === now.getMonth() && joined.getFullYear() === now.getFullYear();
-	}).length;
 
 	const openAdd = () => {
 		setForm(emptyStaffForm);
@@ -130,9 +125,10 @@ export default function StaffPage() {
 			/>
 
 			<div className="grid grid--stats">
-				<StatCard icon={<Users size={20}/>} value={staff.length} label="Staff" hint="On this page"/>
-				<StatCard icon={<UserPlus size={20}/>} value={newThisMonth} label="New staff"
-				          hint="This page, this month"/>
+				<StatCard icon={<Users size={20}/>} value={stats?.totalStaff ?? '—'} label="Staff"
+				          hint={statsError ?? 'Total'}/>
+				<StatCard icon={<UserPlus size={20}/>} value={stats?.newStaff ?? '—'} label="New staff"
+				          hint={statsError ?? 'This month'}/>
 			</div>
 
 			<StaffTable

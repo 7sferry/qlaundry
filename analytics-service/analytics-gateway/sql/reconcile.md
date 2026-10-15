@@ -69,6 +69,19 @@ pushes each through `OrderAnalyticsPublisher` as `LAUNDRY_SERVICE_BACKFILLED` / 
 again and `ReplacingMergeTree` keeps one. Keep analytics-service running so the stream drains as it fills
 (`XLEN analytics:event:ORDER`).
 
+user-service and promotion-service have the same runner (same profile, same `--app.analytics.backfill.tenant-id`).
+Run all three after a fresh ClickHouse volume, or the staff/customer/promotion cards, top customers and the
+customer page's totals stay empty:
+
+```bash
+cd user-service/user-web-service && ./mvnw spring-boot:run -Dspring-boot.run.profiles=analytics-backfill
+# staffs (incl. deleted) as STAFF_BACKFILLED, then customers with a tenant as CUSTOMER_BACKFILLED
+cd promotion-service/promotion-web-service && ./mvnw spring-boot:run -Dspring-boot.run.profiles=analytics-backfill
+# every promotion as PROMOTION_BACKFILLED
+```
+
+Their outboxes are `users.analytics_events` and `promotions.analytics_events`, queried the same way as above.
+
 ## DLQ replay
 
 A record that failed `MAX_DELIVERIES` (5) times is copied to `analytics:event:<AGGREGATE>:dlq` with
@@ -95,11 +108,11 @@ Simpler when there are many: delete the DLQ entries and rerun the backfill for t
 
 ## Full rebuild
 
-`TRUNCATE TABLE` the five tables (or `docker compose down -v && docker compose up -d` in dev), then run the backfill.
+`TRUNCATE TABLE` every table (or `docker compose down -v && docker compose up -d` in dev), then run the backfill.
 Nothing else is needed — the consumer group and the outbox are unaffected.
 
 ## Adding a producer
 
-A new aggregate (e.g. user-service customers) gets its own `AnalyticsAggregate` member, its own stream
+A new aggregate (e.g. user-service customers) gets a member in its own `<Service>AnalyticsAggregate` enum and in analytics-service's `AnalyticsAggregate`, its own stream
 `analytics:event:<AGGREGATE>`, an outbox table **in that service's own schema**, and a new `event/<aggregate>/`
 feature in analytics-service. Never let a second service write to order-service's `analytics_events`.

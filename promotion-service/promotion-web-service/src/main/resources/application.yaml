@@ -31,6 +31,22 @@ logging:
     name: logs/promotion-web-service.log
 
 app:
+  analytics:
+    stream:
+      event:
+        # must match analytics-service's app.analytics.stream.event.key; full stream name is key + AGGREGATE
+        key: 'analytics:event:'
+    outbox:
+      # how long a CREATED (not-yet-published) analytics_events row sits before the sweeper republishes it —
+      # long enough that an in-flight afterCommit publish is never raced
+      grace-period: 2m
+      sweep-batch-size: 200
+      # @Scheduled reads this as a plain number of minutes (see AnalyticsOutboxScheduler)
+      sweep-interval-minutes: 5
+      backfill-batch-size: 500
+    backfill:
+      # only read by the analytics-backfill profile; blank means every tenant
+      tenant-id: ''
   internal:
     # SHA-256 (hex) of each caller's secret — never the secret itself, so a dump of this file yields nothing usable.
     # Break-glass only: this set is consulted just when Redis is unreachable. Live rotation and revocation happen

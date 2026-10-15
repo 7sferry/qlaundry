@@ -1,5 +1,9 @@
 package com.ferry.user.core.customer.registration;
 
+import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.UserAnalyticsPublisher;
+import com.ferry.user.domain.analytics.UserAnalyticsAggregate;
+import com.ferry.user.domain.analytics.UserAnalyticsEventType;
 import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import com.ferry.user.domain.customer.CustomerAddress;
 import com.ferry.user.domain.customer.Customer;
@@ -40,6 +44,8 @@ class DefaultCustomerRegistrationUseCaseTest{
 
 	@Mock
 	CustomerRegistrationGateway gateway;
+	@Mock
+	UserAnalyticsPublisher analyticsPublisher;
 	@InjectMocks
 	DefaultCustomerRegistrationUseCase useCase;
 	@Mock
@@ -54,6 +60,8 @@ class DefaultCustomerRegistrationUseCaseTest{
 	ArgumentCaptor<CustomerAddress> addressCaptor;
 	@Captor
 	ArgumentCaptor<CustomerRegistrationResponse> responseCaptor;
+	@Captor
+	ArgumentCaptor<UserAnalyticsEventConfig> analyticsCaptor;
 
 	@Test
 	void givenBlankPhone_thenThrowsConstraintViolationException(){
@@ -146,13 +154,20 @@ class DefaultCustomerRegistrationUseCaseTest{
 				.save(emailCaptor.capture());
 		then(gateway).should()
 				.save(addressCaptor.capture());
+		then(analyticsPublisher).should()
+				.save(analyticsCaptor.capture());
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
 		Customer saved = customerCaptor.getValue();
 		CustomerRegistrationResponse response = responseCaptor.getValue();
+		UserAnalyticsEventConfig analytics = analyticsCaptor.getValue();
 
 		thenSoftly(softly -> {
+			softly.then(analytics.aggregate()).isEqualTo(UserAnalyticsAggregate.CUSTOMER);
+			softly.then(analytics.type()).isEqualTo(UserAnalyticsEventType.CUSTOMER_REGISTERED);
+			softly.then(analytics.aggregateId()).isEqualTo(CUSTOMER_ID);
+			softly.then(analytics.aggregateVersion()).isZero();
 			softly.then(saved.tenantId()).isEqualTo(TENANT_ID);
 			softly.then(saved.fullNameValue()).isEqualTo(FULL_NAME);
 			softly.then(saved.notesValue()).isEqualTo("prefers evening pickup");

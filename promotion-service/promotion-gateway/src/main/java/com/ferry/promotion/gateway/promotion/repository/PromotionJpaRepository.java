@@ -29,6 +29,15 @@ public interface PromotionJpaRepository extends JpaRepository<PromotionJpa, Stri
 
 	boolean existsByCodeAndTenantIdAndIdNot(String code, String tenantId, String id);
 
+	@Query("select p " +
+			"from PromotionJpa p " +
+			"where " +
+			"(:tenantId is null or p.tenantId = :tenantId) AND " +
+			"(:afterId is null or p.id > :afterId) " +
+			"order by p.id asc")
+	List<PromotionJpa> findBackfillPage(@Param("tenantId") String tenantId, @Param("afterId") String afterId,
+	                                    Pageable pageable);
+
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query("update PromotionJpa p " +
 			"set p.usedCount = p.usedCount + 1, p.updatedBy = :updatedBy, p.updatedAt = :updatedAt " +

@@ -1,5 +1,9 @@
 package com.ferry.user.core.customer.delete;
 
+import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.CustomerAnalyticsMessage;
+import com.ferry.user.core.analytics.UserAnalyticsPublisher;
+import com.ferry.user.domain.analytics.UserAnalyticsEventType;
 import com.ferry.user.domain.common.exception.ForbiddenActionException;
 import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.customer.Customer;
@@ -17,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DefaultCustomerDeleteUseCase implements CustomerDeleteUseCase{
 	private final CustomerDeleteGateway gateway;
+	private final UserAnalyticsPublisher analyticsPublisher;
 
 	@Override
 	public void execute(CustomerDeleteRequest request, UserAuthPrincipal principal, CustomerDeletePresenter presenter){
@@ -28,8 +33,10 @@ public class DefaultCustomerDeleteUseCase implements CustomerDeleteUseCase{
 		TenantId tenantId = new TenantId(principal.tenantId());
 		Customer customer = gateway.findById(customerId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Customer Not Found"));
-		gateway.save(customer.markDeleted(principal.userId()));
+		Customer deleted = gateway.save(customer.markDeleted(principal.userId()));
 		gateway.deleteContacts(customer.id(), principal.userId());
+		analyticsPublisher.publish(analyticsPublisher.save(UserAnalyticsEventConfig.customer(
+				UserAnalyticsEventType.CUSTOMER_DELETED, CustomerAnalyticsMessage.from(deleted), principal.userId())));
 		presenter.present(new CustomerDeleteResponse(customer.id()));
 	}
 

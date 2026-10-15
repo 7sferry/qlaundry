@@ -26,4 +26,5 @@ export const serviceUseCases = (repository: ServiceRepository) => ({
 		return repository.updateService(input);
 	},
 	deleteService: (id: string) => repository.deleteService(id),
+	getStats: () => repository.getServiceStats(),
 });

@@ -28,7 +28,7 @@ public class JpaPromotionToggleGateway implements PromotionToggleGateway{
 
 	@Override
 	public Promotion save(Promotion promotion){
-		PromotionJpa saved = promotionJpaRepository.save(
+		PromotionJpa saved = promotionJpaRepository.saveAndFlush(
 				PromotionJpa.construct(promotion.id(), promotion));
 		return PromotionJpa.construct(saved);
 	}

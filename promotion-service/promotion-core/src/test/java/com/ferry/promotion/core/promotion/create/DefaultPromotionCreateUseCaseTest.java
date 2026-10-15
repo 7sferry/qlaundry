@@ -1,5 +1,9 @@
 package com.ferry.promotion.core.promotion.create;
 
+import com.ferry.promotion.core.analytics.PromotionAnalyticsEventConfig;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsPublisher;
+import com.ferry.promotion.domain.analytics.PromotionAnalyticsAggregate;
+import com.ferry.promotion.domain.analytics.PromotionAnalyticsEventType;
 import com.ferry.promotion.domain.common.exception.InvalidPromotionStateException;
 import com.ferry.promotion.domain.common.exception.PromotionForbiddenActionException;
 import com.ferry.promotion.domain.promotion.PromotionCode;
@@ -41,12 +45,16 @@ class DefaultPromotionCreateUseCaseTest{
 
 	@Mock
 	PromotionCreateGateway gateway;
+	@Mock
+	PromotionAnalyticsPublisher publisher;
 	@InjectMocks
 	DefaultPromotionCreateUseCase useCase;
 	@Mock
 	PromotionCreatePresenter presenter;
 	@Captor
 	ArgumentCaptor<Promotion> promotionCaptor;
+	@Captor
+	ArgumentCaptor<PromotionAnalyticsEventConfig> analyticsCaptor;
 
 	@Test
 	void givenNonSuperStaffRole_thenThrowsForbiddenActionException(){
@@ -194,12 +202,20 @@ class DefaultPromotionCreateUseCaseTest{
 
 		then(gateway).should()
 				.save(promotionCaptor.capture());
+		then(publisher).should()
+				.save(analyticsCaptor.capture());
 		then(presenter).should()
 				.present(any(PromotionCreateResponse.class));
 
 		Promotion saved = promotionCaptor.getValue();
+		PromotionAnalyticsEventConfig analytics = analyticsCaptor.getValue();
 
 		thenSoftly(softly -> {
+			softly.then(analytics.aggregate()).isEqualTo(PromotionAnalyticsAggregate.PROMOTION);
+			softly.then(analytics.type()).isEqualTo(PromotionAnalyticsEventType.PROMOTION_CREATED);
+			softly.then(analytics.tenantId()).isEqualTo(TENANT_ID);
+			softly.then(analytics.aggregateVersion()).isZero();
+			softly.then(analytics.actor()).isEqualTo(STAFF_ID);
 			softly.then(saved.codeValue()).isEqualTo("POTONGAN5RB");
 			softly.then(saved.tenantId()).isEqualTo(TENANT_ID);
 			softly.then(saved.type()).isEqualTo(PromotionType.FIXED_AMOUNT);
