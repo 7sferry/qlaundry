@@ -1,4 +1,4 @@
-package com.ferry.order.core.order.machines;
+package com.ferry.order.core.order.assignmachines;
 
 import com.ferry.order.domain.common.exception.InvalidOrderStatusException;
 import com.ferry.order.domain.common.exception.MachineBusyException;
@@ -28,11 +28,12 @@ import java.util.stream.Collectors;
  ************************/
 
 @RequiredArgsConstructor
-public class DefaultOrderMachinesUseCase implements OrderMachinesUseCase{
-	private final OrderMachinesGateway gateway;
+public class DefaultOrderAssignMachinesUseCase implements OrderAssignMachinesUseCase{
+	private final OrderAssignMachinesGateway gateway;
 
 	@Override
-	public void execute(OrderMachinesRequest request, OrderAuthPrincipal principal, OrderMachinesPresenter presenter){
+	public void execute(OrderAssignMachinesRequest request, OrderAuthPrincipal principal,
+	                    OrderAssignMachinesPresenter presenter){
 		request.validate();
 		OrderId orderId = new OrderId(request.orderId());
 		TenantId tenantId = new TenantId(principal.tenantId());
@@ -75,7 +76,7 @@ public class DefaultOrderMachinesUseCase implements OrderMachinesUseCase{
 		saved.stream()
 				.filter(machine -> !machine.deleted())
 				.forEach(machines::add);
-		presenter.present(new OrderMachinesResponse(order, machines));
+		presenter.present(new OrderAssignMachinesResponse(order, machines));
 	}
 
 	private Set<MachineId> machineIds(Set<String> rawIds){

@@ -1,7 +1,7 @@
-package com.ferry.order.webservice.order.machines;
+package com.ferry.order.webservice.order.assignmachines;
 
-import com.ferry.order.core.order.machines.OrderMachinesRequest;
-import com.ferry.order.core.order.machines.OrderMachinesUseCase;
+import com.ferry.order.core.order.assignmachines.OrderAssignMachinesRequest;
+import com.ferry.order.core.order.assignmachines.OrderAssignMachinesUseCase;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,15 +19,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-public class OrderMachinesController{
-	private final OrderMachinesUseCase orderMachinesUseCase;
+public class OrderAssignMachinesController{
+	private final OrderAssignMachinesUseCase orderAssignMachinesUseCase;
 
 	@Transactional(isolation = Isolation.READ_COMMITTED)
-	@PatchMapping("/order/machines")
-	public ResponseEntity<?> changeMachines(@RequestBody OrderMachinesRequest request,
+	@PatchMapping("/order/assignMachines")
+	public ResponseEntity<?> assignMachines(@RequestBody OrderAssignMachinesRequest request,
 	                                        @AuthenticationPrincipal OrderAuthPrincipal principal){
-		WebOrderMachinesPresenter presenter = new WebOrderMachinesPresenter();
-		orderMachinesUseCase.execute(request, principal, presenter);
+		WebOrderAssignMachinesPresenter presenter = new WebOrderAssignMachinesPresenter();
+		orderAssignMachinesUseCase.execute(request, principal, presenter);
 		return presenter.getResponseEntity();
 	}
 

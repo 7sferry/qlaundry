@@ -42,7 +42,7 @@ GET    /order/schedule          ?date=yyyy-MM-dd   → today's (or that day's) d
 PATCH  /order/confirm           {orderId, staffNotes?}
 PATCH  /order/pickup            {orderId, staffNotes?}
 PATCH  /order/process           {orderId, staffNotes?, machineIds?}
-PATCH  /order/machines          {orderId, machineIds}   IN_PROGRESS only; replaces the order's machines ([] clears them)
+PATCH  /order/assignMachines    {orderId, machineIds}   IN_PROGRESS only; replaces the order's machines ([] clears them)
 PATCH  /order/ready             {orderId, staffNotes?}
 PATCH  /order/deliver           {orderId, staffNotes?}
 PATCH  /order/complete          {orderId, staffNotes?}
@@ -75,7 +75,7 @@ any non-final status → CANCELLED
 
 An illegal move is a 400. `COMPLETED` and `CANCELLED` are final.
 
-**Machines on an order**: `/order/process` takes the machines the order runs on (optional; none is allowed). While the order is `IN_PROGRESS`, `/order/machines` swaps them. Every id must be an active machine of your tenant (else 404), and a machine already on another `IN_PROGRESS` order is a 409 naming that order. A machine is freed as soon as its order leaves `IN_PROGRESS`. `/order/detail` lists them under `machines: [{machineId, name, type}]`, with the name as it was when assigned.
+**Machines on an order**: `/order/process` takes the machines the order runs on (optional; none is allowed). While the order is `IN_PROGRESS`, `/order/assignMachines` swaps them. Every id must be an active machine of your tenant (else 404), and a machine already on another `IN_PROGRESS` order is a 409 naming that order. A machine is freed as soon as its order leaves `IN_PROGRESS`. `/order/detail` lists them under `machines: [{machineId, name, type}]`, with the name as it was when assigned.
 
 **Order numbers** look like `INV-20261015-…`, dated in the tenant's time zone.
 

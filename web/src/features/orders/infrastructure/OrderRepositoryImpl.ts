@@ -313,7 +313,7 @@ export class OrderRepositoryImpl implements OrderRepository {
 	}
 
 	async changeMachines(orderId: string, machineIds: string[]): Promise<Order> {
-		await httpClient.patch<{ id: string }>(ORDER_ENDPOINTS.machines, {orderId, machineIds});
+		await httpClient.patch<{ id: string }>(ORDER_ENDPOINTS.assignMachines, {orderId, machineIds});
 		return this.getOrderById(orderId);
 	}
 }

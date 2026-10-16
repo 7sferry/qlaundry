@@ -1,4 +1,4 @@
-package com.ferry.order.core.order.machines;
+package com.ferry.order.core.order.assignmachines;
 
 import com.ferry.order.domain.order.Order;
 import com.ferry.order.domain.order.OrderMachine;
@@ -10,5 +10,5 @@ import java.util.List;
  * on Oktober 2026      *
  ************************/
 
-public record OrderMachinesResponse(Order order, List<OrderMachine> machines){
+public record OrderAssignMachinesResponse(Order order, List<OrderMachine> machines){
 }

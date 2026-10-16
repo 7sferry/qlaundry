@@ -1,4 +1,4 @@
-package com.ferry.order.core.order.machines;
+package com.ferry.order.core.order.assignmachines;
 
 import com.ferry.order.core.tools.OrderValidation;
 import jakarta.validation.constraints.NotBlank;
@@ -11,7 +11,7 @@ import java.util.Set;
  * on Oktober 2026      *
  ************************/
 
-public record OrderMachinesRequest(
+public record OrderAssignMachinesRequest(
 	@NotBlank String orderId,
 	@NotNull Set<String> machineIds) implements OrderValidation{
 }

@@ -1,4 +1,4 @@
-package com.ferry.order.webservice.order.machines;
+package com.ferry.order.webservice.order.assignmachines;
 
 import java.util.List;
 
@@ -7,7 +7,7 @@ import java.util.List;
  * on Oktober 2026      *
  ************************/
 
-public record OrderMachinesRestResponse(
+public record OrderAssignMachinesRestResponse(
 	String id,
 	String orderNumber,
 	String status,

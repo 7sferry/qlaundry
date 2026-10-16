@@ -1,4 +1,4 @@
-package com.ferry.order.core.order.machines;
+package com.ferry.order.core.order.assignmachines;
 
 import com.ferry.order.domain.machine.Machine;
 import com.ferry.order.domain.machine.MachineId;
@@ -17,7 +17,7 @@ import java.util.Set;
  * on Oktober 2026      *
  ************************/
 
-public interface OrderMachinesGateway{
+public interface OrderAssignMachinesGateway{
 	Optional<Order> lockById(OrderId orderId, TenantId tenantId);
 
 	List<OrderMachine> findAllMachinesByOrderId(OrderId orderId);

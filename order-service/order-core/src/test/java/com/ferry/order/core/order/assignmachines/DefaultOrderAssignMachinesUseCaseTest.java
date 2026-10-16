@@ -1,4 +1,4 @@
-package com.ferry.order.core.order.machines;
+package com.ferry.order.core.order.assignmachines;
 
 import com.ferry.order.domain.common.FullName;
 import com.ferry.order.domain.common.Money;
@@ -52,7 +52,7 @@ import static org.mockito.Mockito.never;
  ************************/
 
 @ExtendWith(MockitoExtension.class)
-class DefaultOrderMachinesUseCaseTest{
+class DefaultOrderAssignMachinesUseCaseTest{
 
 	private static final String TENANT_ID = "01TENANTSEROJA00000000000";
 	private static final String STAFF_ID = "01STAFFDEWISARTIKA0000000";
@@ -63,17 +63,17 @@ class DefaultOrderMachinesUseCaseTest{
 	private static final String IRONER_ID = "01MACHINEIRONERLIMA000000";
 
 	@Mock
-	OrderMachinesGateway gateway;
+	OrderAssignMachinesGateway gateway;
 	@InjectMocks
-	DefaultOrderMachinesUseCase useCase;
+	DefaultOrderAssignMachinesUseCase useCase;
 	@Mock
-	OrderMachinesPresenter presenter;
+	OrderAssignMachinesPresenter presenter;
 	@Captor
 	ArgumentCaptor<List<OrderMachine>> machinesCaptor;
 	@Captor
 	ArgumentCaptor<Set<MachineId>> machineIdsCaptor;
 	@Captor
-	ArgumentCaptor<OrderMachinesResponse> responseCaptor;
+	ArgumentCaptor<OrderAssignMachinesResponse> responseCaptor;
 
 	@Test
 	void givenNullMachineIds_thenThrowsConstraintViolationException(){
@@ -84,7 +84,7 @@ class DefaultOrderMachinesUseCaseTest{
 				.build();
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
-						useCase.execute(new OrderMachinesRequest(ORDER_ID, null), principal, presenter))
+						useCase.execute(new OrderAssignMachinesRequest(ORDER_ID, null), principal, presenter))
 				.isInstanceOf(ConstraintViolationException.class));
 
 		then(gateway).shouldHaveNoInteractions();
@@ -101,7 +101,7 @@ class DefaultOrderMachinesUseCaseTest{
 				.lockById(any(OrderId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
-						useCase.execute(new OrderMachinesRequest(ORDER_ID, Set.of(WASHER_ID)), principal, presenter))
+						useCase.execute(new OrderAssignMachinesRequest(ORDER_ID, Set.of(WASHER_ID)), principal, presenter))
 				.isInstanceOf(NotFoundException.class)
 				.hasMessage("Order Not Found"));
 
@@ -147,7 +147,7 @@ class DefaultOrderMachinesUseCaseTest{
 				.lockById(any(OrderId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
-						useCase.execute(new OrderMachinesRequest(ORDER_ID, Set.of(WASHER_ID)), principal, presenter))
+						useCase.execute(new OrderAssignMachinesRequest(ORDER_ID, Set.of(WASHER_ID)), principal, presenter))
 				.isInstanceOf(InvalidOrderStatusException.class)
 				.hasMessage("Machines can only be changed while the order is in progress"));
 
@@ -213,7 +213,7 @@ class DefaultOrderMachinesUseCaseTest{
 				.findOccupancies(anySet(), any(OrderId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
-						useCase.execute(new OrderMachinesRequest(ORDER_ID, Set.of(DRYER_ID)), principal, presenter))
+						useCase.execute(new OrderAssignMachinesRequest(ORDER_ID, Set.of(DRYER_ID)), principal, presenter))
 				.isInstanceOf(MachineBusyException.class)
 				.hasMessage("Machine Pengering 4 is in use by INV-20261016-8BC1XY"));
 
@@ -285,7 +285,7 @@ class DefaultOrderMachinesUseCaseTest{
 		willAnswer(invocation -> invocation.<List<OrderMachine>>getArgument(0)).given(gateway)
 				.saveMachines(anyList());
 
-		useCase.execute(new OrderMachinesRequest(ORDER_ID, Set.of(WASHER_ID, DRYER_ID)), principal, presenter);
+		useCase.execute(new OrderAssignMachinesRequest(ORDER_ID, Set.of(WASHER_ID, DRYER_ID)), principal, presenter);
 
 		then(gateway).should()
 				.lockMachines(machineIdsCaptor.capture(), eq(new TenantId(TENANT_ID)));
@@ -355,7 +355,7 @@ class DefaultOrderMachinesUseCaseTest{
 		willAnswer(invocation -> invocation.<List<OrderMachine>>getArgument(0)).given(gateway)
 				.saveMachines(anyList());
 
-		useCase.execute(new OrderMachinesRequest(ORDER_ID, Set.of()), principal, presenter);
+		useCase.execute(new OrderAssignMachinesRequest(ORDER_ID, Set.of()), principal, presenter);
 
 		then(gateway).should(never())
 				.lockMachines(anySet(), any(TenantId.class));
@@ -415,7 +415,7 @@ class DefaultOrderMachinesUseCaseTest{
 		willReturn(List.of(washer)).given(gateway)
 				.findAllMachinesByOrderId(any(OrderId.class));
 
-		useCase.execute(new OrderMachinesRequest(ORDER_ID, Set.of(WASHER_ID)), principal, presenter);
+		useCase.execute(new OrderAssignMachinesRequest(ORDER_ID, Set.of(WASHER_ID)), principal, presenter);
 
 		then(gateway).should(never())
 				.lockMachines(anySet(), any(TenantId.class));
@@ -488,7 +488,7 @@ class DefaultOrderMachinesUseCaseTest{
 		willAnswer(invocation -> invocation.<List<OrderMachine>>getArgument(0)).given(gateway)
 				.saveMachines(anyList());
 
-		useCase.execute(new OrderMachinesRequest(ORDER_ID, Set.of(DRYER_ID)), principal, presenter);
+		useCase.execute(new OrderAssignMachinesRequest(ORDER_ID, Set.of(DRYER_ID)), principal, presenter);
 
 		then(gateway).should()
 				.lockById(eq(new OrderId(ORDER_ID)), eq(new TenantId(TENANT_ID)));

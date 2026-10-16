@@ -14,7 +14,7 @@ export const ORDER_ENDPOINTS = {
 	deliver: '/order/deliver',
 	complete: '/order/complete',
 	cancel: '/order/cancel',
-	machines: '/order/machines',
+	assignMachines: '/order/assignMachines',
 	invoiceLink: '/invoice/link',
 	invoicePdf: '/public/invoice/pdf',
 	serviceList: '/service/list',

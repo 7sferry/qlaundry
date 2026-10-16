@@ -1,6 +1,6 @@
 package com.ferry.order.gateway.order;
 
-import com.ferry.order.core.order.machines.OrderMachinesGateway;
+import com.ferry.order.core.order.assignmachines.OrderAssignMachinesGateway;
 import com.ferry.order.domain.common.exception.OrderMachinesConflictException;
 import com.ferry.order.domain.machine.Machine;
 import com.ferry.order.domain.machine.MachineId;
@@ -31,7 +31,7 @@ import java.util.Set;
  ************************/
 
 @RequiredArgsConstructor
-public class JpaOrderMachinesGateway implements OrderMachinesGateway{
+public class JpaOrderAssignMachinesGateway implements OrderAssignMachinesGateway{
 	private final OrderJpaRepository orderJpaRepository;
 	private final OrderMachineJpaRepository orderMachineJpaRepository;
 	private final MachineJpaRepository machineJpaRepository;
