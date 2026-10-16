@@ -1,6 +1,6 @@
 package com.ferry.promotion.core.promotion.toggle;
 
-import com.ferry.promotion.core.analytics.PromotionAnalyticsEventConfig;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsEvent;
 import com.ferry.promotion.core.analytics.PromotionAnalyticsMessage;
 import com.ferry.promotion.core.analytics.PromotionAnalyticsPublisher;
 import com.ferry.promotion.domain.analytics.PromotionAnalyticsEventType;
@@ -35,7 +35,7 @@ public class DefaultPromotionToggleUseCase implements PromotionToggleUseCase{
 		Promotion promotion = gateway.findById(promotionId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Promotion Not Found"));
 		Promotion saved = gateway.save(promotion.changeActive(request.active(), principal.userId()));
-		publisher.publish(publisher.save(PromotionAnalyticsEventConfig.promotion(PromotionAnalyticsEventType.PROMOTION_TOGGLED,
+		publisher.publish(publisher.save(PromotionAnalyticsEvent.promotion(PromotionAnalyticsEventType.PROMOTION_TOGGLED,
 				PromotionAnalyticsMessage.from(saved), principal.userId())));
 		presenter.present(new PromotionToggleResponse(saved));
 	}

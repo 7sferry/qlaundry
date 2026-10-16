@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.delete;
 
-import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.UserAnalyticsEvent;
 import com.ferry.user.core.analytics.StaffAnalyticsMessage;
 import com.ferry.user.core.analytics.UserAnalyticsPublisher;
 import com.ferry.user.domain.analytics.UserAnalyticsAggregate;
@@ -62,7 +62,7 @@ class DefaultStaffDeleteUseCaseTest{
 	@Captor
 	ArgumentCaptor<Staff> staffCaptor;
 	@Captor
-	ArgumentCaptor<UserAnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<UserAnalyticsEvent> analyticsCaptor;
 
 	private UserAuthPrincipal superStaffPrincipal(String tenantId){
 		return UserAuthPrincipal.builder()
@@ -201,7 +201,7 @@ class DefaultStaffDeleteUseCaseTest{
 
 		Staff saved = staffCaptor.getValue();
 		StaffDeleteResponse response = responseCaptor.getValue();
-		UserAnalyticsEventConfig analytics = analyticsCaptor.getValue();
+		UserAnalyticsEvent analytics = analyticsCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(analytics.aggregate()).isEqualTo(UserAnalyticsAggregate.STAFF);

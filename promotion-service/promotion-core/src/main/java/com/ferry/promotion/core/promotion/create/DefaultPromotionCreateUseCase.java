@@ -1,6 +1,6 @@
 package com.ferry.promotion.core.promotion.create;
 
-import com.ferry.promotion.core.analytics.PromotionAnalyticsEventConfig;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsEvent;
 import com.ferry.promotion.core.analytics.PromotionAnalyticsMessage;
 import com.ferry.promotion.core.analytics.PromotionAnalyticsPublisher;
 import com.ferry.promotion.domain.analytics.PromotionAnalyticsEventType;
@@ -46,7 +46,7 @@ public class DefaultPromotionCreateUseCase implements PromotionCreateUseCase{
 				money(request.amount()), money(request.maxDiscountAmount()), money(request.minSubtotal()),
 				combinable, request.usageLimit(), instant(request.startAt()), instant(request.endAt()),
 				principal.userId()));
-		publisher.publish(publisher.save(PromotionAnalyticsEventConfig.promotion(PromotionAnalyticsEventType.PROMOTION_CREATED,
+		publisher.publish(publisher.save(PromotionAnalyticsEvent.promotion(PromotionAnalyticsEventType.PROMOTION_CREATED,
 				PromotionAnalyticsMessage.from(saved), principal.userId())));
 		presenter.present(new PromotionCreateResponse(saved));
 	}

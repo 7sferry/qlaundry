@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.registration;
 
-import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.UserAnalyticsEvent;
 import com.ferry.user.core.analytics.StaffAnalyticsMessage;
 import com.ferry.user.core.analytics.UserAnalyticsPublisher;
 import com.ferry.user.core.tools.PasswordTool;
@@ -70,7 +70,7 @@ class DefaultStaffRegistrationUseCaseTest{
 	@Captor
 	ArgumentCaptor<Staff> staffCaptor;
 	@Captor
-	ArgumentCaptor<UserAnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<UserAnalyticsEvent> analyticsCaptor;
 
 	@ParameterizedTest
 	@NullAndEmptySource
@@ -306,7 +306,7 @@ class DefaultStaffRegistrationUseCaseTest{
 
 		Staff saved = staffCaptor.getValue();
 		StaffRegistrationResponse response = responseCaptor.getValue();
-		UserAnalyticsEventConfig analytics = analyticsCaptor.getValue();
+		UserAnalyticsEvent analytics = analyticsCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(analytics.type()).isEqualTo(UserAnalyticsEventType.STAFF_REGISTERED);

@@ -1,6 +1,6 @@
 package com.ferry.user.core.analytics.backfill;
 
-import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.UserAnalyticsEvent;
 import com.ferry.user.core.analytics.UserAnalyticsOutboxConstant;
 import com.ferry.user.core.analytics.CustomerAnalyticsMessage;
 import com.ferry.user.core.analytics.StaffAnalyticsMessage;
@@ -34,7 +34,7 @@ public class DefaultUserAnalyticsBackfillUseCase implements UserAnalyticsBackfil
 		do{
 			staffPage = gateway.findStaffsAfter(tenantId, afterStaffId, batchSize);
 			for(Staff staff : staffPage){
-				publisher.publish(publisher.save(UserAnalyticsEventConfig.staff(UserAnalyticsEventType.STAFF_BACKFILLED,
+				publisher.publish(publisher.save(UserAnalyticsEvent.staff(UserAnalyticsEventType.STAFF_BACKFILLED,
 						StaffAnalyticsMessage.from(staff), UserAnalyticsOutboxConstant.BACKFILL_ACTOR)));
 				afterStaffId = staff.id();
 				staffs++;
@@ -46,7 +46,7 @@ public class DefaultUserAnalyticsBackfillUseCase implements UserAnalyticsBackfil
 		do{
 			customerPage = gateway.findCustomersAfter(tenantId, afterCustomerId, batchSize);
 			for(Customer customer : customerPage){
-				publisher.publish(publisher.save(UserAnalyticsEventConfig.customer(UserAnalyticsEventType.CUSTOMER_BACKFILLED,
+				publisher.publish(publisher.save(UserAnalyticsEvent.customer(UserAnalyticsEventType.CUSTOMER_BACKFILLED,
 						CustomerAnalyticsMessage.from(customer), UserAnalyticsOutboxConstant.BACKFILL_ACTOR)));
 				afterCustomerId = customer.id();
 				customers++;

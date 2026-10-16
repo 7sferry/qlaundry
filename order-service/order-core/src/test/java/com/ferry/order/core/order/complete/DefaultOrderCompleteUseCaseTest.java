@@ -1,10 +1,9 @@
 package com.ferry.order.core.order.complete;
 
-import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEvent;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.OrderAnalyticsAggregate;
-import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
 import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
 import com.ferry.order.domain.common.FullName;
 import com.ferry.order.domain.common.Money;
@@ -60,7 +59,7 @@ class DefaultOrderCompleteUseCaseTest{
 	@Mock
 	OrderAnalyticsPublisher publisher;
 	@Captor
-	ArgumentCaptor<OrderAnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<OrderAnalyticsEvent> analyticsCaptor;
 	@InjectMocks
 	DefaultOrderCompleteUseCase useCase;
 	@Mock
@@ -190,16 +189,16 @@ class DefaultOrderCompleteUseCaseTest{
 				.findById(any(OrderId.class), any(TenantId.class));
 		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
 				.save(any(Order.class));
-		willReturn(OrderAnalyticsEvent.create(OrderAnalyticsAggregate.ORDER, OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
+		willReturn(com.ferry.order.domain.analytics.OrderAnalyticsEvent.create(OrderAnalyticsAggregate.ORDER, OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
 				TENANT_ID, ORDER_ID, 1, "{}", STAFF_ID)).given(publisher)
-				.save(any(OrderAnalyticsEventConfig.class));
+				.save(any(OrderAnalyticsEvent.class));
 
 		useCase.execute(new OrderCompleteRequest(ORDER_ID, "handed over at the counter"), principal, presenter);
 
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(OrderAnalyticsEvent.class));
+				.publish(any(com.ferry.order.domain.analytics.OrderAnalyticsEvent.class));
 		then(gateway).should()
 				.findById(eq(new OrderId(ORDER_ID)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()

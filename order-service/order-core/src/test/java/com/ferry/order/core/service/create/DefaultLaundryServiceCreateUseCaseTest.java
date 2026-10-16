@@ -1,10 +1,9 @@
 package com.ferry.order.core.service.create;
 
-import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEvent;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
 import com.ferry.order.domain.analytics.OrderAnalyticsAggregate;
-import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
 import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
 import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 import com.ferry.order.domain.common.exception.OrderForbiddenActionException;
@@ -54,7 +53,7 @@ class DefaultLaundryServiceCreateUseCaseTest{
 	@Mock
 	OrderAnalyticsPublisher publisher;
 	@Captor
-	ArgumentCaptor<OrderAnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<OrderAnalyticsEvent> analyticsCaptor;
 	@InjectMocks
 	DefaultLaundryServiceCreateUseCase useCase;
 	@Mock
@@ -134,16 +133,16 @@ class DefaultLaundryServiceCreateUseCaseTest{
 		willAnswer(invocation -> invocation.<LaundryService>getArgument(0)).given(gateway)
 				.save(any(LaundryService.class));
 
-		willReturn(OrderAnalyticsEvent.create(OrderAnalyticsAggregate.LAUNDRY_SERVICE, OrderAnalyticsEventType.LAUNDRY_SERVICE_CREATED, TENANT_ID,
+		willReturn(com.ferry.order.domain.analytics.OrderAnalyticsEvent.create(OrderAnalyticsAggregate.LAUNDRY_SERVICE, OrderAnalyticsEventType.LAUNDRY_SERVICE_CREATED, TENANT_ID,
 				"01SERVICEBARU0000000000000", 1, "{}", STAFF_ID)).given(publisher)
-				.save(any(OrderAnalyticsEventConfig.class));
+				.save(any(OrderAnalyticsEvent.class));
 
 		useCase.execute(request, principal, presenter);
 
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(OrderAnalyticsEvent.class));
+				.publish(any(com.ferry.order.domain.analytics.OrderAnalyticsEvent.class));
 		then(gateway).should()
 				.existsByName(eq(SERVICE_NAME), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()

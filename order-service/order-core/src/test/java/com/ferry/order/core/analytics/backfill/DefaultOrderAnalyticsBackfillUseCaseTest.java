@@ -1,12 +1,11 @@
 package com.ferry.order.core.analytics.backfill;
 
-import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEvent;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsOutboxConstant;
 import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.OrderAnalyticsAggregate;
-import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
 import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
 import com.ferry.order.domain.common.FullName;
 import com.ferry.order.domain.common.Money;
@@ -64,7 +63,7 @@ class DefaultOrderAnalyticsBackfillUseCaseTest{
 	@Mock
 	OrderAnalyticsPublisher publisher;
 	@Captor
-	ArgumentCaptor<OrderAnalyticsEventConfig> configCaptor;
+	ArgumentCaptor<OrderAnalyticsEvent> configCaptor;
 
 	@Test
 	void givenOneTenantWithAServiceAndAnOrder_thenReplaysBothThroughTheOutboxAtTheirCurrentVersion(){
@@ -139,9 +138,9 @@ class DefaultOrderAnalyticsBackfillUseCaseTest{
 				.findItemsByOrderId(any(OrderId.class));
 		willReturn(List.of()).given(gateway)
 				.findPromotionsByOrderId(any(OrderId.class));
-		willReturn(OrderAnalyticsEvent.create(OrderAnalyticsAggregate.ORDER, OrderAnalyticsEventType.ORDER_BACKFILLED,
+		willReturn(com.ferry.order.domain.analytics.OrderAnalyticsEvent.create(OrderAnalyticsAggregate.ORDER, OrderAnalyticsEventType.ORDER_BACKFILLED,
 				TENANT_ID, ORDER_ID, 5, "{}", OrderAnalyticsOutboxConstant.BACKFILL_ACTOR)).given(publisher)
-				.save(any(OrderAnalyticsEventConfig.class));
+				.save(any(OrderAnalyticsEvent.class));
 		DefaultOrderAnalyticsBackfillUseCase useCase = new DefaultOrderAnalyticsBackfillUseCase(gateway, publisher, BATCH_SIZE);
 
 		OrderAnalyticsBackfillResponse response = useCase.execute(new OrderAnalyticsBackfillRequest(' ' + TENANT_ID + ' '));
@@ -155,10 +154,10 @@ class DefaultOrderAnalyticsBackfillUseCaseTest{
 		then(publisher).should(times(2))
 				.save(configCaptor.capture());
 		then(publisher).should(times(2))
-				.publish(any(OrderAnalyticsEvent.class));
+				.publish(any(com.ferry.order.domain.analytics.OrderAnalyticsEvent.class));
 
-		OrderAnalyticsEventConfig serviceEvent = configCaptor.getAllValues().getFirst();
-		OrderAnalyticsEventConfig orderEvent = configCaptor.getAllValues().getLast();
+		OrderAnalyticsEvent serviceEvent = configCaptor.getAllValues().getFirst();
+		OrderAnalyticsEvent orderEvent = configCaptor.getAllValues().getLast();
 
 		thenSoftly(softly -> {
 			softly.then(serviceEvent.type()).isEqualTo(OrderAnalyticsEventType.LAUNDRY_SERVICE_BACKFILLED);
@@ -186,7 +185,7 @@ class DefaultOrderAnalyticsBackfillUseCaseTest{
 		OrderAnalyticsBackfillResponse response = useCase.execute(new OrderAnalyticsBackfillRequest(""));
 
 		then(publisher).should(never())
-				.save(any(OrderAnalyticsEventConfig.class));
+				.save(any(OrderAnalyticsEvent.class));
 		then(gateway).should(never())
 				.findItemsByOrderId(any(OrderId.class));
 

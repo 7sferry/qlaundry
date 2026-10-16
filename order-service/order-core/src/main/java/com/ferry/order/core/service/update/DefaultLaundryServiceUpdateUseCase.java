@@ -1,6 +1,6 @@
 package com.ferry.order.core.service.update;
 
-import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEvent;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
 import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
@@ -41,7 +41,7 @@ public class DefaultLaundryServiceUpdateUseCase implements LaundryServiceUpdateU
 				new Note(request.description()), new Money(request.pricePerUnit()), request.unit(),
 				request.category(), request.estimatedHours(), request.expressHours(), request.expressMultiplier(), request.popular(), active,
 				principal.userId()));
-		publisher.publish(publisher.save(OrderAnalyticsEventConfig.laundryService(OrderAnalyticsEventType.LAUNDRY_SERVICE_UPDATED,
+		publisher.publish(publisher.save(OrderAnalyticsEvent.laundryService(OrderAnalyticsEventType.LAUNDRY_SERVICE_UPDATED,
 				LaundryServiceAnalyticsMessage.from(saved), principal.userId())));
 		presenter.present(new LaundryServiceUpdateResponse(saved));
 	}

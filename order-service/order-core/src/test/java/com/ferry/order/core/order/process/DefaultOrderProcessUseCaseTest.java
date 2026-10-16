@@ -1,10 +1,9 @@
 package com.ferry.order.core.order.process;
 
-import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEvent;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.OrderAnalyticsAggregate;
-import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
 import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
 import com.ferry.order.domain.common.FullName;
 import com.ferry.order.domain.common.Money;
@@ -74,7 +73,7 @@ class DefaultOrderProcessUseCaseTest{
 	@Mock
 	OrderAnalyticsPublisher publisher;
 	@Captor
-	ArgumentCaptor<OrderAnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<OrderAnalyticsEvent> analyticsCaptor;
 	@InjectMocks
 	DefaultOrderProcessUseCase useCase;
 	@Mock
@@ -210,16 +209,16 @@ class DefaultOrderProcessUseCaseTest{
 				.lockById(any(OrderId.class), any(TenantId.class));
 		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
 				.save(any(Order.class));
-		willReturn(OrderAnalyticsEvent.create(OrderAnalyticsAggregate.ORDER, OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
+		willReturn(com.ferry.order.domain.analytics.OrderAnalyticsEvent.create(OrderAnalyticsAggregate.ORDER, OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
 				TENANT_ID, ORDER_ID, 1, "{}", STAFF_ID)).given(publisher)
-				.save(any(OrderAnalyticsEventConfig.class));
+				.save(any(OrderAnalyticsEvent.class));
 
 		useCase.execute(new OrderProcessRequest(ORDER_ID, "washing started", null), principal, presenter);
 
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(OrderAnalyticsEvent.class));
+				.publish(any(com.ferry.order.domain.analytics.OrderAnalyticsEvent.class));
 		then(gateway).should()
 				.lockById(eq(new OrderId(ORDER_ID)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
@@ -616,7 +615,7 @@ class DefaultOrderProcessUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		Set<String> machineIds = new LinkedHashSet<>(List.of(WASHER_ID, " " + DRYER_ID + " ", WASHER_ID));
+		Set<String> machineIds = new LinkedHashSet<>(List.of(WASHER_ID, ' ' + DRYER_ID + ' ', WASHER_ID));
 		willReturn(Optional.of(order)).given(gateway)
 				.lockById(any(OrderId.class), any(TenantId.class));
 		willReturn(List.of(dryer, washer)).given(gateway)

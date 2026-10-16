@@ -1,6 +1,6 @@
 package com.ferry.promotion.core.promotion.update;
 
-import com.ferry.promotion.core.analytics.PromotionAnalyticsEventConfig;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsEvent;
 import com.ferry.promotion.core.analytics.PromotionAnalyticsMessage;
 import com.ferry.promotion.core.analytics.PromotionAnalyticsPublisher;
 import com.ferry.promotion.domain.analytics.PromotionAnalyticsEventType;
@@ -58,7 +58,7 @@ class DefaultPromotionUpdateUseCaseTest{
 	@Captor
 	ArgumentCaptor<Promotion> promotionCaptor;
 	@Captor
-	ArgumentCaptor<PromotionAnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<PromotionAnalyticsEvent> analyticsCaptor;
 
 	@Test
 	void givenNonSuperStaffRole_thenThrowsForbiddenActionException(){
@@ -194,7 +194,7 @@ class DefaultPromotionUpdateUseCaseTest{
 				.save(analyticsCaptor.capture());
 
 		Promotion saved = promotionCaptor.getValue();
-		PromotionAnalyticsEventConfig analytics = analyticsCaptor.getValue();
+		PromotionAnalyticsEvent analytics = analyticsCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(analytics.type()).isEqualTo(PromotionAnalyticsEventType.PROMOTION_UPDATED);

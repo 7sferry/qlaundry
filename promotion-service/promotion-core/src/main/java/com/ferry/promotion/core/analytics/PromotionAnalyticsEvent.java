@@ -8,7 +8,7 @@ import com.ferry.promotion.domain.analytics.PromotionAnalyticsEventType;
  * on Oktober 2026      *
  ************************/
 
-public record PromotionAnalyticsEventConfig(
+public record PromotionAnalyticsEvent(
 	PromotionAnalyticsAggregate aggregate,
 	PromotionAnalyticsEventType type,
 	String tenantId,
@@ -17,9 +17,9 @@ public record PromotionAnalyticsEventConfig(
 	Object payload,
 	String actor){
 
-	public static PromotionAnalyticsEventConfig promotion(PromotionAnalyticsEventType type, PromotionAnalyticsMessage message,
-	                                                      String actor){
-		return new PromotionAnalyticsEventConfig(PromotionAnalyticsAggregate.PROMOTION, type, message.tenantId(), message.promotionId(),
+	public static PromotionAnalyticsEvent promotion(PromotionAnalyticsEventType type, PromotionAnalyticsMessage message,
+	                                                String actor){
+		return new PromotionAnalyticsEvent(PromotionAnalyticsAggregate.PROMOTION, type, message.tenantId(), message.promotionId(),
 				message.version(), message, actor);
 	}
 

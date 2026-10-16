@@ -1,6 +1,6 @@
 package com.ferry.promotion.core.promotion.update;
 
-import com.ferry.promotion.core.analytics.PromotionAnalyticsEventConfig;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsEvent;
 import com.ferry.promotion.core.analytics.PromotionAnalyticsMessage;
 import com.ferry.promotion.core.analytics.PromotionAnalyticsPublisher;
 import com.ferry.promotion.domain.analytics.PromotionAnalyticsEventType;
@@ -51,7 +51,7 @@ public class DefaultPromotionUpdateUseCase implements PromotionUpdateUseCase{
 				new Note(request.description()), request.type(), request.percentage(), money(request.amount()),
 				money(request.maxDiscountAmount()), money(request.minSubtotal()), combinable, request.usageLimit(),
 				instant(request.startAt()), instant(request.endAt()), active, principal.userId()));
-		publisher.publish(publisher.save(PromotionAnalyticsEventConfig.promotion(PromotionAnalyticsEventType.PROMOTION_UPDATED,
+		publisher.publish(publisher.save(PromotionAnalyticsEvent.promotion(PromotionAnalyticsEventType.PROMOTION_UPDATED,
 				PromotionAnalyticsMessage.from(saved), principal.userId())));
 		presenter.present(new PromotionUpdateResponse(saved));
 	}

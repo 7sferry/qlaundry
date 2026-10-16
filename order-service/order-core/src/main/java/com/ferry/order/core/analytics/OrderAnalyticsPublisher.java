@@ -1,14 +1,12 @@
 package com.ferry.order.core.analytics;
 
-import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
-
 /************************
  * Made by [MR Ferry™]  *
  * on September 2026    *
  ************************/
 
 public interface OrderAnalyticsPublisher{
-	OrderAnalyticsEvent save(OrderAnalyticsEventConfig config);
+	com.ferry.order.domain.analytics.OrderAnalyticsEvent save(OrderAnalyticsEvent config);
 
-	void publish(OrderAnalyticsEvent event);
+	void publish(com.ferry.order.domain.analytics.OrderAnalyticsEvent event);
 }

@@ -1,6 +1,6 @@
 package com.ferry.order.core.order.pickup;
 
-import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEvent;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
@@ -33,7 +33,7 @@ public class DefaultOrderPickupUseCase implements OrderPickupUseCase{
 		Note staffNotes = request.staffNotes() == null || request.staffNotes().isBlank()
 				? null : new Note(request.staffNotes());
 		Order saved = gateway.save(order.changeStatus(OrderStatus.PICKED_UP, staffNotes, principal.userId()));
-		publisher.publish(publisher.save(OrderAnalyticsEventConfig.order(OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
+		publisher.publish(publisher.save(OrderAnalyticsEvent.order(OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
 				OrderAnalyticsMessage.from(saved, gateway.findItemsByOrderId(orderId),
 						gateway.findPromotionsByOrderId(orderId)), principal.userId())));
 		presenter.present(new OrderPickupResponse(saved));

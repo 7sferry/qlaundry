@@ -1,6 +1,6 @@
 package com.ferry.order.core.analytics.backfill;
 
-import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEvent;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsOutboxConstant;
 import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
@@ -35,7 +35,7 @@ public class DefaultOrderAnalyticsBackfillUseCase implements OrderAnalyticsBackf
 		do{
 			servicePage = gateway.findServicesAfter(tenantId, afterServiceId, batchSize);
 			for(LaundryService service : servicePage){
-				publisher.publish(publisher.save(OrderAnalyticsEventConfig.laundryService(
+				publisher.publish(publisher.save(OrderAnalyticsEvent.laundryService(
 						OrderAnalyticsEventType.LAUNDRY_SERVICE_BACKFILLED, LaundryServiceAnalyticsMessage.from(service),
 						OrderAnalyticsOutboxConstant.BACKFILL_ACTOR)));
 				afterServiceId = service.id();
@@ -49,7 +49,7 @@ public class DefaultOrderAnalyticsBackfillUseCase implements OrderAnalyticsBackf
 			orderPage = gateway.findOrdersAfter(tenantId, afterOrderId, batchSize);
 			for(Order order : orderPage){
 				OrderId orderId = new OrderId(order.id());
-				publisher.publish(publisher.save(OrderAnalyticsEventConfig.order(OrderAnalyticsEventType.ORDER_BACKFILLED,
+				publisher.publish(publisher.save(OrderAnalyticsEvent.order(OrderAnalyticsEventType.ORDER_BACKFILLED,
 						OrderAnalyticsMessage.from(order, gateway.findItemsByOrderId(orderId),
 								gateway.findPromotionsByOrderId(orderId)), OrderAnalyticsOutboxConstant.BACKFILL_ACTOR)));
 				afterOrderId = order.id();

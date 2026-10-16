@@ -1,6 +1,6 @@
 package com.ferry.promotion.core.analytics.backfill;
 
-import com.ferry.promotion.core.analytics.PromotionAnalyticsEventConfig;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsEvent;
 import com.ferry.promotion.core.analytics.PromotionAnalyticsOutboxConstant;
 import com.ferry.promotion.core.analytics.PromotionAnalyticsPublisher;
 import com.ferry.promotion.domain.analytics.PromotionAnalyticsEventType;
@@ -44,7 +44,7 @@ class DefaultPromotionAnalyticsBackfillUseCaseTest{
 	@Mock
 	PromotionAnalyticsPublisher publisher;
 	@Captor
-	ArgumentCaptor<PromotionAnalyticsEventConfig> configCaptor;
+	ArgumentCaptor<PromotionAnalyticsEvent> configCaptor;
 
 	@Test
 	void givenThreePromotionsAndABatchOfTwo_thenPagesByIdAndPublishesEachAsBackfilled(){
@@ -111,17 +111,17 @@ class DefaultPromotionAnalyticsBackfillUseCaseTest{
 		then(publisher).should(times(3))
 				.save(configCaptor.capture());
 
-		List<PromotionAnalyticsEventConfig> configs = configCaptor.getAllValues();
+		List<PromotionAnalyticsEvent> configs = configCaptor.getAllValues();
 
 		thenSoftly(softly -> {
 			softly.then(response.promotions()).isEqualTo(3);
-			softly.then(configs).extracting(PromotionAnalyticsEventConfig::type)
+			softly.then(configs).extracting(PromotionAnalyticsEvent::type)
 					.containsOnly(PromotionAnalyticsEventType.PROMOTION_BACKFILLED);
-			softly.then(configs).extracting(PromotionAnalyticsEventConfig::aggregateId)
+			softly.then(configs).extracting(PromotionAnalyticsEvent::aggregateId)
 					.containsExactly("01PROMORAMADAN00000000000", "01PROMOKEMERDEKAAN0000000",
 							"01PROMOTAHUNBARU000000000");
-			softly.then(configs).extracting(PromotionAnalyticsEventConfig::aggregateVersion).containsExactly(4, 1, 0);
-			softly.then(configs).extracting(PromotionAnalyticsEventConfig::actor)
+			softly.then(configs).extracting(PromotionAnalyticsEvent::aggregateVersion).containsExactly(4, 1, 0);
+			softly.then(configs).extracting(PromotionAnalyticsEvent::actor)
 					.containsOnly(PromotionAnalyticsOutboxConstant.BACKFILL_ACTOR);
 		});
 	}

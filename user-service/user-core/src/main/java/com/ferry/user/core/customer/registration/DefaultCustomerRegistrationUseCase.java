@@ -1,6 +1,6 @@
 package com.ferry.user.core.customer.registration;
 
-import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.UserAnalyticsEvent;
 import com.ferry.user.core.analytics.CustomerAnalyticsMessage;
 import com.ferry.user.core.analytics.UserAnalyticsPublisher;
 import com.ferry.user.domain.analytics.UserAnalyticsEventType;
@@ -42,7 +42,7 @@ public class DefaultCustomerRegistrationUseCase implements CustomerRegistrationU
 				new Phone(request.phone()), principal.userId())));
 		List<CustomerEmail> emails = saveEmail(request, saved, principal);
 		List<CustomerAddress> addresses = saveAddress(request, saved, principal);
-		analyticsPublisher.publish(analyticsPublisher.save(UserAnalyticsEventConfig.customer(
+		analyticsPublisher.publish(analyticsPublisher.save(UserAnalyticsEvent.customer(
 				UserAnalyticsEventType.CUSTOMER_REGISTERED, CustomerAnalyticsMessage.from(saved), principal.userId())));
 		presenter.present(new CustomerRegistrationResponse(saved, emails, phones, addresses));
 	}

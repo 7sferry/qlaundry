@@ -1,6 +1,6 @@
 package com.ferry.order.core.order.payment;
 
-import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEvent;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
@@ -32,7 +32,7 @@ public class DefaultOrderPaymentUseCase implements OrderPaymentUseCase{
 		Order order = gateway.findById(orderId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Order Not Found"));
 		Order saved = gateway.save(order.markPaid(principal.userId()));
-		publisher.publish(publisher.save(OrderAnalyticsEventConfig.order(OrderAnalyticsEventType.ORDER_PAID,
+		publisher.publish(publisher.save(OrderAnalyticsEvent.order(OrderAnalyticsEventType.ORDER_PAID,
 				OrderAnalyticsMessage.from(saved, gateway.findItemsByOrderId(orderId),
 						gateway.findPromotionsByOrderId(orderId)), principal.userId())));
 		presenter.present(new OrderPaymentResponse(saved));

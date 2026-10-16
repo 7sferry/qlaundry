@@ -1,6 +1,6 @@
 package com.ferry.user.core.analytics.backfill;
 
-import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.UserAnalyticsEvent;
 import com.ferry.user.core.analytics.UserAnalyticsOutboxConstant;
 import com.ferry.user.core.analytics.UserAnalyticsPublisher;
 import com.ferry.user.domain.analytics.UserAnalyticsAggregate;
@@ -46,7 +46,7 @@ class DefaultUserAnalyticsBackfillUseCaseTest{
 	@Mock
 	UserAnalyticsPublisher publisher;
 	@Captor
-	ArgumentCaptor<UserAnalyticsEventConfig> configCaptor;
+	ArgumentCaptor<UserAnalyticsEvent> configCaptor;
 
 	@Test
 	void givenStaffAndCustomers_thenPublishesStaffFirstThenCustomersAsBackfilled(){
@@ -96,18 +96,18 @@ class DefaultUserAnalyticsBackfillUseCaseTest{
 		then(publisher).should(times(3))
 				.save(configCaptor.capture());
 
-		List<UserAnalyticsEventConfig> configs = configCaptor.getAllValues();
+		List<UserAnalyticsEvent> configs = configCaptor.getAllValues();
 
 		thenSoftly(softly -> {
 			softly.then(response.staffs()).isEqualTo(1);
 			softly.then(response.customers()).isEqualTo(2);
-			softly.then(configs).extracting(UserAnalyticsEventConfig::aggregate)
+			softly.then(configs).extracting(UserAnalyticsEvent::aggregate)
 					.containsExactly(UserAnalyticsAggregate.STAFF, UserAnalyticsAggregate.CUSTOMER, UserAnalyticsAggregate.CUSTOMER);
-			softly.then(configs).extracting(UserAnalyticsEventConfig::type)
+			softly.then(configs).extracting(UserAnalyticsEvent::type)
 					.containsExactly(UserAnalyticsEventType.STAFF_BACKFILLED, UserAnalyticsEventType.CUSTOMER_BACKFILLED,
 							UserAnalyticsEventType.CUSTOMER_BACKFILLED);
-			softly.then(configs).extracting(UserAnalyticsEventConfig::aggregateVersion).containsExactly(2, 0, 1);
-			softly.then(configs).extracting(UserAnalyticsEventConfig::actor)
+			softly.then(configs).extracting(UserAnalyticsEvent::aggregateVersion).containsExactly(2, 0, 1);
+			softly.then(configs).extracting(UserAnalyticsEvent::actor)
 					.containsOnly(UserAnalyticsOutboxConstant.BACKFILL_ACTOR);
 		});
 	}

@@ -1,6 +1,6 @@
 package com.ferry.order.core.order.process;
 
-import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEvent;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
@@ -51,7 +51,7 @@ public class DefaultOrderProcessUseCase implements OrderProcessUseCase{
 		List<OrderMachine> assigned = machines.isEmpty() ? List.of() : gateway.saveMachines(machines.stream()
 				.map(machine -> OrderMachine.assign(saved.id(), machine, principal.userId()))
 				.toList());
-		publisher.publish(publisher.save(OrderAnalyticsEventConfig.order(OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
+		publisher.publish(publisher.save(OrderAnalyticsEvent.order(OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
 				OrderAnalyticsMessage.from(saved, gateway.findItemsByOrderId(orderId),
 						gateway.findPromotionsByOrderId(orderId)), principal.userId())));
 		presenter.present(new OrderProcessResponse(saved, assigned));

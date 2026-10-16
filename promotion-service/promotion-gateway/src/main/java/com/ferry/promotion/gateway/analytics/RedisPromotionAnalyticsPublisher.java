@@ -1,8 +1,7 @@
 package com.ferry.promotion.gateway.analytics;
 
-import com.ferry.promotion.core.analytics.PromotionAnalyticsEventConfig;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsEvent;
 import com.ferry.promotion.core.analytics.PromotionAnalyticsPublisher;
-import com.ferry.promotion.domain.analytics.PromotionAnalyticsEvent;
 import com.ferry.promotion.gateway.analytics.entity.PromotionAnalyticsEventJpa;
 import com.ferry.promotion.gateway.analytics.repository.PromotionAnalyticsEventJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
@@ -30,9 +29,9 @@ public class RedisPromotionAnalyticsPublisher implements PromotionAnalyticsPubli
 	private final PlatformTransactionManager transactionManager;
 
 	@Override
-	public PromotionAnalyticsEvent save(PromotionAnalyticsEventConfig config){
+	public com.ferry.promotion.domain.analytics.PromotionAnalyticsEvent save(PromotionAnalyticsEvent config){
 		String payload = jsonManager.writeValueAsString(config.payload());
-		PromotionAnalyticsEvent event = PromotionAnalyticsEvent.create(config.aggregate(), config.type(), config.tenantId(),
+		com.ferry.promotion.domain.analytics.PromotionAnalyticsEvent event = com.ferry.promotion.domain.analytics.PromotionAnalyticsEvent.create(config.aggregate(), config.type(), config.tenantId(),
 				config.aggregateId(), config.aggregateVersion(), payload, config.actor());
 		String id = idGenerator.generateId();
 		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
@@ -44,7 +43,7 @@ public class RedisPromotionAnalyticsPublisher implements PromotionAnalyticsPubli
 	}
 
 	@Override
-	public void publish(PromotionAnalyticsEvent event){
+	public void publish(com.ferry.promotion.domain.analytics.PromotionAnalyticsEvent event){
 		if(TransactionSynchronizationManager.isSynchronizationActive()){
 			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization(){
 				@Override
@@ -57,7 +56,7 @@ public class RedisPromotionAnalyticsPublisher implements PromotionAnalyticsPubli
 		publishToStream(event);
 	}
 
-	private void publishToStream(PromotionAnalyticsEvent event){
+	private void publishToStream(com.ferry.promotion.domain.analytics.PromotionAnalyticsEvent event){
 		try{
 			analyticsStreamWriter.append(event);
 		}catch(RuntimeException e){

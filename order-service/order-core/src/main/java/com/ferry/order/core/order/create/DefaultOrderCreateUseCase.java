@@ -1,6 +1,6 @@
 package com.ferry.order.core.order.create;
 
-import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEvent;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
@@ -98,7 +98,7 @@ public class DefaultOrderCreateUseCase implements OrderCreateUseCase{
 		List<OrderItem> items = saveItems(request, saved, principal);
 		Order current = Boolean.TRUE.equals(request.pickedUpImmediately())
 				? gateway.markPickedUp(saved, principal) : saved;
-		publisher.publish(publisher.save(OrderAnalyticsEventConfig.order(OrderAnalyticsEventType.ORDER_CREATED,
+		publisher.publish(publisher.save(OrderAnalyticsEvent.order(OrderAnalyticsEventType.ORDER_CREATED,
 				OrderAnalyticsMessage.from(current, items, promotions), principal.userId())));
 		return new OrderCreateResponse(current, items, promotions);
 	}

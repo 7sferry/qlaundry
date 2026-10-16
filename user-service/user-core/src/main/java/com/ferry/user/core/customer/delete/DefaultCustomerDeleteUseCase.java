@@ -1,6 +1,6 @@
 package com.ferry.user.core.customer.delete;
 
-import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.UserAnalyticsEvent;
 import com.ferry.user.core.analytics.CustomerAnalyticsMessage;
 import com.ferry.user.core.analytics.UserAnalyticsPublisher;
 import com.ferry.user.domain.analytics.UserAnalyticsEventType;
@@ -35,7 +35,7 @@ public class DefaultCustomerDeleteUseCase implements CustomerDeleteUseCase{
 				.orElseThrow(() -> new NotFoundException("Customer Not Found"));
 		Customer deleted = gateway.save(customer.markDeleted(principal.userId()));
 		gateway.deleteContacts(customer.id(), principal.userId());
-		analyticsPublisher.publish(analyticsPublisher.save(UserAnalyticsEventConfig.customer(
+		analyticsPublisher.publish(analyticsPublisher.save(UserAnalyticsEvent.customer(
 				UserAnalyticsEventType.CUSTOMER_DELETED, CustomerAnalyticsMessage.from(deleted), principal.userId())));
 		presenter.present(new CustomerDeleteResponse(customer.id()));
 	}

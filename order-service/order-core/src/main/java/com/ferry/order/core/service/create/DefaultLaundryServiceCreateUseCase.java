@@ -1,6 +1,6 @@
 package com.ferry.order.core.service.create;
 
-import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEvent;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
 import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
@@ -39,7 +39,7 @@ public class DefaultLaundryServiceCreateUseCase implements LaundryServiceCreateU
 				new Note(request.description()), new Money(request.pricePerUnit()), request.unit(),
 				request.category(), request.estimatedHours(), request.expressHours(), request.expressMultiplier(), request.popular(),
 				principal.userId()));
-		publisher.publish(publisher.save(OrderAnalyticsEventConfig.laundryService(OrderAnalyticsEventType.LAUNDRY_SERVICE_CREATED,
+		publisher.publish(publisher.save(OrderAnalyticsEvent.laundryService(OrderAnalyticsEventType.LAUNDRY_SERVICE_CREATED,
 				LaundryServiceAnalyticsMessage.from(saved), principal.userId())));
 		presenter.present(new LaundryServiceCreateResponse(saved));
 	}

@@ -1,10 +1,9 @@
 package com.ferry.order.core.service.delete;
 
-import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEvent;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.LaundryServiceAnalyticsMessage;
 import com.ferry.order.domain.analytics.OrderAnalyticsAggregate;
-import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
 import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
 import com.ferry.order.domain.common.Money;
 import com.ferry.order.domain.common.Note;
@@ -54,7 +53,7 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 	@Mock
 	OrderAnalyticsPublisher publisher;
 	@Captor
-	ArgumentCaptor<OrderAnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<OrderAnalyticsEvent> analyticsCaptor;
 	@InjectMocks
 	DefaultLaundryServiceDeleteUseCase useCase;
 	@Mock
@@ -190,16 +189,16 @@ class DefaultLaundryServiceDeleteUseCaseTest{
 				.hasOpenOrders(any(LaundryServiceId.class), any(TenantId.class));
 		willAnswer(invocation -> invocation.<LaundryService>getArgument(0)).given(gateway)
 				.save(any(LaundryService.class));
-		willReturn(OrderAnalyticsEvent.create(OrderAnalyticsAggregate.LAUNDRY_SERVICE, OrderAnalyticsEventType.LAUNDRY_SERVICE_DELETED,
+		willReturn(com.ferry.order.domain.analytics.OrderAnalyticsEvent.create(OrderAnalyticsAggregate.LAUNDRY_SERVICE, OrderAnalyticsEventType.LAUNDRY_SERVICE_DELETED,
 				TENANT_ID, SERVICE_ID, 1, "{}", STAFF_ID)).given(publisher)
-				.save(any(OrderAnalyticsEventConfig.class));
+				.save(any(OrderAnalyticsEvent.class));
 
 		useCase.execute(new LaundryServiceDeleteRequest(SERVICE_ID), principal, presenter);
 
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(OrderAnalyticsEvent.class));
+				.publish(any(com.ferry.order.domain.analytics.OrderAnalyticsEvent.class));
 		then(gateway).should()
 				.hasOpenOrders(eq(new LaundryServiceId(SERVICE_ID)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()

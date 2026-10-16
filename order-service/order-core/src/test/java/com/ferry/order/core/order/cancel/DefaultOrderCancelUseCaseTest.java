@@ -1,10 +1,9 @@
 package com.ferry.order.core.order.cancel;
 
-import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEvent;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
 import com.ferry.order.core.analytics.OrderAnalyticsMessage;
 import com.ferry.order.domain.analytics.OrderAnalyticsAggregate;
-import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
 import com.ferry.order.domain.analytics.OrderAnalyticsEventType;
 import com.ferry.order.domain.common.FullName;
 import com.ferry.order.domain.common.Money;
@@ -60,7 +59,7 @@ class DefaultOrderCancelUseCaseTest{
 	@Mock
 	OrderAnalyticsPublisher publisher;
 	@Captor
-	ArgumentCaptor<OrderAnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<OrderAnalyticsEvent> analyticsCaptor;
 	@InjectMocks
 	DefaultOrderCancelUseCase useCase;
 	@Mock
@@ -107,16 +106,16 @@ class DefaultOrderCancelUseCaseTest{
 				.findById(any(OrderId.class), any(TenantId.class));
 		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
 				.save(any(Order.class));
-		willReturn(OrderAnalyticsEvent.create(OrderAnalyticsAggregate.ORDER, OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
+		willReturn(com.ferry.order.domain.analytics.OrderAnalyticsEvent.create(OrderAnalyticsAggregate.ORDER, OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
 				TENANT_ID, ORDER_ID, 1, "{}", STAFF_ID)).given(publisher)
-				.save(any(OrderAnalyticsEventConfig.class));
+				.save(any(OrderAnalyticsEvent.class));
 
 		useCase.execute(new OrderCancelRequest(ORDER_ID, "customer changed their mind"), principal, presenter);
 
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
 		then(publisher).should()
-				.publish(any(OrderAnalyticsEvent.class));
+				.publish(any(com.ferry.order.domain.analytics.OrderAnalyticsEvent.class));
 		then(gateway).should()
 				.save(orderCaptor.capture());
 		then(presenter).should()

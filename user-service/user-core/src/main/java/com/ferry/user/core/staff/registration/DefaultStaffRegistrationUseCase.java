@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.registration;
 
-import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.UserAnalyticsEvent;
 import com.ferry.user.core.analytics.StaffAnalyticsMessage;
 import com.ferry.user.core.analytics.UserAnalyticsPublisher;
 import com.ferry.user.core.tools.PasswordTool;
@@ -36,7 +36,7 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 		saveEmail(request, registeredUser, principal);
 		saveAddress(request, registeredUser, principal);
 		savePhone(request, registeredUser, principal);
-		analyticsPublisher.publish(analyticsPublisher.save(UserAnalyticsEventConfig.staff(
+		analyticsPublisher.publish(analyticsPublisher.save(UserAnalyticsEvent.staff(
 				UserAnalyticsEventType.STAFF_REGISTERED, StaffAnalyticsMessage.from(registeredUser), principal.userId())));
 		presenter.present(new StaffRegistrationResponse(registeredUser));
 	}

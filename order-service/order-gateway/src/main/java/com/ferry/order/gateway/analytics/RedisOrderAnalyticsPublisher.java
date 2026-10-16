@@ -1,8 +1,7 @@
 package com.ferry.order.gateway.analytics;
 
-import com.ferry.order.core.analytics.OrderAnalyticsEventConfig;
+import com.ferry.order.core.analytics.OrderAnalyticsEvent;
 import com.ferry.order.core.analytics.OrderAnalyticsPublisher;
-import com.ferry.order.domain.analytics.OrderAnalyticsEvent;
 import com.ferry.order.gateway.analytics.entity.OrderAnalyticsEventJpa;
 import com.ferry.order.gateway.analytics.repository.OrderAnalyticsEventJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
@@ -30,9 +29,9 @@ public class RedisOrderAnalyticsPublisher implements OrderAnalyticsPublisher{
 	private final PlatformTransactionManager transactionManager;
 
 	@Override
-	public OrderAnalyticsEvent save(OrderAnalyticsEventConfig config){
+	public com.ferry.order.domain.analytics.OrderAnalyticsEvent save(OrderAnalyticsEvent config){
 		String payload = jsonManager.writeValueAsString(config.payload());
-		OrderAnalyticsEvent event = OrderAnalyticsEvent.create(config.aggregate(), config.type(), config.tenantId(),
+		com.ferry.order.domain.analytics.OrderAnalyticsEvent event = com.ferry.order.domain.analytics.OrderAnalyticsEvent.create(config.aggregate(), config.type(), config.tenantId(),
 				config.aggregateId(), config.aggregateVersion(), payload, config.actor());
 		String id = idGenerator.generateId();
 		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
@@ -45,7 +44,7 @@ public class RedisOrderAnalyticsPublisher implements OrderAnalyticsPublisher{
 	}
 
 	@Override
-	public void publish(OrderAnalyticsEvent event){
+	public void publish(com.ferry.order.domain.analytics.OrderAnalyticsEvent event){
 		if(TransactionSynchronizationManager.isSynchronizationActive()){
 			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization(){
 				@Override
@@ -58,7 +57,7 @@ public class RedisOrderAnalyticsPublisher implements OrderAnalyticsPublisher{
 		publishToStream(event);
 	}
 
-	private void publishToStream(OrderAnalyticsEvent event){
+	private void publishToStream(com.ferry.order.domain.analytics.OrderAnalyticsEvent event){
 		try{
 			analyticsStreamWriter.append(event);
 		}catch(RuntimeException e){

@@ -1,14 +1,12 @@
 package com.ferry.promotion.core.analytics;
 
-import com.ferry.promotion.domain.analytics.PromotionAnalyticsEvent;
-
 /************************
  * Made by [MR Ferry™]  *
  * on Oktober 2026      *
  ************************/
 
 public interface PromotionAnalyticsPublisher{
-	PromotionAnalyticsEvent save(PromotionAnalyticsEventConfig config);
+	com.ferry.promotion.domain.analytics.PromotionAnalyticsEvent save(PromotionAnalyticsEvent config);
 
-	void publish(PromotionAnalyticsEvent event);
+	void publish(com.ferry.promotion.domain.analytics.PromotionAnalyticsEvent event);
 }

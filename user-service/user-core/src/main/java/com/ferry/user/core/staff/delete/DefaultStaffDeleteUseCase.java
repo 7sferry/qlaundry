@@ -1,6 +1,6 @@
 package com.ferry.user.core.staff.delete;
 
-import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.UserAnalyticsEvent;
 import com.ferry.user.core.analytics.StaffAnalyticsMessage;
 import com.ferry.user.core.analytics.UserAnalyticsPublisher;
 import com.ferry.user.domain.analytics.UserAnalyticsEventType;
@@ -37,7 +37,7 @@ public class DefaultStaffDeleteUseCase implements StaffDeleteUseCase{
 			throw new ForbiddenActionException("Cannot delete your own account");
 		}
 		Staff deleted = gateway.save(target.markDeleted(principal.userId()));
-		analyticsPublisher.publish(analyticsPublisher.save(UserAnalyticsEventConfig.staff(UserAnalyticsEventType.STAFF_DELETED,
+		analyticsPublisher.publish(analyticsPublisher.save(UserAnalyticsEvent.staff(UserAnalyticsEventType.STAFF_DELETED,
 				StaffAnalyticsMessage.from(deleted), principal.userId())));
 		presenter.present(new StaffDeleteResponse(target.usernameValue()));
 	}

@@ -1,6 +1,6 @@
 package com.ferry.user.core.customer.delete;
 
-import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.UserAnalyticsEvent;
 import com.ferry.user.core.analytics.CustomerAnalyticsMessage;
 import com.ferry.user.core.analytics.UserAnalyticsPublisher;
 import com.ferry.user.domain.analytics.UserAnalyticsEventType;
@@ -59,7 +59,7 @@ class DefaultCustomerDeleteUseCaseTest{
 	@Captor
 	ArgumentCaptor<CustomerDeleteResponse> responseCaptor;
 	@Captor
-	ArgumentCaptor<UserAnalyticsEventConfig> analyticsCaptor;
+	ArgumentCaptor<UserAnalyticsEvent> analyticsCaptor;
 
 	@Test
 	void givenNonSuperStaffRole_thenThrowsForbiddenActionException(){
@@ -165,7 +165,7 @@ class DefaultCustomerDeleteUseCaseTest{
 
 		Customer saved = customerCaptor.getValue();
 		CustomerDeleteResponse response = responseCaptor.getValue();
-		UserAnalyticsEventConfig analytics = analyticsCaptor.getValue();
+		UserAnalyticsEvent analytics = analyticsCaptor.getValue();
 
 		thenSoftly(softly -> {
 			softly.then(analytics.type()).isEqualTo(UserAnalyticsEventType.CUSTOMER_DELETED);

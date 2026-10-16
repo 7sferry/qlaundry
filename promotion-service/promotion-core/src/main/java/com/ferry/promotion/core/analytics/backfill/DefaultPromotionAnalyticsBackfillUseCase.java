@@ -1,6 +1,6 @@
 package com.ferry.promotion.core.analytics.backfill;
 
-import com.ferry.promotion.core.analytics.PromotionAnalyticsEventConfig;
+import com.ferry.promotion.core.analytics.PromotionAnalyticsEvent;
 import com.ferry.promotion.core.analytics.PromotionAnalyticsOutboxConstant;
 import com.ferry.promotion.core.analytics.PromotionAnalyticsMessage;
 import com.ferry.promotion.core.analytics.PromotionAnalyticsPublisher;
@@ -32,7 +32,7 @@ public class DefaultPromotionAnalyticsBackfillUseCase implements PromotionAnalyt
 		do{
 			page = gateway.findPromotionsAfter(tenantId, afterId, batchSize);
 			for(Promotion promotion : page){
-				publisher.publish(publisher.save(PromotionAnalyticsEventConfig.promotion(
+				publisher.publish(publisher.save(PromotionAnalyticsEvent.promotion(
 						PromotionAnalyticsEventType.PROMOTION_BACKFILLED, PromotionAnalyticsMessage.from(promotion),
 						PromotionAnalyticsOutboxConstant.BACKFILL_ACTOR)));
 				afterId = promotion.id();

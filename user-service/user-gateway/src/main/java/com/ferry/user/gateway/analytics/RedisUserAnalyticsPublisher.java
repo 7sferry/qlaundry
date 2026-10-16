@@ -1,8 +1,7 @@
 package com.ferry.user.gateway.analytics;
 
-import com.ferry.user.core.analytics.UserAnalyticsEventConfig;
+import com.ferry.user.core.analytics.UserAnalyticsEvent;
 import com.ferry.user.core.analytics.UserAnalyticsPublisher;
-import com.ferry.user.domain.analytics.UserAnalyticsEvent;
 import com.ferry.user.gateway.analytics.entity.UserAnalyticsEventJpa;
 import com.ferry.user.gateway.analytics.repository.UserAnalyticsEventJpaRepository;
 import com.ferry.utils.generator.IdGenerator;
@@ -30,9 +29,9 @@ public class RedisUserAnalyticsPublisher implements UserAnalyticsPublisher{
 	private final PlatformTransactionManager transactionManager;
 
 	@Override
-	public UserAnalyticsEvent save(UserAnalyticsEventConfig config){
+	public com.ferry.user.domain.analytics.UserAnalyticsEvent save(UserAnalyticsEvent config){
 		String payload = jsonManager.writeValueAsString(config.payload());
-		UserAnalyticsEvent event = UserAnalyticsEvent.create(config.aggregate(), config.type(), config.tenantId(),
+		com.ferry.user.domain.analytics.UserAnalyticsEvent event = com.ferry.user.domain.analytics.UserAnalyticsEvent.create(config.aggregate(), config.type(), config.tenantId(),
 				config.aggregateId(), config.aggregateVersion(), payload, config.actor());
 		String id = idGenerator.generateId();
 		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
@@ -44,7 +43,7 @@ public class RedisUserAnalyticsPublisher implements UserAnalyticsPublisher{
 	}
 
 	@Override
-	public void publish(UserAnalyticsEvent event){
+	public void publish(com.ferry.user.domain.analytics.UserAnalyticsEvent event){
 		if(TransactionSynchronizationManager.isSynchronizationActive()){
 			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization(){
 				@Override
@@ -57,7 +56,7 @@ public class RedisUserAnalyticsPublisher implements UserAnalyticsPublisher{
 		publishToStream(event);
 	}
 
-	private void publishToStream(UserAnalyticsEvent event){
+	private void publishToStream(com.ferry.user.domain.analytics.UserAnalyticsEvent event){
 		try{
 			analyticsStreamWriter.append(event);
 		}catch(RuntimeException e){
