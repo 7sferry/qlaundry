@@ -20,7 +20,7 @@ import java.util.Set;
  ************************/
 
 public interface OrderProcessGateway{
-	Optional<Order> findById(OrderId orderId, TenantId tenantId);
+	Optional<Order> lockById(OrderId orderId, TenantId tenantId);
 
 	Order save(Order order);
 

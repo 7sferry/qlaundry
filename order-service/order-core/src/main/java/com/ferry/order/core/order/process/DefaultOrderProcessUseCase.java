@@ -41,7 +41,7 @@ public class DefaultOrderProcessUseCase implements OrderProcessUseCase{
 		request.validate();
 		OrderId orderId = new OrderId(request.orderId());
 		TenantId tenantId = new TenantId(principal.tenantId());
-		Order order = gateway.findById(orderId, tenantId)
+		Order order = gateway.lockById(orderId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Order Not Found"));
 		Note staffNotes = request.staffNotes() == null || request.staffNotes().isBlank()
 				? null : new Note(request.staffNotes());

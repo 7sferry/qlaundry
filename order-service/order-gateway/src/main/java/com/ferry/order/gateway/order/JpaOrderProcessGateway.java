@@ -47,8 +47,8 @@ public class JpaOrderProcessGateway implements OrderProcessGateway{
 	private final CryptoTool cryptoTool;
 
 	@Override
-	public Optional<Order> findById(OrderId orderId, TenantId tenantId){
-		return orderJpaRepository.findByIdAndTenantIdAndDeletedIsFalse(orderId.value(), tenantId.value())
+	public Optional<Order> lockById(OrderId orderId, TenantId tenantId){
+		return orderJpaRepository.lockByIdAndTenantId(orderId.value(), tenantId.value())
 				.map(entity -> OrderJpa.construct(entity, cryptoTool));
 	}
 

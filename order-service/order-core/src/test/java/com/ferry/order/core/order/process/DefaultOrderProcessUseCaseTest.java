@@ -111,7 +111,7 @@ class DefaultOrderProcessUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		willReturn(Optional.empty()).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new OrderProcessRequest(ORDER_ID, null, null), principal, presenter))
@@ -160,7 +160,7 @@ class DefaultOrderProcessUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new OrderProcessRequest(ORDER_ID, "already ready", null), principal, presenter))
@@ -207,7 +207,7 @@ class DefaultOrderProcessUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
 				.save(any(Order.class));
 		willReturn(OrderAnalyticsEvent.create(OrderAnalyticsAggregate.ORDER, OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
@@ -221,7 +221,7 @@ class DefaultOrderProcessUseCaseTest{
 		then(publisher).should()
 				.publish(any(OrderAnalyticsEvent.class));
 		then(gateway).should()
-				.findById(eq(new OrderId(ORDER_ID)), eq(new TenantId(TENANT_ID)));
+				.lockById(eq(new OrderId(ORDER_ID)), eq(new TenantId(TENANT_ID)));
 		then(gateway).should()
 				.save(orderCaptor.capture());
 		then(presenter).should()
@@ -278,7 +278,7 @@ class DefaultOrderProcessUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
 				.save(any(Order.class));
 
@@ -341,7 +341,7 @@ class DefaultOrderProcessUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
 				.save(any(Order.class));
 
@@ -409,7 +409,7 @@ class DefaultOrderProcessUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 		willReturn(List.of(washer)).given(gateway)
 				.lockMachines(anySet(), any(TenantId.class));
 
@@ -472,7 +472,7 @@ class DefaultOrderProcessUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 		willReturn(List.of(retiredDryer)).given(gateway)
 				.lockMachines(anySet(), any(TenantId.class));
 
@@ -536,7 +536,7 @@ class DefaultOrderProcessUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 		willReturn(List.of(washer)).given(gateway)
 				.lockMachines(anySet(), any(TenantId.class));
 		willReturn(List.of(new MachineOccupancy(WASHER_ID, OTHER_ORDER_NUMBER))).given(gateway)
@@ -618,7 +618,7 @@ class DefaultOrderProcessUseCaseTest{
 				.build();
 		Set<String> machineIds = new LinkedHashSet<>(List.of(WASHER_ID, " " + DRYER_ID + " ", WASHER_ID));
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 		willReturn(List.of(dryer, washer)).given(gateway)
 				.lockMachines(anySet(), any(TenantId.class));
 		willReturn(List.of()).given(gateway)
