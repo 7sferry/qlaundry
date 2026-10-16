@@ -50,6 +50,10 @@ INSERT INTO analytics_aggregates (id, name) VALUES (2, 'LAUNDRY_SERVICE');
 INSERT INTO analytics_event_statuses (id, name) VALUES (1, 'CREATED');
 INSERT INTO analytics_event_statuses (id, name) VALUES (2, 'PUBLISHED');
 
+INSERT INTO machine_types (id, name) VALUES (1, 'WASHER');
+INSERT INTO machine_types (id, name) VALUES (2, 'DRYER');
+INSERT INTO machine_types (id, name) VALUES (3, 'IRONER');
+
 -- Default laundry service price list (mirrors web/'s old orderFallbackData.ts).
 -- laundry_services is tenant-scoped (tenant_id NOT NULL), so this is a per-tenant
 -- seed, not a global lookup like the tables above — replace REPLACE_WITH_TENANT_ID

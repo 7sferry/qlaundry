@@ -5,7 +5,7 @@
 
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {FileText, MoreHorizontal, Package, PackagePlus, Search, X,} from 'lucide-react';
+import {FileText, MoreHorizontal, Package, PackagePlus, Search, WashingMachine, X,} from 'lucide-react';
 import {
 	Badge,
 	type BadgeTone,
@@ -22,9 +22,11 @@ import {
 } from '@/core/ui';
 import {DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS, type SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency, formatDate, formatRelative} from '@/core/utils/format';
-import {useOrders} from '../useOrders';
+import {useMachineOptions, useOrders} from '../useOrders';
+import MachinePickerModal from '../components/MachinePickerModal';
 import type {Order, OrderStatus} from '../../domain/Order';
 import {CLOTHING_TYPE_LABELS, ORDER_STATUS_LABELS} from '../../domain/Order';
+import {MACHINE_TYPE_LABELS} from '../../domain/Machine';
 import type {OrderSortBy} from '../../domain/OrderRepository';
 
 const SORT_OPTIONS: { value: string; sortBy: OrderSortBy; sortDir: SortDirection; label: string }[] = [
@@ -62,12 +64,22 @@ const NEXT_STATUS_LABEL: Partial<Record<OrderStatus, string>> = {
 	out_for_delivery: 'Complete',
 };
 
+interface MachinePickerTarget {
+	order: Order;
+	mode: 'start' | 'change';
+}
+
 export default function OrderHistoryPage() {
 	const navigate = useNavigate();
 	const {
-		orders, loading, hasNext, hasPrev, refresh, goNext, goPrevious, updateStatus, cancelOrder, viewInvoice,
+		orders, loading, hasNext, hasPrev, refresh, goNext, goPrevious, loadOrder, updateStatus, changeMachines,
+		cancelOrder, viewInvoice,
 	} = useOrders();
+	const machineOptions = useMachineOptions();
 	const toast = useToast();
+	const [pickerTarget, setPickerTarget] = useState<MachinePickerTarget | null>(null);
+	const [pickerSession, setPickerSession] = useState(0);
+	const [pickerSubmitting, setPickerSubmitting] = useState(false);
 
 	const [search, setSearch] = useState('');
 	const [openingInvoice, setOpeningInvoice] = useState(false);
@@ -111,17 +123,54 @@ export default function OrderHistoryPage() {
 
 	if (loading && orders.length === 0) return <Loading label="Loading orders…"/>;
 
+	const showInDrawer = (updated: Order) =>
+			setSelectedOrder((prev) => (prev?.id === updated.id ? updated : prev));
+
+	const openOrder = (order: Order) => {
+		setSelectedOrder(order);
+		loadOrder(order.id)
+				.then(showInDrawer)
+				.catch((err) => toast.error(err instanceof Error ? err.message : 'Failed to load order details.'));
+	};
+
+	const openMachinePicker = (order: Order, mode: MachinePickerTarget['mode']) => {
+		setPickerTarget({order, mode});
+		setPickerSession((session) => session + 1);
+		void machineOptions.load();
+	};
+
 	const handleAdvance = async (order: Order) => {
 		const next = NEXT_STATUS[order.status];
 		if (!next) return;
+		if (next === 'in_progress') {
+			openMachinePicker(order, 'start');
+			return;
+		}
 		try {
-			await updateStatus({orderId: order.id, status: next});
+			showInDrawer(await updateStatus({orderId: order.id, status: next}));
 			toast.success(`Order ${order.orderNumber} status updated: ${ORDER_STATUS_LABELS[next]}`);
-			if (selectedOrder?.id === order.id) {
-				setSelectedOrder((prev) => prev ? {...prev, status: next} : null);
-			}
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to update status.');
+		}
+	};
+
+	const handleMachinesConfirm = async (machineIds: string[]) => {
+		if (!pickerTarget) return;
+		const {order, mode} = pickerTarget;
+		setPickerSubmitting(true);
+		try {
+			if (mode === 'start') {
+				showInDrawer(await updateStatus({orderId: order.id, status: 'in_progress', machineIds}));
+				toast.success(`Order ${order.orderNumber} status updated: ${ORDER_STATUS_LABELS.in_progress}`);
+			} else {
+				showInDrawer(await changeMachines(order.id, machineIds));
+				toast.success(`Machines updated for ${order.orderNumber}.`);
+			}
+			setPickerTarget(null);
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Failed to save machines.');
+		} finally {
+			setPickerSubmitting(false);
 		}
 	};
 
@@ -241,7 +290,7 @@ export default function OrderHistoryPage() {
 							</thead>
 							<tbody>
 							{orders.map((order) => (
-									<tr key={order.id} className="table-row--clickable" onClick={() => setSelectedOrder(order)}>
+									<tr key={order.id} className="table-row--clickable" onClick={() => openOrder(order)}>
 										<td>
 											<strong>{order.orderNumber}</strong>
 											<span className="table-sub">{formatRelative(order.createdAt)}</span>
@@ -277,7 +326,7 @@ export default function OrderHistoryPage() {
 											<button
 													className="icon-btn"
 													aria-label="Detail"
-													onClick={() => setSelectedOrder(order)}
+													onClick={() => openOrder(order)}
 											>
 												<MoreHorizontal size={16}/>
 											</button>
@@ -366,6 +415,32 @@ export default function OrderHistoryPage() {
 									</div>
 								</div>
 
+								{(selectedOrder.status === 'in_progress' || !!selectedOrder.machines?.length) && (
+										<div className="detail-section">
+											<h4>Machines</h4>
+											{selectedOrder.machines === undefined ? (
+													<p className="muted" style={{fontSize: 13}}>Loading machines…</p>
+											) : selectedOrder.machines.length > 0 ? (
+													<div className="items-list">
+														{selectedOrder.machines.map((machine) => (
+																<div key={machine.machineId} className="item-row item-row--view">
+																	<span>{machine.name}</span>
+																	<Badge tone="neutral">{MACHINE_TYPE_LABELS[machine.type]}</Badge>
+																</div>
+														))}
+													</div>
+											) : (
+													<p className="muted" style={{fontSize: 13}}>No machines recorded.</p>
+											)}
+											{selectedOrder.status === 'in_progress' && selectedOrder.machines !== undefined && (
+													<Button variant="ghost" style={{marginTop: 8}}
+													        onClick={() => openMachinePicker(selectedOrder, 'change')}>
+														<WashingMachine size={15}/> Change machines
+													</Button>
+											)}
+										</div>
+								)}
+
 								<div className="detail-section">
   							<h4>Garments</h4>
 									<div className="items-list">
@@ -449,6 +524,26 @@ export default function OrderHistoryPage() {
 							</div>
 					)}
 				</Drawer>
+
+				<MachinePickerModal
+						key={pickerSession}
+						open={pickerTarget !== null}
+						mode={pickerTarget?.mode ?? 'start'}
+						orderNumber={pickerTarget?.order.orderNumber ?? ''}
+						initialSelection={pickerTarget?.mode === 'change' ? pickerTarget.order.machines ?? [] : []}
+						machines={machineOptions.machines}
+						loading={machineOptions.loading}
+						error={machineOptions.error}
+						hasNext={machineOptions.hasNext}
+						hasPrev={machineOptions.hasPrev}
+						hasAnyMachine={machineOptions.hasAnyMachine}
+						submitting={pickerSubmitting}
+						onNext={() => void machineOptions.goNext()}
+						onPrev={() => void machineOptions.goPrevious()}
+						onTypeChange={(type) => void machineOptions.load(type)}
+						onCancel={() => setPickerTarget(null)}
+						onConfirm={(machineIds) => void handleMachinesConfirm(machineIds)}
+				/>
 			</>
 	);
 }

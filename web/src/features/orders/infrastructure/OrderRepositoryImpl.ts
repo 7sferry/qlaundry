@@ -6,7 +6,8 @@
 import {env} from '@/core/config/env';
 import {httpClient} from '@/core/http/httpClient';
 import type {Page} from '@/core/pagination/Pagination';
-import type {InvoiceLink, OrderFilters, OrderRepository} from '../domain/OrderRepository';
+import type {InvoiceLink, MachineOptionFilters, OrderFilters, OrderRepository} from '../domain/OrderRepository';
+import type {MachineOption, MachineType, OrderMachine} from '../domain/Machine';
 import type {
 	ClothingType,
 	CreateOrderInput,
@@ -54,6 +55,26 @@ interface OrderApiItem {
 	completedAt?: number | null;
 	createdAt: number;
 	items: { type: string; label: string | null; quantity: number }[];
+	machines?: OrderMachineApiItem[];
+}
+
+interface OrderMachineApiItem {
+	machineId: string;
+	name: string;
+	type: string;
+}
+
+interface MachineListApiResponse {
+	machines: {
+		id: string;
+		name: string;
+		type: string;
+		capacityKg: number | null;
+		inUse: boolean;
+		currentOrderNumber: string | null;
+	}[];
+	nextCursor: string | null;
+	prevCursor: string | null;
 }
 
 interface OrderListApiResponse {
@@ -133,7 +154,21 @@ function toOrder(item: OrderApiItem): Order {
 		pickupDate: toIso(item.pickupAt),
 		estimatedDelivery: toIso(item.estimatedDeliveryAt),
 		completedAt: item.completedAt ? toIso(item.completedAt) : undefined,
+		machines: item.machines?.map(toOrderMachine),
 	};
+}
+
+function toOrderMachine(item: OrderMachineApiItem): OrderMachine {
+	return {machineId: item.machineId, name: item.name, type: item.type.toLowerCase() as MachineType};
+}
+
+function buildMachineOptionQuery(filters?: MachineOptionFilters): string {
+	const params = new URLSearchParams({activeOnly: 'true', sortBy: 'NAME', sortDir: 'ASC'});
+	if (filters?.type) params.set('type', filters.type.toUpperCase());
+	if (filters?.after) params.set('after', filters.after);
+	if (filters?.before) params.set('before', filters.before);
+	if (filters?.pageSize) params.set('pageSize', String(filters.pageSize));
+	return `?${params.toString()}`;
 }
 
 /**
@@ -251,12 +286,35 @@ export class OrderRepositoryImpl implements OrderRepository {
 		await httpClient.patch<{ id: string }>(endpoint, {
 			orderId: input.orderId,
 			staffNotes: input.staffNotes,
+			...(input.status === 'in_progress' ? {machineIds: input.machineIds ?? []} : {}),
 		});
 		return this.getOrderById(input.orderId);
 	}
 
 	async cancelOrder(id: string, reason?: string): Promise<Order> {
 		return this.updateOrderStatus({orderId: id, status: 'cancelled', staffNotes: reason});
+	}
+
+	async getMachineOptions(filters?: MachineOptionFilters): Promise<Page<MachineOption>> {
+		const res = await httpClient.get<MachineListApiResponse>(
+				`${ORDER_ENDPOINTS.machineList}${buildMachineOptionQuery(filters)}`);
+		return {
+			items: res.machines.map((m) => ({
+				id: m.id,
+				name: m.name,
+				type: m.type.toLowerCase() as MachineType,
+				capacityKg: m.capacityKg,
+				inUse: m.inUse,
+				currentOrderNumber: m.currentOrderNumber,
+			})),
+			nextCursor: res.nextCursor,
+			prevCursor: res.prevCursor,
+		};
+	}
+
+	async changeMachines(orderId: string, machineIds: string[]): Promise<Order> {
+		await httpClient.patch<{ id: string }>(ORDER_ENDPOINTS.machines, {orderId, machineIds});
+		return this.getOrderById(orderId);
 	}
 }
 

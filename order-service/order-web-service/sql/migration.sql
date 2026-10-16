@@ -80,3 +80,9 @@ CREATE SCHEMA IF NOT EXISTS orders;
 -- promotion-service's own schema and is a plain varchar, never a foreign key — same policy as `tenant_id`
 -- and `customer_id`. `code` is a snapshot: promotion-service may rename or soft-delete the promotion later,
 -- and the invoice must keep what it was raised with.
+
+-- Machines: ddl-auto creates `machines`, `machine_types` and `order_machines` on the next boot. Then run the
+-- three machine_types inserts from init.sql (WASHER 1, DRYER 2, IRONER 3); until they exist every
+-- /machine/create fails at the FK on `machines.type_id`. Orders processed without machines are unaffected.
+-- `order_machines.machine_id` is a plain varchar like `order_promotions.promotion_id`, and `machine_name` /
+-- `machine_type_id` are snapshots, so renaming a machine never rewrites an order's history.

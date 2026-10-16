@@ -4,10 +4,12 @@ import com.ferry.order.domain.common.FullName;
 import com.ferry.order.domain.common.Money;
 import com.ferry.order.domain.common.Phone;
 import com.ferry.order.domain.common.exception.NotFoundException;
+import com.ferry.order.domain.machine.MachineType;
 import com.ferry.order.domain.order.ClothingType;
 import com.ferry.order.domain.order.Order;
 import com.ferry.order.domain.order.OrderId;
 import com.ferry.order.domain.order.OrderItem;
+import com.ferry.order.domain.order.OrderMachine;
 import com.ferry.order.domain.order.OrderNumber;
 import com.ferry.order.domain.order.OrderPriority;
 import com.ferry.order.domain.order.OrderPromotion;
@@ -165,6 +167,11 @@ class DefaultOrderDetailUseCaseTest{
 				.findItemsByOrderId(any(OrderId.class));
 		willReturn(promotions).given(gateway)
 				.findPromotionsByOrderId(any(OrderId.class));
+		List<OrderMachine> machines = List.of(new OrderMachine("01ORDERMACHINESEPRAI00000", ORDER_ID,
+				"01MACHINEWASHERENAM000000", "Mesin Cuci 6", MachineType.WASHER, 0, false, now, STAFF_ID, now,
+				STAFF_ID));
+		willReturn(machines).given(gateway)
+				.findMachinesByOrderId(any(OrderId.class));
 
 		useCase.execute(new OrderDetailRequest(ORDER_ID), principal, presenter);
 
@@ -174,6 +181,8 @@ class DefaultOrderDetailUseCaseTest{
 				.findItemsByOrderId(eq(new OrderId(ORDER_ID)));
 		then(gateway).should()
 				.findPromotionsByOrderId(eq(new OrderId(ORDER_ID)));
+		then(gateway).should()
+				.findMachinesByOrderId(eq(new OrderId(ORDER_ID)));
 		then(presenter).should()
 				.present(responseCaptor.capture());
 
@@ -184,6 +193,7 @@ class DefaultOrderDetailUseCaseTest{
 			softly.then(response.items()).isEqualTo(items);
 			softly.then(response.promotions()).isEqualTo(promotions);
 			softly.then(response.promotions().getFirst().code()).isEqualTo("SEPRAI20");
+			softly.then(response.machines()).isEqualTo(machines);
 		});
 	}
 

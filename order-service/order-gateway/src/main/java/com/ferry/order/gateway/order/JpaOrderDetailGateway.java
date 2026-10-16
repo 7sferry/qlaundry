@@ -4,13 +4,16 @@ import com.ferry.order.core.order.detail.OrderDetailGateway;
 import com.ferry.order.domain.order.Order;
 import com.ferry.order.domain.order.OrderId;
 import com.ferry.order.domain.order.OrderItem;
+import com.ferry.order.domain.order.OrderMachine;
 import com.ferry.order.domain.order.OrderPromotion;
 import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.gateway.order.entity.OrderItemJpa;
 import com.ferry.order.gateway.order.entity.OrderJpa;
+import com.ferry.order.gateway.order.entity.OrderMachineJpa;
 import com.ferry.order.gateway.order.entity.OrderPromotionJpa;
 import com.ferry.order.gateway.order.repository.OrderItemJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderJpaRepository;
+import com.ferry.order.gateway.order.repository.OrderMachineJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderPromotionJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ public class JpaOrderDetailGateway implements OrderDetailGateway{
 	private final OrderJpaRepository orderJpaRepository;
 	private final OrderItemJpaRepository orderItemJpaRepository;
 	private final OrderPromotionJpaRepository orderPromotionJpaRepository;
+	private final OrderMachineJpaRepository orderMachineJpaRepository;
 	private final CryptoTool cryptoTool;
 
 	@Override
@@ -47,6 +51,13 @@ public class JpaOrderDetailGateway implements OrderDetailGateway{
 	public List<OrderPromotion> findPromotionsByOrderId(OrderId orderId){
 		return orderPromotionJpaRepository.findByOrderIdAndDeletedIsFalseOrderById(orderId.value()).stream()
 				.map(OrderPromotionJpa::construct)
+				.toList();
+	}
+
+	@Override
+	public List<OrderMachine> findMachinesByOrderId(OrderId orderId){
+		return orderMachineJpaRepository.findByOrderIdAndDeletedIsFalseOrderById(orderId.value()).stream()
+				.map(OrderMachineJpa::construct)
 				.toList();
 	}
 

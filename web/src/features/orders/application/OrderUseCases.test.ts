@@ -1,7 +1,8 @@
 import {describe, expect, it, vi} from 'vitest';
-import type {OrderRepository} from '../domain/OrderRepository';
+import type {MachineOptionFilters, OrderRepository} from '../domain/OrderRepository';
 import type {CreateOrderInput, Order, UpdateOrderStatusInput} from '../domain/Order';
 import type {LaundryService} from '../domain/Service';
+import type {MachineOption} from '../domain/Machine';
 import {orderUseCases} from './OrderUseCases';
 
 const mockOrder: Order = {
@@ -44,6 +45,23 @@ const mockOrderPage = {items: [mockOrder], nextCursor: null, prevCursor: null};
 
 const mockInvoiceLink = {url: 'https://localhost:8100/api/public/invoice/pdf?token=abc.def', expiresAt: 1_720_000_000_000};
 
+const mockMachineOption: MachineOption = {
+	id: 'mch_1',
+	name: 'Mesin Cuci 1',
+	type: 'washer',
+	capacityKg: 8,
+	inUse: true,
+	currentOrderNumber: 'INV-20261016-ABC123',
+};
+
+const mockMachinePage = {items: [mockMachineOption], nextCursor: 'next', prevCursor: null};
+
+const mockOrderWithMachines: Order = {
+	...mockOrder,
+	status: 'in_progress',
+	machines: [{machineId: 'mch_1', name: 'Mesin Cuci 1', type: 'washer'}],
+};
+
 function makeRepo(): { repo: OrderRepository; fns: Record<string, ReturnType<typeof vi.fn>> } {
 	const fns = {
 		getOrders: vi.fn().mockResolvedValue(mockOrderPage),
@@ -53,6 +71,8 @@ function makeRepo(): { repo: OrderRepository; fns: Record<string, ReturnType<typ
 		createOrder: vi.fn().mockResolvedValue(mockOrder),
 		updateOrderStatus: vi.fn().mockResolvedValue(mockOrder),
 		cancelOrder: vi.fn().mockResolvedValue(mockOrder),
+		getMachineOptions: vi.fn().mockResolvedValue(mockMachinePage),
+		changeMachines: vi.fn().mockResolvedValue(mockOrderWithMachines),
 	};
 	return {repo: fns as unknown as OrderRepository, fns};
 }
@@ -136,5 +156,45 @@ describe('orderUseCases', () => {
 		await useCases.cancelOrder('ord_1', 'Customer request');
 
 		expect(fns.cancelOrder).toHaveBeenCalledWith('ord_1', 'Customer request');
+	});
+
+	it('updateStatus passes the picked machine ids through', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = orderUseCases(repo);
+		const input: UpdateOrderStatusInput = {orderId: 'ord_1', status: 'in_progress', machineIds: ['mch_1', 'mch_2']};
+
+		await useCases.updateStatus(input);
+
+		expect(fns.updateOrderStatus).toHaveBeenCalledWith(input);
+	});
+
+	it('listMachineOptions passes the filters through to repository.getMachineOptions', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = orderUseCases(repo);
+		const filters: MachineOptionFilters = {type: 'dryer', after: 'cursor-1'};
+
+		const result = await useCases.listMachineOptions(filters);
+
+		expect(fns.getMachineOptions).toHaveBeenCalledWith(filters);
+		expect(result).toEqual(mockMachinePage);
+	});
+
+	it('changeMachines delegates to repository.changeMachines, an empty list included', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = orderUseCases(repo);
+
+		const result = await useCases.changeMachines('ord_1', []);
+
+		expect(fns.changeMachines).toHaveBeenCalledWith('ord_1', []);
+		expect(result).toBe(mockOrderWithMachines);
+	});
+
+	it('changeMachines propagates repository errors', async () => {
+		const {repo, fns} = makeRepo();
+		fns.changeMachines.mockRejectedValue(new Error('Machine Mesin Cuci 1 is in use by INV-20261016-ABC123'));
+		const useCases = orderUseCases(repo);
+
+		await expect(useCases.changeMachines('ord_1', ['mch_1']))
+				.rejects.toThrow('Machine Mesin Cuci 1 is in use by INV-20261016-ABC123');
 	});
 });

@@ -36,7 +36,8 @@ public record OrderDetailRestResponse(
 	long estimatedDeliveryAt,
 	Long completedAt,
 	long createdAt,
-	List<Item> items){
+	List<Item> items,
+	List<Machine> machines){
 
 	public record Item(
 		String type,
@@ -49,6 +50,13 @@ public record OrderDetailRestResponse(
 		String promotionId,
 		String code,
 		BigDecimal discountAmount){
+
+	}
+
+	public record Machine(
+		String machineId,
+		String name,
+		String type){
 
 	}
 

@@ -3,6 +3,7 @@ package com.ferry.order.core.order.detail;
 import com.ferry.order.domain.order.Order;
 import com.ferry.order.domain.order.OrderId;
 import com.ferry.order.domain.order.OrderItem;
+import com.ferry.order.domain.order.OrderMachine;
 import com.ferry.order.domain.order.OrderPromotion;
 import com.ferry.order.domain.tenant.TenantId;
 
@@ -20,4 +21,6 @@ public interface OrderDetailGateway{
 	List<OrderItem> findItemsByOrderId(OrderId orderId);
 
 	List<OrderPromotion> findPromotionsByOrderId(OrderId orderId);
+
+	List<OrderMachine> findMachinesByOrderId(OrderId orderId);
 }

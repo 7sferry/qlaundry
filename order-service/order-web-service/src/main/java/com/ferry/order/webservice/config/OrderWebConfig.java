@@ -11,6 +11,15 @@ import com.ferry.order.core.invoice.pdf.DefaultInvoicePdfUseCase;
 import com.ferry.order.core.invoice.pdf.InvoiceComposer;
 import com.ferry.order.core.invoice.pdf.InvoicePdfGateway;
 import com.ferry.order.core.invoice.pdf.InvoicePdfUseCase;
+import com.ferry.order.core.machine.create.DefaultMachineCreateUseCase;
+import com.ferry.order.core.machine.create.MachineCreateGateway;
+import com.ferry.order.core.machine.create.MachineCreateUseCase;
+import com.ferry.order.core.machine.list.DefaultMachineListUseCase;
+import com.ferry.order.core.machine.list.MachineListGateway;
+import com.ferry.order.core.machine.list.MachineListUseCase;
+import com.ferry.order.core.machine.update.DefaultMachineUpdateUseCase;
+import com.ferry.order.core.machine.update.MachineUpdateGateway;
+import com.ferry.order.core.machine.update.MachineUpdateUseCase;
 import com.ferry.order.core.order.cancel.DefaultOrderCancelUseCase;
 import com.ferry.order.core.order.cancel.OrderCancelGateway;
 import com.ferry.order.core.order.cancel.OrderCancelUseCase;
@@ -30,6 +39,9 @@ import com.ferry.order.core.order.detail.OrderDetailUseCase;
 import com.ferry.order.core.order.list.DefaultOrderListUseCase;
 import com.ferry.order.core.order.list.OrderListGateway;
 import com.ferry.order.core.order.list.OrderListUseCase;
+import com.ferry.order.core.order.machines.DefaultOrderMachinesUseCase;
+import com.ferry.order.core.order.machines.OrderMachinesGateway;
+import com.ferry.order.core.order.machines.OrderMachinesUseCase;
 import com.ferry.order.core.order.payment.DefaultOrderPaymentUseCase;
 import com.ferry.order.core.order.payment.OrderPaymentGateway;
 import com.ferry.order.core.order.payment.OrderPaymentUseCase;
@@ -65,6 +77,10 @@ import com.ferry.order.gateway.analytics.repository.OrderAnalyticsEventJpaReposi
 import com.ferry.order.gateway.customer.HttpOrderCustomerGateway;
 import com.ferry.order.gateway.invoice.HtmlInvoiceComposer;
 import com.ferry.order.gateway.invoice.JpaInvoicePdfGateway;
+import com.ferry.order.gateway.machine.JpaMachineCreateGateway;
+import com.ferry.order.gateway.machine.JpaMachineListGateway;
+import com.ferry.order.gateway.machine.JpaMachineUpdateGateway;
+import com.ferry.order.gateway.machine.repository.MachineJpaRepository;
 import com.ferry.order.gateway.order.*;
 import com.ferry.order.gateway.order.repository.*;
 import com.ferry.order.gateway.promotion.HttpOrderPromotionGateway;
@@ -177,6 +193,38 @@ public class OrderWebConfig{
 	}
 
 	@Bean
+	MachineCreateGateway machineCreateGateway(MachineJpaRepository machineJpaRepository, IdGenerator idGenerator){
+		return new JpaMachineCreateGateway(machineJpaRepository, idGenerator);
+	}
+
+	@Bean
+	MachineCreateUseCase machineCreateUseCase(MachineCreateGateway machineCreateGateway){
+		return new DefaultMachineCreateUseCase(machineCreateGateway);
+	}
+
+	@Bean
+	MachineListGateway machineListGateway(MachineJpaRepository machineJpaRepository,
+	                                      OrderMachineJpaRepository orderMachineJpaRepository){
+		return new JpaMachineListGateway(machineJpaRepository, orderMachineJpaRepository);
+	}
+
+	@Bean
+	MachineListUseCase machineListUseCase(MachineListGateway machineListGateway){
+		return new DefaultMachineListUseCase(machineListGateway);
+	}
+
+	@Bean
+	MachineUpdateGateway machineUpdateGateway(MachineJpaRepository machineJpaRepository,
+	                                          OrderMachineJpaRepository orderMachineJpaRepository){
+		return new JpaMachineUpdateGateway(machineJpaRepository, orderMachineJpaRepository);
+	}
+
+	@Bean
+	MachineUpdateUseCase machineUpdateUseCase(MachineUpdateGateway machineUpdateGateway){
+		return new DefaultMachineUpdateUseCase(machineUpdateGateway);
+	}
+
+	@Bean
 	OrderCustomerGateway customerVerificationGateway(UserServiceClient userServiceClient){
 		return new HttpOrderCustomerGateway(userServiceClient);
 	}
@@ -255,9 +303,10 @@ public class OrderWebConfig{
 	OrderDetailGateway orderDetailGateway(OrderJpaRepository orderJpaRepository,
 	                                      OrderItemJpaRepository orderItemJpaRepository,
 	                                      OrderPromotionJpaRepository orderPromotionJpaRepository,
+	                                      OrderMachineJpaRepository orderMachineJpaRepository,
 	                                      CryptoTool cryptoTool){
 		return new JpaOrderDetailGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
-				cryptoTool);
+				orderMachineJpaRepository, cryptoTool);
 	}
 
 	@Bean
@@ -360,15 +409,33 @@ public class OrderWebConfig{
 	OrderProcessGateway orderProcessGateway(OrderJpaRepository orderJpaRepository,
 	                                        OrderItemJpaRepository orderItemJpaRepository,
 	                                        OrderPromotionJpaRepository orderPromotionJpaRepository,
+	                                        OrderMachineJpaRepository orderMachineJpaRepository,
+	                                        MachineJpaRepository machineJpaRepository,
+	                                        IdGenerator idGenerator,
 	                                        CryptoTool cryptoTool){
 		return new JpaOrderProcessGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
-				cryptoTool);
+				orderMachineJpaRepository, machineJpaRepository, idGenerator, cryptoTool);
 	}
 
 	@Bean
 	OrderProcessUseCase orderProcessUseCase(OrderProcessGateway orderProcessGateway,
 	                                        OrderAnalyticsPublisher analyticsEventPublisher){
 		return new DefaultOrderProcessUseCase(orderProcessGateway, analyticsEventPublisher);
+	}
+
+	@Bean
+	OrderMachinesGateway orderMachinesGateway(OrderJpaRepository orderJpaRepository,
+	                                          OrderMachineJpaRepository orderMachineJpaRepository,
+	                                          MachineJpaRepository machineJpaRepository,
+	                                          IdGenerator idGenerator,
+	                                          CryptoTool cryptoTool){
+		return new JpaOrderMachinesGateway(orderJpaRepository, orderMachineJpaRepository, machineJpaRepository,
+				idGenerator, cryptoTool);
+	}
+
+	@Bean
+	OrderMachinesUseCase orderMachinesUseCase(OrderMachinesGateway orderMachinesGateway){
+		return new DefaultOrderMachinesUseCase(orderMachinesGateway);
 	}
 
 	@Bean

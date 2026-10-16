@@ -20,8 +20,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @Slf4j
 public class OrderWebExceptionHandler{
 
-	@ExceptionHandler({InvalidOrderStatusException.class, UnsupportedPaymentMethodException.class,
-			ConstraintViolationException.class})
+	@ExceptionHandler({InvalidOrderStatusException.class, InvalidOrderStateException.class,
+			UnsupportedPaymentMethodException.class, ConstraintViolationException.class})
 	ProblemDetail handleBadRequest(RuntimeException e){
 		log.warn(e.getMessage(), e);
 		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
@@ -52,6 +52,12 @@ public class OrderWebExceptionHandler{
 		log.error(e.getMessage(), e);
 		return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE,
 				e.getMessage());
+	}
+
+	@ExceptionHandler(MachineBusyException.class)
+	ProblemDetail handleConflict(MachineBusyException e){
+		log.warn(e.getMessage(), e);
+		return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
 	}
 
 	@ExceptionHandler(OrderForbiddenActionException.class)

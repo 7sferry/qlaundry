@@ -1,0 +1,78 @@
+package com.ferry.order.gateway.order;
+
+import com.ferry.order.core.order.machines.OrderMachinesGateway;
+import com.ferry.order.domain.machine.Machine;
+import com.ferry.order.domain.machine.MachineId;
+import com.ferry.order.domain.machine.MachineOccupancy;
+import com.ferry.order.domain.order.Order;
+import com.ferry.order.domain.order.OrderId;
+import com.ferry.order.domain.order.OrderMachine;
+import com.ferry.order.domain.order.OrderStatus;
+import com.ferry.order.domain.tenant.TenantId;
+import com.ferry.order.gateway.machine.entity.MachineJpa;
+import com.ferry.order.gateway.machine.repository.MachineJpaRepository;
+import com.ferry.order.gateway.order.entity.OrderJpa;
+import com.ferry.order.gateway.order.entity.OrderMachineJpa;
+import com.ferry.order.gateway.order.repository.OrderJpaRepository;
+import com.ferry.order.gateway.order.repository.OrderMachineJpaRepository;
+import com.ferry.utils.crypto.CryptoTool;
+import com.ferry.utils.generator.IdGenerator;
+import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+/************************
+ * Made by [MR Ferry™]  *
+ * on Oktober 2026      *
+ ************************/
+
+@RequiredArgsConstructor
+public class JpaOrderMachinesGateway implements OrderMachinesGateway{
+	private final OrderJpaRepository orderJpaRepository;
+	private final OrderMachineJpaRepository orderMachineJpaRepository;
+	private final MachineJpaRepository machineJpaRepository;
+	private final IdGenerator idGenerator;
+	private final CryptoTool cryptoTool;
+
+	@Override
+	public Optional<Order> findById(OrderId orderId, TenantId tenantId){
+		return orderJpaRepository.findByIdAndTenantIdAndDeletedIsFalse(orderId.value(), tenantId.value())
+				.map(entity -> OrderJpa.construct(entity, cryptoTool));
+	}
+
+	@Override
+	public List<OrderMachine> findMachinesByOrderId(OrderId orderId){
+		return orderMachineJpaRepository.findByOrderIdAndDeletedIsFalseOrderById(orderId.value()).stream()
+				.map(OrderMachineJpa::construct)
+				.toList();
+	}
+
+	@Override
+	public List<Machine> lockMachines(Set<MachineId> machineIds, TenantId tenantId){
+		List<String> ids = machineIds.stream().map(MachineId::value).toList();
+		return machineJpaRepository.lockByIdsAndTenantId(ids, tenantId.value()).stream()
+				.map(MachineJpa::construct)
+				.toList();
+	}
+
+	@Override
+	public List<MachineOccupancy> findOccupancies(Set<MachineId> machineIds, OrderId excludedOrderId){
+		List<String> ids = machineIds.stream().map(MachineId::value).toList();
+		return orderMachineJpaRepository.findOccupanciesExcept(ids, OrderStatus.IN_PROGRESS.getValue(),
+				excludedOrderId.value());
+	}
+
+	@Override
+	public List<OrderMachine> saveMachines(List<OrderMachine> machines){
+		List<OrderMachineJpa> entities = machines.stream()
+				.map(machine -> OrderMachineJpa.construct(machine.id() == null ? idGenerator.generateId() : machine.id(),
+						machine, orderJpaRepository.getReferenceById(machine.orderId())))
+				.toList();
+		return orderMachineJpaRepository.saveAll(entities).stream()
+				.map(OrderMachineJpa::construct)
+				.toList();
+	}
+
+}

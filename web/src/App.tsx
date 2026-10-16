@@ -17,6 +17,7 @@ import OrderHistoryPage from '@/features/orders/presentation/pages/OrderHistoryP
 import ReportsPage from '@/features/reports/presentation/pages/ReportsPage';
 import CustomersPage from '@/features/customers/presentation/pages/CustomersPage';
 import ServicesPage from '@/features/services/presentation/pages/ServicesPage';
+import MachinesPage from '@/features/machines/presentation/pages/MachinesPage';
 import PromotionsPage from '@/features/promotions/presentation/pages/PromotionsPage';
 import StaffPage from '@/features/staff/presentation/pages/StaffPage';
 import StaffSettingsPage from '@/features/staff/presentation/pages/StaffSettingsPage';
@@ -89,6 +90,7 @@ export default function App() {
                   <Route path="/orders/history" element={<OrderHistoryPage/>}/>
                   <Route path="/customers" element={<CustomersPage/>}/>
                   <Route path="/services" element={<ServicesPage/>}/>
+                  <Route path="/machines" element={<MachinesPage/>}/>
                   <Route path="/promotions" element={<PromotionsPage/>}/>
                   <Route path="/staff" element={<StaffPage/>}/>
                   <Route path="/settings" element={<StaffSettingsPage/>}/>

@@ -4,6 +4,7 @@ import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.order.Order;
 import com.ferry.order.domain.order.OrderId;
 import com.ferry.order.domain.order.OrderItem;
+import com.ferry.order.domain.order.OrderMachine;
 import com.ferry.order.domain.order.OrderPromotion;
 import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
@@ -29,7 +30,8 @@ public class DefaultOrderDetailUseCase implements OrderDetailUseCase{
 				.orElseThrow(() -> new NotFoundException("Order Not Found"));
 		List<OrderItem> items = gateway.findItemsByOrderId(orderId);
 		List<OrderPromotion> promotions = gateway.findPromotionsByOrderId(orderId);
-		presenter.present(new OrderDetailResponse(order, items, promotions));
+		List<OrderMachine> machines = gateway.findMachinesByOrderId(orderId);
+		presenter.present(new OrderDetailResponse(order, items, promotions, machines));
 	}
 
 }

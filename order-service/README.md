@@ -2,7 +2,7 @@
 
 Port **8103** · Postgres schema `orders` · Redis (analytics events only)
 
-Owns each laundry's price list, its orders, the daily pickup/delivery schedule and invoices. It verifies user-service's tokens (it can't issue them), calls [user-service](../user-service/README.md) and [promotion-service](../promotion-service/README.md) over `/internal/`, and feeds [analytics-service](../analytics-service/README.md) through a Redis stream.
+Owns each laundry's price list, its machines, its orders, the daily pickup/delivery schedule and invoices. It verifies user-service's tokens (it can't issue them), calls [user-service](../user-service/README.md) and [promotion-service](../promotion-service/README.md) over `/internal/`, and feeds [analytics-service](../analytics-service/README.md) through a Redis stream.
 
 Modules: `order-domain`, `order-core`, `order-gateway`, `order-web-service`.
 
@@ -21,6 +21,17 @@ DELETE /service/delete   ?serviceId=   super-staff; refused while the service st
 
 Express is optional per service: send `expressHours` (1 to `estimatedHours`) and `expressMultiplier` (at least 1) together, or leave both out for a service that offers no express. Without `estimatedDeliveryAt`, an order is due `expressHours` after pickup for `EXPRESS` and `estimatedHours` otherwise.
 
+### Machines
+
+```
+POST   /machine/create   {name, type, capacityKg?, description?}   super-staff
+GET    /machine/list     ?name=&type=&activeOnly=&after=&before=&sortBy=&sortDir=&pageSize=   (activeOnly defaults to true; default sort NAME ASC)
+                         → machines: [{id, name, type, capacityKg, description, active, inUse, currentOrderNumber}]
+PUT    /machine/update   {machineId, name, type, capacityKg?, description?, active}   super-staff
+```
+
+`type` is `WASHER`, `DRYER` or `IRONER`. Names are unique per tenant (case-insensitive). There is no delete: retire a machine with `active: false`. A machine is **in use** while it is on an `IN_PROGRESS` order; deactivating it then is a 409.
+
 ### Orders
 
 ```
@@ -30,7 +41,8 @@ GET    /order/detail            ?orderId=
 GET    /order/schedule          ?date=yyyy-MM-dd   → today's (or that day's) due pickups and deliveries
 PATCH  /order/confirm           {orderId, staffNotes?}
 PATCH  /order/pickup            {orderId, staffNotes?}
-PATCH  /order/process           {orderId, staffNotes?}
+PATCH  /order/process           {orderId, staffNotes?, machineIds?}
+PATCH  /order/machines          {orderId, machineIds}   IN_PROGRESS only; replaces the order's machines ([] clears them)
 PATCH  /order/ready             {orderId, staffNotes?}
 PATCH  /order/deliver           {orderId, staffNotes?}
 PATCH  /order/complete          {orderId, staffNotes?}
@@ -62,6 +74,8 @@ any non-final status → CANCELLED
 ```
 
 An illegal move is a 400. `COMPLETED` and `CANCELLED` are final.
+
+**Machines on an order**: `/order/process` takes the machines the order runs on (optional; none is allowed). While the order is `IN_PROGRESS`, `/order/machines` swaps them. Every id must be an active machine of your tenant (else 404), and a machine already on another `IN_PROGRESS` order is a 409 naming that order. A machine is freed as soon as its order leaves `IN_PROGRESS`. `/order/detail` lists them under `machines: [{machineId, name, type}]`, with the name as it was when assigned.
 
 **Order numbers** look like `INV-20261015-…`, dated in the tenant's time zone.
 
@@ -109,7 +123,7 @@ It is safe to rerun. Reconciliation queries are in [`analytics-service/analytics
 
 ## Setup notes
 
-- **Seed data**: `order-gateway/sql/init.sql` (statuses, priorities, payment methods/statuses, clothing types, units, categories, saga statuses, analytics lookups). Until the analytics lookups are seeded, every order write fails.
+- **Seed data**: `order-gateway/sql/init.sql` (statuses, priorities, payment methods/statuses, clothing types, units, categories, saga statuses, analytics lookups, machine types). Until the analytics lookups are seeded, every order write fails; until the machine types are seeded, `/machine/create` fails.
 - **Dependencies**: user-service (`:8101`) for orders with a `customerId`, and promotion-service (`:8104`) for orders with `promoCodes`. Walk-in orders without promo codes need neither.
 - **Internal API keys**: `app.internal.user-service.api-key` and `app.internal.promotion-service.api-key`, each `order:<version>:<secret>`. The callees must have the matching digests in Redis (see the root README).
 - **Encryption**: the customer contact snapshot on each order is AES-256-GCM-encrypted (`app.crypto.*`).

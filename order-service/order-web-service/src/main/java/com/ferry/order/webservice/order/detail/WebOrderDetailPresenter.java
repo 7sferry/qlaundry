@@ -4,6 +4,7 @@ import com.ferry.order.core.order.detail.OrderDetailPresenter;
 import com.ferry.order.core.order.detail.OrderDetailResponse;
 import com.ferry.order.domain.order.Order;
 import com.ferry.order.webservice.order.detail.OrderDetailRestResponse.Item;
+import com.ferry.order.webservice.order.detail.OrderDetailRestResponse.Machine;
 import com.ferry.order.webservice.order.detail.OrderDetailRestResponse.Promotion;
 import lombok.Getter;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,9 @@ public class WebOrderDetailPresenter implements OrderDetailPresenter{
 		List<Item> items = response.items().stream()
 				.map(o -> new Item(o.type().name(), o.label(), o.quantity()))
 				.toList();
+		List<Machine> machines = response.machines().stream()
+				.map(o -> new Machine(o.machineId(), o.machineName(), o.machineType().name()))
+				.toList();
 		responseEntity = ResponseEntity.ok(new OrderDetailRestResponse(order.id(), order.orderNumberValue(),
 				order.customerId(), order.customerNameValue(), order.customerPhoneValue(),
 				order.customerEmailValue(), order.customerAddressValue(), order.serviceId(), order.serviceName(),
@@ -37,7 +41,7 @@ public class WebOrderDetailPresenter implements OrderDetailPresenter{
 				order.status().name(), order.notesValue(), order.staffNotesValue(),
 				order.pickupAt().toEpochMilli(), order.estimatedDeliveryAt().toEpochMilli(),
 				order.completedAt() == null ? null : order.completedAt().toEpochMilli(),
-				order.createdAt().toEpochMilli(), items));
+				order.createdAt().toEpochMilli(), items, machines));
 	}
 
 }

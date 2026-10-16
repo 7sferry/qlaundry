@@ -31,6 +31,7 @@ const NAV_ITEMS: { path: string; label: string; icon: FC<{ size?: number }> }[] 
 	{path: '/orders/history', label: 'Order history', icon: ClipboardList},
 	{path: '/customers', label: 'Customers', icon: Users},
 	{path: '/services', label: 'Services', icon: ListChecks},
+	{path: '/machines', label: 'Machines', icon: WashingMachine},
 	{path: '/promotions', label: 'Promotions', icon: Percent},
 	{path: '/staff', label: 'Staff', icon: UserCog},
 	{path: '/reports', label: 'Reports', icon: BarChart3},

@@ -3,6 +3,8 @@
  * on Juli 2026         *
  ************************/
 
+import type {OrderMachine} from './Machine';
+
 export type OrderStatus =
 		| 'pending'
 		| 'confirmed'
@@ -65,6 +67,7 @@ export interface Order {
 	pickupDate: string;
 	estimatedDelivery: string;
 	completedAt?: string;
+	machines?: OrderMachine[];
 }
 
 export interface CreateOrderInput {
@@ -90,6 +93,7 @@ export interface UpdateOrderStatusInput {
 	orderId: string;
 	status: OrderStatus;
 	staffNotes?: string;
+	machineIds?: string[];
 }
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {

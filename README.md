@@ -8,6 +8,7 @@ A multi-tenant laundry management system: each laundry business (a *tenant*) man
 - **Staff accounts** — `STAFF` and `SUPER_STAFF` roles, self-service profile, password reset by emailed OTP, and no password reuse within 90 days.
 - **Customers** — a per-tenant customer book with phone/email/address. Phone numbers are normalised (`0812…`, `62812…`, `+62 812…` are the same number).
 - **Price list** — laundry services priced per kg or per unit, with categories, estimated hours and an optional express option (its own hours and price multiplier).
+- **Machines** — the laundry's washers, dryers and irons. Staff pick the machines an order runs on when they start processing it and can swap them while it is in progress; a machine can't be on two in-progress orders at once.
 - **Orders** — walk-in or registered customers, itemised clothing, express priority, pickup and delivery times, a status workflow (confirm → pickup → process → ready → deliver → complete, or cancel), and cash payment.
 - **Daily schedule** — today's due pickups and deliveries.
 - **Invoices** — a PDF per order, opened in the browser through a 1-hour signed link.
@@ -37,7 +38,7 @@ A multi-tenant laundry management system: each laundry business (a *tenant*) man
 |---|---|---|---|---|
 | `user-service` | 8101 | Auth, tenants, staff, customers | Postgres `users`, Redis | [README](user-service/README.md) |
 | `notification-service` | 8102 | Registration and OTP emails (stream consumer, no REST API) | Postgres `notif`, Redis | [README](notification-service/README.md) |
-| `order-service` | 8103 | Price list, orders, schedule, invoices | Postgres `orders`, Redis | [README](order-service/README.md) |
+| `order-service` | 8103 | Price list, machines, orders, schedule, invoices | Postgres `orders`, Redis | [README](order-service/README.md) |
 | `promotion-service` | 8104 | Promo codes and their redemption | Postgres `promotions`, Redis | [README](promotion-service/README.md) |
 | `analytics-service` | 8105 | Every stat card: dashboard, reports, staff, customers, services, promotions | ClickHouse, Redis | [README](analytics-service/README.md) |
 

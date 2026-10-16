@@ -6,8 +6,13 @@
 import type {Page, PaginationParams} from '@/core/pagination/Pagination';
 import type {CreateOrderInput, Order, UpdateOrderStatusInput} from './Order';
 import type {LaundryService} from './Service';
+import type {MachineOption, MachineType} from './Machine';
 
 export type OrderSortBy = 'id' | 'name';
+
+export interface MachineOptionFilters extends PaginationParams<'name'> {
+	type?: MachineType;
+}
 
 export interface OrderFilters extends PaginationParams<OrderSortBy> {
 	status?: string;
@@ -36,4 +41,8 @@ export interface OrderRepository {
 	updateOrderStatus(input: UpdateOrderStatusInput): Promise<Order>;
 
 	cancelOrder(id: string, reason?: string): Promise<Order>;
+
+	getMachineOptions(filters?: MachineOptionFilters): Promise<Page<MachineOption>>;
+
+	changeMachines(orderId: string, machineIds: string[]): Promise<Order>;
 }

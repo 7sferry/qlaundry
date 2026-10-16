@@ -3,6 +3,8 @@ package com.ferry.order.core.order.process;
 import com.ferry.order.core.tools.OrderValidation;
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.Set;
+
 /************************
  * Made by [MR Ferry™]  *
  * on Agustus 2026      *
@@ -10,5 +12,6 @@ import jakarta.validation.constraints.NotBlank;
 
 public record OrderProcessRequest(
 	@NotBlank String orderId,
-	String staffNotes) implements OrderValidation{
+	String staffNotes,
+	Set<String> machineIds) implements OrderValidation{
 }
