@@ -3,8 +3,10 @@ package com.ferry.order.gateway.order.repository;
 import com.ferry.order.domain.order.OrderFilter;
 import com.ferry.order.domain.order.schedule.OrderScheduleProjection;
 import com.ferry.order.gateway.order.entity.OrderJpa;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -21,6 +23,12 @@ import java.util.Optional;
 public interface OrderJpaRepository extends JpaRepository<OrderJpa, String>{
 
 	Optional<OrderJpa> findByIdAndTenantIdAndDeletedIsFalse(String id, String tenantId);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select o " +
+			"from OrderJpa o " +
+			"where o.id = :id and o.tenantId = :tenantId and o.deleted IS FALSE")
+	Optional<OrderJpa> lockByIdAndTenantId(@Param("id") String id, @Param("tenantId") String tenantId);
 
 	@Query("select o " +
 			"from OrderJpa o " +

@@ -51,4 +51,14 @@ public record OrderMachine(
 		return toBuilder().deleted(true).updatedBy(updatedBy).updatedAt(Instant.now()).build();
 	}
 
+	public OrderMachine restore(Machine machine, String updatedBy){
+		return toBuilder()
+				.machineName(machine.name())
+				.machineType(machine.type())
+				.deleted(false)
+				.updatedBy(updatedBy)
+				.updatedAt(Instant.now())
+				.build();
+	}
+
 }

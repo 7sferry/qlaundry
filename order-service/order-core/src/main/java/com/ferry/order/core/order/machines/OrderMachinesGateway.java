@@ -18,9 +18,9 @@ import java.util.Set;
  ************************/
 
 public interface OrderMachinesGateway{
-	Optional<Order> findById(OrderId orderId, TenantId tenantId);
+	Optional<Order> lockById(OrderId orderId, TenantId tenantId);
 
-	List<OrderMachine> findMachinesByOrderId(OrderId orderId);
+	List<OrderMachine> findAllMachinesByOrderId(OrderId orderId);
 
 	List<Machine> lockMachines(Set<MachineId> machineIds, TenantId tenantId);
 

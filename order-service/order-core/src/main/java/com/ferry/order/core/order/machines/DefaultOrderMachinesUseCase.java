@@ -36,7 +36,7 @@ public class DefaultOrderMachinesUseCase implements OrderMachinesUseCase{
 		request.validate();
 		OrderId orderId = new OrderId(request.orderId());
 		TenantId tenantId = new TenantId(principal.tenantId());
-		Order order = gateway.findById(orderId, tenantId)
+		Order order = gateway.lockById(orderId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Order Not Found"));
 		if(order.status() != OrderStatus.IN_PROGRESS){
 			throw new InvalidOrderStatusException("Machines can only be changed while the order is in progress");
@@ -45,7 +45,13 @@ public class DefaultOrderMachinesUseCase implements OrderMachinesUseCase{
 		Set<String> requestedValues = requested.stream()
 				.map(MachineId::value)
 				.collect(Collectors.toSet());
-		List<OrderMachine> current = gateway.findMachinesByOrderId(orderId);
+		List<OrderMachine> all = gateway.findAllMachinesByOrderId(orderId);
+		List<OrderMachine> current = all.stream()
+				.filter(machine -> !machine.deleted())
+				.toList();
+		Map<String,OrderMachine> removedBefore = all.stream()
+				.filter(OrderMachine::deleted)
+				.collect(Collectors.toMap(OrderMachine::machineId, Function.identity(), (first, second) -> first));
 		Set<String> currentValues = current.stream()
 				.map(OrderMachine::machineId)
 				.collect(Collectors.toSet());
@@ -60,7 +66,9 @@ public class DefaultOrderMachinesUseCase implements OrderMachinesUseCase{
 				.filter(machineId -> !currentValues.contains(machineId.value()))
 				.collect(Collectors.toCollection(LinkedHashSet::new));
 		resolveMachines(added, orderId, tenantId).stream()
-				.map(machine -> OrderMachine.assign(order.id(), machine, principal.userId()))
+				.map(machine -> removedBefore.containsKey(machine.id())
+						? removedBefore.get(machine.id()).restore(machine, principal.userId())
+						: OrderMachine.assign(order.id(), machine, principal.userId()))
 				.forEach(changes::add);
 		List<OrderMachine> saved = changes.isEmpty() ? List.of() : gateway.saveMachines(changes);
 		List<OrderMachine> machines = new ArrayList<>(kept);

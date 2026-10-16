@@ -2,6 +2,7 @@ package com.ferry.order.gateway.order.entity;
 
 import com.ferry.order.domain.machine.MachineType;
 import com.ferry.order.domain.order.OrderMachine;
+import com.ferry.order.gateway.machine.entity.MachineJpa;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -19,10 +20,10 @@ import java.time.Instant;
 @Setter
 @EqualsAndHashCode(of = "id")
 @Entity
-@Table(name = "order_machines", indexes = {
-		@Index(name = "idx_order_machines_order_id", columnList = "order_id"),
-		@Index(name = "idx_order_machines_machine_id", columnList = "machine_id")
-})
+@Table(name = "order_machines",
+		uniqueConstraints = @UniqueConstraint(name = "uq_order_machines_order_id_machine_id",
+				columnNames = {"order_id", "machine_id"}),
+		indexes = @Index(name = "idx_order_machines_machine_id", columnList = "machine_id"))
 public class OrderMachineJpa{
 
 	@Id
@@ -34,7 +35,11 @@ public class OrderMachineJpa{
 	@Setter(AccessLevel.PRIVATE)
 	@Column(nullable = false, name = "order_id", insertable = false, updatable = false)
 	private String orderId;
-	@Column(nullable = false, name = "machine_id", length = 50)
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@Getter(AccessLevel.PRIVATE)
+	private MachineJpa machine;
+	@Setter(AccessLevel.PRIVATE)
+	@Column(nullable = false, name = "machine_id", insertable = false, updatable = false)
 	private String machineId;
 	@Column(nullable = false, length = 100)
 	private String machineName;
@@ -58,11 +63,17 @@ public class OrderMachineJpa{
 		this.orderId = order.getId();
 	}
 
-	public static OrderMachineJpa construct(String id, OrderMachine machine, OrderJpa order){
+	public void setMachine(MachineJpa machine){
+		this.machine = machine;
+		this.machineId = machine.getId();
+	}
+
+	public static OrderMachineJpa construct(String id, OrderMachine machine, OrderJpa order, MachineJpa machineRef){
 		OrderMachineJpa entity = new OrderMachineJpa();
 		entity.id = id;
 		entity.order = order;
 		entity.orderId = order.getId();
+		entity.machine = machineRef;
 		entity.machineId = machine.machineId();
 		entity.machineName = machine.machineName();
 		entity.machineTypeId = machine.machineType().getValue();

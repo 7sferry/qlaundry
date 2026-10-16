@@ -18,6 +18,8 @@ public interface OrderMachineJpaRepository extends JpaRepository<OrderMachineJpa
 
 	List<OrderMachineJpa> findByOrderIdAndDeletedIsFalseOrderById(String orderId);
 
+	List<OrderMachineJpa> findByOrderIdOrderById(String orderId);
+
 	@Query("select new com.ferry.order.domain.machine.MachineOccupancy(om.machineId, o.orderNumber) " +
 			"from OrderMachineJpa om join om.order o " +
 			"where om.machineId in :machineIds and om.deleted is false and o.deleted is false " +

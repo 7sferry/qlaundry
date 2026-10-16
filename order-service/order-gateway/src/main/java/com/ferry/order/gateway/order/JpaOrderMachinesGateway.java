@@ -1,6 +1,7 @@
 package com.ferry.order.gateway.order;
 
 import com.ferry.order.core.order.machines.OrderMachinesGateway;
+import com.ferry.order.domain.common.exception.OrderMachinesConflictException;
 import com.ferry.order.domain.machine.Machine;
 import com.ferry.order.domain.machine.MachineId;
 import com.ferry.order.domain.machine.MachineOccupancy;
@@ -18,6 +19,7 @@ import com.ferry.order.gateway.order.repository.OrderMachineJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,14 +39,14 @@ public class JpaOrderMachinesGateway implements OrderMachinesGateway{
 	private final CryptoTool cryptoTool;
 
 	@Override
-	public Optional<Order> findById(OrderId orderId, TenantId tenantId){
-		return orderJpaRepository.findByIdAndTenantIdAndDeletedIsFalse(orderId.value(), tenantId.value())
+	public Optional<Order> lockById(OrderId orderId, TenantId tenantId){
+		return orderJpaRepository.lockByIdAndTenantId(orderId.value(), tenantId.value())
 				.map(entity -> OrderJpa.construct(entity, cryptoTool));
 	}
 
 	@Override
-	public List<OrderMachine> findMachinesByOrderId(OrderId orderId){
-		return orderMachineJpaRepository.findByOrderIdAndDeletedIsFalseOrderById(orderId.value()).stream()
+	public List<OrderMachine> findAllMachinesByOrderId(OrderId orderId){
+		return orderMachineJpaRepository.findByOrderIdOrderById(orderId.value()).stream()
 				.map(OrderMachineJpa::construct)
 				.toList();
 	}
@@ -68,11 +70,17 @@ public class JpaOrderMachinesGateway implements OrderMachinesGateway{
 	public List<OrderMachine> saveMachines(List<OrderMachine> machines){
 		List<OrderMachineJpa> entities = machines.stream()
 				.map(machine -> OrderMachineJpa.construct(machine.id() == null ? idGenerator.generateId() : machine.id(),
-						machine, orderJpaRepository.getReferenceById(machine.orderId())))
+						machine, orderJpaRepository.getReferenceById(machine.orderId()),
+						machineJpaRepository.getReferenceById(machine.machineId())))
 				.toList();
-		return orderMachineJpaRepository.saveAll(entities).stream()
-				.map(OrderMachineJpa::construct)
-				.toList();
+		try{
+			return orderMachineJpaRepository.saveAllAndFlush(entities).stream()
+					.map(OrderMachineJpa::construct)
+					.toList();
+		}catch(DataIntegrityViolationException e){
+			throw new OrderMachinesConflictException("Machines on this order were just changed by someone else. "
+					+ "Reload and try again.");
+		}
 	}
 
 }

@@ -1,6 +1,7 @@
 package com.ferry.order.gateway.order;
 
 import com.ferry.order.core.order.process.OrderProcessGateway;
+import com.ferry.order.domain.common.exception.OrderMachinesConflictException;
 import com.ferry.order.domain.machine.Machine;
 import com.ferry.order.domain.machine.MachineId;
 import com.ferry.order.domain.machine.MachineOccupancy;
@@ -24,6 +25,7 @@ import com.ferry.order.gateway.order.repository.OrderPromotionJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.Optional;
@@ -89,11 +91,17 @@ public class JpaOrderProcessGateway implements OrderProcessGateway{
 	public List<OrderMachine> saveMachines(List<OrderMachine> machines){
 		List<OrderMachineJpa> entities = machines.stream()
 				.map(machine -> OrderMachineJpa.construct(idGenerator.generateId(), machine,
-						orderJpaRepository.getReferenceById(machine.orderId())))
+						orderJpaRepository.getReferenceById(machine.orderId()),
+						machineJpaRepository.getReferenceById(machine.machineId())))
 				.toList();
-		return orderMachineJpaRepository.saveAll(entities).stream()
-				.map(OrderMachineJpa::construct)
-				.toList();
+		try{
+			return orderMachineJpaRepository.saveAllAndFlush(entities).stream()
+					.map(OrderMachineJpa::construct)
+					.toList();
+		}catch(DataIntegrityViolationException e){
+			throw new OrderMachinesConflictException("Machines on this order were just changed by someone else. "
+					+ "Reload and try again.");
+		}
 	}
 
 }

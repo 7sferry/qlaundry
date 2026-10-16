@@ -98,7 +98,7 @@ class DefaultOrderMachinesUseCaseTest{
 				.role(StaffRole.STAFF)
 				.build();
 		willReturn(Optional.empty()).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new OrderMachinesRequest(ORDER_ID, Set.of(WASHER_ID)), principal, presenter))
@@ -144,7 +144,7 @@ class DefaultOrderMachinesUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
 						useCase.execute(new OrderMachinesRequest(ORDER_ID, Set.of(WASHER_ID)), principal, presenter))
@@ -152,7 +152,7 @@ class DefaultOrderMachinesUseCaseTest{
 				.hasMessage("Machines can only be changed while the order is in progress"));
 
 		then(gateway).should(never())
-				.findMachinesByOrderId(any(OrderId.class));
+				.findAllMachinesByOrderId(any(OrderId.class));
 		then(gateway).should(never())
 				.saveMachines(anyList());
 	}
@@ -204,9 +204,9 @@ class DefaultOrderMachinesUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 		willReturn(List.of()).given(gateway)
-				.findMachinesByOrderId(any(OrderId.class));
+				.findAllMachinesByOrderId(any(OrderId.class));
 		willReturn(List.of(dryer)).given(gateway)
 				.lockMachines(anySet(), any(TenantId.class));
 		willReturn(List.of(new MachineOccupancy(DRYER_ID, "INV-20261016-8BC1XY"))).given(gateway)
@@ -275,9 +275,9 @@ class DefaultOrderMachinesUseCaseTest{
 				.updatedBy(STAFF_ID)
 				.build();
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 		willReturn(List.of(keptWasher, droppedIroner)).given(gateway)
-				.findMachinesByOrderId(any(OrderId.class));
+				.findAllMachinesByOrderId(any(OrderId.class));
 		willReturn(List.of(dryer)).given(gateway)
 				.lockMachines(anySet(), any(TenantId.class));
 		willReturn(List.of()).given(gateway)
@@ -349,9 +349,9 @@ class DefaultOrderMachinesUseCaseTest{
 		OrderMachine washer = new OrderMachine("01ORDERMACHINECUCI0000000", ORDER_ID, WASHER_ID,
 				"Mesin Cuci 3", MachineType.WASHER, 0, false, now, STAFF_ID, now, STAFF_ID);
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 		willReturn(List.of(washer)).given(gateway)
-				.findMachinesByOrderId(any(OrderId.class));
+				.findAllMachinesByOrderId(any(OrderId.class));
 		willAnswer(invocation -> invocation.<List<OrderMachine>>getArgument(0)).given(gateway)
 				.saveMachines(anyList());
 
@@ -411,9 +411,9 @@ class DefaultOrderMachinesUseCaseTest{
 		OrderMachine washer = new OrderMachine("01ORDERMACHINECUCI0000000", ORDER_ID, WASHER_ID,
 				"Mesin Cuci 3", MachineType.WASHER, 0, false, now, STAFF_ID, now, STAFF_ID);
 		willReturn(Optional.of(order)).given(gateway)
-				.findById(any(OrderId.class), any(TenantId.class));
+				.lockById(any(OrderId.class), any(TenantId.class));
 		willReturn(List.of(washer)).given(gateway)
-				.findMachinesByOrderId(any(OrderId.class));
+				.findAllMachinesByOrderId(any(OrderId.class));
 
 		useCase.execute(new OrderMachinesRequest(ORDER_ID, Set.of(WASHER_ID)), principal, presenter);
 
@@ -425,6 +425,91 @@ class DefaultOrderMachinesUseCaseTest{
 				.present(responseCaptor.capture());
 
 		thenSoftly(softly -> softly.then(responseCaptor.getValue().machines()).containsExactly(washer));
+	}
+
+	@Test
+	void givenPreviouslyRemovedMachineAddedBack_thenRestoresItsRowWithAFreshSnapshot(){
+		Instant now = Instant.now();
+		Instant removedAt = now.minusSeconds(1800);
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		Order order = Order.builder()
+				.id(ORDER_ID)
+				.orderNumber(new OrderNumber(ORDER_NUMBER))
+				.tenantId(TENANT_ID)
+				.customerName(new FullName("angel wijaya"))
+				.customerPhone(new Phone("+6285711223344"))
+				.serviceId("01SERVICESELIMUT00000000")
+				.serviceName("Cuci Selimut")
+				.unit(ServiceUnit.ITEM)
+				.unitPrice(Money.of(25000L))
+				.quantity(2)
+				.subtotal(Money.of(50000L))
+				.discount(Money.ZERO)
+				.totalPrice(Money.of(50000L))
+				.priority(OrderPriority.NORMAL)
+				.paymentMethod(PaymentMethod.CASH)
+				.paymentStatus(PaymentStatus.UNPAID)
+				.status(OrderStatus.IN_PROGRESS)
+				.pickupAt(now)
+				.estimatedDeliveryAt(now.plusSeconds(172800))
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		OrderMachine removedDryer = new OrderMachine("01ORDERMACHINEKERING00000", ORDER_ID, DRYER_ID,
+				"Pengering Lama", MachineType.DRYER, 3, true, removedAt, "01STAFFPERTAMA00000000000", removedAt,
+				"01STAFFPERTAMA00000000000");
+		Machine dryer = Machine.builder()
+				.id(DRYER_ID)
+				.tenantId(TENANT_ID)
+				.name("Pengering 4")
+				.type(MachineType.DRYER)
+				.active(true)
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		willReturn(Optional.of(order)).given(gateway)
+				.lockById(any(OrderId.class), any(TenantId.class));
+		willReturn(List.of(removedDryer)).given(gateway)
+				.findAllMachinesByOrderId(any(OrderId.class));
+		willReturn(List.of(dryer)).given(gateway)
+				.lockMachines(anySet(), any(TenantId.class));
+		willReturn(List.of()).given(gateway)
+				.findOccupancies(anySet(), any(OrderId.class));
+		willAnswer(invocation -> invocation.<List<OrderMachine>>getArgument(0)).given(gateway)
+				.saveMachines(anyList());
+
+		useCase.execute(new OrderMachinesRequest(ORDER_ID, Set.of(DRYER_ID)), principal, presenter);
+
+		then(gateway).should()
+				.lockById(eq(new OrderId(ORDER_ID)), eq(new TenantId(TENANT_ID)));
+		then(gateway).should()
+				.saveMachines(machinesCaptor.capture());
+		then(presenter).should()
+				.present(responseCaptor.capture());
+
+		thenSoftly(softly -> {
+			softly.then(machinesCaptor.getValue()).singleElement()
+					.satisfies(machine -> {
+						softly.then(machine.id()).isEqualTo("01ORDERMACHINEKERING00000");
+						softly.then(machine.deleted()).isFalse();
+						softly.then(machine.version()).isEqualTo(3);
+						softly.then(machine.machineName()).isEqualTo("Pengering 4");
+						softly.then(machine.createdBy()).isEqualTo("01STAFFPERTAMA00000000000");
+						softly.then(machine.updatedBy()).isEqualTo(STAFF_ID);
+					});
+			softly.then(responseCaptor.getValue().machines()).extracting(OrderMachine::machineId)
+					.containsExactly(DRYER_ID);
+		});
 	}
 
 }

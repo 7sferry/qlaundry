@@ -84,5 +84,20 @@ CREATE SCHEMA IF NOT EXISTS orders;
 -- Machines: ddl-auto creates `machines`, `machine_types` and `order_machines` on the next boot. Then run the
 -- three machine_types inserts from init.sql (WASHER 1, DRYER 2, IRONER 3); until they exist every
 -- /machine/create fails at the FK on `machines.type_id`. Orders processed without machines are unaffected.
--- `order_machines.machine_id` is a plain varchar like `order_promotions.promotion_id`, and `machine_name` /
--- `machine_type_id` are snapshots, so renaming a machine never rewrites an order's history.
+-- `order_machines` has foreign keys to `orders` and `machines` (both @ManyToOne) and one row per
+-- (order_id, machine_id): re-adding a removed machine reactivates its soft-deleted row. `machine_name` /
+-- `machine_type_id` are snapshots, so renaming a machine never rewrites an order's history. A database created
+-- before the constraint may hold duplicate pairs; keep the live (or newest) row of each pair, then add it:
+--
+-- DELETE FROM orders.order_machines WHERE id IN (
+--     SELECT id FROM (
+--         SELECT id, row_number() OVER (PARTITION BY order_id, machine_id ORDER BY deleted, updated_at DESC) AS rn
+--           FROM orders.order_machines) ranked
+--      WHERE rn > 1);
+-- ALTER TABLE orders.order_machines
+--     ADD CONSTRAINT uq_order_machines_order_id_machine_id UNIQUE (order_id, machine_id);
+-- ALTER TABLE orders.order_machines
+--     ADD CONSTRAINT fk_order_machines_machine FOREIGN KEY (machine_id) REFERENCES orders.machines (id);
+--
+-- Tenant isolation for this table is enforced by the two writers (order and machines are both loaded by
+-- (id, tenant_id)), not by a composite foreign key.
