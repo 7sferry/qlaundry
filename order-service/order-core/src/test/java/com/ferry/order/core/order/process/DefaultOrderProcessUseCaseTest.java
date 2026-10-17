@@ -747,8 +747,8 @@ class DefaultOrderProcessUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		Set<String> staffIds = new LinkedHashSet<>(List.of(OTHER_STAFF_ID, " " + THIRD_STAFF_ID + " ", " ",
-				" " + OTHER_STAFF_ID));
+		Set<String> staffIds = new LinkedHashSet<>(List.of(OTHER_STAFF_ID, ' ' + THIRD_STAFF_ID + ' ', " ",
+				' ' + OTHER_STAFF_ID));
 		willReturn(Optional.of(order)).given(gateway)
 				.lockById(any(OrderId.class), any(TenantId.class));
 		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)

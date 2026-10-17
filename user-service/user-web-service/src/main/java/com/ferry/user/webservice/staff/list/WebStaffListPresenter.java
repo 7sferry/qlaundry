@@ -2,9 +2,6 @@ package com.ferry.user.webservice.staff.list;
 
 import com.ferry.user.core.staff.list.StaffListPresenter;
 import com.ferry.user.core.staff.list.StaffListResponse;
-import com.ferry.user.domain.staff.list.StaffAddressListProjection;
-import com.ferry.user.domain.staff.list.StaffEmailListProjection;
-import com.ferry.user.domain.staff.list.StaffPhoneListProjection;
 import com.ferry.user.webservice.staff.list.StaffListRestResponse.Address;
 import com.ferry.user.webservice.staff.list.StaffListRestResponse.Email;
 import com.ferry.user.webservice.staff.list.StaffListRestResponse.Phone;
@@ -13,8 +10,6 @@ import lombok.Getter;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /************************
  * Made by [MR Ferry™]  *

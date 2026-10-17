@@ -45,7 +45,7 @@ public class DefaultOrderAssignStaffsUseCase implements OrderAssignStaffsUseCase
 				.toList();
 		Map<String,OrderStaff> removedBefore = all.stream()
 				.filter(OrderStaff::deleted)
-				.collect(Collectors.toMap(OrderStaff::staffId, Function.identity(), (first, second) -> first));
+				.collect(Collectors.toMap(OrderStaff::staffId, Function.identity(), (first, _) -> first));
 		Set<String> currentValues = current.stream()
 				.map(OrderStaff::staffId)
 				.collect(Collectors.toSet());
