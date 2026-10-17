@@ -20,10 +20,11 @@ import java.time.Instant;
 @Setter
 @EqualsAndHashCode(of = "id")
 @Entity
-@Table(name = "order_promotions", indexes = {
-		@Index(name = "idx_order_promotions_order_id", columnList = "order_id"),
-		@Index(name = "idx_order_promotions_promotion_id", columnList = "promotion_id")
-})
+@Table(name = "order_promotions",
+		indexes = @Index(name = "idx_order_promotions_promotion_id", columnList = "promotion_id"),
+		uniqueConstraints = @UniqueConstraint(name = "uq_order_promotions_order_id_promotion_id",
+				columnNames = {"order_id", "promotion_id"})
+)
 public class OrderPromotionJpa{
 
 	@Id
