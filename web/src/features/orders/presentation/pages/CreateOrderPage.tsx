@@ -132,7 +132,7 @@ export default function CreateOrderPage() {
 
 	const subtotal = useMemo(() => {
 		if (!service) return 0;
-		const qty = service.unit === 'kg' ? Number(weightKg) || totalQty : totalQty;
+		const qty = service.unit === 'kg' ? Number(weightKg) || 0 : totalQty;
 		return Math.round(service.pricePerUnit * (express?.multiplier ?? 1) * qty);
 	}, [service, weightKg, totalQty, express]);
 
@@ -684,7 +684,7 @@ export default function CreateOrderPage() {
 							<div className="summary-line">
 								<span>Quantity</span>
 								<span>
-                  {service?.unit === 'kg' && weightKg ? `${weightKg} kg` : `${totalQty} pcs`}
+                  {service?.unit === 'kg' ? `${Number(weightKg) || 0} kg` : `${totalQty} pcs`}
                 </span>
 							</div>
 							<div className="summary-line">
