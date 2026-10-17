@@ -1,12 +1,21 @@
 package com.ferry.user.core.staff.resetpassword;
 
+import com.ferry.user.core.audit.AuthAction;
+import com.ferry.user.core.audit.AuthAuditLog;
+import com.ferry.user.core.audit.AuthResult;
+import com.ferry.user.core.staff.constant.LoginLockKey;
 import com.ferry.user.core.staff.constant.PasswordConstant;
+import com.ferry.user.core.tools.PasswordContentPolicy;
+import com.ferry.user.core.tools.PasswordSubject;
+import com.ferry.user.core.tools.PasswordSubjectGateway;
 import com.ferry.user.core.tools.PasswordTool;
+import com.ferry.user.core.tools.StaffSessionRevoker;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.common.HashedPassword;
 import com.ferry.user.domain.common.RawPassword;
 import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.common.exception.InvalidPasswordException;
+import com.ferry.user.domain.common.exception.PasswordPolicyException;
 import com.ferry.user.domain.staff.Staff;
 import com.ferry.user.domain.staff.StaffPassword;
 import com.ferry.user.domain.staff.StaffPasswordProjection;
@@ -28,26 +37,54 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 	private final StaffResetPasswordGateway gateway;
 	private final PasswordTool passwordTool;
 	private final UserCacheManager cacheManager;
+	private final PasswordSubjectGateway subjectGateway;
+	private final StaffSessionRevoker sessionRevoker;
+	private final AuthAuditLog auditLog;
 
 	@Override
 	public void execute(StaffResetPasswordRequest request, StaffResetPasswordPresenter presenter){
+		String subject = request.username();
+		Staff staff = null;
 		try{
 			request.validate();
 			Username username = new Username(request.username());
 			RawPassword password = new RawPassword(request.password());
 			validateResetToken(username, request.resetToken());
-			Staff staff = gateway.findByUsername(username)
+			staff = gateway.findByUsername(username)
 					.orElseThrow(() -> new FailedToResetPasswordException("Invalid username"));
+			validatePasswordContent(staff, password);
 			validateRecentPassword(staff, password);
 			validateLastUsedPasswords(staff, password);
+			consumeResetToken(username);
 			HashedPassword hashedPassword = passwordTool.hash(password);
 			gateway.save(StaffPassword.register(staff.id(), hashedPassword, staff.id()));
+			sessionRevoker.revokeAll(staff.id());
+			clearLoginLock(username);
+			auditLog.record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.SUCCESS, staff.id(), subject);
 			presenter.present(new StaffResetPasswordResponse("password has been reset"));
-		} catch (FailedToResetPasswordException e){
+		} catch (InvalidPasswordException | FailedToResetPasswordException e){
+			auditLog.record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.FAILURE, userIdOf(staff), subject);
 			throw e;
 		} catch (Exception e){
+			auditLog.record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.FAILURE, userIdOf(staff), subject);
 			throw new FailedToResetPasswordException(e);
 		}
+	}
+
+	private void clearLoginLock(Username username){
+		String normalized = LoginLockKey.normalize(username.value());
+		cacheManager.delete(LoginLockKey.lock(normalized));
+		cacheManager.delete(LoginLockKey.attempt(normalized));
+	}
+
+	private String userIdOf(Staff staff){
+		return staff == null ? null : staff.id();
+	}
+
+	private void validatePasswordContent(Staff staff, RawPassword password){
+		PasswordSubject passwordSubject = subjectGateway.findByStaffId(staff.id())
+				.orElseThrow(() -> new FailedToResetPasswordException("Invalid username"));
+		PasswordContentPolicy.check(password.value(), passwordSubject);
 	}
 
 	private void validateLastUsedPasswords(Staff staff, RawPassword password){
@@ -56,7 +93,7 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 		boolean reused = recentPasswords.stream()
 				.anyMatch(recent -> passwordTool.matches(password.value(), recent.password()));
 		if(reused){
-			throw new InvalidPasswordException("Password was used within the last 3 months, please choose a different password");
+			throw new PasswordPolicyException("Password was used within the last 3 months, please choose a different password");
 		}
 	}
 
@@ -64,18 +101,23 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 		gateway.findCurrentPassword(staff.id())
 				.ifPresent(current -> {
 					if(passwordTool.matches(password.value(), current.password())){
-						throw new InvalidPasswordException("New password must be different from your current password");
+						throw new PasswordPolicyException("New password must be different from your current password");
 					}
 				});
 	}
 
 	private void validateResetToken(Username username, String resetToken){
-		String storedToken = cacheManager.getAndDelete(PasswordConstant.RESET_TOKEN_KEY + username.value())
+		String storedToken = cacheManager.get(PasswordConstant.RESET_TOKEN_KEY + username.value())
 				.orElseThrow(() -> new FailedToResetPasswordException("Invalid reset token"));
 		if(resetToken == null
 				|| !MessageDigest.isEqual(storedToken.getBytes(StandardCharsets.UTF_8), resetToken.getBytes(StandardCharsets.UTF_8))){
 			throw new FailedToResetPasswordException("Invalid reset token");
 		}
+	}
+
+	private void consumeResetToken(Username username){
+		cacheManager.getAndDelete(PasswordConstant.RESET_TOKEN_KEY + username.value())
+				.orElseThrow(() -> new FailedToResetPasswordException("Invalid reset token"));
 	}
 
 }

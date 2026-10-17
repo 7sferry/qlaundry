@@ -4,6 +4,7 @@ import com.ferry.user.core.tenant.resendconfirmation.TenantResendConfirmationRes
 import com.ferry.user.domain.common.exception.*;
 import com.ferry.user.domain.staff.forgottenpassword.FailedToResetPasswordException;
 import com.ferry.user.domain.staff.login.FailedToLoginException;
+import com.ferry.user.domain.staff.login.LoginLockedException;
 import com.ferry.user.domain.staff.refresh.ExpiredSessionException;
 import com.ferry.user.domain.staff.registration.TurnstileVerificationException;
 import com.ferry.user.domain.staff.submitotp.FailedToSubmitOtpException;
@@ -11,6 +12,7 @@ import com.ferry.user.domain.tenant.confirmregistration.FailedToConfirmTenantExc
 import com.ferry.user.domain.tenant.resendconfirmation.FailedToResendConfirmationException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +54,24 @@ public class UserWebExceptionHandler{
 	ProblemDetail handleNotFoundRequest(RuntimeException e){
 		log.warn(e.getMessage(), e);
 		return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+	}
+
+	@ExceptionHandler(PasswordPolicyException.class)
+	ProblemDetail handlePasswordPolicy(PasswordPolicyException e){
+		log.warn(e.getMessage(), e);
+		return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+	}
+
+	@ExceptionHandler(LoginLockedException.class)
+	ResponseEntity<ProblemDetail> handleLoginLocked(LoginLockedException e){
+		log.warn(e.getMessage());
+		long retryAfterSeconds = e.retryAfter().toSeconds();
+		long retryAfterMinutes = Math.max(1, (retryAfterSeconds + 59) / 60);
+		ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS,
+				"Too many failed login attempts. Try again in " + retryAfterMinutes + " minute(s).");
+		return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+				.header(HttpHeaders.RETRY_AFTER, String.valueOf(retryAfterSeconds))
+				.body(body);
 	}
 
 	@ExceptionHandler(FailedToLoginException.class)

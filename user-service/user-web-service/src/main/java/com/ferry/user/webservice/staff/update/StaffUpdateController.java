@@ -3,6 +3,7 @@ package com.ferry.user.webservice.staff.update;
 import com.ferry.user.core.staff.update.StaffUpdateRequest;
 import com.ferry.user.core.staff.update.StaffUpdateUseCase;
 import com.ferry.user.domain.token.UserAuthPrincipal;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,8 +26,9 @@ public class StaffUpdateController{
 	@Transactional(isolation = Isolation.READ_COMMITTED)
 	@PutMapping("/staff/profile")
 	public ResponseEntity<?> updateProfile(@RequestBody StaffUpdateRequest request,
-	                                       @AuthenticationPrincipal UserAuthPrincipal principal){
-		WebStaffUpdatePresenter presenter = new WebStaffUpdatePresenter();
+	                                       @AuthenticationPrincipal UserAuthPrincipal principal,
+	                                       HttpServletResponse servletResponse){
+		WebStaffUpdatePresenter presenter = new WebStaffUpdatePresenter(servletResponse);
 		staffUpdateUseCase.execute(request, principal, presenter);
 		return presenter.getResponseEntity();
 	}

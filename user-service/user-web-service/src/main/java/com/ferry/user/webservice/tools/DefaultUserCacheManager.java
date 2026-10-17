@@ -78,4 +78,9 @@ public class DefaultUserCacheManager implements UserCacheManager{
 		return cacheHandler.delete(key);
 	}
 
+	@Override
+	public long increment(String key, Duration expiry){
+		return cacheHandler.increment(key, expiry);
+	}
+
 }

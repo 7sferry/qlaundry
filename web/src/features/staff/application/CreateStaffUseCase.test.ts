@@ -65,6 +65,14 @@ describe('CreateStaffUseCase', () => {
 				.rejects.toThrow('Username minimal 5 karakter.');
 	});
 
+	it('rejects when username is longer than 50 characters', async () => {
+		const createStaffFn = vi.fn().mockResolvedValue(mockStaff);
+		const useCase = new CreateStaffUseCase(makeRepo(createStaffFn));
+		await expect(useCase.execute({...validInput, username: 'a'.repeat(51)}))
+				.rejects.toThrow('Username maksimal 50 karakter.');
+		expect(createStaffFn).not.toHaveBeenCalled();
+	});
+
 	it('rejects when password is shorter than 8 characters', async () => {
 		const useCase = new CreateStaffUseCase(makeRepo());
 		await expect(useCase.execute({...validInput, password: 'abc123'}))

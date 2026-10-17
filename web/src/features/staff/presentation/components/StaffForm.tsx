@@ -6,6 +6,7 @@
 import React from 'react';
 import {AtSign, Lock, Mail, MapPin, Shield} from 'lucide-react';
 import {Button, Field, Input, PasswordInput, PhoneInput, Select, Textarea} from '@/core/ui';
+import {USERNAME_MAX_LENGTH} from '@/core/utils/username';
 import type {StaffFormData} from './staffFormData';
 
 interface StaffFormProps {
@@ -26,7 +27,7 @@ export default function StaffForm({form, update, onSubmit, onCancel, saving, edi
 					<div className="input-with-icon">
 						<AtSign size={15}/>
 						<Input id="sfUsername" autoComplete="off" required disabled={editMode} value={form.username}
-						       onChange={update('username')} placeholder="staff username" minLength={5}/>
+						       onChange={update('username')} placeholder="staff username" minLength={5} maxLength={USERNAME_MAX_LENGTH}/>
 					</div>
 				</Field>
 				{!editMode && (

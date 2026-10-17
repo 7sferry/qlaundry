@@ -1,5 +1,8 @@
 package com.ferry.user.core.tenant.confirmregistration;
 
+import com.ferry.user.core.audit.AuthAction;
+import com.ferry.user.core.audit.AuthAuditLog;
+import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.tenant.constant.TenantConfirmationConstant;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.common.Description;
@@ -44,6 +47,8 @@ class DefaultTenantConfirmRegistrationUseCaseTest{
 	TenantConfirmRegistrationGateway gateway;
 	@Mock
 	UserCacheManager cacheManager;
+	@Mock
+	AuthAuditLog auditLog;
 	@InjectMocks
 	DefaultTenantConfirmRegistrationUseCase useCase;
 	@Mock
@@ -138,6 +143,7 @@ class DefaultTenantConfirmRegistrationUseCaseTest{
 		useCase.execute(new TenantConfirmRegistrationRequest(TENANT_ID, TOKEN), presenter);
 
 		then(gateway).should().save(tenantCaptor.capture());
+		then(auditLog).should().record(AuthAction.TENANT_CONFIRMATION, AuthResult.SUCCESS, null, TENANT_ID);
 		then(presenter).should().present(new TenantConfirmRegistrationResponse("Registration confirmed. You can now sign in."));
 		thenSoftly(softly -> softly.then(tenantCaptor.getValue().status()).isEqualTo(TenantStatus.ACTIVE));
 	}

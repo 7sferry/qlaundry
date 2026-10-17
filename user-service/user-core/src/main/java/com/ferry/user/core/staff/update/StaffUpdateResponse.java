@@ -16,5 +16,6 @@ public record StaffUpdateResponse(
 	Staff staff,
 	List<StaffEmail> emails,
 	List<StaffPhone> phones,
-	List<StaffAddress> addresses){
+	List<StaffAddress> addresses,
+	boolean passwordChanged){
 }

@@ -49,6 +49,12 @@ describe('LoginUseCase', () => {
 				.rejects.toThrow('Masukkan username dan password.');
 	});
 
+	it('rejects when username is longer than 50 characters', async () => {
+		await expect(useCase.execute({username: 'a'.repeat(51), password: 'secret'}))
+				.rejects.toThrow('Username maksimal 50 karakter.');
+		expect(loginFn).not.toHaveBeenCalled();
+	});
+
 	it('delegates to the repository with valid credentials', async () => {
 		const credentials = {username: 'admin', password: 'admin123'};
 		const result = await useCase.execute(credentials);

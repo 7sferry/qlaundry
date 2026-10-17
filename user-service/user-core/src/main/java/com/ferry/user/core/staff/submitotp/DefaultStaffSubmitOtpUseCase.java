@@ -1,5 +1,8 @@
 package com.ferry.user.core.staff.submitotp;
 
+import com.ferry.user.core.audit.AuthAction;
+import com.ferry.user.core.audit.AuthAuditLog;
+import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.common.Username;
@@ -20,9 +23,11 @@ public class DefaultStaffSubmitOtpUseCase implements StaffSubmitOtpUseCase {
 	private static final int RESET_TOKEN_BYTES = 32;
 
 	private final UserCacheManager cacheManager;
+	private final AuthAuditLog auditLog;
 
 	@Override
 	public void execute(StaffSubmitOtpRequest request, StaffSubmitOtpPresenter presenter){
+		String subject = request.username();
 		try{
 			request.validate();
 			Username username = new Username(request.username());
@@ -36,10 +41,13 @@ public class DefaultStaffSubmitOtpUseCase implements StaffSubmitOtpUseCase {
 			String resetToken = generateResetToken();
 			cacheManager.set(PasswordConstant.RESET_TOKEN_KEY + username.value(), resetToken,
 					PasswordConstant.RESET_TOKEN_DURATION);
+			auditLog.record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.SUCCESS, null, subject);
 			presenter.present(new StaffSubmitOtpResponse(resetToken));
 		} catch (FailedToSubmitOtpException e){
+			auditLog.record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.FAILURE, null, subject);
 			throw e;
 		} catch (Exception e){
+			auditLog.record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.FAILURE, null, subject);
 			throw new FailedToSubmitOtpException(e);
 		}
 	}

@@ -1,5 +1,8 @@
 package com.ferry.user.core.staff.submitotp;
 
+import com.ferry.user.core.audit.AuthAction;
+import com.ferry.user.core.audit.AuthAuditLog;
+import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.staff.submitotp.FailedToSubmitOtpException;
@@ -33,6 +36,8 @@ class DefaultStaffSubmitOtpUseCaseTest{
 
 	@Mock
 	UserCacheManager cacheManager;
+	@Mock
+	AuthAuditLog auditLog;
 	@InjectMocks
 	DefaultStaffSubmitOtpUseCase useCase;
 	@Mock
@@ -79,6 +84,7 @@ class DefaultStaffSubmitOtpUseCaseTest{
 		FailedToSubmitOtpException thrown = catchThrowableOfType(FailedToSubmitOtpException.class,
 				() -> useCase.execute(new StaffSubmitOtpRequest(USERNAME, OTP), presenter));
 
+		then(auditLog).should().record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.FAILURE, null, USERNAME);
 		thenSoftly(softly -> softly.then(thrown.getMessage()).isEqualTo("Invalid otp"));
 		then(cacheManager).should(never()).delete(any());
 		then(presenter).shouldHaveNoInteractions();
@@ -91,6 +97,7 @@ class DefaultStaffSubmitOtpUseCaseTest{
 		useCase.execute(new StaffSubmitOtpRequest(USERNAME, OTP), presenter);
 
 		then(cacheManager).should().delete(PasswordConstant.OTP_KEY + USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.SUCCESS, null, USERNAME);
 		then(cacheManager).should().set(eq(PasswordConstant.RESET_TOKEN_KEY + USERNAME), resetTokenCaptor.capture(),
 				eq(PasswordConstant.RESET_TOKEN_DURATION));
 		then(presenter).should().present(new StaffSubmitOtpResponse(resetTokenCaptor.getValue()));

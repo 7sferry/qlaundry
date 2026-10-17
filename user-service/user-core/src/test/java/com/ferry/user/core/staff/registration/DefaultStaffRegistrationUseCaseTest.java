@@ -1,5 +1,12 @@
 package com.ferry.user.core.staff.registration;
 
+import com.ferry.user.core.audit.AuthAuditLog;
+import com.ferry.user.core.audit.AuthAction;
+import com.ferry.user.core.audit.AuthResult;
+import com.ferry.user.core.tools.PasswordSubject;
+import com.ferry.user.core.tools.PasswordSubjectGateway;
+import com.ferry.user.domain.common.exception.NotFoundException;
+import com.ferry.user.domain.common.exception.PasswordPolicyException;
 import com.ferry.user.core.analytics.UserAnalyticsEvent;
 import com.ferry.user.core.analytics.StaffAnalyticsMessage;
 import com.ferry.user.core.analytics.UserAnalyticsPublisher;
@@ -31,6 +38,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.BDDMockito.then;
@@ -54,6 +62,8 @@ class DefaultStaffRegistrationUseCaseTest{
 	private static final String TENANT_ID = "tnt-jakarta-01";
 	private static final String HASHED_PASSWORD = "hashed-password";
 	private static final String GENERATED_ID = "stf-gen-777";
+	private static final PasswordSubject TENANT_SUBJECT = new PasswordSubject(null, null, "Laundry Kilat Jakarta",
+			"qlk_cabang07", null, null);
 
 	@Mock
 	StaffRegistrationGateway gateway;
@@ -61,6 +71,10 @@ class DefaultStaffRegistrationUseCaseTest{
 	PasswordTool passwordTool;
 	@Mock
 	UserAnalyticsPublisher analyticsPublisher;
+	@Mock
+	PasswordSubjectGateway subjectGateway;
+	@Mock
+	AuthAuditLog auditLog;
 	@InjectMocks
 	DefaultStaffRegistrationUseCase useCase;
 	@Mock
@@ -176,12 +190,80 @@ class DefaultStaffRegistrationUseCaseTest{
 	}
 
 	@Test
+	void givenPasswordContainsUsername_thenThrowsPasswordPolicyExceptionAndNeverSaves(){
+		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, "xx-BudiReStaff01-xx", FULL_NAME,
+				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+				.role(StaffRole.SUPER_STAFF).build();
+		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(Optional.of(TENANT_SUBJECT)).given(subjectGateway).findByTenantId(TENANT_ID);
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(PasswordPolicyException.class)
+				.hasMessage("Password must not contain your username"));
+
+		then(gateway).should(never()).save(any(Staff.class));
+		then(passwordTool).shouldHaveNoInteractions();
+		then(presenter).shouldHaveNoInteractions();
+		then(auditLog).should().record(AuthAction.STAFF_REGISTRATION, AuthResult.FAILURE, PRINCIPAL_ID, USERNAME);
+	}
+
+	@Test
+	void givenPasswordContainsLocalPartOfNewStaffEmail_thenThrowsPasswordPolicyException(){
+		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, "Pw-Kasir.Depan-2026", FULL_NAME,
+				"note", StaffRole.STAFF, List.of("kasir.depan@mailku.id"), null, null);
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+				.role(StaffRole.SUPER_STAFF).build();
+		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(Optional.of(TENANT_SUBJECT)).given(subjectGateway).findByTenantId(TENANT_ID);
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(PasswordPolicyException.class)
+				.hasMessage("Password must not contain your email address"));
+
+		then(gateway).should(never()).save(any(Staff.class));
+	}
+
+	@Test
+	void givenPasswordContainsTenantUsername_thenThrowsPasswordPolicyException(){
+		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, "Xx-QLK_Cabang07-Zz", FULL_NAME,
+				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+				.role(StaffRole.SUPER_STAFF).build();
+		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(Optional.of(TENANT_SUBJECT)).given(subjectGateway).findByTenantId(TENANT_ID);
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(PasswordPolicyException.class)
+				.hasMessage("Password must not contain the tenant username"));
+
+		then(gateway).should(never()).save(any(Staff.class));
+	}
+
+	@Test
+	void givenTenantOfPrincipalNotFound_thenThrowsNotFoundExceptionAndNeverSaves(){
+		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
+				"note", StaffRole.STAFF, List.of(EMAIL), null, null);
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
+				.role(StaffRole.SUPER_STAFF).build();
+		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(Optional.empty()).given(subjectGateway).findByTenantId(TENANT_ID);
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(NotFoundException.class)
+				.hasMessage("Tenant Not Found"));
+
+		then(gateway).should(never()).save(any(Staff.class));
+	}
+
+	@Test
 	void givenEmptyEmailsList_thenThrowsInvalidUserStateExceptionAfterStaffIsSaved(){
 		StaffRegistrationRequest request = new StaffRegistrationRequest(USERNAME, PASSWORD, FULL_NAME,
 				"note", StaffRole.STAFF, List.of(), null, null);
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(Optional.of(TENANT_SUBJECT)).given(subjectGateway).findByTenantId(TENANT_ID);
 		willReturn(new HashedPassword(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPassword.class));
 		willAnswer(invocation -> {
 			Staff arg = invocation.getArgument(0);
@@ -204,6 +286,7 @@ class DefaultStaffRegistrationUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(Optional.of(TENANT_SUBJECT)).given(subjectGateway).findByTenantId(TENANT_ID);
 		willReturn(new HashedPassword(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPassword.class));
 		willAnswer(invocation -> {
 			Staff arg = invocation.getArgument(0);
@@ -224,6 +307,7 @@ class DefaultStaffRegistrationUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(Optional.of(TENANT_SUBJECT)).given(subjectGateway).findByTenantId(TENANT_ID);
 		willReturn(new HashedPassword(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPassword.class));
 		willAnswer(invocation -> {
 			Staff arg = invocation.getArgument(0);
@@ -245,6 +329,7 @@ class DefaultStaffRegistrationUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(Optional.of(TENANT_SUBJECT)).given(subjectGateway).findByTenantId(TENANT_ID);
 		willReturn(new HashedPassword(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPassword.class));
 		willAnswer(invocation -> {
 			Staff arg = invocation.getArgument(0);
@@ -267,6 +352,7 @@ class DefaultStaffRegistrationUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(Optional.of(TENANT_SUBJECT)).given(subjectGateway).findByTenantId(TENANT_ID);
 		willReturn(new HashedPassword(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPassword.class));
 		willAnswer(invocation -> {
 			Staff arg = invocation.getArgument(0);
@@ -289,6 +375,7 @@ class DefaultStaffRegistrationUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(Optional.of(TENANT_SUBJECT)).given(subjectGateway).findByTenantId(TENANT_ID);
 		willReturn(new HashedPassword(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPassword.class));
 		willAnswer(invocation -> {
 			Staff arg = invocation.getArgument(0);
@@ -327,6 +414,7 @@ class DefaultStaffRegistrationUseCaseTest{
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(PRINCIPAL_ID).tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF).build();
 		willReturn(false).given(gateway).existsByUsername(new Username(USERNAME));
+		willReturn(Optional.of(TENANT_SUBJECT)).given(subjectGateway).findByTenantId(TENANT_ID);
 		willReturn(new HashedPassword(HASHED_PASSWORD)).given(passwordTool).hash(any(RawPassword.class));
 		willAnswer(invocation -> {
 			Staff arg = invocation.getArgument(0);

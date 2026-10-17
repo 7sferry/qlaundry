@@ -1,5 +1,8 @@
 package com.ferry.user.core.staff.refreshtoken;
 
+import com.ferry.user.core.audit.AuthAction;
+import com.ferry.user.core.audit.AuthAuditLog;
+import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.staff.constant.TokenConstant;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
@@ -27,10 +30,12 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 	private final StaffRefreshTokenGateway gateway;
 	private final TokenProcessor tokenProcessor;
 	private final UserCacheManager cacheManager;
+	private final AuthAuditLog auditLog;
 
 	@Override
 	public void execute(StaffRefreshTokenRequest request, StaffRefreshTokenPresenter presenter){
 		if(request.refreshToken() == null || request.refreshToken().isBlank()){
+			audit(AuthResult.FAILURE, null);
 			presenter.presentUnauthorized();
 			return;
 		}
@@ -40,22 +45,26 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 						StaffRefreshTokenResponse.class)
 				.orElse(null);
 		if(rotatedResponse != null){
+			audit(AuthResult.SUCCESS, null);
 			presenter.presentRotatedToken(rotatedResponse);
 			return;
 		}
 		UserSession currentSession = getCurrentSession(oldHashedRefreshToken);
 		if(currentSession.sessionType() != SessionType.STAFF){
+			audit(AuthResult.FAILURE, currentSession.userId());
 			presenter.presentUnauthorized();
 			return;
 		}
 		Instant now = Instant.now();
 		if(now.isAfter(currentSession.expirationTime())){
+			audit(AuthResult.FAILURE, currentSession.userId());
 			presenter.presentUnauthorized();
 			return;
 		}
 		String oldAccessToken = cacheManager.get(TokenConstant.ACCESS_KEY + oldHashedRefreshToken)
 				.orElse(null);
 		if(oldAccessToken != null){
+			audit(AuthResult.SUCCESS, currentSession.userId());
 			presenter.presentCachedToken(new StaffRefreshTokenResponse(oldAccessToken, null));
 			return;
 		}
@@ -68,11 +77,17 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 			StaffRefreshTokenResponse response = new StaffRefreshTokenResponse(newAccessToken, newRefreshToken);
 			cacheManager.set(TokenConstant.ROTATED_KEY + oldHashedRefreshToken, response,
 					Duration.ofSeconds(TokenConstant.ROTATION_GRACE_SECONDS));
+			audit(AuthResult.SUCCESS, currentSession.userId());
 			presenter.presentRotatedToken(response);
 			return;
 		}
 		updateAccessTokenCache(oldHashedRefreshToken, newAccessToken);
+		audit(AuthResult.SUCCESS, currentSession.userId());
 		presenter.presentCachedToken(new StaffRefreshTokenResponse(newAccessToken, null));
+	}
+
+	private void audit(AuthResult result, String userId){
+		auditLog.record(AuthAction.STAFF_REFRESH, result, userId, null);
 	}
 
 	private UserSession getCurrentSession(String hashedRefreshToken){
@@ -80,7 +95,10 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 		return cacheManager.get(cacheKey, UserSession.class)
 				.orElseGet(() -> {
 					UserSession session = gateway.findSessionById(hashedRefreshToken)
-							.orElseThrow(() -> new ExpiredSessionException("session expired"));
+							.orElseThrow(() -> {
+								audit(AuthResult.FAILURE, null);
+								return new ExpiredSessionException("session expired");
+							});
 					cacheSession(cacheKey, session);
 					return session;
 				});

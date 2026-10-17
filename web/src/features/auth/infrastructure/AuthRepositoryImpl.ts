@@ -4,6 +4,7 @@
  ************************/
 
 import {httpClient} from '@/core/http/httpClient';
+import {HttpError} from '@/core/http/HttpError';
 import {
 	clearRefreshTokenCookie,
 	getAccessToken,
@@ -71,7 +72,8 @@ export class AuthRepositoryImpl implements AuthRepository {
 				username: credentials.username,
 				password: credentials.password,
 			});
-		} catch {
+		} catch (err) {
+			if (err instanceof HttpError && err.status === 429) throw err;
 			throw new Error('Incorrect username or password.');
 		}
 		setAccessToken(tokens.accessToken);
@@ -124,7 +126,8 @@ export class AuthRepositoryImpl implements AuthRepository {
 	async resetPassword(username: string, password: string, resetToken: string): Promise<void> {
 		try {
 			await httpClient.post<{ message: string }>(AUTH_ENDPOINTS.resetPassword, {username, password, resetToken});
-		} catch {
+		} catch (err) {
+			if (err instanceof HttpError && err.status === 422) throw err;
 			// The backend only rejects this call when the single-use token is
 			// expired or already consumed — the flow must restart from the top.
 			throw new ResetSessionExpiredError();

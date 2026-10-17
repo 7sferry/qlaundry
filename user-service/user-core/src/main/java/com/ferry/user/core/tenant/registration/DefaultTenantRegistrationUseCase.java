@@ -1,5 +1,8 @@
 package com.ferry.user.core.tenant.registration;
 
+import com.ferry.user.core.audit.AuthAction;
+import com.ferry.user.core.audit.AuthAuditLog;
+import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.staff.registration.StaffRegistrationRequest;
@@ -37,21 +40,28 @@ public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCa
 	private final UserEmailPublisher emailPublisher;
 	private final VerificationGateway verificationGateway;
 	private final UserCacheManager cacheManager;
+	private final AuthAuditLog auditLog;
 
 	@Override
 	public void execute(TenantRegistrationRequest request, TenantRegistrationPresenter presenter){
 		request.validate();
-		verifyCaptcha(request);
 		try{
+			verifyCaptcha(request);
 			Tenant savedTenant = saveTenant(request);
 			StaffRegistrationResponse registeredAdmin = registerAdmin(request, savedTenant);
 			triggerRegistrationEmail(request, savedTenant, registeredAdmin);
+			auditLog.record(AuthAction.TENANT_REGISTRATION, AuthResult.SUCCESS, registeredAdmin.user().id(),
+					request.username());
 			presenter.present(new TenantRegistrationResponse(savedTenant, registeredAdmin));
 		} catch (InvalidUsernameException e){
 			log.warn("Failed to register tenant", e);
+			auditLog.record(AuthAction.TENANT_REGISTRATION, AuthResult.FAILURE, null, request.username());
 			Tenant fakeTenant = Tenant.fake(new FullName(request.tenantName()), new Username(request.username()));
 			Staff fakeStaff = Staff.fake(new FullName(request.fullName()), new Username(request.username()));
 			presenter.present(new TenantRegistrationResponse(fakeTenant, new StaffRegistrationResponse(fakeStaff)));
+		} catch (RuntimeException e){
+			auditLog.record(AuthAction.TENANT_REGISTRATION, AuthResult.FAILURE, null, request.username());
+			throw e;
 		}
 	}
 

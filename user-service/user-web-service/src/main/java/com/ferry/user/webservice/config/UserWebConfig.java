@@ -80,6 +80,7 @@ import com.ferry.user.core.tenant.resendconfirmation.TenantResendConfirmationUse
 import com.ferry.user.core.tenant.update.DefaultTenantUpdateUseCase;
 import com.ferry.user.core.tenant.update.TenantUpdateGateway;
 import com.ferry.user.core.tenant.update.TenantUpdateUseCase;
+import com.ferry.user.core.audit.AuthAuditLog;
 import com.ferry.user.core.tools.*;
 import com.ferry.user.gateway.analytics.*;
 import com.ferry.user.gateway.analytics.repository.UserAnalyticsEventJpaRepository;
@@ -91,6 +92,7 @@ import com.ferry.user.gateway.customer.repository.CustomerPhoneJpaRepository;
 import com.ferry.user.gateway.notification.entity.EmailTriggerJpa;
 import com.ferry.user.gateway.notification.repository.EmailTriggerJpaRepository;
 import com.ferry.user.gateway.redis.RedisUserEmailPublisher;
+import com.ferry.user.gateway.session.JpaStaffSessionGateway;
 import com.ferry.user.gateway.session.repository.UserSessionJpaRepository;
 import com.ferry.user.gateway.staff.*;
 import com.ferry.user.gateway.staff.entity.StaffAddressJpa;
@@ -100,6 +102,7 @@ import com.ferry.user.gateway.staff.repository.*;
 import com.ferry.user.gateway.tenant.*;
 import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import com.ferry.user.webservice.analytics.sweep.UserAnalyticsOutboxScheduler;
+import com.ferry.user.webservice.audit.Slf4jAuthAuditLog;
 import com.ferry.user.webservice.tenant.expiration.TenantExpirationScheduler;
 import com.ferry.user.webservice.tools.Argon2PasswordTool;
 import com.ferry.user.webservice.tools.DefaultUserCacheManager;
@@ -317,9 +320,10 @@ public class UserWebConfig{
 	TenantRegistrationUseCase tenantRegistrationUseCase(TenantRegistrationGateway tenantRegistrationGateway,
 	                                                    UserEmailPublisher emailPublisher,
 	                                                    VerificationGateway verificationGateway,
-	                                                    UserCacheManager userCacheManager){
+	                                                    UserCacheManager userCacheManager,
+	                                                    AuthAuditLog authAuditLog){
 		return new DefaultTenantRegistrationUseCase(tenantRegistrationGateway, emailPublisher,
-				verificationGateway, userCacheManager);
+				verificationGateway, userCacheManager, authAuditLog);
 	}
 
 	@Bean
@@ -329,8 +333,10 @@ public class UserWebConfig{
 
 	@Bean
 	TenantConfirmRegistrationUseCase tenantConfirmRegistrationUseCase(TenantConfirmRegistrationGateway tenantConfirmRegistrationGateway,
-	                                                                  UserCacheManager userCacheManager){
-		return new DefaultTenantConfirmRegistrationUseCase(tenantConfirmRegistrationGateway, userCacheManager);
+	                                                                  UserCacheManager userCacheManager,
+	                                                                  AuthAuditLog authAuditLog){
+		return new DefaultTenantConfirmRegistrationUseCase(tenantConfirmRegistrationGateway, userCacheManager,
+				authAuditLog);
 	}
 
 	@Bean
@@ -343,8 +349,10 @@ public class UserWebConfig{
 	@Bean
 	TenantResendConfirmationUseCase tenantResendConfirmationUseCase(TenantResendConfirmationGateway tenantResendConfirmationGateway,
 	                                                                UserEmailPublisher emailPublisher,
-	                                                                UserCacheManager userCacheManager){
-		return new DefaultTenantResendConfirmationUseCase(tenantResendConfirmationGateway, emailPublisher, userCacheManager);
+	                                                                UserCacheManager userCacheManager,
+	                                                                AuthAuditLog authAuditLog){
+		return new DefaultTenantResendConfirmationUseCase(tenantResendConfirmationGateway, emailPublisher,
+				userCacheManager, authAuditLog);
 	}
 
 	@Bean
@@ -390,8 +398,36 @@ public class UserWebConfig{
 	@Bean
 	StaffRegistrationUseCase staffRegistrationUseCase(StaffRegistrationGateway staffRegistrationGateway,
 	                                                  PasswordTool passwordTool,
-	                                                  UserAnalyticsPublisher userAnalyticsPublisher){
-		return new DefaultStaffRegistrationUseCase(staffRegistrationGateway, passwordTool, userAnalyticsPublisher);
+	                                                  UserAnalyticsPublisher userAnalyticsPublisher,
+	                                                  PasswordSubjectGateway passwordSubjectGateway,
+	                                                  AuthAuditLog authAuditLog){
+		return new DefaultStaffRegistrationUseCase(staffRegistrationGateway, passwordTool, userAnalyticsPublisher,
+				passwordSubjectGateway, authAuditLog);
+	}
+
+	@Bean
+	AuthAuditLog authAuditLog(){
+		return new Slf4jAuthAuditLog();
+	}
+
+	@Bean
+	PasswordSubjectGateway passwordSubjectGateway(StaffJpaRepository staffJpaRepository,
+	                                              StaffEmailJpaRepository staffEmailJpaRepository,
+	                                              StaffPhoneJpaRepository staffPhoneJpaRepository,
+	                                              TenantJpaRepository tenantJpaRepository,
+	                                              CryptoTool cryptoTool){
+		return new JpaPasswordSubjectGateway(staffJpaRepository, staffEmailJpaRepository, staffPhoneJpaRepository,
+				tenantJpaRepository, cryptoTool);
+	}
+
+	@Bean
+	StaffSessionGateway staffSessionGateway(UserSessionJpaRepository userSessionJpaRepository){
+		return new JpaStaffSessionGateway(userSessionJpaRepository);
+	}
+
+	@Bean
+	StaffSessionRevoker staffSessionRevoker(StaffSessionGateway staffSessionGateway, UserCacheManager userCacheManager){
+		return new DefaultStaffSessionRevoker(staffSessionGateway, userCacheManager);
 	}
 
 	@Bean
@@ -409,8 +445,10 @@ public class UserWebConfig{
 
 	@Bean
 	StaffLoginUseCase staffLoginUseCase(StaffLoginGateway staffLoginGateway, PasswordTool passwordTool,
-	                                    TokenProcessor tokenProcessor, UserCacheManager userCacheManager){
-		return new DefaultStaffLoginUseCase(staffLoginGateway, passwordTool, tokenProcessor, userCacheManager);
+	                                    TokenProcessor tokenProcessor, UserCacheManager userCacheManager,
+	                                    AuthAuditLog authAuditLog){
+		return new DefaultStaffLoginUseCase(staffLoginGateway, passwordTool, tokenProcessor, userCacheManager,
+				authAuditLog);
 	}
 
 	@Bean
@@ -474,8 +512,10 @@ public class UserWebConfig{
 
 	@Bean
 	StaffRefreshTokenUseCase staffRefreshTokenUseCase(StaffRefreshTokenGateway staffRefreshTokenGateway,
-	                                                  TokenProcessor tokenProcessor, UserCacheManager userCacheManager){
-		return new DefaultStaffRefreshTokenUseCase(staffRefreshTokenGateway, tokenProcessor, userCacheManager);
+	                                                  TokenProcessor tokenProcessor, UserCacheManager userCacheManager,
+	                                                  AuthAuditLog authAuditLog){
+		return new DefaultStaffRefreshTokenUseCase(staffRefreshTokenGateway, tokenProcessor, userCacheManager,
+				authAuditLog);
 	}
 
 	@Bean
@@ -485,8 +525,8 @@ public class UserWebConfig{
 
 	@Bean
 	StaffLogoutUseCase staffLogoutUseCase(StaffLogoutGateway staffLogoutGateway, TokenProcessor tokenProcessor,
-	                                      UserCacheManager userCacheManager){
-		return new DefaultStaffLogoutUseCase(staffLogoutGateway, tokenProcessor, userCacheManager);
+	                                      UserCacheManager userCacheManager, AuthAuditLog authAuditLog){
+		return new DefaultStaffLogoutUseCase(staffLogoutGateway, tokenProcessor, userCacheManager, authAuditLog);
 	}
 
 	@Bean
@@ -498,13 +538,15 @@ public class UserWebConfig{
 	@Bean
 	StaffForgottenPasswordUseCase staffForgottenPasswordUseCase(StaffForgottenPasswordGateway staffForgottenPasswordGateway,
 	                                                            UserEmailPublisher emailPublisher,
-	                                                            UserCacheManager userCacheManager){
-		return new DefaultStaffForgottenPasswordUseCase(staffForgottenPasswordGateway, emailPublisher, userCacheManager);
+	                                                            UserCacheManager userCacheManager,
+	                                                            AuthAuditLog authAuditLog){
+		return new DefaultStaffForgottenPasswordUseCase(staffForgottenPasswordGateway, emailPublisher,
+				userCacheManager, authAuditLog);
 	}
 
 	@Bean
-	StaffSubmitOtpUseCase staffSubmitOtpUseCase(UserCacheManager userCacheManager){
-		return new DefaultStaffSubmitOtpUseCase(userCacheManager);
+	StaffSubmitOtpUseCase staffSubmitOtpUseCase(UserCacheManager userCacheManager, AuthAuditLog authAuditLog){
+		return new DefaultStaffSubmitOtpUseCase(userCacheManager, authAuditLog);
 	}
 
 	@Bean
@@ -516,8 +558,12 @@ public class UserWebConfig{
 
 	@Bean
 	StaffResetPasswordUseCase staffResetPasswordUseCase(StaffResetPasswordGateway staffResetPasswordGateway,
-	                                                    PasswordTool passwordTool, UserCacheManager userCacheManager){
-		return new DefaultStaffResetPasswordUseCase(staffResetPasswordGateway, passwordTool, userCacheManager);
+	                                                    PasswordTool passwordTool, UserCacheManager userCacheManager,
+	                                                    PasswordSubjectGateway passwordSubjectGateway,
+	                                                    StaffSessionRevoker staffSessionRevoker,
+	                                                    AuthAuditLog authAuditLog){
+		return new DefaultStaffResetPasswordUseCase(staffResetPasswordGateway, passwordTool, userCacheManager,
+				passwordSubjectGateway, staffSessionRevoker, authAuditLog);
 	}
 
 	@Bean
@@ -547,8 +593,11 @@ public class UserWebConfig{
 	}
 
 	@Bean
-	StaffUpdateUseCase staffUpdateUseCase(StaffUpdateGateway staffUpdateGateway, PasswordTool passwordTool){
-		return new DefaultStaffUpdateUseCase(staffUpdateGateway, passwordTool);
+	StaffUpdateUseCase staffUpdateUseCase(StaffUpdateGateway staffUpdateGateway, PasswordTool passwordTool,
+	                                      PasswordSubjectGateway passwordSubjectGateway,
+	                                      StaffSessionRevoker staffSessionRevoker, AuthAuditLog authAuditLog){
+		return new DefaultStaffUpdateUseCase(staffUpdateGateway, passwordTool, passwordSubjectGateway,
+				staffSessionRevoker, authAuditLog);
 	}
 
 	@Bean

@@ -1,5 +1,8 @@
 package com.ferry.user.core.tenant.resendconfirmation;
 
+import com.ferry.user.core.audit.AuthAction;
+import com.ferry.user.core.audit.AuthAuditLog;
+import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tenant.constant.TenantConfirmationConstant;
@@ -37,10 +40,12 @@ public class DefaultTenantResendConfirmationUseCase implements TenantResendConfi
 	private final TenantResendConfirmationGateway gateway;
 	private final UserEmailPublisher emailPublisher;
 	private final UserCacheManager cacheManager;
+	private final AuthAuditLog auditLog;
 
 	@Override
 	public void execute(TenantResendConfirmationRequest request, TenantResendConfirmationPresenter presenter){
 		long startedAt = System.nanoTime();
+		String subject = request.tenantId();
 		try{
 			request.validate();
 			TenantId tenantId = new TenantId(request.tenantId());
@@ -52,10 +57,12 @@ public class DefaultTenantResendConfirmationUseCase implements TenantResendConfi
 			TenantAdminContactProjection admin = gateway.findAdminContact(tenantId)
 					.orElseThrow(() -> new FailedToResendConfirmationException("Tenant not found"));
 			resendConfirmationEmail(tenant, admin);
+			auditLog.record(AuthAction.TENANT_RESEND_CONFIRMATION, AuthResult.SUCCESS, null, subject);
 			presenter.present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
 			awaitMinimumResponseTime(startedAt);
 		} catch (Exception e){
 			log.error("Failed to process resend confirmation request", e);
+			auditLog.record(AuthAction.TENANT_RESEND_CONFIRMATION, AuthResult.FAILURE, null, subject);
 			presenter.present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
 			awaitMinimumResponseTime(startedAt);
 		}

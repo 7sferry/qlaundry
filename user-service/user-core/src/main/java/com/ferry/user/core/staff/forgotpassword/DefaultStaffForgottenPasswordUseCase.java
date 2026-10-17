@@ -1,5 +1,8 @@
 package com.ferry.user.core.staff.forgotpassword;
 
+import com.ferry.user.core.audit.AuthAction;
+import com.ferry.user.core.audit.AuthAuditLog;
+import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tools.UserEmailPublisher;
@@ -41,6 +44,7 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 	private final StaffForgottenPasswordGateway gateway;
 	private final UserEmailPublisher emailPublisher;
 	private final UserCacheManager userCacheManager;
+	private final AuthAuditLog auditLog;
 
 	@Override
 	public void execute(StaffForgottenPasswordRequest request, StaffForgottenPasswordPresenter presenter){
@@ -58,16 +62,19 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 						EmailTriggerType.FORGOTTEN_PASSWORD, recipient);
 				EmailTrigger saved = emailPublisher.save(config);
 				emailPublisher.publish(saved);
+				auditLog.record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.SUCCESS, email.staffId(), username.value());
 				String maskedEmail = maskEmail(email.email());
 				presenter.present(new StaffForgottenPasswordResponse(maskedEmail));
 				awaitMinimumResponseTime(startedAt);
 			}, () -> {
+				auditLog.record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.FAILURE, null, username.value());
 				String maskedFakeEmail = maskFakeEmail(username.value());
 				presenter.present(new StaffForgottenPasswordResponse(maskedFakeEmail));
 				awaitMinimumResponseTime(startedAt);
 			});
 		} catch (Exception e){
 			log.error("Failed to process forgotten password request", e);
+			auditLog.record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.FAILURE, null, request.username());
 			String maskedFakeEmail = maskFakeEmail(request.username());
 			presenter.present(new StaffForgottenPasswordResponse(maskedFakeEmail));
 			awaitMinimumResponseTime(startedAt);

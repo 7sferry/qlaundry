@@ -27,7 +27,11 @@ DELETE /auth/staff/logout
 
 - A new tenant is `PENDING` until its confirmation link is clicked; its staff can't log in before then. The link is valid for 24 hours (resend for a new one), and a tenant that never confirms is removed after 30 days, freeing its username.
 - Login returns a short-lived access token (Ed25519-signed JWT, 15 min) and sets an HTTP-only `refresh_token` cookie scoped to `/auth`. The access token carries the tenant id, role and the tenant's `timeZone`.
-- Passwords are hashed with Argon2. A new password can't equal the current one or any password used in the last 90 days.
+- Usernames are 5 to 50 characters: letters, digits and underscore.
+- Passwords are hashed with Argon2. A new password can't equal the current one or any password used in the last 90 days, and (registration, `/staff/profile`, reset) can't contain the account's username, full name or any name word, the tenant name or tenant username, any email (with or without its domain) or phone number (with or without country code) — rejected with **422** and the reason in `detail`.
+- Changing the password through `/staff/profile` or resetting it expires every refresh session of that staff and clears the `refresh_token` cookie; an already-issued access token stays valid until it expires on its own.
+- **Login lock**: 3 failed logins for the same username (existing or not), each within 5 minutes of the previous one, lock that username for 10 minutes, answered with **429** + `Retry-After`. A successful login or a completed password reset clears the lock and the counter. State is in Redis (`login:attempt:<sha256(username)>`, `login:lock:<sha256(username)>`); to unlock early `redis-cli -a 12345 DEL login:lock:$(printf '%s' <username> | sha256sum | cut -d' ' -f1)`.
+- Every auth endpoint writes one line per call to `logs/user-auth-audit.log` (logger `AUTH_AUDIT`): `action`, `result` (`SUCCESS`/`FAILURE`/`LOCKED`), `userId`, `subject` (the username or tenant id the caller named), `ip`.
 
 ### Staff
 

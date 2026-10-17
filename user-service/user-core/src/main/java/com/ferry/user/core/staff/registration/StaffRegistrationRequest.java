@@ -12,7 +12,7 @@ import java.util.List;
  ************************/
 
 public record StaffRegistrationRequest(
-	@NotBlank @Pattern(regexp = "^[a-zA-Z0-9_]+$") @Size(min = 5) String username,
+	@NotBlank @Pattern(regexp = "^[a-zA-Z0-9_]+$") @Size(min = 5, max = 50) String username,
 	@NotBlank String password,
 	@NotBlank String fullName,
 	String description,

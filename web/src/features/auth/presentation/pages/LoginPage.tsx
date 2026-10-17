@@ -7,6 +7,7 @@ import React, {useState} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
 import {ArrowRight, LockKeyhole, User2, WashingMachine} from 'lucide-react';
 import {Button, Field, Input, PasswordInput} from '@/core/ui';
+import {USERNAME_MAX_LENGTH} from '@/core/utils/username';
 import {useAuth} from '../useAuth';
 
 export default function LoginPage() {
@@ -69,6 +70,7 @@ export default function LoginPage() {
 							<Input
 									id="username"
 									value={username}
+									maxLength={USERNAME_MAX_LENGTH}
 									onChange={(e) => setUsername(e.target.value)}
 									autoComplete="off"
  								placeholder="Enter username"

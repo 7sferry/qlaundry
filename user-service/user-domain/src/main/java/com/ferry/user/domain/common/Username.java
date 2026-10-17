@@ -9,6 +9,7 @@ import com.ferry.user.domain.common.exception.InvalidUsernameException;
 
 public record Username(String value) {
 
+	private static final int MAX_LENGTH = 50;
 	private static final String ALLOWED_PATTERN = "^[a-zA-Z0-9_]+$";
 
 	public Username {
@@ -19,7 +20,9 @@ public record Username(String value) {
 		if (value.length() < 5) {
 			throw new InvalidUsernameException("Username must be at least 5 characters long");
 		}
-		value = value.toLowerCase().trim();
+		if (value.length() > MAX_LENGTH) {
+			throw new InvalidUsernameException("Username must be at most 50 characters long");
+		}
 		if (!value.matches(ALLOWED_PATTERN)) {
 			throw new InvalidUsernameException("Username must only contain letters, numbers and underscore");
 		}

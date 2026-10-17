@@ -176,4 +176,11 @@ public class DefaultCacheHandler implements CacheHandler{
 		return redis.delete(key);
 	}
 
+	@Override
+	public long increment(String key, Duration expiry){
+		Long count = redis.opsForValue().increment(key);
+		redis.expire(key, expiry);
+		return count == null ? 0 : count;
+	}
+
 }

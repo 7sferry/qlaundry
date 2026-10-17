@@ -1,10 +1,17 @@
 package com.ferry.user.core.staff.update;
 
+import com.ferry.user.core.audit.AuthAction;
+import com.ferry.user.core.audit.AuthAuditLog;
+import com.ferry.user.core.audit.AuthResult;
+import com.ferry.user.core.tools.PasswordSubject;
+import com.ferry.user.core.tools.PasswordSubjectGateway;
+import com.ferry.user.core.tools.StaffSessionRevoker;
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.domain.common.*;
 import com.ferry.user.domain.common.exception.InvalidPasswordException;
 import com.ferry.user.domain.common.exception.InvalidUserStateException;
 import com.ferry.user.domain.common.exception.NotFoundException;
+import com.ferry.user.domain.common.exception.PasswordPolicyException;
 import com.ferry.user.domain.staff.*;
 import com.ferry.user.domain.token.UserAuthPrincipal;
 import jakarta.validation.ConstraintViolationException;
@@ -41,10 +48,19 @@ class DefaultStaffUpdateUseCaseTest{
 	private static final String PHONE = "+6281234567890";
 	private static final String ADDRESS_LINE = "Jl. Merdeka No. 1";
 
+	private static final PasswordSubject SUBJECT = new PasswordSubject(USERNAME, "Rahmat Hidayat",
+			"Laundry Bersih Jaya", "bersih_jaya_laundry", List.of(EMAIL), List.of(PHONE));
+
 	@Mock
 	StaffUpdateGateway gateway;
 	@Mock
 	PasswordTool passwordTool;
+	@Mock
+	PasswordSubjectGateway subjectGateway;
+	@Mock
+	StaffSessionRevoker sessionRevoker;
+	@Mock
+	AuthAuditLog auditLog;
 	@InjectMocks
 	DefaultStaffUpdateUseCase useCase;
 	@Mock
@@ -53,6 +69,8 @@ class DefaultStaffUpdateUseCaseTest{
 	ArgumentCaptor<Staff> staffCaptor;
 	@Captor
 	ArgumentCaptor<StaffPassword> passwordCaptor;
+	@Captor
+	ArgumentCaptor<StaffUpdateResponse> responseCaptor;
 
 	@Test
 	void givenBlankFullName_thenThrowsConstraintViolationException(){
@@ -172,10 +190,13 @@ class DefaultStaffUpdateUseCaseTest{
 		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
 				.given(gateway).findCurrentPassword(USER_ID);
 		willReturn(true).given(passwordTool).matches("current-password", OLD_HASHED_PASSWORD);
+		willReturn(Optional.of(SUBJECT)).given(subjectGateway).findByStaffId(USER_ID);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(InvalidPasswordException.class)
+				.isInstanceOf(PasswordPolicyException.class)
 				.hasMessage("New password must be different from your current password"));
+		then(auditLog).should().record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.FAILURE, USER_ID, USERNAME);
+		then(sessionRevoker).shouldHaveNoInteractions();
 
 		then(gateway).should(never()).save(any(Staff.class));
 		then(gateway).should(never()).save(any(StaffPassword.class));
@@ -199,9 +220,10 @@ class DefaultStaffUpdateUseCaseTest{
 		StaffPasswordProjection usedThisQuarter = new StaffPasswordProjection("quarter-old-hash");
 		willReturn(List.of(usedThisQuarter)).given(gateway).findRecentPasswords(eq(USER_ID), any(Instant.class));
 		willReturn(true).given(passwordTool).matches("OldSecret2025", "quarter-old-hash");
+		willReturn(Optional.of(SUBJECT)).given(subjectGateway).findByStaffId(USER_ID);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(InvalidPasswordException.class));
+				.isInstanceOf(PasswordPolicyException.class));
 
 		then(gateway).should(never()).save(any(Staff.class));
 		then(gateway).should(never()).save(any(StaffPassword.class));
@@ -244,6 +266,7 @@ class DefaultStaffUpdateUseCaseTest{
 		willReturn(true).given(passwordTool).matches("current-password", OLD_HASHED_PASSWORD);
 		willReturn(List.of()).given(gateway).findRecentPasswords(eq(USER_ID), any(Instant.class));
 		willReturn(new HashedPassword("new-hash-xyz789")).given(passwordTool).hash(any());
+		willReturn(Optional.of(SUBJECT)).given(subjectGateway).findByStaffId(USER_ID);
 		willDoNothing().given(gateway).save(any(StaffPassword.class));
 		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(Staff.class));
 		willReturn(List.of()).given(gateway).findEmailsByStaffId(USER_ID);
@@ -253,10 +276,100 @@ class DefaultStaffUpdateUseCaseTest{
 		useCase.execute(request, principal, presenter);
 
 		then(gateway).should().save(passwordCaptor.capture());
+		then(sessionRevoker).should().revokeAll(USER_ID);
+		then(auditLog).should().record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.SUCCESS, USER_ID, USERNAME);
+		then(presenter).should().present(responseCaptor.capture());
 		thenSoftly(softly -> {
 			softly.then(passwordCaptor.getValue().passwordValue()).isEqualTo("new-hash-xyz789");
 			softly.then(passwordCaptor.getValue().staffId()).isEqualTo(USER_ID);
+			softly.then(responseCaptor.getValue().passwordChanged()).isTrue();
 		});
+	}
+
+	@Test
+	void givenNewPasswordContainsUsername_thenThrowsPasswordPolicyExceptionBeforeAnyPasswordIsSaved(){
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
+		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
+				"Rahmat_Staff01!x", List.of(EMAIL), null, null);
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+				.toBuilder().id(USER_ID).build();
+		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
+		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
+				.given(gateway).findCurrentPassword(USER_ID);
+		willReturn(true).given(passwordTool).matches("current-password", OLD_HASHED_PASSWORD);
+		willReturn(Optional.of(SUBJECT)).given(subjectGateway).findByStaffId(USER_ID);
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(PasswordPolicyException.class)
+				.hasMessage("Password must not contain your username"));
+
+		then(gateway).should(never()).save(any(StaffPassword.class));
+		then(gateway).should(never()).save(any(Staff.class));
+		then(sessionRevoker).shouldHaveNoInteractions();
+		then(auditLog).should().record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.FAILURE, USER_ID, USERNAME);
+		then(presenter).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void givenNewPasswordContainsEmailTypedInThisSameRequest_thenThrowsPasswordPolicyException(){
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
+		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
+				"Budi.Santoso#2026", List.of("budi.santoso@qlaundry.com"), null, null);
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+				.toBuilder().id(USER_ID).build();
+		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
+		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
+				.given(gateway).findCurrentPassword(USER_ID);
+		willReturn(true).given(passwordTool).matches("current-password", OLD_HASHED_PASSWORD);
+		willReturn(Optional.of(SUBJECT)).given(subjectGateway).findByStaffId(USER_ID);
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(PasswordPolicyException.class)
+				.hasMessage("Password must not contain your email address"));
+
+		then(gateway).should(never()).save(any(StaffPassword.class));
+	}
+
+	@Test
+	void givenNewPasswordContainsTenantName_thenThrowsPasswordPolicyException(){
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
+		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
+				"Bersih-Jaya-77", List.of(EMAIL), null, null);
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+				.toBuilder().id(USER_ID).build();
+		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
+		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
+				.given(gateway).findCurrentPassword(USER_ID);
+		willReturn(true).given(passwordTool).matches("current-password", OLD_HASHED_PASSWORD);
+		willReturn(Optional.of(SUBJECT)).given(subjectGateway).findByStaffId(USER_ID);
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(PasswordPolicyException.class)
+				.hasMessage("Password must not contain the tenant name"));
+	}
+
+	@Test
+	void givenSubjectOfStaffNotFound_thenThrowsNotFoundException(){
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
+		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
+				"NewSecret2026", List.of(EMAIL), null, null);
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+				.toBuilder().id(USER_ID).build();
+		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
+		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
+				.given(gateway).findCurrentPassword(USER_ID);
+		willReturn(true).given(passwordTool).matches("current-password", OLD_HASHED_PASSWORD);
+		willReturn(Optional.empty()).given(subjectGateway).findByStaffId(USER_ID);
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(NotFoundException.class)
+				.hasMessage("Staff Not Found"));
+
+		then(gateway).should(never()).save(any(StaffPassword.class));
 	}
 
 	@Test
@@ -285,7 +398,8 @@ class DefaultStaffUpdateUseCaseTest{
 		then(gateway).should(times(1)).save(any(StaffEmail.class));
 		then(gateway).should(times(1)).save(any(StaffPhone.class));
 		then(gateway).should(times(1)).save(any(StaffAddress.class));
-		then(presenter).should().present(new StaffUpdateResponse(staffCaptor.getValue(), emails, phones, addresses));
+		then(presenter).should().present(new StaffUpdateResponse(staffCaptor.getValue(), emails, phones, addresses, false));
+		then(sessionRevoker).shouldHaveNoInteractions();
 	}
 
 	@Test

@@ -8,6 +8,7 @@ import {useNavigate} from 'react-router-dom';
 import {ArrowRight, CheckCircle2, KeyRound, LockKeyhole, User2, WashingMachine} from 'lucide-react';
 import {Button, Field, Input, PasswordInput} from '@/core/ui';
 import {useToast} from '@/core/ui/useToast';
+import {USERNAME_MAX_LENGTH} from '@/core/utils/username';
 import {ResetSessionExpiredError} from '../../domain/errors';
 import {authRepository} from '../../infrastructure/AuthRepositoryImpl';
 import {ForgotPasswordUseCase} from '../../application/ForgotPasswordUseCase';
@@ -106,6 +107,7 @@ export default function ForgotPasswordPage() {
 										<Input
 												id="username"
 												value={username}
+												maxLength={USERNAME_MAX_LENGTH}
 												onChange={(e) => setUsername(e.target.value)}
 												autoComplete="off"
     								placeholder="Enter username"

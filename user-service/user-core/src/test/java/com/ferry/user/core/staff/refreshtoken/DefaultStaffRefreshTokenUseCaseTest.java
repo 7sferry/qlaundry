@@ -1,5 +1,8 @@
 package com.ferry.user.core.staff.refreshtoken;
 
+import com.ferry.user.core.audit.AuthAction;
+import com.ferry.user.core.audit.AuthAuditLog;
+import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.staff.constant.TokenConstant;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
@@ -56,6 +59,8 @@ class DefaultStaffRefreshTokenUseCaseTest{
 	TokenProcessor tokenProcessor;
 	@Mock
 	UserCacheManager cacheManager;
+	@Mock
+	AuthAuditLog auditLog;
 	@InjectMocks
 	DefaultStaffRefreshTokenUseCase useCase;
 	@Mock
@@ -73,6 +78,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		then(tokenProcessor).shouldHaveNoInteractions();
 		then(cacheManager).shouldHaveNoInteractions();
 		then(presenter).should().presentUnauthorized();
+		then(auditLog).should().record(AuthAction.STAFF_REFRESH, AuthResult.FAILURE, null, null);
 	}
 
 	@Test
@@ -98,6 +104,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 				.isInstanceOf(ExpiredSessionException.class)
 				.hasMessage("session expired"));
 
+		then(auditLog).should().record(AuthAction.STAFF_REFRESH, AuthResult.FAILURE, null, null);
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -124,6 +131,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
 		then(presenter).should().presentUnauthorized();
+		then(auditLog).should().record(AuthAction.STAFF_REFRESH, AuthResult.FAILURE, USER_ID, null);
 	}
 
 	@Test
@@ -155,6 +163,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
 		then(presenter).should().presentCachedToken(new StaffRefreshTokenResponse("cached-access-token", null));
+		then(auditLog).should().record(AuthAction.STAFF_REFRESH, AuthResult.SUCCESS, USER_ID, null);
 		then(gateway).shouldHaveNoInteractions();
 		then(cacheManager).should(never()).set(eq(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN), any(), any());
 	}

@@ -59,6 +59,14 @@ describe('RegisterUseCase', () => {
 				.rejects.toThrow('Password minimal 6 karakter.');
 	});
 
+	it('rejects when username is longer than 50 characters', async () => {
+		const registerFn = vi.fn().mockResolvedValue(undefined);
+		const useCase = new RegisterUseCase(makeRepo(registerFn));
+		await expect(useCase.execute({...validData, username: 'a'.repeat(51)}))
+				.rejects.toThrow('Username must be at most 50 characters.');
+		expect(registerFn).not.toHaveBeenCalled();
+	});
+
 	it('rejects when captchaToken is missing', async () => {
 		const useCase = new RegisterUseCase(makeRepo());
 		await expect(useCase.execute({...validData, captchaToken: ''}))

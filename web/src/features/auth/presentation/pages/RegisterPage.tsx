@@ -8,6 +8,7 @@ import {useNavigate} from 'react-router-dom';
 import {ArrowLeft, ArrowRight, Building2, LockKeyhole, Mail, MapPin, User2, WashingMachine} from 'lucide-react';
 import {Button, Field, Input, PasswordInput, PhoneInput, Turnstile, type TurnstileHandle} from '@/core/ui';
 import {env} from '@/core/config/env';
+import {USERNAME_MAX_LENGTH} from '@/core/utils/username';
 import {useAuth} from '../useAuth';
 
 const initialForm = {
@@ -31,6 +32,9 @@ function validateForm(form: RegisterForm): Partial<Record<FieldKey, string>> {
 	const errors: Partial<Record<FieldKey, string>> = {};
 	for (const key of REQUIRED_FIELDS) {
 		if (!form[key].trim()) errors[key] = REQUIRED_MESSAGE;
+	}
+	if (!errors.username && form.username.trim().length > USERNAME_MAX_LENGTH) {
+		errors.username = `Username must be at most ${USERNAME_MAX_LENGTH} characters.`;
 	}
 	if (!errors.password && form.password.length < 6) {
 		errors.password = 'Password must be at least 6 characters.';
@@ -192,6 +196,7 @@ export default function RegisterPage() {
 											required
 											autoComplete="off"
 											value={form.username}
+											maxLength={USERNAME_MAX_LENGTH}
 											onChange={update('username')}
    								placeholder="At least 4 characters"
 									/>

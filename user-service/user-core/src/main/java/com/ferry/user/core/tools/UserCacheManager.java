@@ -23,4 +23,6 @@ public interface UserCacheManager{
 	Optional<String> getAndDelete(String key);
 
 	boolean delete(String key);
+
+	long increment(String key, Duration expiry);
 }

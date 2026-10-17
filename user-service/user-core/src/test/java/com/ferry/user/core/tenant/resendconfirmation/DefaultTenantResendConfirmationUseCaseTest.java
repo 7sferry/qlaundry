@@ -1,5 +1,8 @@
 package com.ferry.user.core.tenant.resendconfirmation;
 
+import com.ferry.user.core.audit.AuthAction;
+import com.ferry.user.core.audit.AuthAuditLog;
+import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.tenant.constant.TenantConfirmationConstant;
 import com.ferry.user.core.tenant.registration.TenantRegistrationEmailMessage;
@@ -54,6 +57,8 @@ class DefaultTenantResendConfirmationUseCaseTest{
 	UserEmailPublisher emailPublisher;
 	@Mock
 	UserCacheManager cacheManager;
+	@Mock
+	AuthAuditLog auditLog;
 	@InjectMocks
 	DefaultTenantResendConfirmationUseCase useCase;
 	@Mock
@@ -123,6 +128,7 @@ class DefaultTenantResendConfirmationUseCaseTest{
 		useCase.execute(new TenantResendConfirmationRequest(TENANT_ID), presenter);
 
 		then(emailPublisher).should().publish(trigger);
+		then(auditLog).should().record(AuthAction.TENANT_RESEND_CONFIRMATION, AuthResult.SUCCESS, null, TENANT_ID);
 		then(presenter).should().present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
 		EmailTriggerConfig config = emailConfigCaptor.getValue();
 		TenantRegistrationEmailMessage message = (TenantRegistrationEmailMessage) config.payload();

@@ -1,5 +1,8 @@
 package com.ferry.user.core.staff.forgotpassword;
 
+import com.ferry.user.core.audit.AuthAction;
+import com.ferry.user.core.audit.AuthAuditLog;
+import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tools.UserEmailPublisher;
@@ -45,6 +48,8 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 	UserEmailPublisher emailPublisher;
 	@Mock
 	UserCacheManager userCacheManager;
+	@Mock
+	AuthAuditLog auditLog;
 	@InjectMocks
 	DefaultStaffForgottenPasswordUseCase useCase;
 	@Mock
@@ -75,6 +80,7 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 
 		then(userCacheManager).shouldHaveNoInteractions();
 		then(emailPublisher).shouldHaveNoInteractions();
+		then(auditLog).should().record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.FAILURE, null, USERNAME);
 		then(presenter).should().present(responseCaptor.capture());
 		String notFoundMaskedEmail = responseCaptor.getValue().email();
 		thenSoftly(softly -> softly.then(notFoundMaskedEmail).matches(FAKE_EMAIL_PATTERN));
@@ -100,6 +106,7 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 		useCase.execute(new StaffForgottenPasswordRequest(USERNAME), presenter);
 
 		then(userCacheManager).should().set(eq(PasswordConstant.OTP_KEY + USERNAME), otpCaptor.capture(), eq(PasswordConstant.OTP_DURATION));
+		then(auditLog).should().record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.SUCCESS, STAFF_ID, USERNAME);
 		then(emailPublisher).should().publish(trigger);
 		then(presenter).should().present(responseCaptor.capture());
 

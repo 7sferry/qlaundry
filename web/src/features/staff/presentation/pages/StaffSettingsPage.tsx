@@ -4,7 +4,9 @@
  ************************/
 
 import React, {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import {Card, Loading, PageHeader, useToast} from '@/core/ui';
+import {endSession} from '@/core/auth/endSession';
 import {useAuth} from '@/features/auth/presentation/useAuth';
 import {useOnceEffect} from '@/core/hooks/useOnceEffect';
 import {GetStaffUseCase} from '../../application/GetStaffUseCase';
@@ -20,6 +22,7 @@ const updateStaffUseCase = new UpdateStaffUseCase(staffRepository);
 export default function StaffSettingsPage() {
 	const {user} = useAuth();
 	const toast = useToast();
+	const navigate = useNavigate();
 
 	const [form, setForm] = useState<StaffFormData>(emptyStaffForm);
 	const [original, setOriginal] = useState<StaffFormData>(emptyStaffForm);
@@ -76,6 +79,11 @@ export default function StaffSettingsPage() {
 				newPassword: form.newPassword || undefined,
 			};
 			await updateStaffUseCase.execute(input);
+			if (input.newPassword) {
+				endSession();
+				navigate('/login', {replace: true, state: {notice: 'Password berhasil diubah. Silakan masuk kembali.'}});
+				return;
+			}
 			const saved: StaffFormData = {...form, currentPassword: '', newPassword: '', confirmNewPassword: ''};
 			setForm(saved);
 			setOriginal(saved);

@@ -3,6 +3,7 @@
  * on Juli 2026         *
  ************************/
 
+import {USERNAME_MAX_LENGTH} from '@/core/utils/username';
 import type {StaffRepository} from '../domain/StaffRepository';
 import type {CreateStaffInput, Staff} from '../domain/Staff';
 
@@ -27,6 +28,9 @@ export class CreateStaffUseCase {
 		}
 		if (username.length < 5) {
 			return Promise.reject(new Error('Username minimal 5 karakter.'));
+		}
+		if (username.length > USERNAME_MAX_LENGTH) {
+			return Promise.reject(new Error(`Username maksimal ${USERNAME_MAX_LENGTH} karakter.`));
 		}
 		if (password.length < 8) {
 			return Promise.reject(new Error('Password minimal 8 karakter.'));

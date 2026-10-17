@@ -1,11 +1,16 @@
 package com.ferry.user.webservice.staff.update;
 
+import com.ferry.user.core.staff.constant.TokenConstant;
 import com.ferry.user.core.staff.update.StaffUpdatePresenter;
 import com.ferry.user.core.staff.update.StaffUpdateResponse;
 import com.ferry.user.webservice.staff.update.StaffUpdateRestResponse.Address;
 import com.ferry.user.webservice.staff.update.StaffUpdateRestResponse.Email;
 import com.ferry.user.webservice.staff.update.StaffUpdateRestResponse.Phone;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -16,7 +21,9 @@ import java.util.List;
  ************************/
 
 @Getter
+@RequiredArgsConstructor
 public class WebStaffUpdatePresenter implements StaffUpdatePresenter{
+	private final HttpServletResponse servletResponse;
 	private ResponseEntity<StaffUpdateRestResponse> responseEntity;
 
 	@Override
@@ -28,6 +35,19 @@ public class WebStaffUpdatePresenter implements StaffUpdatePresenter{
 		responseEntity = ResponseEntity.ok(new StaffUpdateRestResponse(response.staff().descriptionValue(),
 				response.staff().fullNameValue(), createdAt, response.staff().usernameValue(),
 				response.staff().role().name(), emails, phones, addresses));
+		if(response.passwordChanged()){
+			servletResponse.addHeader(HttpHeaders.SET_COOKIE, getExpiredRefreshCookie().toString());
+		}
+	}
+
+	private ResponseCookie getExpiredRefreshCookie(){
+		return ResponseCookie.from(TokenConstant.REFRESH_TOKEN_COOKIE, "")
+				.httpOnly(true)
+				.secure(false)
+				.path(TokenConstant.AUTH_PATH)
+				.maxAge(0)
+				.sameSite("Lax")
+				.build();
 	}
 
 }

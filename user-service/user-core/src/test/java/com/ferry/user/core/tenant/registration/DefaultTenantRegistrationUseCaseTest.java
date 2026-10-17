@@ -1,5 +1,8 @@
 package com.ferry.user.core.tenant.registration;
 
+import com.ferry.user.core.audit.AuthAction;
+import com.ferry.user.core.audit.AuthAuditLog;
+import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.registration.StaffRegistrationRequest;
 import com.ferry.user.core.staff.registration.StaffRegistrationResponse;
@@ -59,6 +62,8 @@ class DefaultTenantRegistrationUseCaseTest{
 	VerificationGateway verificationGateway;
 	@Mock
 	UserCacheManager cacheManager;
+	@Mock
+	AuthAuditLog auditLog;
 	@InjectMocks
 	DefaultTenantRegistrationUseCase useCase;
 	@Mock
@@ -129,6 +134,7 @@ class DefaultTenantRegistrationUseCaseTest{
 		then(gateway).should(never()).save(any(Tenant.class));
 		then(gateway).should(never()).registerAdmin(any(StaffRegistrationRequest.class), any(Tenant.class));
 		then(emailPublisher).shouldHaveNoInteractions();
+		then(auditLog).should().record(AuthAction.TENANT_REGISTRATION, AuthResult.FAILURE, null, USERNAME);
 	}
 
 	@Test
@@ -240,6 +246,7 @@ class DefaultTenantRegistrationUseCaseTest{
 		useCase.execute(request, presenter);
 
 		then(presenter).should().present(responseCaptor.capture());
+		then(auditLog).should().record(AuthAction.TENANT_REGISTRATION, AuthResult.SUCCESS, null, USERNAME);
 		TenantRegistrationResponse response = responseCaptor.getValue();
 		thenSoftly(softly -> {
 			softly.then(response.tenant().id()).isEqualTo(TENANT_ID);
