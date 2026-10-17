@@ -15,6 +15,7 @@ export {StatCard} from './StatCard';
 export {PageHeader} from './PageHeader';
 export {Pagination} from './Pagination';
 export {Modal} from './Modal';
+export {ConfirmDialog} from './ConfirmDialog';
 export {Drawer} from './Drawer';
 export {ToastProvider} from './Toast';
 export {Skeleton, SkeletonText, SkeletonCard} from './Skeleton';

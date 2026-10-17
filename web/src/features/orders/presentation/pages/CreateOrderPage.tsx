@@ -25,7 +25,7 @@ import {
 import {Badge, Button, Card, Field, Input, Modal, PageHeader, Pagination, Select, Textarea, useToast} from '@/core/ui';
 import {formatCurrency} from '@/core/utils/format';
 import {usePlaceOrder, useServices} from '../useOrders';
-import {useCustomerSearch} from '@/features/customers/presentation/useCustomers';
+import {useCreateCustomer, useCustomerSearch} from '@/features/customers/presentation/useCustomers';
 import type {Customer} from '@/features/customers/domain/Customer';
 import {usePromotions} from '@/features/promotions/presentation/usePromotions';
 import {usePromotionPreview} from '@/features/promotions/presentation/usePromotionPreview';
@@ -39,20 +39,23 @@ const CLOTHING_TYPES: ClothingType[] = [
 
 const PAYMENT_METHODS: PaymentMethod[] = ['cash'];
 
-function toLocalDateString(d: Date): string {
+function toLocalDatetimeValue(d: Date): string {
 	const pad = (n: number) => String(n).padStart(2, '0');
-	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-/** `toISOString()` reports UTC, which is a different calendar day from local time near midnight — this reads the wall-clock date instead. */
-function todayLocalDate(): string {
-	return toLocalDateString(new Date());
+function nowLocalDatetime(): string {
+	return toLocalDatetimeValue(new Date());
 }
 
-/** `new Date('YYYY-MM-DD')` parses as UTC midnight, which is the *previous* calendar day in any timezone behind UTC — this reads it as a local date instead. */
-function parseLocalDate(dateStr: string): Date {
-	const [year, month, day] = dateStr.split('-').map(Number);
-	return new Date(year, month - 1, day);
+function startOfTodayLocalDatetime(): string {
+	const d = new Date();
+	d.setHours(0, 0, 0, 0);
+	return toLocalDatetimeValue(d);
+}
+
+function addHoursLocalDatetime(datetime: string, hours: number): string {
+	return toLocalDatetimeValue(new Date(new Date(datetime).getTime() + hours * 3_600_000));
 }
 
 function initials(fullName: string): string {
@@ -63,6 +66,7 @@ export default function CreateOrderPage() {
 	const navigate = useNavigate();
 	const toast = useToast();
 	const {placeOrder} = usePlaceOrder();
+	const {createCustomer} = useCreateCustomer();
 	const {services, loading: servicesLoading} = useServices();
 	const {matches: customerMatches, searching: searchingCustomers, hasNext, hasPrev, search, goNext, goPrevious} =
 		useCustomerSearch();
@@ -85,6 +89,7 @@ export default function CreateOrderPage() {
 	const [nameSearch, setNameSearch] = useState('');
 	const [searchModalOpen, setSearchModalOpen] = useState(false);
 	const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>(undefined);
+	const [registerPromptOpen, setRegisterPromptOpen] = useState(false);
 	// An ordered array, not a map keyed by code, for two reasons: the picker is paginated (see usePromotions())
 	// so a code selected on one page must not vanish from this list/the preview/the removable chip list the
 	// moment the user pages away from wherever it happened to be shown — and the order itself is meaningful,
@@ -100,7 +105,7 @@ export default function CreateOrderPage() {
 		customerName: '',
 		customerPhone: '',
 		customerAddress: '',
-		pickupDate: todayLocalDate(),
+		pickupDate: nowLocalDatetime(),
 		estimatedDelivery: '',
 		notes: '',
 	});
@@ -233,9 +238,7 @@ export default function CreateOrderPage() {
 	const autoDelivery = useCallback(
 		(pickup: string) => {
 			if (!service || !pickup) return '';
-			const d = parseLocalDate(pickup);
-			d.setHours(d.getHours() + turnaroundHours);
-			return toLocalDateString(d);
+			return addHoursLocalDatetime(pickup, turnaroundHours);
 		},
 		[service, turnaroundHours],
 	);
@@ -290,13 +293,44 @@ export default function CreateOrderPage() {
 
 	const clearSelectedCustomer = () => setSelectedCustomerId(undefined);
 
-	const submit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+	const submit = (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
+		if (!service) return;
+		if (!selectedCustomerId) {
+			setRegisterPromptOpen(true);
+			return;
+		}
+		void submitOrder(selectedCustomerId);
+	};
+
+	const registerAndSubmit = async () => {
+		setRegisterPromptOpen(false);
+		setSubmitting(true);
+		try {
+			const customer = await createCustomer({
+				fullName: form.customerName,
+				phone: form.customerPhone,
+				address: form.customerAddress,
+			});
+			setSelectedCustomerId(customer.id);
+			await submitOrder(customer.id);
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Gagal mendaftarkan pelanggan. Coba lagi.');
+			setSubmitting(false);
+		}
+	};
+
+	const continueAsNonMember = () => {
+		setRegisterPromptOpen(false);
+		void submitOrder(undefined);
+	};
+
+	const submitOrder = async (customerId: string | undefined) => {
 		if (!service) return;
 		setSubmitting(true);
 		try {
 			await placeOrder({
-				customerId: selectedCustomerId,
+				customerId,
 				customerName: form.customerName,
 				customerPhone: form.customerPhone,
 				customerAddress: form.customerAddress,
@@ -574,20 +608,20 @@ export default function CreateOrderPage() {
 
 						<Card title="4. Schedule & payment" subtitle="Choose the dates and payment method.">
 							<div className="form-grid">
-								<Field label="Pickup date" htmlFor="pickup">
+								<Field label="Pickup date & time" htmlFor="pickup">
 									<Input
 										id="pickup"
-										type="date"
+										type="datetime-local"
 										required
 										value={form.pickupDate}
 										onChange={handlePickupChange}
-										min={todayLocalDate()}
+										min={startOfTodayLocalDatetime()}
 									/>
 								</Field>
 								<Field label="Estimated completion" htmlFor="delivery">
 									<Input
 										id="delivery"
-										type="date"
+										type="datetime-local"
 										required
 										value={form.estimatedDelivery || autoDelivery(form.pickupDate)}
 										onChange={update('estimatedDelivery')}
@@ -751,6 +785,19 @@ export default function CreateOrderPage() {
 					</aside>
 				</div>
 			</form>
+
+			<Modal open={registerPromptOpen} onClose={() => setRegisterPromptOpen(false)} title="Register customer?" size="sm">
+				<p className="muted" style={{fontSize: 13}}>
+					{form.customerName || 'This customer'} is not a registered member. Register them first so their orders
+					are linked to a customer record?
+				</p>
+				<Button block type="button" style={{marginTop: 16}} onClick={() => void registerAndSubmit()}>
+					Yes, register and create order
+				</Button>
+				<Button block type="button" variant="ghost" style={{marginTop: 8}} onClick={continueAsNonMember}>
+					No, continue as non-member
+				</Button>
+			</Modal>
 
 			<Modal open={searchModalOpen} onClose={() => setSearchModalOpen(false)} title="Select a customer" size="sm">
 				{searchingCustomers ? (

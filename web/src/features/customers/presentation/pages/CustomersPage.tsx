@@ -8,6 +8,7 @@ import {Edit2, Mail, MapPin, Phone, Plus, Search, Star, Trash2, UserPlus, Users,
 import {
 	Button,
 	Card,
+	ConfirmDialog,
 	Drawer,
 	Field,
 	Input,
@@ -115,6 +116,8 @@ export default function CustomersPage() {
 	const [editMode, setEditMode] = useState(false);
 	const [form, setForm] = useState<CustomerFormData>(emptyForm);
 	const [saving, setSaving] = useState(false);
+	const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+	const [deleting, setDeleting] = useState(false);
 
 	// Compares against the *last processed* filter snapshot, not a boolean "have we mounted" flag —
 	// see `PromotionsPage`'s identical effect for why a boolean (with or without a self-resetting
@@ -179,14 +182,18 @@ export default function CustomersPage() {
 		}
 	};
 
-	const handleDelete = async (c: Customer) => {
-		if (!confirm(`Delete customer ${c.fullName}? This cannot be undone.`)) return;
+	const handleDelete = async () => {
+		if (!customerToDelete) return;
+		setDeleting(true);
 		try {
-			await deleteCustomer(c.id);
-			toast.success(`${c.fullName} deleted.`);
+			await deleteCustomer(customerToDelete.id);
+			toast.success(`${customerToDelete.fullName} deleted.`);
 			setSelectedCustomer(null);
+			setCustomerToDelete(null);
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to delete customer.');
+		} finally {
+			setDeleting(false);
 		}
 	};
 
@@ -299,7 +306,7 @@ export default function CustomersPage() {
 												<button className="icon-btn" onClick={() => openEdit(c)} title="Edit">
 													<Edit2 size={14}/>
 												</button>
-    								<button className="icon-btn icon-btn--danger" onClick={() => void handleDelete(c)}
+    								<button className="icon-btn icon-btn--danger" onClick={() => setCustomerToDelete(c)}
     								        title="Delete">
 													<Trash2 size={14}/>
 												</button>
@@ -348,7 +355,7 @@ export default function CustomersPage() {
 						footer={
 								selectedCustomer && (
 										<div className="row" style={{gap: 8, justifyContent: 'flex-end'}}>
-   								<Button variant="danger" onClick={() => void handleDelete(selectedCustomer)}>
+   								<Button variant="danger" onClick={() => setCustomerToDelete(selectedCustomer)}>
    									<Trash2 size={14}/> Delete
    								</Button>
    								<Button onClick={() => openEdit(selectedCustomer)}>
@@ -436,6 +443,16 @@ export default function CustomersPage() {
 							editMode={editMode}
 					/>
 				</Modal>
+
+				<ConfirmDialog
+						open={customerToDelete !== null}
+						title="Delete customer"
+						message={`Delete ${customerToDelete?.fullName ?? 'this customer'}? This cannot be undone.`}
+						confirmLabel={deleting ? 'Deleting…' : 'Delete'}
+						busy={deleting}
+						onConfirm={() => void handleDelete()}
+						onCancel={() => setCustomerToDelete(null)}
+				/>
 			</>
 	);
 }

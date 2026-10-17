@@ -23,14 +23,14 @@ export function usePromotionStats() {
 export function usePromotionList() {
 	const fetchPromotionPage = useCallback((filters?: PromotionFilters) => useCases.listPromotions(filters), []);
 	const {
-		items: promotions, setItems: setPromotions, loading, error, hasNext, hasPrev, refresh, goNext, goPrevious,
+		items: promotions, setItems: setPromotions, loading, error, hasNext, hasPrev, refresh, reload, goNext, goPrevious,
 	} = usePaginatedList<Promotion, PromotionFilters>(fetchPromotionPage);
 
 	const createPromotion = useCallback(async (input: CreatePromotionInput): Promise<Promotion> => {
 		const p = await useCases.createPromotion(input);
-		setPromotions((prev) => [p, ...prev]);
+		await reload(true);
 		return p;
-	}, [setPromotions]);
+	}, [reload]);
 
 	const updatePromotion = useCallback(async (input: UpdatePromotionInput): Promise<Promotion> => {
 		const updated = await useCases.updatePromotion(input);

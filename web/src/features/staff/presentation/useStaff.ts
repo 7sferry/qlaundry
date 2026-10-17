@@ -30,14 +30,14 @@ export function useStaffStats() {
 export function useStaff() {
 	const fetchStaffPage = useCallback((filters?: StaffFilters) => listStaffUseCase.execute(filters), []);
 	const {
-		items: staff, setItems: setStaff, loading, error, hasNext, hasPrev, refresh, goNext, goPrevious,
+		items: staff, setItems: setStaff, loading, error, hasNext, hasPrev, refresh, reload, goNext, goPrevious,
 	} = usePaginatedList<Staff, StaffFilters>(fetchStaffPage);
 
 	const createStaff = useCallback(async (input: CreateStaffInput): Promise<Staff> => {
 		const s = await createStaffUseCase.execute(input);
-		setStaff((prev) => [s, ...prev]);
+		await reload(true);
 		return s;
-	}, [setStaff]);
+	}, [reload]);
 
 	const updateStaff = useCallback(async (input: UpdateStaffInput): Promise<Staff> => {
 		const updated = await updateStaffUseCase.execute(input);
@@ -47,8 +47,8 @@ export function useStaff() {
 
 	const deleteStaff = useCallback(async (id: string): Promise<void> => {
 		await deleteStaffUseCase.execute(id);
-		setStaff((prev) => prev.filter((s) => s.id !== id));
-	}, [setStaff]);
+		await reload();
+	}, [reload]);
 
 	return {
 		staff,

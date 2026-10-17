@@ -30,7 +30,7 @@ interface CustomerTotalsApiResponse {
 }
 
 interface TopCustomerApiResponse {
-	customers: { customerId: string; totalOrders: number; totalSpend: number }[];
+	customers: { customerId: string | null; totalOrders: number; totalSpend: number }[];
 }
 
 interface CustomerNamesApiResponse {
@@ -48,6 +48,8 @@ interface CustomerTotals {
 }
 
 const NO_TOTALS: CustomerTotals = {totalOrders: 0, totalSpend: 0};
+
+const NON_MEMBER_NAME = 'Non-members';
 
 async function fetchTotals(customerIds: string[]): Promise<Map<string, CustomerTotals>> {
 	const totals = new Map<string, CustomerTotals>();
@@ -180,19 +182,23 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 
 	async getTopCustomers(period?: CustomerStatsPeriod): Promise<TopCustomer[]> {
 		const res = await httpClient.get<TopCustomerApiResponse>(`${CUSTOMER_ENDPOINTS.top}${periodQuery(period)}`);
-		if (res.customers.length === 0) return [];
-		const params = new URLSearchParams();
-		for (const c of res.customers) params.append('customerIds', c.customerId);
-		const names = await httpClient.get<CustomerNamesApiResponse>(`${CUSTOMER_ENDPOINTS.names}?${params.toString()}`);
-		const nameById = new Map(names.customers.map((n) => [n.customerId, n.fullName]));
-		return res.customers
-				.filter((c) => nameById.has(c.customerId))
-				.map((c) => ({
-					customerId: c.customerId,
-					fullName: nameById.get(c.customerId) as string,
-					totalOrders: c.totalOrders,
-					totalSpend: c.totalSpend,
-				}));
+		const memberIds = res.customers.flatMap((c) => (c.customerId === null ? [] : [c.customerId]));
+		const nameById = new Map<string, string>();
+		if (memberIds.length > 0) {
+			const params = new URLSearchParams();
+			for (const id of memberIds) params.append('customerIds', id);
+			const names = await httpClient.get<CustomerNamesApiResponse>(`${CUSTOMER_ENDPOINTS.names}?${params.toString()}`);
+			for (const n of names.customers) nameById.set(n.customerId, n.fullName);
+		}
+		return res.customers.flatMap((c) => {
+			if (c.customerId === null) {
+				return [{customerId: null, fullName: NON_MEMBER_NAME, totalOrders: c.totalOrders, totalSpend: c.totalSpend}];
+			}
+			const fullName = nameById.get(c.customerId);
+			return fullName === undefined
+					? []
+					: [{customerId: c.customerId, fullName, totalOrders: c.totalOrders, totalSpend: c.totalSpend}];
+		});
 	}
 }
 

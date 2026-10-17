@@ -30,6 +30,7 @@ export function usePaginatedList<T, F extends PaginationParams>(
 	const nextCursor = useRef<string | null>(null);
 	const prevCursor = useRef<string | null>(null);
 	const baseFilters = useRef<F | undefined>(undefined);
+	const lastRequest = useRef<F | undefined>(undefined);
 
 	const applyPage = useCallback((page: Page<T>) => {
 		setItems(page.items);
@@ -41,6 +42,7 @@ export function usePaginatedList<T, F extends PaginationParams>(
 
 	useOnceEffect(() => {
 		if (options?.lazy) return;
+		lastRequest.current = undefined;
 		fetchPage(undefined)
 				.then(applyPage)
 				.catch((err) => setError(err instanceof Error ? err.message : 'Failed to load'))
@@ -49,6 +51,7 @@ export function usePaginatedList<T, F extends PaginationParams>(
 
 	const refresh = useCallback(async (filters?: F) => {
 		baseFilters.current = filters;
+		lastRequest.current = filters;
 		setLoading(true);
 		setError(null);
 		try {
@@ -65,7 +68,9 @@ export function usePaginatedList<T, F extends PaginationParams>(
 		setLoading(true);
 		setError(null);
 		try {
-			applyPage(await fetchPage({...baseFilters.current, after: nextCursor.current} as F));
+			const request = {...baseFilters.current, after: nextCursor.current} as F;
+			lastRequest.current = request;
+			applyPage(await fetchPage(request));
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Failed to load');
 		} finally {
@@ -78,7 +83,9 @@ export function usePaginatedList<T, F extends PaginationParams>(
 		setLoading(true);
 		setError(null);
 		try {
-			applyPage(await fetchPage({...baseFilters.current, before: prevCursor.current} as F));
+			const request = {...baseFilters.current, before: prevCursor.current} as F;
+			lastRequest.current = request;
+			applyPage(await fetchPage(request));
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Failed to load');
 		} finally {
@@ -86,5 +93,25 @@ export function usePaginatedList<T, F extends PaginationParams>(
 		}
 	}, [fetchPage, applyPage]);
 
-	return {items, setItems, loading, error, hasNext, hasPrev, refresh, goNext, goPrevious};
+	const reload = useCallback(async (firstPage = false) => {
+		setLoading(true);
+		setError(null);
+		try {
+			const request = firstPage ? baseFilters.current : lastRequest.current;
+			lastRequest.current = request;
+			const page = await fetchPage(request);
+			if (page.items.length === 0 && (request?.after || request?.before)) {
+				lastRequest.current = baseFilters.current;
+				applyPage(await fetchPage(baseFilters.current));
+			} else {
+				applyPage(page);
+			}
+		} catch (err) {
+			setError(err instanceof Error ? err.message : 'Failed to load');
+		} finally {
+			setLoading(false);
+		}
+	}, [fetchPage, applyPage]);
+
+	return {items, setItems, loading, error, hasNext, hasPrev, refresh, reload, goNext, goPrevious};
 }

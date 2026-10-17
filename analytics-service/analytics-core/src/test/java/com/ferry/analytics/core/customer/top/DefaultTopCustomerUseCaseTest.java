@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
 import static org.mockito.ArgumentMatchers.any;
@@ -74,6 +75,34 @@ class DefaultTopCustomerUseCaseTest{
 			softly.then(windowCaptor.getValue().to()).isEqualTo(Instant.parse("2026-10-20T09:00:00Z"));
 			softly.then(responseCaptor.getValue().customers()).isEqualTo(top);
 		});
+	}
+
+	@Test
+	void givenNonMemberOrders_thenAddsThemAsOneRowRankedBySpend(){
+		DefaultTopCustomerUseCase useCase = new DefaultTopCustomerUseCase(gateway,
+				Clock.fixed(Instant.parse("2026-10-12T04:00:00Z"), ZoneOffset.UTC));
+		AnalyticsAuthPrincipal principal = AnalyticsAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.SUPER_STAFF)
+				.build();
+		TopCustomerProjection bigMember = new TopCustomerProjection("01CUSTOMERHENDRAWAN00000", 6L,
+				BigDecimal.valueOf(540000));
+		TopCustomerProjection smallMember = new TopCustomerProjection("01CUSTOMERLINDASARI00000", 1L,
+				BigDecimal.valueOf(30000));
+		TopCustomerProjection nonMember = new TopCustomerProjection(null, 9L, BigDecimal.valueOf(210000));
+		willReturn(List.of(bigMember, smallMember)).given(gateway)
+				.top(any(TenantId.class), any(PeriodWindow.class), anyInt());
+		willReturn(Optional.of(nonMember)).given(gateway)
+				.nonMember(any(TenantId.class), any(PeriodWindow.class));
+
+		useCase.execute(new TopCustomerRequest(ReportPeriod.WEEK), principal, presenter);
+
+		then(presenter).should()
+				.present(responseCaptor.capture());
+
+		thenSoftly(softly -> softly.then(responseCaptor.getValue().customers())
+				.containsExactly(bigMember, nonMember, smallMember));
 	}
 
 	@Test

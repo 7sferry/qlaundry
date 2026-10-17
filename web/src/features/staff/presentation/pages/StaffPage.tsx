@@ -5,7 +5,7 @@
 
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {UserPlus, Users} from 'lucide-react';
-import {Button, Loading, Modal, PageHeader, StatCard, useToast} from '@/core/ui';
+import {Button, ConfirmDialog, Loading, Modal, PageHeader, StatCard, useToast} from '@/core/ui';
 import {useAuth} from '@/features/auth/presentation/useAuth';
 import {DEFAULT_PAGE_SIZE, type SortDirection} from '@/core/pagination/Pagination';
 import {useStaff, useStaffStats} from '../useStaff';
@@ -33,6 +33,8 @@ export default function StaffPage() {
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [form, setForm] = useState<StaffFormData>(emptyStaffForm);
 	const [saving, setSaving] = useState(false);
+	const [staffToDelete, setStaffToDelete] = useState<Staff | null>(null);
+	const [deleting, setDeleting] = useState(false);
 
 	// Compares against the *last processed* filter snapshot, not a boolean "have we mounted" flag —
 	// see `PromotionsPage`'s identical effect for why a boolean (with or without a self-resetting
@@ -92,14 +94,18 @@ export default function StaffPage() {
 		}
 	};
 
-	const handleDelete = async (s: Staff) => {
-		if (!confirm(`Delete staff ${s.fullName}? This cannot be undone.`)) return;
+	const handleDelete = async () => {
+		if (!staffToDelete) return;
+		setDeleting(true);
 		try {
-			await deleteStaff(s.id);
-			toast.success(`${s.fullName} deleted.`);
+			await deleteStaff(staffToDelete.id);
+			toast.success(`${staffToDelete.fullName} deleted.`);
 			setSelectedStaff(null);
+			setStaffToDelete(null);
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to delete staff.');
+		} finally {
+			setDeleting(false);
 		}
 	};
 
@@ -139,7 +145,7 @@ export default function StaffPage() {
 				sortDir={sortDir}
 				onSortChange={handleSortChange}
 				onSelect={setSelectedStaff}
-				onDelete={(s) => void handleDelete(s)}
+				onDelete={setStaffToDelete}
 				onAdd={openAdd}
 				canDelete={canDelete}
 				hasNext={hasNext}
@@ -166,8 +172,18 @@ export default function StaffPage() {
 				staff={selectedStaff}
 				open={!!selectedStaff}
 				onClose={() => setSelectedStaff(null)}
-				onDelete={(s) => void handleDelete(s)}
+				onDelete={setStaffToDelete}
 				canDelete={selectedStaff ? canDelete(selectedStaff) : false}
+			/>
+
+			<ConfirmDialog
+				open={staffToDelete !== null}
+				title="Delete staff"
+				message={`Delete ${staffToDelete?.fullName ?? 'this staff'}? This cannot be undone.`}
+				confirmLabel={deleting ? 'Deleting…' : 'Delete'}
+				busy={deleting}
+				onConfirm={() => void handleDelete()}
+				onCancel={() => setStaffToDelete(null)}
 			/>
 		</>
 	);

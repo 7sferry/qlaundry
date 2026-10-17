@@ -12,7 +12,25 @@ const idrFormatter = new Intl.NumberFormat('id-ID', {
 
 export const formatCurrency = (value: number): string => idrFormatter.format(value);
 
-export const formatDate = (value: string | Date): string => {
+export interface CompactCurrencyUnit {
+	divisor: number;
+	suffix: string;
+}
+
+const COMPACT_CURRENCY_UNITS: CompactCurrencyUnit[] = [
+	{divisor: 1_000_000_000_000, suffix: 'T'},
+	{divisor: 1_000_000_000, suffix: 'mlr'},
+	{divisor: 1_000_000, suffix: 'jt'},
+	{divisor: 1_000, suffix: 'rb'},
+];
+
+export const compactCurrencyUnit = (max: number): CompactCurrencyUnit =>
+		COMPACT_CURRENCY_UNITS.find((unit) => max >= unit.divisor) ?? {divisor: 1, suffix: ''};
+
+export const formatCompactCurrency = (value: number, unit: CompactCurrencyUnit): string =>
+		`${(value / unit.divisor).toLocaleString('id-ID', {maximumFractionDigits: 1})}${unit.suffix}`;
+
+export const formatDate =(value: string | Date): string => {
 	const date = typeof value === 'string' ? new Date(value) : value;
 	if (Number.isNaN(date.getTime())) return String(value);
 	return date.toLocaleDateString('en-GB', {

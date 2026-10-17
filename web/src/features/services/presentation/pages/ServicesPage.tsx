@@ -10,6 +10,7 @@ import {
 	type BadgeTone,
 	Button,
 	Card,
+	ConfirmDialog,
 	Field,
 	Input,
 	Loading,
@@ -180,6 +181,8 @@ export default function ServicesPage() {
 	const [editMode, setEditMode] = useState(false);
 	const [form, setForm] = useState<ServiceFormData>(emptyForm);
 	const [saving, setSaving] = useState(false);
+	const [serviceToDelete, setServiceToDelete] = useState<LaundryService | null>(null);
+	const [deleting, setDeleting] = useState(false);
 
 	// Compares against the *last processed* filter snapshot, not a boolean "have we mounted" flag —
 	// see `PromotionsPage`'s identical effect for why a boolean (with or without a self-resetting
@@ -268,14 +271,18 @@ export default function ServicesPage() {
 		}
 	};
 
-	const handleDelete = async (s: LaundryService) => {
-		if (!confirm(`Delete service "${s.name}"? This cannot be undone.`)) return;
+	const handleDelete = async () => {
+		if (!serviceToDelete) return;
+		setDeleting(true);
 		try {
-			await deleteService(s.id);
-			toast.success(`${s.name} deleted.`);
+			await deleteService(serviceToDelete.id);
+			toast.success(`${serviceToDelete.name} deleted.`);
 			setSelectedService(null);
+			setServiceToDelete(null);
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to delete service.');
+		} finally {
+			setDeleting(false);
 		}
 	};
 
@@ -406,7 +413,7 @@ export default function ServicesPage() {
 														<button className="icon-btn" onClick={() => openEdit(s)} title="Edit">
 															<Edit2 size={14}/>
 														</button>
-														<button className="icon-btn icon-btn--danger" onClick={() => void handleDelete(s)}
+														<button className="icon-btn icon-btn--danger" onClick={() => setServiceToDelete(s)}
 														        title="Delete">
 															<Trash2 size={14}/>
 														</button>
@@ -447,6 +454,16 @@ export default function ServicesPage() {
 					<ServiceForm form={form} update={update} toggle={toggle} onSubmit={handleSave}
 					             onCancel={handleCancel} saving={saving} editMode={true}/>
 				</Modal>
+
+				<ConfirmDialog
+						open={serviceToDelete !== null}
+						title="Delete service"
+						message={`Delete service "${serviceToDelete?.name ?? ''}"? This cannot be undone.`}
+						confirmLabel={deleting ? 'Deleting…' : 'Delete'}
+						busy={deleting}
+						onConfirm={() => void handleDelete()}
+						onCancel={() => setServiceToDelete(null)}
+				/>
 			</>
 	);
 }

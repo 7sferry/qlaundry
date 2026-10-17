@@ -3,13 +3,14 @@
  * on September 2026     *
  ************************/
 
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {Button, Card, Field, Input, Loading, PageHeader, Select, Textarea, useToast} from '@/core/ui';
 import {useOnceEffect} from '@/core/hooks/useOnceEffect';
 import {GetTenantUseCase} from '../../application/GetTenantUseCase';
 import {UpdateTenantUseCase} from '../../application/UpdateTenantUseCase';
 import {tenantRepository} from '../../infrastructure/TenantRepositoryImpl';
 import type {UpdateTenantInput} from '../../domain/Tenant';
+import {groupTimeZones, representativeZone, timeZoneGroupLabel} from '../timeZoneGroups';
 
 const getTenantUseCase = new GetTenantUseCase(tenantRepository);
 const updateTenantUseCase = new UpdateTenantUseCase(tenantRepository);
@@ -40,6 +41,21 @@ export default function TenantSettingsPage() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [saving, setSaving] = useState(false);
+
+	const timeZoneGroups = useMemo(
+			() => groupTimeZones([...TIME_ZONES, 'UTC', original.timeZone]),
+			[original.timeZone],
+	);
+
+	const selectedOffset = timeZoneGroups.find((group) => group.zones.includes(form.timeZone))?.offset ?? '';
+
+	const changeTimeZone = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const group = timeZoneGroups.find((g) => g.offset === e.target.value);
+		if (!group) return;
+		const zone = [form.timeZone, original.timeZone].find((candidate) => group.zones.includes(candidate))
+				?? representativeZone(group);
+		setForm((prev) => ({...prev, timeZone: zone}));
+	};
 
 	useOnceEffect(() => {
 		getTenantUseCase.execute()
@@ -98,10 +114,10 @@ export default function TenantSettingsPage() {
 									<Textarea id="tsDescription" value={form.description} onChange={update('description')}
 									          placeholder="Short description of your business" rows={3} autoComplete="off"/>
 								</Field>
-								<Field label="Time zone" htmlFor="tsTimeZone" hint="Used for 'today', schedules and order numbers">
-									<Select id="tsTimeZone" required value={form.timeZone} onChange={update('timeZone')}>
-										{TIME_ZONES.map((zone) => (
-												<option key={zone} value={zone}>{zone}</option>
+								<Field label="Time zone" htmlFor="tsTimeZone" hint={`Saved as ${form.timeZone} · used for 'today', schedules and order numbers`}>
+									<Select id="tsTimeZone" required value={selectedOffset} onChange={changeTimeZone}>
+										{timeZoneGroups.map((group) => (
+												<option key={group.offset} value={group.offset}>{timeZoneGroupLabel(group)}</option>
 										))}
 									</Select>
 								</Field>

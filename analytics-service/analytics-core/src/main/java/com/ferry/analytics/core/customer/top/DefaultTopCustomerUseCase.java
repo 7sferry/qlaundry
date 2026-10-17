@@ -1,6 +1,7 @@
 package com.ferry.analytics.core.customer.top;
 
 import com.ferry.analytics.core.constant.AnalyticsConstant;
+import com.ferry.analytics.domain.customer.TopCustomerProjection;
 import com.ferry.analytics.domain.period.PeriodWindow;
 import com.ferry.analytics.domain.report.ReportWindow;
 import com.ferry.analytics.domain.tenant.TenantId;
@@ -11,6 +12,9 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -30,8 +34,11 @@ public class DefaultTopCustomerUseCase implements TopCustomerUseCase{
 		Instant now = clock.instant();
 		ReportWindow reportWindow = request.periodOrDefault().windowFor(LocalDate.ofInstant(now, zone), zone);
 		PeriodWindow periodWindow = PeriodWindow.upTo(reportWindow, now);
-		presenter.present(new TopCustomerResponse(gateway.top(tenantId, periodWindow,
-				AnalyticsConstant.TOP_CUSTOMER_LIMIT)));
+		List<TopCustomerProjection> ranked = new ArrayList<>(gateway.top(tenantId, periodWindow,
+				AnalyticsConstant.TOP_CUSTOMER_LIMIT));
+		gateway.nonMember(tenantId, periodWindow).ifPresent(ranked::add);
+		ranked.sort(Comparator.comparing(TopCustomerProjection::totalSpend).reversed());
+		presenter.present(new TopCustomerResponse(ranked));
 	}
 
 }

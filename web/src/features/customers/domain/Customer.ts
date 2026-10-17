@@ -24,7 +24,7 @@ export interface CustomerStats {
 }
 
 export interface TopCustomer {
-	customerId: string;
+	customerId: string | null;
 	fullName: string;
 	totalOrders: number;
 	totalSpend: number;

@@ -1,5 +1,50 @@
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {formatCurrency, formatDate, formatDatetime, formatPhone, formatRelative, formatTime} from './format';
+import {
+	compactCurrencyUnit,
+	formatCompactCurrency,
+	formatCurrency,
+	formatDate,
+	formatDatetime,
+	formatPhone,
+	formatRelative,
+	formatTime,
+} from './format';
+
+describe('compactCurrencyUnit', () => {
+	it('uses no suffix below one thousand', () => {
+		expect(compactCurrencyUnit(750)).toEqual({divisor: 1, suffix: ''});
+	});
+
+	it('uses rb when the max is below one million', () => {
+		expect(compactCurrencyUnit(999_999).suffix).toBe('rb');
+		expect(compactCurrencyUnit(1_000).suffix).toBe('rb');
+	});
+
+	it('uses jt when the max is below one billion', () => {
+		expect(compactCurrencyUnit(1_000_000).suffix).toBe('jt');
+		expect(compactCurrencyUnit(999_999_999).suffix).toBe('jt');
+	});
+
+	it('uses mlr from one billion and T from one trillion', () => {
+		expect(compactCurrencyUnit(1_000_000_000).suffix).toBe('mlr');
+		expect(compactCurrencyUnit(2_500_000_000_000).suffix).toBe('T');
+	});
+});
+
+describe('formatCompactCurrency', () => {
+	it('scales every tick by the chart unit', () => {
+		const unit = compactCurrencyUnit(850_000);
+		expect(formatCompactCurrency(0, unit)).toBe('0rb');
+		expect(formatCompactCurrency(250_000, unit)).toBe('250rb');
+		expect(formatCompactCurrency(850_000, unit)).toBe('850rb');
+	});
+
+	it('keeps one decimal in the id-ID style', () => {
+		const unit = compactCurrencyUnit(3_400_000);
+		expect(formatCompactCurrency(1_500_000, unit)).toBe('1,5jt');
+		expect(formatCompactCurrency(3_000_000, unit)).toBe('3jt');
+	});
+});
 
 describe('formatCurrency', () => {
 	it('formats zero as IDR', () => {

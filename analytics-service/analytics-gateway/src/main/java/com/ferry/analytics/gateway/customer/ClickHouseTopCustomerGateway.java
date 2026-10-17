@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -40,6 +41,24 @@ public class ClickHouseTopCustomerGateway implements TopCustomerGateway{
 			SETTINGS do_not_merge_across_partitions_select_final = 1
 			""";
 
+	private static final String NON_MEMBER_QUERY = """
+			SELECT
+			    toInt64(count()) AS orders,
+			    toDecimal64(sum(total_price), 2) AS spend
+			FROM orders_current FINAL
+			WHERE tenant_id = {tenantId:String}
+			  AND deleted = 0
+			  AND status != 'CANCELLED'
+			  AND (customer_id IS NULL OR assumeNotNull(customer_id) NOT IN (
+			      SELECT customer_id
+			      FROM customers_current FINAL
+			      WHERE tenant_id = {tenantId:String}
+			        AND deleted = 0))
+			  AND created_at >= {from:DateTime64(3, 'UTC')}
+			  AND created_at < {to:DateTime64(3, 'UTC')}
+			SETTINGS do_not_merge_across_partitions_select_final = 1
+			""";
+
 	private final AnalyticStore store;
 
 	@Override
@@ -52,6 +71,20 @@ public class ClickHouseTopCustomerGateway implements TopCustomerGateway{
 		return store.query(TOP_QUERY, params,
 				reader -> new TopCustomerProjection(reader.getString("linked_customer_id"), reader.getLong("orders"),
 						reader.getBigDecimal("spend")));
+	}
+
+	@Override
+	public Optional<TopCustomerProjection> nonMember(TenantId tenantId, PeriodWindow window){
+		Map<String, Object> params = Map.of(
+				"tenantId", tenantId.value(),
+				"from", store.dateTime(window.from()),
+				"to", store.dateTime(window.to()));
+		return store.query(NON_MEMBER_QUERY, params,
+						reader -> new TopCustomerProjection(null, reader.getLong("orders"),
+								reader.getBigDecimal("spend")))
+				.stream()
+				.filter(row -> row.totalOrders() > 0)
+				.findFirst();
 	}
 
 }

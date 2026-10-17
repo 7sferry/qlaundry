@@ -18,7 +18,7 @@ import {
 	YAxis,
 } from 'recharts';
 import {Card, Loading, PageHeader, StatCard} from '@/core/ui';
-import {formatCurrency} from '@/core/utils/format';
+import {compactCurrencyUnit, formatCompactCurrency, formatCurrency} from '@/core/utils/format';
 import {REPORT_PERIODS, type ReportPeriod} from '@/features/dashboard/domain/Dashboard';
 import {useReports} from '@/features/dashboard/presentation/useReports';
 import {useCustomerStats, useTopCustomers} from '@/features/customers/presentation/useCustomers';
@@ -67,6 +67,8 @@ export default function ReportsPage() {
 	if (loading && !summary) return <Loading label="Preparing reports…"/>;
 
 	const scope = PERIOD_SCOPES[period];
+	const trendUnit = compactCurrencyUnit(Math.max(0, ...(report?.revenueTrend ?? []).map((t) => t.revenue)));
+	const serviceUnit = compactCurrencyUnit(Math.max(0, ...(report?.serviceBreakdown ?? []).map((s) => s.revenue)));
 
 	return (
 			<>
@@ -135,7 +137,7 @@ export default function ReportsPage() {
 											axisLine={false}
 											tickLine={false}
 											tick={{fill: 'var(--text-muted)', fontSize: 11}}
-											tickFormatter={(v: number) => `${(v / 1000000).toFixed(1)}jt`}
+											tickFormatter={(v: number) => formatCompactCurrency(v, trendUnit)}
 									/>
 									<YAxis
 											yAxisId="right"
@@ -232,7 +234,7 @@ export default function ReportsPage() {
 											axisLine={false}
 											tickLine={false}
 											tick={{fill: 'var(--text-muted)', fontSize: 11}}
-											tickFormatter={(v: number) => `${(v / 1000000).toFixed(1)}jt`}
+											tickFormatter={(v: number) => formatCompactCurrency(v, serviceUnit)}
 									/>
 									<YAxis
 											type="category"
@@ -257,10 +259,10 @@ export default function ReportsPage() {
 						</div>
 					</Card>
 
-						<Card title="Top customers" subtitle={`Top 5 customers by spend · ${scope}`}>
+						<Card title="Top customers" subtitle={`Top 5 members and all non-members by spend · ${scope}`}>
 						<div className="top-customers">
 							{topCustomers.map((c, idx) => (
-									<div key={c.customerId} className="top-customer-row">
+									<div key={c.customerId ?? 'non-members'} className="top-customer-row">
 										<span className="top-rank">{idx + 1}</span>
 										<div className="top-customer-info">
 											<strong>{c.fullName}</strong>

@@ -26,6 +26,11 @@ export function useTopCustomers() {
 	return {topCustomers: data ?? [], loading, error, reload};
 }
 
+export function useCreateCustomer() {
+	const createCustomer = useCallback((input: CreateCustomerInput): Promise<Customer> => useCases.createCustomer(input), []);
+	return {createCustomer};
+}
+
 interface CustomerSearchFilters extends PaginationParams {
 	phone?: string;
 	name?: string;
@@ -34,14 +39,14 @@ interface CustomerSearchFilters extends PaginationParams {
 export function useCustomers() {
 	const fetchCustomerPage = useCallback((filters?: CustomerFilters) => useCases.listCustomers(filters), []);
 	const {
-		items: customers, setItems: setCustomers, loading, error, hasNext, hasPrev, refresh, goNext, goPrevious,
+		items: customers, setItems: setCustomers, loading, error, hasNext, hasPrev, refresh, reload, goNext, goPrevious,
 	} = usePaginatedList<Customer, CustomerFilters>(fetchCustomerPage);
 
 	const createCustomer = useCallback(async (input: CreateCustomerInput): Promise<Customer> => {
 		const c = await useCases.createCustomer(input);
-		setCustomers((prev) => [c, ...prev]);
+		await reload(true);
 		return c;
-	}, [setCustomers]);
+	}, [reload]);
 
 	const updateCustomer = useCallback(async (input: UpdateCustomerInput): Promise<void> => {
 		const updated = await useCases.updateCustomer(input);
@@ -50,8 +55,8 @@ export function useCustomers() {
 
 	const deleteCustomer = useCallback(async (id: string): Promise<void> => {
 		await useCases.deleteCustomer(id);
-		setCustomers((prev) => prev.filter((c) => c.id !== id));
-	}, [setCustomers]);
+		await reload();
+	}, [reload]);
 
 	return {
 		customers,

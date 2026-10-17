@@ -22,14 +22,14 @@ export function useServiceStats() {
 export function useServices() {
 	const fetchServicePage = useCallback((filters?: ServiceFilters) => useCases.listServices(filters), []);
 	const {
-		items: services, setItems: setServices, loading, error, hasNext, hasPrev, refresh, goNext, goPrevious,
+		items: services, setItems: setServices, loading, error, hasNext, hasPrev, refresh, reload, goNext, goPrevious,
 	} = usePaginatedList<LaundryService, ServiceFilters>(fetchServicePage);
 
 	const createService = useCallback(async (input: CreateServiceInput): Promise<LaundryService> => {
 		const s = await useCases.createService(input);
-		setServices((prev) => [s, ...prev]);
+		await reload(true);
 		return s;
-	}, [setServices]);
+	}, [reload]);
 
 	const updateService = useCallback(async (input: UpdateServiceInput): Promise<LaundryService> => {
 		const updated = await useCases.updateService(input);
@@ -39,8 +39,8 @@ export function useServices() {
 
 	const deleteService = useCallback(async (id: string): Promise<void> => {
 		await useCases.deleteService(id);
-		setServices((prev) => prev.filter((s) => s.id !== id));
-	}, [setServices]);
+		await reload();
+	}, [reload]);
 
 	return {
 		services,

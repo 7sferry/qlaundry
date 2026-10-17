@@ -20,14 +20,14 @@ export function useMachines() {
 			[],
 	);
 	const {
-		items: machines, setItems: setMachines, loading, error, hasNext, hasPrev, refresh, goNext, goPrevious,
+		items: machines, setItems: setMachines, loading, error, hasNext, hasPrev, refresh, reload, goNext, goPrevious,
 	} = usePaginatedList<Machine, MachineFilters>(fetchMachinePage);
 
 	const createMachine = useCallback(async (input: CreateMachineInput): Promise<Machine> => {
 		const created = await useCases.createMachine(input);
-		setMachines((prev) => [created, ...prev]);
+		await reload(true);
 		return created;
-	}, [setMachines]);
+	}, [reload]);
 
 	const updateMachine = useCallback(async (input: UpdateMachineInput): Promise<Machine> => {
 		const updated = await useCases.updateMachine(input);

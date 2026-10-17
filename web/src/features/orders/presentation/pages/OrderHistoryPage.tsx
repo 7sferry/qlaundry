@@ -11,6 +11,7 @@ import {
 	type BadgeTone,
 	Button,
 	Card,
+	ConfirmDialog,
 	Drawer,
 	Field,
 	Input,
@@ -21,7 +22,7 @@ import {
 	useToast
 } from '@/core/ui';
 import {DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS, type SortDirection} from '@/core/pagination/Pagination';
-import {formatCurrency, formatDate, formatRelative} from '@/core/utils/format';
+import {formatCurrency, formatDatetime, formatRelative} from '@/core/utils/format';
 import {useAuth} from '@/features/auth/presentation/useAuth';
 import {useMachineOptions, useOrders, useStaffOptions} from '../useOrders';
 import MachinePickerModal from '../components/MachinePickerModal';
@@ -103,6 +104,8 @@ export default function OrderHistoryPage() {
 	const [sortDir, setSortDir] = useState<SortDirection>('desc');
 	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+	const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
+	const [cancelling, setCancelling] = useState(false);
 
 	// Compares against the *last processed* filter snapshot, not a boolean "have we mounted" flag —
 	// see `PromotionsPage`'s identical effect for why a boolean (with or without a self-resetting
@@ -224,14 +227,18 @@ export default function OrderHistoryPage() {
 		}
 	};
 
-	const handleCancel = async (order: Order) => {
-		if (!confirm(`Cancel order ${order.orderNumber}?`)) return;
+	const handleCancel = async () => {
+		if (!orderToCancel) return;
+		setCancelling(true);
 		try {
-			await cancelOrder(order.id, 'Cancelled by operator');
-			toast.success(`Order ${order.orderNumber} cancelled.`);
+			await cancelOrder(orderToCancel.id, 'Cancelled by operator');
+			toast.success(`Order ${orderToCancel.orderNumber} cancelled.`);
 			setSelectedOrder(null);
+			setOrderToCancel(null);
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to cancel order.');
+		} finally {
+			setCancelling(false);
 		}
 	};
 
@@ -340,8 +347,8 @@ export default function OrderHistoryPage() {
 										</td>
 										<td>{order.serviceName}</td>
 										<td>
-											<span>{formatDate(order.pickupDate)}</span>
-											<span className="table-sub">→ {formatDate(order.estimatedDelivery)}</span>
+											<span>{formatDatetime(order.pickupDate)}</span>
+											<span className="table-sub">→ {formatDatetime(order.estimatedDelivery)}</span>
 										</td>
 										<td>
 											<Badge tone={statusTone(order.status)}>
@@ -414,7 +421,7 @@ export default function OrderHistoryPage() {
        										{NEXT_STATUS_LABEL[selectedOrder.status]}
        									</Button>
 														)}
-     									<Button variant="danger" onClick={() => void handleCancel(selectedOrder)}>
+     									<Button variant="danger" onClick={() => setOrderToCancel(selectedOrder)}>
      										Cancel
      									</Button>
 													</>
@@ -445,11 +452,11 @@ export default function OrderHistoryPage() {
 										</div>
 										<div>
   									<small>Pickup</small>
-											<strong>{formatDate(selectedOrder.pickupDate)}</strong>
+											<strong>{formatDatetime(selectedOrder.pickupDate)}</strong>
 										</div>
 										<div>
   									<small>Estimated completion</small>
-											<strong>{formatDate(selectedOrder.estimatedDelivery)}</strong>
+											<strong>{formatDatetime(selectedOrder.estimatedDelivery)}</strong>
 										</div>
 									</div>
 								</div>
@@ -627,6 +634,17 @@ export default function OrderHistoryPage() {
 						onSearch={(search) => void staffOptions.load(search)}
 						onCancel={() => setStaffTarget(null)}
 						onConfirm={(staffIds) => void handleStaffConfirm(staffIds)}
+				/>
+
+				<ConfirmDialog
+						open={orderToCancel !== null}
+						title="Cancel order"
+						message={`Cancel order ${orderToCancel?.orderNumber ?? ''}? This cannot be undone.`}
+						confirmLabel={cancelling ? 'Cancelling…' : 'Cancel order'}
+						cancelLabel="Keep order"
+						busy={cancelling}
+						onConfirm={() => void handleCancel()}
+						onCancel={() => setOrderToCancel(null)}
 				/>
 			</>
 	);

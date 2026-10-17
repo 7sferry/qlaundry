@@ -5,6 +5,7 @@ import com.ferry.analytics.domain.period.PeriodWindow;
 import com.ferry.analytics.domain.tenant.TenantId;
 
 import java.util.List;
+import java.util.Optional;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -13,4 +14,6 @@ import java.util.List;
 
 public interface TopCustomerGateway{
 	List<TopCustomerProjection> top(TenantId tenantId, PeriodWindow window, int limit);
+
+	Optional<TopCustomerProjection> nonMember(TenantId tenantId, PeriodWindow window);
 }

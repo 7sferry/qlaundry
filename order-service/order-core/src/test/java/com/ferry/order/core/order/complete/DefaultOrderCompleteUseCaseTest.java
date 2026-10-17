@@ -175,7 +175,7 @@ class DefaultOrderCompleteUseCaseTest{
 				.totalPrice(Money.of(30000L))
 				.priority(OrderPriority.NORMAL)
 				.paymentMethod(PaymentMethod.CASH)
-				.paymentStatus(PaymentStatus.PAID)
+				.paymentStatus(PaymentStatus.UNPAID)
 				.status(OrderStatus.READY)
 				.pickupAt(now)
 				.estimatedDeliveryAt(now.plusSeconds(86400))
@@ -215,9 +215,63 @@ class DefaultOrderCompleteUseCaseTest{
 					.isNotNull();
 			softly.then(saved.status()).isEqualTo(OrderStatus.COMPLETED);
 			softly.then(saved.completedAt()).isNotNull();
+			softly.then(saved.paymentStatus()).isEqualTo(PaymentStatus.PAID);
 			softly.then(saved.staffNotesValue()).isEqualTo("handed over at the counter");
 			softly.then(saved.updatedBy()).isEqualTo(STAFF_ID);
 			softly.then(responseCaptor.getValue().order().status()).isEqualTo(OrderStatus.COMPLETED);
+		});
+	}
+
+	@Test
+	void givenAlreadyPaidCashOrder_thenCompletesItWithoutPayingAgain(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		Order order = Order.builder()
+				.id(ORDER_ID)
+				.orderNumber(new OrderNumber(ORDER_NUMBER))
+				.tenantId(TENANT_ID)
+				.customerName(new FullName("sinta maharani"))
+				.customerPhone(new Phone("+6281355667788"))
+				.serviceId("01SERVICEBEDCOVER00000000")
+				.serviceName("Cuci Bed Cover")
+				.unit(ServiceUnit.ITEM)
+				.unitPrice(Money.of(45000L))
+				.quantity(1)
+				.subtotal(Money.of(45000L))
+				.discount(Money.ZERO)
+				.totalPrice(Money.of(45000L))
+				.priority(OrderPriority.NORMAL)
+				.paymentMethod(PaymentMethod.CASH)
+				.paymentStatus(PaymentStatus.PAID)
+				.status(OrderStatus.OUT_FOR_DELIVERY)
+				.pickupAt(now)
+				.estimatedDeliveryAt(now.plusSeconds(172800))
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		willReturn(Optional.of(order)).given(gateway)
+				.findById(any(OrderId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
+				.save(any(Order.class));
+		willReturn(com.ferry.order.domain.analytics.OrderAnalyticsEvent.create(OrderAnalyticsAggregate.ORDER, OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
+				TENANT_ID, ORDER_ID, 1, "{}", STAFF_ID)).given(publisher)
+				.save(any(OrderAnalyticsEvent.class));
+
+		useCase.execute(new OrderCompleteRequest(ORDER_ID, null), principal, presenter);
+
+		then(gateway).should()
+				.save(orderCaptor.capture());
+
+		thenSoftly(softly -> {
+			softly.then(orderCaptor.getValue().status()).isEqualTo(OrderStatus.COMPLETED);
+			softly.then(orderCaptor.getValue().paymentStatus()).isEqualTo(PaymentStatus.PAID);
 		});
 	}
 

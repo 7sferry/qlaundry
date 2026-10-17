@@ -9,6 +9,8 @@ import com.ferry.order.domain.common.exception.NotFoundException;
 import com.ferry.order.domain.order.Order;
 import com.ferry.order.domain.order.OrderId;
 import com.ferry.order.domain.order.OrderStatus;
+import com.ferry.order.domain.order.PaymentMethod;
+import com.ferry.order.domain.order.PaymentStatus;
 import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +34,11 @@ public class DefaultOrderCompleteUseCase implements OrderCompleteUseCase{
 				.orElseThrow(() -> new NotFoundException("Order Not Found"));
 		Note staffNotes = request.staffNotes() == null || request.staffNotes().isBlank()
 				? null : new Note(request.staffNotes());
-		Order saved = gateway.save(order.changeStatus(OrderStatus.COMPLETED, staffNotes,
-				principal.userId()));
+		Order completed = order.changeStatus(OrderStatus.COMPLETED, staffNotes, principal.userId());
+		if(completed.paymentMethod() == PaymentMethod.CASH && completed.paymentStatus() == PaymentStatus.UNPAID){
+			completed = completed.markPaid(principal.userId());
+		}
+		Order saved = gateway.save(completed);
 		publisher.publish(publisher.save(OrderAnalyticsEvent.order(OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
 				OrderAnalyticsMessage.from(saved, gateway.findItemsByOrderId(orderId),
 						gateway.findPromotionsByOrderId(orderId)), principal.userId())));
