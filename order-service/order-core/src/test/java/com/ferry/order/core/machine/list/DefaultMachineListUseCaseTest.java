@@ -23,8 +23,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.Mockito.any;
@@ -150,12 +152,15 @@ class DefaultMachineListUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		List<MachineUsage> rows = List.of(new MachineUsage(washer, "INV-20261016-9PL2AA"),
+		List<Machine> machines = List.of(washer, dryer);
+		List<MachineUsage> expectedUsages = List.of(new MachineUsage(washer, "INV-20261016-9PL2AA"),
 				new MachineUsage(dryer, null));
 		String afterToken = CursorCodec.encode("Bilas", "01MACHINEBILAS00000000000");
 		MachineListRequest request = new MachineListRequest(null, null, null, afterToken, null, null, null, 2);
-		willReturn(new CursorFetch<>(rows, true)).given(gateway)
+		willReturn(new CursorFetch<>(machines, true)).given(gateway)
 				.findByFilter(any(MachineFilter.class));
+		willReturn(Map.of(WASHER_ID, "INV-20261016-9PL2AA")).given(gateway)
+				.getCurrentOrderNumberByMachineId(anyList());
 
 		useCase.execute(request, principal, presenter);
 
@@ -165,7 +170,7 @@ class DefaultMachineListUseCaseTest{
 		MachineListResponse response = responseCaptor.getValue();
 
 		thenSoftly(softly -> {
-			softly.then(response.machines()).isEqualTo(rows);
+			softly.then(response.machines()).isEqualTo(expectedUsages);
 			softly.then(response.machines().getFirst().inUse()).isTrue();
 			softly.then(response.machines().getLast().inUse()).isFalse();
 			softly.then(response.nextCursor()).isEqualTo(CursorCodec.encode("Kering B", DRYER_ID));
