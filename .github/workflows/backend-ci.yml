@@ -4,9 +4,15 @@ on:
   push:
     branches:
       - '**'
+    paths-ignore:
+      - 'web/**'
+      - '.github/workflows/web-ci.yml'
   pull_request:
     branches:
       - master
+    paths-ignore:
+      - 'web/**'
+      - '.github/workflows/web-ci.yml'
 
 jobs:
   build-and-test:
