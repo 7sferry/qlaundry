@@ -1,10 +1,7 @@
 package com.ferry.order.gateway.machine;
 
 import com.ferry.order.core.machine.list.MachineListGateway;
-import com.ferry.order.domain.machine.MachineFilter;
-import com.ferry.order.domain.machine.MachineListSortBy;
-import com.ferry.order.domain.machine.MachineOccupancy;
-import com.ferry.order.domain.machine.MachineUsage;
+import com.ferry.order.domain.machine.*;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.gateway.machine.entity.MachineJpa;
 import com.ferry.order.gateway.machine.repository.MachineJpaRepository;
@@ -31,20 +28,19 @@ public class JpaMachineListGateway implements MachineListGateway{
 	private final OrderMachineJpaRepository orderMachineJpaRepository;
 
 	@Override
-	public CursorFetch<MachineUsage> findByFilter(MachineFilter filter){
-		List<MachineJpa> raw = fetchByFilter(filter);
-		Map<String,String> orderNumbers = currentOrderNumbers(raw);
-		List<MachineUsage> rows = raw.stream()
-				.map(entity -> new MachineUsage(MachineJpa.construct(entity), orderNumbers.get(entity.getId())))
+	public CursorFetch<Machine> findByFilter(MachineFilter filter){
+		List<Machine> rows = fetchByFilter(filter).stream()
+				.map(MachineJpa::construct)
 				.toList();
 		return CursorFetch.of(rows, filter.pageSize(), filter.pageDirection());
 	}
 
-	private Map<String,String> currentOrderNumbers(List<MachineJpa> machines){
+	@Override
+	public Map<String,String> getCurrentOrderNumberByMachineId(List<Machine> machines){
 		if(machines.isEmpty()){
 			return Map.of();
 		}
-		List<String> machineIds = machines.stream().map(MachineJpa::getId).toList();
+		List<String> machineIds = machines.stream().map(Machine::id).toList();
 		return orderMachineJpaRepository.findOccupancies(machineIds, OrderStatus.IN_PROGRESS.getValue()).stream()
 				.collect(Collectors.toMap(MachineOccupancy::machineId, MachineOccupancy::orderNumber,
 						(first, _) -> first));

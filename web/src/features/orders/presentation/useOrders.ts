@@ -17,8 +17,8 @@ import {orderRepository} from '../infrastructure/OrderRepositoryImpl';
 
 const useCases = orderUseCases(orderRepository);
 
-const MACHINE_PICKER_PAGE_SIZE = 10;
-const STAFF_PICKER_PAGE_SIZE = 10;
+const MACHINE_PICKER_PAGE_SIZE = 5;
+const STAFF_PICKER_PAGE_SIZE = 5;
 
 export function useOrders() {
 	const fetchOrderPage = useCallback((filters?: OrderFilters) => useCases.listOrders(filters), []);

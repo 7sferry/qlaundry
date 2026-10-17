@@ -1,5 +1,6 @@
 package com.ferry.order.core.machine.list;
 
+import com.ferry.order.domain.machine.Machine;
 import com.ferry.order.domain.machine.MachineFilter;
 import com.ferry.order.domain.machine.MachineListSortBy;
 import com.ferry.order.domain.machine.MachineUsage;
@@ -9,6 +10,7 @@ import com.ferry.utils.pagination.*;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -39,11 +41,21 @@ public class DefaultMachineListUseCase implements MachineListUseCase{
 				.cursor(cursor)
 				.pageSize(pageSize)
 				.build();
-		CursorFetch<MachineUsage> fetch = gateway.findByFilter(filter);
+		CursorFetch<MachineUsage> fetch = fetchMachineUsages(filter);
 		CursorPage<MachineUsage> page = CursorPaginator.paginate(fetch, direction, cursor != null,
 				row -> List.of(sortBy == MachineListSortBy.NAME ? row.machine().name() : row.machine().id(),
 						row.machine().id()));
 		presenter.present(new MachineListResponse(page.items(), page.nextCursor(), page.prevCursor()));
+	}
+
+	private CursorFetch<MachineUsage> fetchMachineUsages(MachineFilter filter){
+		CursorFetch<Machine> machineCursorFetch = gateway.findByFilter(filter);
+		List<Machine> machines = machineCursorFetch.rows();
+		Map<String, String> currentOrderNumberByMachineId = gateway.getCurrentOrderNumberByMachineId(machines);
+		List<MachineUsage> machineUsages = machines.stream()
+				.map(entity -> new MachineUsage(entity, currentOrderNumberByMachineId.get(entity.id())))
+				.toList();
+		return new CursorFetch<>(machineUsages, machineCursorFetch.hasMore());
 	}
 
 }
