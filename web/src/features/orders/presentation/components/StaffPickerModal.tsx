@@ -63,10 +63,7 @@ export default function StaffPickerModal({
 
 	return (
 			<Modal open={open} onClose={onCancel} size="sm"
-			       title={mode === 'start' ? `Assign staff · ${orderNumber}` : `Staff · ${orderNumber}`}>
-				<p className="muted" style={{fontSize: 13, marginTop: 0}}>
-					Pick the staff working on this order. Defaults to you if none is picked.
-				</p>
+			       title={mode === 'start' ? 'Assign staff' : 'Staff'} subtitle={orderNumber}>
 				<Input
 						autoComplete="off"
 						placeholder="Search staff by name…"
@@ -92,9 +89,9 @@ export default function StaffPickerModal({
 													checked={draftIds.has(staff.id)}
 													onChange={() => select(staff)}
 											/>
-											<div className="staff-option__info">
-												<strong>{staff.fullName}{staff.username === currentUsername ? ' (you)' : ''}</strong>
-											</div>
+											<span className="staff-option__name">
+												{staff.fullName}{staff.username === currentUsername ? ' (you)' : ''}
+											</span>
 										</label>
 								))}
 							</div>

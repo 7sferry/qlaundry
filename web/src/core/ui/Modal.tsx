@@ -11,11 +11,12 @@ interface ModalProps {
 	open: boolean;
 	onClose: () => void;
 	title?: string;
+	subtitle?: string;
 	size?: 'sm' | 'md' | 'lg';
 	children: React.ReactNode;
 }
 
-export const Modal: React.FC<ModalProps> = ({open, onClose, title, size = 'md', children}) => {
+export const Modal: React.FC<ModalProps> = ({open, onClose, title, subtitle, size = 'md', children}) => {
 	useEffect(() => {
 		if (!open) return;
 		const handler = (e: KeyboardEvent) => {
@@ -36,7 +37,10 @@ export const Modal: React.FC<ModalProps> = ({open, onClose, title, size = 'md', 
 				<div className={`modal modal--${size}`} onClick={(e) => e.stopPropagation()}>
 					{title && (
 							<div className="modal__header">
-								<h3 className="modal__title">{title}</h3>
+								<div className="modal__heading">
+									<h3 className="modal__title">{title}</h3>
+									{subtitle && <p className="modal__subtitle">{subtitle}</p>}
+								</div>
 								<button className="icon-btn" onClick={onClose} aria-label="Close">
 									<X size={18}/>
 								</button>

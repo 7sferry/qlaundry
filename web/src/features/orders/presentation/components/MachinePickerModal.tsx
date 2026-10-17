@@ -79,14 +79,13 @@ export default function MachinePickerModal({
 	return (
 			<>
 				<Modal open={open && !confirmingEmpty} onClose={onCancel} size="sm"
-				       title={mode === 'start' ? `Start process · ${orderNumber}` : `Machines · ${orderNumber}`}>
-					<p className="muted" style={{fontSize: 13, marginTop: 0}}>Pick the machines this order runs on.</p>
-					<div className="machine-type-chips">
+				       title={mode === 'start' ? 'Start process' : 'Machines'} subtitle={orderNumber}>
+					<div className="machine-type-tabs">
 						{TYPE_FILTERS.map((type) => (
 								<button
 										key={type}
 										type="button"
-										className={`machine-type-chip ${typeFilter === type ? 'machine-type-chip--active' : ''}`}
+										className={`machine-type-tab ${typeFilter === type ? 'machine-type-tab--active' : ''}`}
 										onClick={() => changeType(type)}
 								>
 									{type === 'all' ? 'All' : MACHINE_TYPE_LABELS[type]}
@@ -116,13 +115,12 @@ export default function MachinePickerModal({
 															disabled={disabled}
 															onChange={() => toggle(machine)}
 													/>
-													<div className="machine-option__info">
-														<strong>{machine.name}</strong>
-														<span>
-															{MACHINE_TYPE_LABELS[machine.type]}
-															{disabled ? ` · In use · ${machine.currentOrderNumber}` : ''}
-														</span>
-													</div>
+													<span className="machine-option__name">{machine.name}</span>
+													<span className="machine-option__meta">
+														{disabled
+																? `In use · ${machine.currentOrderNumber}`
+																: MACHINE_TYPE_LABELS[machine.type]}
+													</span>
 												</label>
 										);
 									})}
@@ -140,8 +138,8 @@ export default function MachinePickerModal({
 							</p>
 					)}
 					{draft.length > 0 && (
-							<p className="muted" style={{fontSize: 12, marginTop: 12}}>
-								Selected: {draft.map((m) => m.name).join(', ')}
+							<p className="machine-picker__selected">
+								{draft.length} selected · {draft.map((m) => m.name).join(', ')}
 							</p>
 					)}
 					<div className="row" style={{gap: 8, justifyContent: 'flex-end', marginTop: 16}}>

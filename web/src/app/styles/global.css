@@ -976,8 +976,25 @@ button.user-chip--trigger:hover {
     border-bottom: 1px solid var(--border);
 }
 
+.modal__heading {
+    min-width: 0;
+}
+
 .modal__title {
     font-size: 16px;
+}
+
+.modal__subtitle {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+.machine-picker__selected {
+    margin: 12px 0 0;
+    font-size: 12px;
+    color: var(--text-muted);
 }
 
 .modal__body {
@@ -1666,35 +1683,39 @@ button.user-chip--trigger:hover {
 }
 
 /* ── Machine picker ── */
-.machine-type-chips {
+.machine-type-tabs {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 12px;
+    gap: 18px;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 4px;
 }
 
-.machine-type-chip {
-    border: 1.5px solid var(--border);
-    border-radius: 999px;
-    padding: 4px 12px;
-    font-size: 12px;
-    background: var(--surface-2);
-    color: var(--text);
+.machine-type-tab {
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    padding: 6px 0;
+    font-size: 13px;
+    background: none;
+    color: var(--text-muted);
     cursor: pointer;
-    transition: border-color var(--transition), color var(--transition);
+    transition: color var(--transition), border-color var(--transition);
 }
 
-.machine-type-chip:hover,
-.machine-type-chip--active {
-    border-color: var(--brand);
+.machine-type-tab:hover {
+    color: var(--text);
+}
+
+.machine-type-tab--active {
     color: var(--brand);
+    border-bottom-color: var(--brand);
+    font-weight: 600;
 }
 
 .machine-option-list,
 .staff-option-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
     max-height: 360px;
     overflow-y: auto;
 }
@@ -1702,25 +1723,29 @@ button.user-chip--trigger:hover {
 .machine-option,
 .staff-option {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 10px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 10px 12px;
-    background: var(--surface-2);
+    padding: 10px 6px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 13px;
     cursor: pointer;
-    transition: border-color var(--transition), box-shadow var(--transition);
+    transition: background var(--transition);
+}
+
+.machine-option:last-child,
+.staff-option:last-child {
+    border-bottom: none;
 }
 
 .machine-option:hover,
 .staff-option:hover {
-    border-color: var(--brand);
-    box-shadow: var(--shadow-sm);
+    background: var(--surface-2);
 }
 
-.machine-option input[type="checkbox"],
-.staff-option input[type="radio"] {
-    margin-top: 2px;
+.machine-option input,
+.staff-option input {
+    margin: 0;
+    accent-color: var(--brand);
 }
 
 .machine-option--disabled {
@@ -1728,23 +1753,23 @@ button.user-chip--trigger:hover {
     cursor: not-allowed;
 }
 
-.machine-option__info,
-.staff-option__info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+.machine-option--disabled:hover {
+    background: none;
+}
+
+.machine-option__name,
+.staff-option__name {
+    flex: 1;
     min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.machine-option__info strong,
-.staff-option__info strong {
-    font-size: 13px;
-}
-
-.machine-option__info span,
-.staff-option__info span {
+.machine-option__meta {
     font-size: 12px;
     color: var(--text-muted);
+    white-space: nowrap;
 }
 
 /* ── Summary sidebar ── */
