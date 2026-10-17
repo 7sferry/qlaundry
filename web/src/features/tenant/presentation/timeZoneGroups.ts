@@ -42,18 +42,3 @@ export function groupTimeZones(zones: string[], at: Date = new Date()): TimeZone
 			.map((group) => ({...group, zones: [...group.zones].sort()}))
 			.sort((a, b) => a.minutes - b.minutes);
 }
-
-const PREFERRED_ZONES = ['UTC', 'Asia/Jakarta', 'Asia/Makassar', 'Asia/Jayapura'];
-
-const LABEL_ZONE_COUNT = 3;
-
-export function representativeZone(group: TimeZoneGroup): string {
-	return PREFERRED_ZONES.find((zone) => group.zones.includes(zone)) ?? group.zones[0];
-}
-
-export function timeZoneGroupLabel(group: TimeZoneGroup): string {
-	const lead = representativeZone(group);
-	const names = [lead, ...group.zones.filter((zone) => zone !== lead)];
-	const shown = names.slice(0, LABEL_ZONE_COUNT).join(', ');
-	return `${group.offset} (${shown}${names.length > LABEL_ZONE_COUNT ? ', …' : ''})`;
-}

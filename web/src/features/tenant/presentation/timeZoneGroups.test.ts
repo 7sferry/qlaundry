@@ -5,7 +5,7 @@
  ************************/
 
 import {describe, expect, it} from 'vitest';
-import {groupTimeZones, representativeZone, timeZoneGroupLabel} from './timeZoneGroups';
+import {groupTimeZones} from './timeZoneGroups';
 
 const WINTER = new Date('2026-01-15T12:00:00Z');
 
@@ -32,33 +32,5 @@ describe('groupTimeZones', () => {
 		const groups = groupTimeZones(['Asia/Jakarta', 'Asia/Jakarta', 'Not/AZone'], WINTER);
 		expect(groups).toHaveLength(1);
 		expect(groups[0].zones).toEqual(['Asia/Jakarta']);
-	});
-});
-
-describe('representativeZone', () => {
-	it('prefers an Indonesian zone, then UTC, over alphabetical order', () => {
-		const [group] = groupTimeZones(['Asia/Bangkok', 'Asia/Jakarta', 'Asia/Ho_Chi_Minh'], WINTER);
-		expect(representativeZone(group)).toBe('Asia/Jakarta');
-		const [utc] = groupTimeZones(['Africa/Abidjan', 'UTC'], WINTER);
-		expect(representativeZone(utc)).toBe('UTC');
-	});
-
-	it('falls back to the first name alphabetically', () => {
-		const [group] = groupTimeZones(['Asia/Kolkata'], WINTER);
-		expect(representativeZone(group)).toBe('Asia/Kolkata');
-		const [many] = groupTimeZones(['Europe/Paris', 'Europe/Berlin'], WINTER);
-		expect(representativeZone(many)).toBe('Europe/Berlin');
-	});
-});
-
-describe('timeZoneGroupLabel', () => {
-	it('lists the offset and the first names, representative first', () => {
-		const [group] = groupTimeZones(['Asia/Bangkok', 'Asia/Jakarta', 'Asia/Ho_Chi_Minh', 'Asia/Phnom_Penh'], WINTER);
-		expect(timeZoneGroupLabel(group)).toBe('+07:00 (Asia/Jakarta, Asia/Bangkok, Asia/Ho_Chi_Minh, …)');
-	});
-
-	it('has no ellipsis when every name fits', () => {
-		const [group] = groupTimeZones(['Asia/Jakarta', 'Asia/Bangkok'], WINTER);
-		expect(timeZoneGroupLabel(group)).toBe('+07:00 (Asia/Jakarta, Asia/Bangkok)');
 	});
 });

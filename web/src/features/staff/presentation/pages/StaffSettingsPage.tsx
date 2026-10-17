@@ -34,6 +34,7 @@ export default function StaffSettingsPage() {
 					const data: StaffFormData = {
 						username: s.username,
 						password: '',
+						confirmPassword: '',
 						currentPassword: '',
 						newPassword: '',
 						confirmNewPassword: '',
