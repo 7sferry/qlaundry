@@ -8,6 +8,7 @@ import com.ferry.order.domain.order.OrderId;
 import com.ferry.order.domain.order.OrderItem;
 import com.ferry.order.domain.order.OrderMachine;
 import com.ferry.order.domain.order.OrderPromotion;
+import com.ferry.order.domain.order.OrderStaff;
 import com.ferry.order.domain.tenant.TenantId;
 
 import java.util.List;
@@ -33,4 +34,6 @@ public interface OrderProcessGateway{
 	List<MachineOccupancy> findOccupancies(Set<MachineId> machineIds, OrderId excludedOrderId);
 
 	List<OrderMachine> saveMachines(List<OrderMachine> machines);
+
+	List<OrderStaff> saveStaffs(List<OrderStaff> staffs);
 }

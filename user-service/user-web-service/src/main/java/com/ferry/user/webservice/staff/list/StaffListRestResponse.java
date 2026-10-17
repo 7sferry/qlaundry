@@ -13,6 +13,7 @@ public record StaffListRestResponse(
 	String prevCursor){
 
 	public record Staff(
+		String staffId,
 		String description,
 		String fullName,
 		long createdAt,

@@ -23,6 +23,9 @@ import com.ferry.order.core.machine.update.MachineUpdateUseCase;
 import com.ferry.order.core.order.assignmachines.DefaultOrderAssignMachinesUseCase;
 import com.ferry.order.core.order.assignmachines.OrderAssignMachinesGateway;
 import com.ferry.order.core.order.assignmachines.OrderAssignMachinesUseCase;
+import com.ferry.order.core.order.assignstaffs.DefaultOrderAssignStaffsUseCase;
+import com.ferry.order.core.order.assignstaffs.OrderAssignStaffsGateway;
+import com.ferry.order.core.order.assignstaffs.OrderAssignStaffsUseCase;
 import com.ferry.order.core.order.cancel.DefaultOrderCancelUseCase;
 import com.ferry.order.core.order.cancel.OrderCancelGateway;
 import com.ferry.order.core.order.cancel.OrderCancelUseCase;
@@ -304,9 +307,10 @@ public class OrderWebConfig{
 	                                      OrderItemJpaRepository orderItemJpaRepository,
 	                                      OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                      OrderMachineJpaRepository orderMachineJpaRepository,
+	                                      OrderStaffJpaRepository orderStaffJpaRepository,
 	                                      CryptoTool cryptoTool){
 		return new JpaOrderDetailGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
-				orderMachineJpaRepository, cryptoTool);
+				orderMachineJpaRepository, orderStaffJpaRepository, cryptoTool);
 	}
 
 	@Bean
@@ -411,10 +415,11 @@ public class OrderWebConfig{
 	                                        OrderPromotionJpaRepository orderPromotionJpaRepository,
 	                                        OrderMachineJpaRepository orderMachineJpaRepository,
 	                                        MachineJpaRepository machineJpaRepository,
+	                                        OrderStaffJpaRepository orderStaffJpaRepository,
 	                                        IdGenerator idGenerator,
 	                                        CryptoTool cryptoTool){
 		return new JpaOrderProcessGateway(orderJpaRepository, orderItemJpaRepository, orderPromotionJpaRepository,
-				orderMachineJpaRepository, machineJpaRepository, idGenerator, cryptoTool);
+				orderMachineJpaRepository, machineJpaRepository, orderStaffJpaRepository, idGenerator, cryptoTool);
 	}
 
 	@Bean
@@ -436,6 +441,19 @@ public class OrderWebConfig{
 	@Bean
 	OrderAssignMachinesUseCase orderAssignMachinesUseCase(OrderAssignMachinesGateway orderAssignMachinesGateway){
 		return new DefaultOrderAssignMachinesUseCase(orderAssignMachinesGateway);
+	}
+
+	@Bean
+	OrderAssignStaffsGateway orderAssignStaffsGateway(OrderJpaRepository orderJpaRepository,
+	                                                  OrderStaffJpaRepository orderStaffJpaRepository,
+	                                                  IdGenerator idGenerator,
+	                                                  CryptoTool cryptoTool){
+		return new JpaOrderAssignStaffsGateway(orderJpaRepository, orderStaffJpaRepository, idGenerator, cryptoTool);
+	}
+
+	@Bean
+	OrderAssignStaffsUseCase orderAssignStaffsUseCase(OrderAssignStaffsGateway orderAssignStaffsGateway){
+		return new DefaultOrderAssignStaffsUseCase(orderAssignStaffsGateway);
 	}
 
 	@Bean

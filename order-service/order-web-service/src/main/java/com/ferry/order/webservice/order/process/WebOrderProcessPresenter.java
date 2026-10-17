@@ -4,6 +4,7 @@ import com.ferry.order.core.order.process.OrderProcessPresenter;
 import com.ferry.order.core.order.process.OrderProcessResponse;
 import com.ferry.order.domain.order.Order;
 import com.ferry.order.webservice.order.process.OrderProcessRestResponse.Machine;
+import com.ferry.order.webservice.order.process.OrderProcessRestResponse.Staff;
 import lombok.Getter;
 import org.springframework.http.ResponseEntity;
 
@@ -24,10 +25,13 @@ public class WebOrderProcessPresenter implements OrderProcessPresenter{
 		List<Machine> machines = response.machines().stream()
 				.map(o -> new Machine(o.machineId(), o.machineName(), o.machineType().name()))
 				.toList();
+		List<Staff> staffs = response.staffs().stream()
+				.map(o -> new Staff(o.staffId()))
+				.toList();
 		responseEntity = ResponseEntity.ok(new OrderProcessRestResponse(order.id(), order.orderNumberValue(),
 				order.status().name(), order.staffNotesValue(),
 				order.completedAt() == null ? null : order.completedAt().toEpochMilli(),
-				order.updatedAt().toEpochMilli(), machines));
+				order.updatedAt().toEpochMilli(), machines, staffs));
 	}
 
 }

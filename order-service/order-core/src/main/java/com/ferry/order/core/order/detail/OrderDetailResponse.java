@@ -4,6 +4,7 @@ import com.ferry.order.domain.order.Order;
 import com.ferry.order.domain.order.OrderItem;
 import com.ferry.order.domain.order.OrderMachine;
 import com.ferry.order.domain.order.OrderPromotion;
+import com.ferry.order.domain.order.OrderStaff;
 
 import java.util.List;
 
@@ -16,5 +17,6 @@ public record OrderDetailResponse(
 	Order order,
 	List<OrderItem> items,
 	List<OrderPromotion> promotions,
-	List<OrderMachine> machines){
+	List<OrderMachine> machines,
+	List<OrderStaff> staffs){
 }

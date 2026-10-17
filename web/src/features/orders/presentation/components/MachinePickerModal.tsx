@@ -74,7 +74,7 @@ export default function MachinePickerModal({
 		submit();
 	};
 
-	const confirmLabel = mode === 'start' ? `Start process (${draft.length})` : `Save machines (${draft.length})`;
+	const confirmLabel = mode === 'start' ? `Next: staff (${draft.length})` : `Save machines (${draft.length})`;
 
 	return (
 			<>

@@ -13,5 +13,6 @@ import java.util.Set;
 public record OrderProcessRequest(
 	@NotBlank String orderId,
 	String staffNotes,
-	Set<String> machineIds) implements OrderValidation{
+	Set<String> machineIds,
+	Set<String> staffIds) implements OrderValidation{
 }

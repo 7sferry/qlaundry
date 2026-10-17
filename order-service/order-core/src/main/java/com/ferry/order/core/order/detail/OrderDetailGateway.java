@@ -5,6 +5,7 @@ import com.ferry.order.domain.order.OrderId;
 import com.ferry.order.domain.order.OrderItem;
 import com.ferry.order.domain.order.OrderMachine;
 import com.ferry.order.domain.order.OrderPromotion;
+import com.ferry.order.domain.order.OrderStaff;
 import com.ferry.order.domain.tenant.TenantId;
 
 import java.util.List;
@@ -23,4 +24,6 @@ public interface OrderDetailGateway{
 	List<OrderPromotion> findPromotionsByOrderId(OrderId orderId);
 
 	List<OrderMachine> findMachinesByOrderId(OrderId orderId);
+
+	List<OrderStaff> findStaffsByOrderId(OrderId orderId);
 }

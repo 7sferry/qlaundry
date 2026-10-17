@@ -25,7 +25,7 @@ Aplikasi web QLaundry untuk mengelola order, pelanggan, layanan, promo, staf, da
 | `/forgot-password` | Reset password: username → emailed OTP → new password |
 | `/dashboard` | Today's and this month's numbers, growth, status distribution, today's pickups/deliveries |
 | `/orders/new` | Create an order: customer search, items, weight, priority, promo codes, "picked up immediately" |
-| `/orders/history` | Order list with filters, status changes, payment, "view invoice" (opens the PDF in a new tab); "Start process" and "Change machines" pick the machines an order runs on |
+| `/orders/history` | Order list with filters, status changes, payment, "view invoice" (opens the PDF in a new tab); "Start process" and "Change machines" pick the machines an order runs on, then "Start process" asks for the staff (empty = you) and "Change staff" re-assigns them |
 | `/customers` | Customer book with order count, total spend and last order |
 | `/services` | Laundry service price list (editing is super-staff only) |
 | `/machines` | Washers, dryers and irons, with which order each one is busy on (editing is super-staff only, no delete) |

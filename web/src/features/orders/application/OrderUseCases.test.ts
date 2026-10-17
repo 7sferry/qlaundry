@@ -1,5 +1,5 @@
 import {describe, expect, it, vi} from 'vitest';
-import type {MachineOptionFilters, OrderRepository} from '../domain/OrderRepository';
+import type {MachineOptionFilters, OrderRepository, StaffOptionFilters} from '../domain/OrderRepository';
 import type {CreateOrderInput, Order, UpdateOrderStatusInput} from '../domain/Order';
 import type {LaundryService} from '../domain/Service';
 import type {MachineOption} from '../domain/Machine';
@@ -61,6 +61,18 @@ const mockOrderWithMachines: Order = {
 	machines: [{machineId: 'mch_1', name: 'Mesin Cuci 1', type: 'washer'}],
 };
 
+const mockStaffPage = {
+	items: [{id: 'stf_1', username: 'siti', fullName: 'Siti Aminah'}],
+	nextCursor: null,
+	prevCursor: null,
+};
+
+const mockOrderWithStaffs: Order = {
+	...mockOrder,
+	status: 'in_progress',
+	staffs: [{staffId: 'stf_1', name: 'Siti Aminah'}],
+};
+
 function makeRepo(): { repo: OrderRepository; fns: Record<string, ReturnType<typeof vi.fn>> } {
 	const fns = {
 		getOrders: vi.fn().mockResolvedValue(mockOrderPage),
@@ -72,6 +84,8 @@ function makeRepo(): { repo: OrderRepository; fns: Record<string, ReturnType<typ
 		cancelOrder: vi.fn().mockResolvedValue(mockOrder),
 		getMachineOptions: vi.fn().mockResolvedValue(mockMachinePage),
 		changeMachines: vi.fn().mockResolvedValue(mockOrderWithMachines),
+		getStaffOptions: vi.fn().mockResolvedValue(mockStaffPage),
+		changeStaffs: vi.fn().mockResolvedValue(mockOrderWithStaffs),
 	};
 	return {repo: fns as unknown as OrderRepository, fns};
 }
@@ -195,5 +209,50 @@ describe('orderUseCases', () => {
 
 		await expect(useCases.changeMachines('ord_1', ['mch_1']))
 				.rejects.toThrow('Machine Mesin Cuci 1 is in use by INV-20261016-ABC123');
+	});
+
+	it('updateStatus passes the picked staff ids through', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = orderUseCases(repo);
+		const input: UpdateOrderStatusInput = {
+			orderId: 'ord_1',
+			status: 'in_progress',
+			machineIds: ['mch_1'],
+			staffIds: ['stf_1', 'stf_2'],
+		};
+
+		await useCases.updateStatus(input);
+
+		expect(fns.updateOrderStatus).toHaveBeenCalledWith(input);
+	});
+
+	it('listStaffOptions passes the filters through to repository.getStaffOptions', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = orderUseCases(repo);
+		const filters: StaffOptionFilters = {search: 'sit', after: 'cursor-1'};
+
+		const result = await useCases.listStaffOptions(filters);
+
+		expect(fns.getStaffOptions).toHaveBeenCalledWith(filters);
+		expect(result).toEqual(mockStaffPage);
+	});
+
+	it('changeStaffs delegates to repository.changeStaffs, an empty list included', async () => {
+		const {repo, fns} = makeRepo();
+		const useCases = orderUseCases(repo);
+
+		const result = await useCases.changeStaffs('ord_1', []);
+
+		expect(fns.changeStaffs).toHaveBeenCalledWith('ord_1', []);
+		expect(result).toBe(mockOrderWithStaffs);
+	});
+
+	it('changeStaffs propagates repository errors', async () => {
+		const {repo, fns} = makeRepo();
+		fns.changeStaffs.mockRejectedValue(new Error('Staff can only be changed while the order is in progress'));
+		const useCases = orderUseCases(repo);
+
+		await expect(useCases.changeStaffs('ord_1', ['stf_1']))
+				.rejects.toThrow('Staff can only be changed while the order is in progress');
 	});
 });

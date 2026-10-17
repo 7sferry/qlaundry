@@ -13,6 +13,7 @@ import com.ferry.order.domain.machine.MachineOccupancy;
 import com.ferry.order.domain.order.Order;
 import com.ferry.order.domain.order.OrderId;
 import com.ferry.order.domain.order.OrderMachine;
+import com.ferry.order.domain.order.OrderStaff;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
@@ -47,14 +48,26 @@ public class DefaultOrderProcessUseCase implements OrderProcessUseCase{
 				? null : new Note(request.staffNotes());
 		Order changed = order.changeStatus(OrderStatus.IN_PROGRESS, staffNotes, principal.userId());
 		List<Machine> machines = resolveMachines(machineIds(request.machineIds()), orderId, tenantId);
+		Set<String> staffIds = staffIds(request.staffIds(), principal);
 		Order saved = gateway.save(changed);
 		List<OrderMachine> assigned = machines.isEmpty() ? List.of() : gateway.saveMachines(machines.stream()
 				.map(machine -> OrderMachine.assign(saved.id(), machine, principal.userId()))
 				.toList());
+		List<OrderStaff> staffs = gateway.saveStaffs(staffIds.stream()
+				.map(staffId -> OrderStaff.assign(saved.id(), staffId, principal.userId()))
+				.toList());
 		publisher.publish(publisher.save(OrderAnalyticsEvent.order(OrderAnalyticsEventType.ORDER_STATUS_CHANGED,
 				OrderAnalyticsMessage.from(saved, gateway.findItemsByOrderId(orderId),
 						gateway.findPromotionsByOrderId(orderId)), principal.userId())));
-		presenter.present(new OrderProcessResponse(saved, assigned));
+		presenter.present(new OrderProcessResponse(saved, assigned, staffs));
+	}
+
+	private Set<String> staffIds(Set<String> rawIds, OrderAuthPrincipal principal){
+		Set<String> staffIds = rawIds == null ? Set.of() : rawIds.stream()
+				.filter(id -> id != null && !id.isBlank())
+				.map(String::trim)
+				.collect(Collectors.toCollection(LinkedHashSet::new));
+		return staffIds.isEmpty() ? Set.of(principal.userId()) : staffIds;
 	}
 
 	private Set<MachineId> machineIds(Set<String> rawIds){

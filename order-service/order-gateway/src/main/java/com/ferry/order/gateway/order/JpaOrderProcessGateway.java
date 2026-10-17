@@ -10,6 +10,7 @@ import com.ferry.order.domain.order.OrderId;
 import com.ferry.order.domain.order.OrderItem;
 import com.ferry.order.domain.order.OrderMachine;
 import com.ferry.order.domain.order.OrderPromotion;
+import com.ferry.order.domain.order.OrderStaff;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.gateway.machine.entity.MachineJpa;
@@ -18,10 +19,12 @@ import com.ferry.order.gateway.order.entity.OrderItemJpa;
 import com.ferry.order.gateway.order.entity.OrderJpa;
 import com.ferry.order.gateway.order.entity.OrderMachineJpa;
 import com.ferry.order.gateway.order.entity.OrderPromotionJpa;
+import com.ferry.order.gateway.order.entity.OrderStaffJpa;
 import com.ferry.order.gateway.order.repository.OrderItemJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderMachineJpaRepository;
 import com.ferry.order.gateway.order.repository.OrderPromotionJpaRepository;
+import com.ferry.order.gateway.order.repository.OrderStaffJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +46,7 @@ public class JpaOrderProcessGateway implements OrderProcessGateway{
 	private final OrderPromotionJpaRepository orderPromotionJpaRepository;
 	private final OrderMachineJpaRepository orderMachineJpaRepository;
 	private final MachineJpaRepository machineJpaRepository;
+	private final OrderStaffJpaRepository orderStaffJpaRepository;
 	private final IdGenerator idGenerator;
 	private final CryptoTool cryptoTool;
 
@@ -102,6 +106,17 @@ public class JpaOrderProcessGateway implements OrderProcessGateway{
 			throw new OrderMachinesConflictException("Machines on this order were just changed by someone else. "
 					+ "Reload and try again.");
 		}
+	}
+
+	@Override
+	public List<OrderStaff> saveStaffs(List<OrderStaff> staffs){
+		List<OrderStaffJpa> entities = staffs.stream()
+				.map(staff -> OrderStaffJpa.construct(idGenerator.generateId(), staff,
+						orderJpaRepository.getReferenceById(staff.orderId())))
+				.toList();
+		return orderStaffJpaRepository.saveAllAndFlush(entities).stream()
+				.map(OrderStaffJpa::construct)
+				.toList();
 	}
 
 }

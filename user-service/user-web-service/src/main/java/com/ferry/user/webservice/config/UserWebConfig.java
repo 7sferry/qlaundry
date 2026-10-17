@@ -15,6 +15,9 @@ import com.ferry.user.core.customer.delete.DefaultCustomerDeleteUseCase;
 import com.ferry.user.core.customer.detail.CustomerDetailGateway;
 import com.ferry.user.core.customer.detail.CustomerDetailUseCase;
 import com.ferry.user.core.customer.detail.DefaultCustomerDetailUseCase;
+import com.ferry.user.core.staff.names.DefaultStaffNamesUseCase;
+import com.ferry.user.core.staff.names.StaffNamesGateway;
+import com.ferry.user.core.staff.names.StaffNamesUseCase;
 import com.ferry.user.core.customer.names.CustomerNamesGateway;
 import com.ferry.user.core.customer.names.CustomerNamesUseCase;
 import com.ferry.user.core.customer.names.DefaultCustomerNamesUseCase;
@@ -249,6 +252,16 @@ public class UserWebConfig{
 	@Bean
 	CustomerDetailUseCase customerDetailUseCase(CustomerDetailGateway customerDetailGateway){
 		return new DefaultCustomerDetailUseCase(customerDetailGateway);
+	}
+
+	@Bean
+	StaffNamesGateway staffNamesGateway(StaffJpaRepository staffJpaRepository){
+		return new JpaStaffNamesGateway(staffJpaRepository);
+	}
+
+	@Bean
+	StaffNamesUseCase staffNamesUseCase(StaffNamesGateway staffNamesGateway){
+		return new DefaultStaffNamesUseCase(staffNamesGateway);
 	}
 
 	@Bean

@@ -4,6 +4,7 @@
  ************************/
 
 import type {OrderMachine} from './Machine';
+import type {OrderStaff} from './OrderStaff';
 
 export type OrderStatus =
 		| 'pending'
@@ -68,6 +69,7 @@ export interface Order {
 	estimatedDelivery: string;
 	completedAt?: string;
 	machines?: OrderMachine[];
+	staffs?: OrderStaff[];
 }
 
 export interface CreateOrderInput {
@@ -94,6 +96,7 @@ export interface UpdateOrderStatusInput {
 	status: OrderStatus;
 	staffNotes?: string;
 	machineIds?: string[];
+	staffIds?: string[];
 }
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {

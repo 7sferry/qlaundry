@@ -41,8 +41,9 @@ GET    /order/detail            ?orderId=
 GET    /order/schedule          ?date=yyyy-MM-dd   → today's (or that day's) due pickups and deliveries
 PATCH  /order/confirm           {orderId, staffNotes?}
 PATCH  /order/pickup            {orderId, staffNotes?}
-PATCH  /order/process           {orderId, staffNotes?, machineIds?}
+PATCH  /order/process           {orderId, staffNotes?, machineIds?, staffIds?}   staffIds omitted/empty → the calling staff
 PATCH  /order/assignMachines    {orderId, machineIds}   IN_PROGRESS only; replaces the order's machines ([] clears them)
+PATCH  /order/assignStaffs      {orderId, staffIds?}   IN_PROGRESS only; replaces the order's staff (omitted/[] → the calling staff)
 PATCH  /order/ready             {orderId, staffNotes?}
 PATCH  /order/deliver           {orderId, staffNotes?}
 PATCH  /order/complete          {orderId, staffNotes?}

@@ -6,8 +6,16 @@
 import {env} from '@/core/config/env';
 import {httpClient} from '@/core/http/httpClient';
 import type {Page} from '@/core/pagination/Pagination';
-import type {InvoiceLink, MachineOptionFilters, OrderFilters, OrderRepository} from '../domain/OrderRepository';
+import type {
+	InvoiceLink,
+	MachineOptionFilters,
+	OrderFilters,
+	OrderRepository,
+	StaffOptionFilters,
+} from '../domain/OrderRepository';
 import type {MachineOption, MachineType, OrderMachine} from '../domain/Machine';
+import type {OrderStaff, StaffOption} from '../domain/OrderStaff';
+import {UNKNOWN_STAFF_NAME} from '../domain/OrderStaff';
 import type {
 	ClothingType,
 	CreateOrderInput,
@@ -56,12 +64,27 @@ interface OrderApiItem {
 	createdAt: number;
 	items: { type: string; label: string | null; quantity: number }[];
 	machines?: OrderMachineApiItem[];
+	staffs?: OrderStaffApiItem[];
 }
 
 interface OrderMachineApiItem {
 	machineId: string;
 	name: string;
 	type: string;
+}
+
+interface OrderStaffApiItem {
+	staffId: string;
+}
+
+interface StaffNamesApiResponse {
+	staffs: { staffId: string; fullName: string }[];
+}
+
+interface StaffListApiResponse {
+	staffs: { staffId: string; username: string; fullName: string }[];
+	nextCursor: string | null;
+	prevCursor: string | null;
 }
 
 interface MachineListApiResponse {
@@ -196,6 +219,24 @@ function buildOrderQuery(filters?: OrderFilters): string {
 	return query ? `?${query}` : '';
 }
 
+function buildStaffOptionQuery(filters?: StaffOptionFilters): string {
+	const params = new URLSearchParams({sortBy: 'NAME', sortDir: 'ASC'});
+	if (filters?.search) params.set('fullName', filters.search);
+	if (filters?.after) params.set('after', filters.after);
+	if (filters?.before) params.set('before', filters.before);
+	if (filters?.pageSize) params.set('pageSize', String(filters.pageSize));
+	return `?${params.toString()}`;
+}
+
+async function resolveOrderStaffs(items: OrderStaffApiItem[]): Promise<OrderStaff[]> {
+	if (items.length === 0) return [];
+	const params = new URLSearchParams();
+	items.forEach((item) => params.append('staffIds', item.staffId));
+	const res = await httpClient.get<StaffNamesApiResponse>(`${ORDER_ENDPOINTS.staffNames}?${params.toString()}`);
+	const names = new Map(res.staffs.map((s) => [s.staffId, s.fullName]));
+	return items.map((item) => ({staffId: item.staffId, name: names.get(item.staffId) ?? UNKNOWN_STAFF_NAME}));
+}
+
 function toService(s: ServiceListApiResponse['services'][number]): LaundryService {
 	return {
 		id: s.id,
@@ -221,7 +262,7 @@ export class OrderRepositoryImpl implements OrderRepository {
 
 	async getOrderById(id: string): Promise<Order> {
 		const res = await httpClient.get<OrderApiItem>(`${ORDER_ENDPOINTS.detail}?orderId=${encodeURIComponent(id)}`);
-		return toOrder(res);
+		return {...toOrder(res), staffs: res.staffs ? await resolveOrderStaffs(res.staffs) : undefined};
 	}
 
 	async getInvoiceLink(id: string): Promise<InvoiceLink> {
@@ -285,7 +326,9 @@ export class OrderRepositoryImpl implements OrderRepository {
 		await httpClient.patch<{ id: string }>(endpoint, {
 			orderId: input.orderId,
 			staffNotes: input.staffNotes,
-			...(input.status === 'in_progress' ? {machineIds: input.machineIds ?? []} : {}),
+			...(input.status === 'in_progress'
+				? {machineIds: input.machineIds ?? [], staffIds: input.staffIds ?? []}
+				: {}),
 		});
 		return this.getOrderById(input.orderId);
 	}
@@ -312,6 +355,21 @@ export class OrderRepositoryImpl implements OrderRepository {
 
 	async changeMachines(orderId: string, machineIds: string[]): Promise<Order> {
 		await httpClient.patch<{ id: string }>(ORDER_ENDPOINTS.assignMachines, {orderId, machineIds});
+		return this.getOrderById(orderId);
+	}
+
+	async getStaffOptions(filters?: StaffOptionFilters): Promise<Page<StaffOption>> {
+		const res = await httpClient.get<StaffListApiResponse>(
+				`${ORDER_ENDPOINTS.staffList}${buildStaffOptionQuery(filters)}`);
+		return {
+			items: res.staffs.map((s) => ({id: s.staffId, username: s.username, fullName: s.fullName})),
+			nextCursor: res.nextCursor,
+			prevCursor: res.prevCursor,
+		};
+	}
+
+	async changeStaffs(orderId: string, staffIds: string[]): Promise<Order> {
+		await httpClient.patch<{ id: string }>(ORDER_ENDPOINTS.assignStaffs, {orderId, staffIds});
 		return this.getOrderById(orderId);
 	}
 }

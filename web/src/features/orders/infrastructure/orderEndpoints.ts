@@ -15,8 +15,11 @@ export const ORDER_ENDPOINTS = {
 	complete: '/order/complete',
 	cancel: '/order/cancel',
 	assignMachines: '/order/assignMachines',
+	assignStaffs: '/order/assignStaffs',
 	invoiceLink: '/invoice/link',
 	invoicePdf: '/public/invoice/pdf',
 	serviceList: '/service/list',
 	machineList: '/machine/list',
+	staffList: '/staff/list',
+	staffNames: '/staff/names',
 } as const;

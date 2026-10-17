@@ -47,7 +47,7 @@ public class JpaMachineListGateway implements MachineListGateway{
 		List<String> machineIds = machines.stream().map(MachineJpa::getId).toList();
 		return orderMachineJpaRepository.findOccupancies(machineIds, OrderStatus.IN_PROGRESS.getValue()).stream()
 				.collect(Collectors.toMap(MachineOccupancy::machineId, MachineOccupancy::orderNumber,
-						(first, second) -> first));
+						(first, _) -> first));
 	}
 
 	private List<MachineJpa> fetchByFilter(MachineFilter filter){

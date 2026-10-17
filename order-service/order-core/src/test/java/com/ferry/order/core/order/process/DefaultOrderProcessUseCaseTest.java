@@ -20,6 +20,7 @@ import com.ferry.order.domain.order.OrderId;
 import com.ferry.order.domain.order.OrderMachine;
 import com.ferry.order.domain.order.OrderNumber;
 import com.ferry.order.domain.order.OrderPriority;
+import com.ferry.order.domain.order.OrderStaff;
 import com.ferry.order.domain.order.OrderStatus;
 import com.ferry.order.domain.order.PaymentMethod;
 import com.ferry.order.domain.order.PaymentStatus;
@@ -62,7 +63,9 @@ class DefaultOrderProcessUseCaseTest{
 
 	private static final String TENANT_ID = "01TENANTCEMPAKA000000000";
 	private static final String STAFF_ID = "01STAFFSITINURHALIZA0000";
-	private static final String ORDER_ID = "01ORDERGORDEN00000000000";
+	private static final String OTHER_STAFF_ID = "01STAFFBUDIHARTONO000000";
+	private static final String THIRD_STAFF_ID = "01STAFFANGELINAPUTRI000";
+	private static final String ORDER_ID ="01ORDERGORDEN00000000000";
 	private static final String ORDER_NUMBER = "INV-20260821-6TB4WK";
 	private static final String OTHER_ORDER_NUMBER = "INV-20260821-7XK2MQ";
 	private static final String WASHER_ID = "01MACHINEWASHERSATU00000";
@@ -86,6 +89,8 @@ class DefaultOrderProcessUseCaseTest{
 	ArgumentCaptor<List<OrderMachine>> machinesCaptor;
 	@Captor
 	ArgumentCaptor<Set<MachineId>> machineIdsCaptor;
+	@Captor
+	ArgumentCaptor<List<OrderStaff>> staffsCaptor;
 
 	@Test
 	void givenBlankOrderId_thenThrowsConstraintViolationException(){
@@ -96,7 +101,7 @@ class DefaultOrderProcessUseCaseTest{
 				.build();
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
-						useCase.execute(new OrderProcessRequest("", null, null), principal, presenter))
+						useCase.execute(new OrderProcessRequest("", null, null, null), principal, presenter))
 				.isInstanceOf(ConstraintViolationException.class));
 
 		then(gateway).shouldHaveNoInteractions();
@@ -113,7 +118,7 @@ class DefaultOrderProcessUseCaseTest{
 				.lockById(any(OrderId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
-						useCase.execute(new OrderProcessRequest(ORDER_ID, null, null), principal, presenter))
+						useCase.execute(new OrderProcessRequest(ORDER_ID, null, null, null), principal, presenter))
 				.isInstanceOf(NotFoundException.class)
 				.hasMessage("Order Not Found"));
 
@@ -162,7 +167,7 @@ class DefaultOrderProcessUseCaseTest{
 				.lockById(any(OrderId.class), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() ->
-						useCase.execute(new OrderProcessRequest(ORDER_ID, "already ready", null), principal, presenter))
+						useCase.execute(new OrderProcessRequest(ORDER_ID, "already ready", null, null), principal, presenter))
 				.isInstanceOf(InvalidOrderStatusException.class)
 				.hasMessage("Cannot change order status from READY to IN_PROGRESS"));
 
@@ -213,7 +218,7 @@ class DefaultOrderProcessUseCaseTest{
 				TENANT_ID, ORDER_ID, 1, "{}", STAFF_ID)).given(publisher)
 				.save(any(OrderAnalyticsEvent.class));
 
-		useCase.execute(new OrderProcessRequest(ORDER_ID, "washing started", null), principal, presenter);
+		useCase.execute(new OrderProcessRequest(ORDER_ID, "washing started", null, null), principal, presenter);
 
 		then(publisher).should()
 				.save(analyticsCaptor.capture());
@@ -281,7 +286,7 @@ class DefaultOrderProcessUseCaseTest{
 		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
 				.save(any(Order.class));
 
-		useCase.execute(new OrderProcessRequest(ORDER_ID, "sorting the gorden", null), principal, presenter);
+		useCase.execute(new OrderProcessRequest(ORDER_ID, "sorting the gorden", null, null), principal, presenter);
 
 		then(gateway).should()
 				.save(orderCaptor.capture());
@@ -344,7 +349,7 @@ class DefaultOrderProcessUseCaseTest{
 		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
 				.save(any(Order.class));
 
-		useCase.execute(new OrderProcessRequest(ORDER_ID, null, Set.of(" ", "")), principal, presenter);
+		useCase.execute(new OrderProcessRequest(ORDER_ID, null, Set.of(" ", ""), null), principal, presenter);
 
 		then(gateway).should(never())
 				.lockMachines(anySet(), any(TenantId.class));
@@ -412,7 +417,7 @@ class DefaultOrderProcessUseCaseTest{
 				.lockMachines(anySet(), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(
-						new OrderProcessRequest(ORDER_ID, null, Set.of(WASHER_ID, DRYER_ID)), principal, presenter))
+						new OrderProcessRequest(ORDER_ID, null, Set.of(WASHER_ID, DRYER_ID), null), principal, presenter))
 				.isInstanceOf(NotFoundException.class)
 				.hasMessage("Machine Not Found"));
 
@@ -475,7 +480,7 @@ class DefaultOrderProcessUseCaseTest{
 				.lockMachines(anySet(), any(TenantId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(
-						new OrderProcessRequest(ORDER_ID, null, Set.of(DRYER_ID)), principal, presenter))
+						new OrderProcessRequest(ORDER_ID, null, Set.of(DRYER_ID), null), principal, presenter))
 				.isInstanceOf(NotFoundException.class)
 				.hasMessage("Machine Not Found"));
 
@@ -540,7 +545,7 @@ class DefaultOrderProcessUseCaseTest{
 				.findOccupancies(anySet(), any(OrderId.class));
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(
-						new OrderProcessRequest(ORDER_ID, null, Set.of(WASHER_ID)), principal, presenter))
+						new OrderProcessRequest(ORDER_ID, null, Set.of(WASHER_ID), null), principal, presenter))
 				.isInstanceOf(MachineBusyException.class)
 				.hasMessage("Machine Mesin Cuci 1 is in use by " + OTHER_ORDER_NUMBER));
 
@@ -623,7 +628,7 @@ class DefaultOrderProcessUseCaseTest{
 		willAnswer(invocation -> invocation.<List<OrderMachine>>getArgument(0)).given(gateway)
 				.saveMachines(anyList());
 
-		useCase.execute(new OrderProcessRequest(ORDER_ID, "two loads", machineIds), principal, presenter);
+		useCase.execute(new OrderProcessRequest(ORDER_ID, "two loads", machineIds, null), principal, presenter);
 
 		then(gateway).should()
 				.lockMachines(machineIdsCaptor.capture(), eq(new TenantId(TENANT_ID)));
@@ -645,6 +650,121 @@ class DefaultOrderProcessUseCaseTest{
 			softly.then(assigned).extracting(OrderMachine::createdBy).containsOnly(STAFF_ID);
 			softly.then(responseCaptor.getValue().machines()).isEqualTo(assigned);
 			softly.then(responseCaptor.getValue().order().status()).isEqualTo(OrderStatus.IN_PROGRESS);
+		});
+	}
+
+	@Test
+	void givenNoStaffIds_thenAssignsTheCurrentStaff(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.STAFF)
+				.build();
+		Order order = Order.builder()
+				.id(ORDER_ID)
+				.orderNumber(new OrderNumber(ORDER_NUMBER))
+				.tenantId(TENANT_ID)
+				.customerName(new FullName("teguh santoso"))
+				.customerPhone(new Phone("+6281377889900"))
+				.serviceId("01SERVICEGORDEN000000000")
+				.serviceName("Cuci Gorden")
+				.unit(ServiceUnit.KG)
+				.unitPrice(Money.of(15000L))
+				.quantity(4)
+				.weightKg(4.0)
+				.subtotal(Money.of(60000L))
+				.discount(Money.ZERO)
+				.totalPrice(Money.of(60000L))
+				.priority(OrderPriority.NORMAL)
+				.paymentMethod(PaymentMethod.CASH)
+				.paymentStatus(PaymentStatus.UNPAID)
+				.status(OrderStatus.CONFIRMED)
+				.pickupAt(now)
+				.estimatedDeliveryAt(now.plusSeconds(86400))
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		willReturn(Optional.of(order)).given(gateway)
+				.lockById(any(OrderId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<List<OrderStaff>>getArgument(0)).given(gateway)
+				.saveStaffs(anyList());
+
+		useCase.execute(new OrderProcessRequest(ORDER_ID, null, null, Set.of(" ", "")), principal, presenter);
+
+		then(gateway).should()
+				.saveStaffs(staffsCaptor.capture());
+		then(presenter).should()
+				.present(responseCaptor.capture());
+
+		List<OrderStaff> assigned = staffsCaptor.getValue();
+
+		thenSoftly(softly -> {
+			softly.then(assigned).extracting(OrderStaff::staffId).containsExactly(STAFF_ID);
+			softly.then(assigned).extracting(OrderStaff::orderId).containsOnly(ORDER_ID);
+			softly.then(assigned).extracting(OrderStaff::createdBy).containsOnly(STAFF_ID);
+			softly.then(responseCaptor.getValue().staffs()).isEqualTo(assigned);
+		});
+	}
+
+	@Test
+	void givenStaffIds_thenAssignsEachOnceTrimmedAndKeepsTheOrder(){
+		Instant now = Instant.now();
+		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
+				.userId(STAFF_ID)
+				.tenantId(TENANT_ID)
+				.role(StaffRole.SUPER_STAFF)
+				.build();
+		Order order = Order.builder()
+				.id(ORDER_ID)
+				.orderNumber(new OrderNumber(ORDER_NUMBER))
+				.tenantId(TENANT_ID)
+				.customerName(new FullName("teguh santoso"))
+				.customerPhone(new Phone("+6281377889900"))
+				.serviceId("01SERVICEGORDEN000000000")
+				.serviceName("Cuci Gorden")
+				.unit(ServiceUnit.KG)
+				.unitPrice(Money.of(15000L))
+				.quantity(4)
+				.weightKg(4.0)
+				.subtotal(Money.of(60000L))
+				.discount(Money.ZERO)
+				.totalPrice(Money.of(60000L))
+				.priority(OrderPriority.NORMAL)
+				.paymentMethod(PaymentMethod.CASH)
+				.paymentStatus(PaymentStatus.UNPAID)
+				.status(OrderStatus.PICKED_UP)
+				.pickupAt(now)
+				.estimatedDeliveryAt(now.plusSeconds(86400))
+				.deleted(false)
+				.createdAt(now)
+				.createdBy(STAFF_ID)
+				.updatedAt(now)
+				.updatedBy(STAFF_ID)
+				.build();
+		Set<String> staffIds = new LinkedHashSet<>(List.of(OTHER_STAFF_ID, " " + THIRD_STAFF_ID + " ", " ",
+				" " + OTHER_STAFF_ID));
+		willReturn(Optional.of(order)).given(gateway)
+				.lockById(any(OrderId.class), any(TenantId.class));
+		willAnswer(invocation -> invocation.<Order>getArgument(0)).given(gateway)
+				.save(any(Order.class));
+		willAnswer(invocation -> invocation.<List<OrderStaff>>getArgument(0)).given(gateway)
+				.saveStaffs(anyList());
+
+		useCase.execute(new OrderProcessRequest(ORDER_ID, null, null, staffIds), principal, presenter);
+
+		then(gateway).should()
+				.saveStaffs(staffsCaptor.capture());
+
+		thenSoftly(softly -> {
+			softly.then(staffsCaptor.getValue()).extracting(OrderStaff::staffId)
+					.containsExactly(OTHER_STAFF_ID, THIRD_STAFF_ID);
+			softly.then(staffsCaptor.getValue()).extracting(OrderStaff::createdBy).containsOnly(STAFF_ID);
 		});
 	}
 

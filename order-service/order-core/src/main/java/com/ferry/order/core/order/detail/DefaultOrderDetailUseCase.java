@@ -6,6 +6,7 @@ import com.ferry.order.domain.order.OrderId;
 import com.ferry.order.domain.order.OrderItem;
 import com.ferry.order.domain.order.OrderMachine;
 import com.ferry.order.domain.order.OrderPromotion;
+import com.ferry.order.domain.order.OrderStaff;
 import com.ferry.order.domain.tenant.TenantId;
 import com.ferry.order.domain.token.OrderAuthPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,8 @@ public class DefaultOrderDetailUseCase implements OrderDetailUseCase{
 		List<OrderItem> items = gateway.findItemsByOrderId(orderId);
 		List<OrderPromotion> promotions = gateway.findPromotionsByOrderId(orderId);
 		List<OrderMachine> machines = gateway.findMachinesByOrderId(orderId);
-		presenter.present(new OrderDetailResponse(order, items, promotions, machines));
+		List<OrderStaff> staffs = gateway.findStaffsByOrderId(orderId);
+		presenter.present(new OrderDetailResponse(order, items, promotions, machines, staffs));
 	}
 
 }

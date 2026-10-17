@@ -14,11 +14,16 @@ public record OrderProcessRestResponse(
 	String staffNotes,
 	Long completedAt,
 	long updatedAt,
-	List<Machine> machines){
+	List<Machine> machines,
+	List<Staff> staffs){
 
 	public record Machine(
 		String machineId,
 		String name,
 		String type){
+	}
+
+	public record Staff(
+		String staffId){
 	}
 }

@@ -5,7 +5,7 @@
 
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {FileText, MoreHorizontal, Package, PackagePlus, Search, WashingMachine, X,} from 'lucide-react';
+import {FileText, MoreHorizontal, Package, PackagePlus, Search, Users, WashingMachine, X,} from 'lucide-react';
 import {
 	Badge,
 	type BadgeTone,
@@ -22,8 +22,10 @@ import {
 } from '@/core/ui';
 import {DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS, type SortDirection} from '@/core/pagination/Pagination';
 import {formatCurrency, formatDate, formatRelative} from '@/core/utils/format';
-import {useMachineOptions, useOrders} from '../useOrders';
+import {useAuth} from '@/features/auth/presentation/useAuth';
+import {useMachineOptions, useOrders, useStaffOptions} from '../useOrders';
 import MachinePickerModal from '../components/MachinePickerModal';
+import StaffPickerModal from '../components/StaffPickerModal';
 import type {Order, OrderStatus} from '../../domain/Order';
 import {CLOTHING_TYPE_LABELS, ORDER_STATUS_LABELS} from '../../domain/Order';
 import {MACHINE_TYPE_LABELS} from '../../domain/Machine';
@@ -69,17 +71,28 @@ interface MachinePickerTarget {
 	mode: 'start' | 'change';
 }
 
+interface StaffPickerTarget {
+	order: Order;
+	mode: 'start' | 'change';
+	machineIds: string[];
+}
+
 export default function OrderHistoryPage() {
 	const navigate = useNavigate();
 	const {
 		orders, loading, hasNext, hasPrev, refresh, goNext, goPrevious, loadOrder, updateStatus, changeMachines,
-		cancelOrder, viewInvoice,
+		changeStaffs, cancelOrder, viewInvoice,
 	} = useOrders();
 	const machineOptions = useMachineOptions();
+	const staffOptions = useStaffOptions();
+	const {user} = useAuth();
 	const toast = useToast();
 	const [pickerTarget, setPickerTarget] = useState<MachinePickerTarget | null>(null);
 	const [pickerSession, setPickerSession] = useState(0);
 	const [pickerSubmitting, setPickerSubmitting] = useState(false);
+	const [staffTarget, setStaffTarget] = useState<StaffPickerTarget | null>(null);
+	const [staffSession, setStaffSession] = useState(0);
+	const [staffSubmitting, setStaffSubmitting] = useState(false);
 
 	const [search, setSearch] = useState('');
 	const [openingInvoice, setOpeningInvoice] = useState(false);
@@ -139,6 +152,12 @@ export default function OrderHistoryPage() {
 		void machineOptions.load();
 	};
 
+	const openStaffPicker = (order: Order, mode: StaffPickerTarget['mode'], machineIds: string[] = []) => {
+		setStaffTarget({order, mode, machineIds});
+		setStaffSession((session) => session + 1);
+		void staffOptions.load();
+	};
+
 	const handleAdvance = async (order: Order) => {
 		const next = NEXT_STATUS[order.status];
 		if (!next) return;
@@ -157,20 +176,40 @@ export default function OrderHistoryPage() {
 	const handleMachinesConfirm = async (machineIds: string[]) => {
 		if (!pickerTarget) return;
 		const {order, mode} = pickerTarget;
+		if (mode === 'start') {
+			setPickerTarget(null);
+			openStaffPicker(order, 'start', machineIds);
+			return;
+		}
 		setPickerSubmitting(true);
 		try {
-			if (mode === 'start') {
-				showInDrawer(await updateStatus({orderId: order.id, status: 'in_progress', machineIds}));
-				toast.success(`Order ${order.orderNumber} status updated: ${ORDER_STATUS_LABELS.in_progress}`);
-			} else {
-				showInDrawer(await changeMachines(order.id, machineIds));
-				toast.success(`Machines updated for ${order.orderNumber}.`);
-			}
+			showInDrawer(await changeMachines(order.id, machineIds));
+			toast.success(`Machines updated for ${order.orderNumber}.`);
 			setPickerTarget(null);
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to save machines.');
 		} finally {
 			setPickerSubmitting(false);
+		}
+	};
+
+	const handleStaffConfirm = async (staffIds: string[]) => {
+		if (!staffTarget) return;
+		const {order, mode, machineIds} = staffTarget;
+		setStaffSubmitting(true);
+		try {
+			if (mode === 'start') {
+				showInDrawer(await updateStatus({orderId: order.id, status: 'in_progress', machineIds, staffIds}));
+				toast.success(`Order ${order.orderNumber} status updated: ${ORDER_STATUS_LABELS.in_progress}`);
+			} else {
+				showInDrawer(await changeStaffs(order.id, staffIds));
+				toast.success(`Staff updated for ${order.orderNumber}.`);
+			}
+			setStaffTarget(null);
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Failed to save staff.');
+		} finally {
+			setStaffSubmitting(false);
 		}
 	};
 
@@ -441,6 +480,31 @@ export default function OrderHistoryPage() {
 										</div>
 								)}
 
+								{(selectedOrder.status === 'in_progress' || !!selectedOrder.staffs?.length) && (
+										<div className="detail-section">
+											<h4>Staff</h4>
+											{selectedOrder.staffs === undefined ? (
+													<p className="muted" style={{fontSize: 13}}>Loading staff…</p>
+											) : selectedOrder.staffs.length > 0 ? (
+													<div className="items-list">
+														{selectedOrder.staffs.map((staff) => (
+																<div key={staff.staffId} className="item-row item-row--view">
+																	<span>{staff.name}</span>
+																</div>
+														))}
+													</div>
+											) : (
+													<p className="muted" style={{fontSize: 13}}>No staff recorded.</p>
+											)}
+											{selectedOrder.status === 'in_progress' && selectedOrder.staffs !== undefined && (
+													<Button variant="ghost" style={{marginTop: 8}}
+													        onClick={() => openStaffPicker(selectedOrder, 'change')}>
+														<Users size={15}/> Change staff
+													</Button>
+											)}
+										</div>
+								)}
+
 								<div className="detail-section">
   							<h4>Garments</h4>
 									<div className="items-list">
@@ -543,6 +607,26 @@ export default function OrderHistoryPage() {
 						onTypeChange={(type) => void machineOptions.load(type)}
 						onCancel={() => setPickerTarget(null)}
 						onConfirm={(machineIds) => void handleMachinesConfirm(machineIds)}
+				/>
+
+				<StaffPickerModal
+						key={staffSession}
+						open={staffTarget !== null}
+						mode={staffTarget?.mode ?? 'start'}
+						orderNumber={staffTarget?.order.orderNumber ?? ''}
+						currentUsername={user?.username}
+						initialSelection={staffTarget?.mode === 'change' ? staffTarget.order.staffs ?? [] : []}
+						staffs={staffOptions.staffs}
+						loading={staffOptions.loading}
+						error={staffOptions.error}
+						hasNext={staffOptions.hasNext}
+						hasPrev={staffOptions.hasPrev}
+						submitting={staffSubmitting}
+						onNext={() => void staffOptions.goNext()}
+						onPrev={() => void staffOptions.goPrevious()}
+						onSearch={(search) => void staffOptions.load(search)}
+						onCancel={() => setStaffTarget(null)}
+						onConfirm={(staffIds) => void handleStaffConfirm(staffIds)}
 				/>
 			</>
 	);

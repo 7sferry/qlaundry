@@ -38,7 +38,7 @@ public class WebStaffListPresenter implements StaffListPresenter{
 					List<Address> addresses = response.addressesByStaffId().getOrDefault(o.id(), List.of()).stream()
 							.map(e -> new Address(e.addressLine()))
 							.toList();
-					return new Staff(o.description(), o.fullName(), o.createdAt().toEpochMilli(), o.username(),
+					return new Staff(o.id(), o.description(),o.fullName(), o.createdAt().toEpochMilli(), o.username(),
 							o.role().name(), emails, phones, addresses);
 				})
 				.toList();

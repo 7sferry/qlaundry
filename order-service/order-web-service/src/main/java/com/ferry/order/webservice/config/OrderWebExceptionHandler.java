@@ -54,7 +54,8 @@ public class OrderWebExceptionHandler{
 				e.getMessage());
 	}
 
-	@ExceptionHandler({MachineBusyException.class, OrderMachinesConflictException.class})
+	@ExceptionHandler({MachineBusyException.class, OrderMachinesConflictException.class,
+			OrderStaffsConflictException.class})
 	ProblemDetail handleConflict(RuntimeException e){
 		log.warn(e.getMessage(), e);
 		return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());

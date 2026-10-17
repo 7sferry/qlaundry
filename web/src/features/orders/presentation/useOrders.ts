@@ -8,15 +8,17 @@ import {useOnceEffect} from '@/core/hooks/useOnceEffect';
 import {usePaginatedList} from '@/core/hooks/usePaginatedList';
 import {openUrlInNewTab} from '@/core/utils/openUrlInNewTab';
 import type {ClothingItem, CreateOrderInput, Order, UpdateOrderStatusInput} from '../domain/Order';
-import type {MachineOptionFilters, OrderFilters} from '../domain/OrderRepository';
+import type {MachineOptionFilters, OrderFilters, StaffOptionFilters} from '../domain/OrderRepository';
 import type {LaundryService} from '../domain/Service';
 import type {MachineOption, MachineType} from '../domain/Machine';
+import type {StaffOption} from '../domain/OrderStaff';
 import {orderUseCases} from '../application/OrderUseCases';
 import {orderRepository} from '../infrastructure/OrderRepositoryImpl';
 
 const useCases = orderUseCases(orderRepository);
 
 const MACHINE_PICKER_PAGE_SIZE = 10;
+const STAFF_PICKER_PAGE_SIZE = 10;
 
 export function useOrders() {
 	const fetchOrderPage = useCallback((filters?: OrderFilters) => useCases.listOrders(filters), []);
@@ -45,6 +47,12 @@ export function useOrders() {
 			[replaceOrder],
 	);
 
+	const changeStaffs = useCallback(
+			async (orderId: string, staffIds: string[]): Promise<Order> =>
+					replaceOrder(await useCases.changeStaffs(orderId, staffIds)),
+			[replaceOrder],
+	);
+
 	const cancelOrder = useCallback(async (id: string, reason?: string): Promise<void> => {
 		const updated = await useCases.cancelOrder(id, reason);
 		setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
@@ -56,8 +64,23 @@ export function useOrders() {
 
 	return {
 		orders, loading, error, hasNext, hasPrev, refresh, goNext, goPrevious, loadOrder, updateStatus, changeMachines,
-		cancelOrder, viewInvoice,
+		changeStaffs, cancelOrder, viewInvoice,
 	};
+}
+
+export function useStaffOptions() {
+	const fetchStaffPage = useCallback((filters?: StaffOptionFilters) => useCases.listStaffOptions(filters), []);
+
+	const {
+		items: staffs, loading, error, hasNext, hasPrev, refresh, goNext, goPrevious,
+	} = usePaginatedList<StaffOption, StaffOptionFilters>(fetchStaffPage, {lazy: true});
+
+	const load = useCallback(
+			(search?: string) => refresh({search: search || undefined, pageSize: STAFF_PICKER_PAGE_SIZE}),
+			[refresh],
+	);
+
+	return {staffs, loading, error, hasNext, hasPrev, goNext, goPrevious, load};
 }
 
 export function useMachineOptions() {

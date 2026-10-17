@@ -37,7 +37,8 @@ public record OrderDetailRestResponse(
 	Long completedAt,
 	long createdAt,
 	List<Item> items,
-	List<Machine> machines){
+	List<Machine> machines,
+	List<Staff> staffs){
 
 	public record Item(
 		String type,
@@ -57,6 +58,11 @@ public record OrderDetailRestResponse(
 		String machineId,
 		String name,
 		String type){
+
+	}
+
+	public record Staff(
+		String staffId){
 
 	}
 

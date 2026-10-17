@@ -105,3 +105,7 @@ CREATE SCHEMA IF NOT EXISTS orders;
 -- Machines no longer have a capacity. ddl-auto never drops columns, so an existing database keeps a nullable
 -- `machines.capacity_kg` that nothing reads or writes any more; drop it whenever convenient:
 -- ALTER TABLE orders.machines DROP COLUMN capacity_kg;
+
+-- Order staff: ddl-auto creates `order_staffs` on the next boot (FK to `orders`, unique (order_id, staff_id)).
+-- No lookup rows to seed. `staff_id` is a plain varchar like `tenant_id`/`customer_id`, never a foreign key.
+-- Orders already IN_PROGRESS or later have no rows; `process` writes the calling staff when it gets no `staffIds`.

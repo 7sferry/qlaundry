@@ -3,7 +3,7 @@
  * on Juli 2026         *
  ************************/
 
-import type {MachineOptionFilters, OrderFilters, OrderRepository} from '../domain/OrderRepository';
+import type {MachineOptionFilters, OrderFilters, OrderRepository, StaffOptionFilters} from '../domain/OrderRepository';
 import type {CreateOrderInput, UpdateOrderStatusInput} from '../domain/Order';
 
 export const orderUseCases = (repository: OrderRepository) => ({
@@ -16,4 +16,6 @@ export const orderUseCases = (repository: OrderRepository) => ({
 	cancelOrder: (id: string, reason?: string) => repository.cancelOrder(id, reason),
 	listMachineOptions: (filters?: MachineOptionFilters) => repository.getMachineOptions(filters),
 	changeMachines: (orderId: string, machineIds: string[]) => repository.changeMachines(orderId, machineIds),
+	listStaffOptions: (filters?: StaffOptionFilters) => repository.getStaffOptions(filters),
+	changeStaffs: (orderId: string, staffIds: string[]) => repository.changeStaffs(orderId, staffIds),
 });
