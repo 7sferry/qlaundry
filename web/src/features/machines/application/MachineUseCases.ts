@@ -8,9 +8,6 @@ import type {CreateMachineInput, Machine, UpdateMachineInput} from '../domain/Ma
 
 function validate(input: CreateMachineInput): void {
 	if (!input.name.trim()) throw new Error('Machine name is required.');
-	if (input.capacityKg !== null && !(input.capacityKg > 0)) {
-		throw new Error('Capacity must be greater than zero.');
-	}
 }
 
 export const machineUseCases = (repository: MachineRepository) => ({

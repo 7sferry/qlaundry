@@ -69,7 +69,6 @@ interface MachineListApiResponse {
 		id: string;
 		name: string;
 		type: string;
-		capacityKg: number | null;
 		inUse: boolean;
 		currentOrderNumber: string | null;
 	}[];
@@ -303,7 +302,6 @@ export class OrderRepositoryImpl implements OrderRepository {
 				id: m.id,
 				name: m.name,
 				type: m.type.toLowerCase() as MachineType,
-				capacityKg: m.capacityKg,
 				inUse: m.inUse,
 				currentOrderNumber: m.currentOrderNumber,
 			})),

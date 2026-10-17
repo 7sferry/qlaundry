@@ -54,7 +54,7 @@ class DefaultMachineCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		MachineCreateRequest request = new MachineCreateRequest("Mesin Cuci 1", MachineType.WASHER, 8.0d, null);
+		MachineCreateRequest request = new MachineCreateRequest("Mesin Cuci 1", MachineType.WASHER, null);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(OrderForbiddenActionException.class)
@@ -70,22 +70,7 @@ class DefaultMachineCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		MachineCreateRequest request = new MachineCreateRequest("Mesin Cuci 1", null, 8.0d, null);
-
-		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
-				.isInstanceOf(ConstraintViolationException.class));
-
-		then(gateway).shouldHaveNoInteractions();
-	}
-
-	@Test
-	void givenNonPositiveCapacity_thenThrowsConstraintViolationException(){
-		OrderAuthPrincipal principal = OrderAuthPrincipal.builder()
-				.userId(STAFF_ID)
-				.tenantId(TENANT_ID)
-				.role(StaffRole.SUPER_STAFF)
-				.build();
-		MachineCreateRequest request = new MachineCreateRequest("Pengering 1", MachineType.DRYER, 0d, null);
+		MachineCreateRequest request = new MachineCreateRequest("Mesin Cuci 1", null, null);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(ConstraintViolationException.class));
@@ -100,7 +85,7 @@ class DefaultMachineCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		MachineCreateRequest request = new MachineCreateRequest("Mesin Cuci 1", MachineType.WASHER, 8.0d, null);
+		MachineCreateRequest request = new MachineCreateRequest("Mesin Cuci 1", MachineType.WASHER, null);
 		willReturn(true).given(gateway)
 				.existsByName(anyString(), any(TenantId.class));
 
@@ -119,7 +104,7 @@ class DefaultMachineCreateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		MachineCreateRequest request = new MachineCreateRequest("  Setrika Uap 2 ", MachineType.IRONER, null,
+		MachineCreateRequest request = new MachineCreateRequest("  Setrika Uap 2 ", MachineType.IRONER,
 				"front counter");
 		willReturn(false).given(gateway)
 				.existsByName(anyString(), any(TenantId.class));
@@ -142,7 +127,6 @@ class DefaultMachineCreateUseCaseTest{
 			softly.then(saved.tenantId()).isEqualTo(TENANT_ID);
 			softly.then(saved.name()).isEqualTo("Setrika Uap 2");
 			softly.then(saved.type()).isEqualTo(MachineType.IRONER);
-			softly.then(saved.capacityKg()).isNull();
 			softly.then(saved.descriptionValue()).isEqualTo("front counter");
 			softly.then(saved.active()).isTrue();
 			softly.then(saved.deleted()).isFalse();

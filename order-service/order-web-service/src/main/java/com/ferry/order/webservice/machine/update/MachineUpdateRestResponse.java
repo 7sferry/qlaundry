@@ -5,6 +5,6 @@ package com.ferry.order.webservice.machine.update;
  * on Oktober 2026      *
  ************************/
 
-public record MachineUpdateRestResponse(String id, String name, String type, Double capacityKg, String description,
+public record MachineUpdateRestResponse(String id, String name, String type, String description,
                                         boolean active){
 }

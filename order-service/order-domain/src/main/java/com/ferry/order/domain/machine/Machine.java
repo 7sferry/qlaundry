@@ -1,6 +1,5 @@
 package com.ferry.order.domain.machine;
 
-import com.ferry.order.domain.common.Decimals;
 import com.ferry.order.domain.common.Note;
 import com.ferry.order.domain.common.exception.InvalidOrderStateException;
 import lombok.Builder;
@@ -13,7 +12,7 @@ import java.time.Instant;
  ************************/
 
 @Builder(toBuilder = true)
-public record Machine(String id, String tenantId, String name, MachineType type, Double capacityKg, Note description,
+public record Machine(String id, String tenantId, String name, MachineType type, Note description,
                       boolean active, Integer version, boolean deleted, Instant createdAt, String createdBy,
                       Instant updatedAt, String updatedBy){
 
@@ -27,26 +26,21 @@ public record Machine(String id, String tenantId, String name, MachineType type,
 		if(type == null){
 			throw new InvalidOrderStateException("Machine type must not be null");
 		}
-		if(capacityKg != null && capacityKg <= 0){
-			throw new InvalidOrderStateException("Machine capacity must be greater than zero");
-		}
 		name = name.trim();
-		capacityKg = Decimals.scaled(capacityKg);
 	}
 
-	public static Machine create(String tenantId, String name, MachineType type, Double capacityKg, Note description,
+	public static Machine create(String tenantId, String name, MachineType type, Note description,
 	                             String createdBy){
 		Instant now = Instant.now();
-		return new Machine(null, tenantId, name, type, capacityKg, description, true, null, false, now, createdBy,
+		return new Machine(null, tenantId, name, type, description, true, null, false, now, createdBy,
 				now, createdBy);
 	}
 
-	public Machine update(String name, MachineType type, Double capacityKg, Note description, boolean active,
+	public Machine update(String name, MachineType type, Note description, boolean active,
 	                      String updatedBy){
 		return toBuilder()
 				.name(name)
 				.type(type)
-				.capacityKg(capacityKg)
 				.description(description)
 				.active(active)
 				.updatedBy(updatedBy)

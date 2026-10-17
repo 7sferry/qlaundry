@@ -19,7 +19,7 @@ public class WebMachineCreatePresenter implements MachineCreatePresenter{
 	public void present(MachineCreateResponse response){
 		Machine machine = response.machine();
 		responseEntity = ResponseEntity.ok(new MachineCreateRestResponse(machine.id(), machine.name(),
-				machine.type().name(), machine.capacityKg(), machine.descriptionValue(), machine.active()));
+				machine.type().name(), machine.descriptionValue(), machine.active()));
 	}
 
 }

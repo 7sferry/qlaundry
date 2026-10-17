@@ -9,7 +9,6 @@ export interface Machine {
 	id: string;
 	name: string;
 	type: MachineType;
-	capacityKg: number | null;
 	description: string;
 	active: boolean;
 	inUse: boolean;
@@ -19,7 +18,6 @@ export interface Machine {
 export interface CreateMachineInput {
 	name: string;
 	type: MachineType;
-	capacityKg: number | null;
 	description?: string;
 }
 

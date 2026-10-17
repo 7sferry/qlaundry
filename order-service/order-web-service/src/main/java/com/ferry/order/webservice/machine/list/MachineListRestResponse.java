@@ -8,7 +8,7 @@ import java.util.List;
  ************************/
 
 public record MachineListRestResponse(List<Machine> machines, String nextCursor, String prevCursor){
-	public record Machine(String id, String name, String type, Double capacityKg, String description, boolean active,
+	public record Machine(String id, String name, String type, String description, boolean active,
 	                      boolean inUse, String currentOrderNumber){
 	}
 }

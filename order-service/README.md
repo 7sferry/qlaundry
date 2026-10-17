@@ -24,10 +24,10 @@ Express is optional per service: send `expressHours` (1 to `estimatedHours`) and
 ### Machines
 
 ```
-POST   /machine/create   {name, type, capacityKg?, description?}   super-staff
+POST   /machine/create   {name, type, description?}   super-staff
 GET    /machine/list     ?name=&type=&activeOnly=&after=&before=&sortBy=&sortDir=&pageSize=   (activeOnly defaults to true; default sort NAME ASC)
-                         → machines: [{id, name, type, capacityKg, description, active, inUse, currentOrderNumber}]
-PUT    /machine/update   {machineId, name, type, capacityKg?, description?, active}   super-staff
+                         → machines: [{id, name, type, description, active, inUse, currentOrderNumber}]
+PUT    /machine/update   {machineId, name, type, description?, active}   super-staff
 ```
 
 `type` is `WASHER`, `DRYER` or `IRONER`. Names are unique per tenant (case-insensitive). There is no delete: retire a machine with `active: false`. A machine is **in use** while it is on an `IN_PROGRESS` order; deactivating it then is a 409.

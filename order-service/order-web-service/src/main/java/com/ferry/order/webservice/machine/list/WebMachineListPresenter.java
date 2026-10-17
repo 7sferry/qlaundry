@@ -21,8 +21,7 @@ public class WebMachineListPresenter implements MachineListPresenter{
 	public void present(MachineListResponse response){
 		List<Machine> machines = response.machines().stream()
 				.map(o -> new Machine(o.machine().id(), o.machine().name(), o.machine().type().name(),
-						o.machine().capacityKg(), o.machine().descriptionValue(), o.machine().active(), o.inUse(),
-						o.currentOrderNumber()))
+						o.machine().descriptionValue(), o.machine().active(), o.inUse(), o.currentOrderNumber()))
 				.toList();
 		responseEntity = ResponseEntity.ok(new MachineListRestResponse(machines, response.nextCursor(),
 				response.prevCursor()));

@@ -5,6 +5,6 @@ package com.ferry.order.webservice.machine.create;
  * on Oktober 2026      *
  ************************/
 
-public record MachineCreateRestResponse(String id, String name, String type, Double capacityKg, String description,
+public record MachineCreateRestResponse(String id, String name, String type, String description,
                                         boolean active){
 }

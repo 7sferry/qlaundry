@@ -49,7 +49,6 @@ const mockMachineOption: MachineOption = {
 	id: 'mch_1',
 	name: 'Mesin Cuci 1',
 	type: 'washer',
-	capacityKg: 8,
 	inUse: true,
 	currentOrderNumber: 'INV-20261016-ABC123',
 };

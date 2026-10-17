@@ -9,7 +9,6 @@ export interface MachineOption {
 	id: string;
 	name: string;
 	type: MachineType;
-	capacityKg: number | null;
 	inUse: boolean;
 	currentOrderNumber: string | null;
 }

@@ -101,3 +101,7 @@ CREATE SCHEMA IF NOT EXISTS orders;
 --
 -- Tenant isolation for this table is enforced by the two writers (order and machines are both loaded by
 -- (id, tenant_id)), not by a composite foreign key.
+
+-- Machines no longer have a capacity. ddl-auto never drops columns, so an existing database keeps a nullable
+-- `machines.capacity_kg` that nothing reads or writes any more; drop it whenever convenient:
+-- ALTER TABLE orders.machines DROP COLUMN capacity_kg;

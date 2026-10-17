@@ -12,7 +12,6 @@ const mockMachine: Machine = {
 	id: 'mch_washer_1',
 	name: 'Mesin Cuci 1',
 	type: 'washer',
-	capacityKg: 8,
 	description: 'Front loader',
 	active: true,
 	inUse: false,
@@ -45,7 +44,7 @@ describe('machineUseCases', () => {
 	it('createMachine delegates a valid input to repository.createMachine', async () => {
 		const {repo, fns} = makeRepo();
 		const useCases = machineUseCases(repo);
-		const input: CreateMachineInput = {name: 'Pengering 2', type: 'dryer', capacityKg: null};
+		const input: CreateMachineInput = {name: 'Pengering 2', type: 'dryer'};
 
 		const result = await useCases.createMachine(input);
 
@@ -57,35 +56,17 @@ describe('machineUseCases', () => {
 		const {repo, fns} = makeRepo();
 		const useCases = machineUseCases(repo);
 
-		expect(() => useCases.createMachine({name: '   ', type: 'washer', capacityKg: 7})).toThrow('Machine name is required.');
-		expect(fns.createMachine).not.toHaveBeenCalled();
-	});
-
-	it('createMachine rejects a zero capacity', () => {
-		const {repo, fns} = makeRepo();
-		const useCases = machineUseCases(repo);
-
-		expect(() => useCases.createMachine({name: 'Setrika 1', type: 'ironer', capacityKg: 0}))
-				.toThrow('Capacity must be greater than zero.');
+		expect(() => useCases.createMachine({name: '   ', type: 'washer'})).toThrow('Machine name is required.');
 		expect(fns.createMachine).not.toHaveBeenCalled();
 	});
 
 	it('updateMachine delegates a valid input to repository.updateMachine', async () => {
 		const {repo, fns} = makeRepo();
 		const useCases = machineUseCases(repo);
-		const input: UpdateMachineInput = {id: 'mch_washer_1', name: 'Mesin Cuci 1', type: 'washer', capacityKg: 9, active: false};
+		const input: UpdateMachineInput = {id: 'mch_washer_1', name: 'Mesin Cuci 1', type: 'washer', active: false};
 
 		await useCases.updateMachine(input);
 
 		expect(fns.updateMachine).toHaveBeenCalledWith(input);
-	});
-
-	it('updateMachine rejects a negative capacity', () => {
-		const {repo, fns} = makeRepo();
-		const useCases = machineUseCases(repo);
-
-		expect(() => useCases.updateMachine({id: 'mch_1', name: 'Mesin', type: 'washer', capacityKg: -2, active: true}))
-				.toThrow('Capacity must be greater than zero.');
-		expect(fns.updateMachine).not.toHaveBeenCalled();
 	});
 });

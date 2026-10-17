@@ -19,7 +19,7 @@ public class WebMachineUpdatePresenter implements MachineUpdatePresenter{
 	public void present(MachineUpdateResponse response){
 		Machine machine = response.machine();
 		responseEntity = ResponseEntity.ok(new MachineUpdateRestResponse(machine.id(), machine.name(),
-				machine.type().name(), machine.capacityKg(), machine.descriptionValue(), machine.active()));
+				machine.type().name(), machine.descriptionValue(), machine.active()));
 	}
 
 }

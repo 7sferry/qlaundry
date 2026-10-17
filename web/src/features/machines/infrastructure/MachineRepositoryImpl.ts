@@ -13,7 +13,6 @@ interface MachineApiItem {
 	id: string;
 	name: string;
 	type: string;
-	capacityKg: number | null;
 	description: string | null;
 	active: boolean;
 	inUse?: boolean;
@@ -31,7 +30,6 @@ function toMachine(item: MachineApiItem): Machine {
 		id: item.id,
 		name: item.name,
 		type: item.type.toLowerCase() as MachineType,
-		capacityKg: item.capacityKg,
 		description: item.description ?? '',
 		active: item.active,
 		inUse: item.inUse ?? false,
@@ -62,7 +60,6 @@ export class MachineRepositoryImpl implements MachineRepository {
 		const res = await httpClient.post<MachineApiItem>(MACHINE_ENDPOINTS.create, {
 			name: input.name,
 			type: input.type.toUpperCase(),
-			capacityKg: input.capacityKg,
 			description: input.description,
 		});
 		return toMachine(res);
@@ -73,7 +70,6 @@ export class MachineRepositoryImpl implements MachineRepository {
 			machineId: input.id,
 			name: input.name,
 			type: input.type.toUpperCase(),
-			capacityKg: input.capacityKg,
 			description: input.description,
 			active: input.active,
 		});

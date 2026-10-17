@@ -32,8 +32,6 @@ public class MachineJpa{
 	@Column(nullable = false)
 	private short typeId;
 	@Column
-	private Double capacityKg;
-	@Column
 	private String description;
 	@Column(nullable = false)
 	private boolean active;
@@ -56,7 +54,6 @@ public class MachineJpa{
 		entity.setTenantId(machine.tenantId());
 		entity.setName(machine.name());
 		entity.setTypeId(machine.type().getValue());
-		entity.setCapacityKg(machine.capacityKg());
 		entity.setDescription(machine.descriptionValue());
 		entity.setActive(machine.active());
 		entity.setCreatedBy(machine.createdBy());
@@ -70,7 +67,7 @@ public class MachineJpa{
 
 	public static Machine construct(MachineJpa saved){
 		return new Machine(saved.getId(), saved.getTenantId(), saved.getName(),
-				MachineType.fromValue(saved.getTypeId()).orElseThrow(), saved.getCapacityKg(),
+				MachineType.fromValue(saved.getTypeId()).orElseThrow(),
 				new Note(saved.getDescription()), saved.isActive(), saved.getVersion(), saved.isDeleted(),
 				saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}

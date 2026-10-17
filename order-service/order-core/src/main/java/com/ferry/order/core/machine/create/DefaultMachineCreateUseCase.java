@@ -25,7 +25,7 @@ public class DefaultMachineCreateUseCase implements MachineCreateUseCase{
 		}
 		request.validate();
 		TenantId tenantId = new TenantId(principal.tenantId());
-		Machine machine = Machine.create(tenantId.value(), request.name(), request.type(), request.capacityKg(),
+		Machine machine = Machine.create(tenantId.value(), request.name(), request.type(),
 				new Note(request.description()), principal.userId());
 		if(gateway.existsByName(machine.name(), tenantId)){
 			throw new InvalidOrderStateException("Machine name already exists");

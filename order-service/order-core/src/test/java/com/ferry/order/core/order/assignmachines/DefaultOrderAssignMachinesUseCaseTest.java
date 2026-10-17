@@ -266,7 +266,6 @@ class DefaultOrderAssignMachinesUseCaseTest{
 				.tenantId(TENANT_ID)
 				.name("Pengering 4")
 				.type(MachineType.DRYER)
-				.capacityKg(9d)
 				.active(true)
 				.deleted(false)
 				.createdAt(now)

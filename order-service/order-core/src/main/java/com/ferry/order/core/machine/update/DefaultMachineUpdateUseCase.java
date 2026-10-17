@@ -32,7 +32,7 @@ public class DefaultMachineUpdateUseCase implements MachineUpdateUseCase{
 		Machine machine = gateway.lockById(machineId, tenantId)
 				.orElseThrow(() -> new NotFoundException("Machine Not Found"));
 		boolean active = request.active() == null || request.active();
-		Machine updated = machine.update(request.name(), request.type(), request.capacityKg(),
+		Machine updated = machine.update(request.name(), request.type(),
 				new Note(request.description()), active, principal.userId());
 		if(gateway.existsByNameExcept(updated.name(), tenantId, machineId)){
 			throw new InvalidOrderStateException("Machine name already exists");

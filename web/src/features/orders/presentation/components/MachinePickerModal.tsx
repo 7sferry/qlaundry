@@ -120,7 +120,6 @@ export default function MachinePickerModal({
 														<strong>{machine.name}</strong>
 														<span>
 															{MACHINE_TYPE_LABELS[machine.type]}
-															{machine.capacityKg !== null ? ` · ${machine.capacityKg} kg` : ''}
 															{disabled ? ` · In use · ${machine.currentOrderNumber}` : ''}
 														</span>
 													</div>

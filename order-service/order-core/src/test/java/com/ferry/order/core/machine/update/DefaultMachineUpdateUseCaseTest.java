@@ -60,7 +60,7 @@ class DefaultMachineUpdateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.STAFF)
 				.build();
-		MachineUpdateRequest request = new MachineUpdateRequest(MACHINE_ID, "Pengering 3", MachineType.DRYER, 12d,
+		MachineUpdateRequest request = new MachineUpdateRequest(MACHINE_ID, "Pengering 3", MachineType.DRYER,
 				null, true);
 
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
@@ -77,7 +77,7 @@ class DefaultMachineUpdateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.role(StaffRole.SUPER_STAFF)
 				.build();
-		MachineUpdateRequest request = new MachineUpdateRequest(MACHINE_ID, "Pengering 3", MachineType.DRYER, 12d,
+		MachineUpdateRequest request = new MachineUpdateRequest(MACHINE_ID, "Pengering 3", MachineType.DRYER,
 				null, true);
 		willReturn(Optional.empty()).given(gateway)
 				.lockById(any(MachineId.class), any(TenantId.class));
@@ -103,7 +103,6 @@ class DefaultMachineUpdateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.name("Pengering 3")
 				.type(MachineType.DRYER)
-				.capacityKg(12d)
 				.active(true)
 				.version(2)
 				.deleted(false)
@@ -112,7 +111,7 @@ class DefaultMachineUpdateUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		MachineUpdateRequest request = new MachineUpdateRequest(MACHINE_ID, "Pengering 1", MachineType.DRYER, 12d,
+		MachineUpdateRequest request = new MachineUpdateRequest(MACHINE_ID, "Pengering 1", MachineType.DRYER,
 				null, true);
 		willReturn(Optional.of(existing)).given(gateway)
 				.lockById(any(MachineId.class), any(TenantId.class));
@@ -140,7 +139,6 @@ class DefaultMachineUpdateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.name("Pengering 3")
 				.type(MachineType.DRYER)
-				.capacityKg(12d)
 				.active(true)
 				.version(2)
 				.deleted(false)
@@ -149,7 +147,7 @@ class DefaultMachineUpdateUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		MachineUpdateRequest request = new MachineUpdateRequest(MACHINE_ID, "Pengering 3", MachineType.DRYER, 12d,
+		MachineUpdateRequest request = new MachineUpdateRequest(MACHINE_ID, "Pengering 3", MachineType.DRYER,
 				null, false);
 		willReturn(Optional.of(existing)).given(gateway)
 				.lockById(any(MachineId.class), any(TenantId.class));
@@ -179,7 +177,6 @@ class DefaultMachineUpdateUseCaseTest{
 				.tenantId(TENANT_ID)
 				.name("Pengering 3")
 				.type(MachineType.DRYER)
-				.capacityKg(12d)
 				.active(true)
 				.version(2)
 				.deleted(false)
@@ -189,7 +186,7 @@ class DefaultMachineUpdateUseCaseTest{
 				.updatedBy("01STAFFPEMBUAT00000000000")
 				.build();
 		MachineUpdateRequest request = new MachineUpdateRequest(MACHINE_ID, "Pengering 3 (rusak)", MachineType.DRYER,
-				12d, "drum noisy", false);
+				"drum noisy", false);
 		willReturn(Optional.of(existing)).given(gateway)
 				.lockById(any(MachineId.class), any(TenantId.class));
 		willReturn(false).given(gateway)
@@ -241,7 +238,7 @@ class DefaultMachineUpdateUseCaseTest{
 				.updatedAt(now)
 				.updatedBy(STAFF_ID)
 				.build();
-		MachineUpdateRequest request = new MachineUpdateRequest(MACHINE_ID, "Pengering Besar", MachineType.DRYER, 15d,
+		MachineUpdateRequest request = new MachineUpdateRequest(MACHINE_ID, "Pengering Besar", MachineType.DRYER,
 				null, null);
 		willReturn(Optional.of(existing)).given(gateway)
 				.lockById(any(MachineId.class), any(TenantId.class));
@@ -260,7 +257,6 @@ class DefaultMachineUpdateUseCaseTest{
 		thenSoftly(softly -> {
 			softly.then(machineCaptor.getValue().active()).isTrue();
 			softly.then(machineCaptor.getValue().name()).isEqualTo("Pengering Besar");
-			softly.then(machineCaptor.getValue().capacityKg()).isEqualTo(15d);
 		});
 	}
 

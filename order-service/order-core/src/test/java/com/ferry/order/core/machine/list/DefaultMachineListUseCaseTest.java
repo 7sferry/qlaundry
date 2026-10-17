@@ -131,7 +131,6 @@ class DefaultMachineListUseCaseTest{
 				.tenantId(TENANT_ID)
 				.name("Cuci A")
 				.type(MachineType.WASHER)
-				.capacityKg(7.5)
 				.active(true)
 				.deleted(false)
 				.createdAt(now)

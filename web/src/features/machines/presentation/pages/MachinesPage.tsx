@@ -39,7 +39,6 @@ type StatusFilter = 'all' | 'active';
 interface MachineFormData {
 	name: string;
 	type: MachineType;
-	capacityKg: string;
 	description: string;
 	active: boolean;
 }
@@ -47,7 +46,6 @@ interface MachineFormData {
 const emptyForm: MachineFormData = {
 	name: '',
 	type: 'washer',
-	capacityKg: '',
 	description: '',
 	active: true,
 };
@@ -77,19 +75,13 @@ function MachineForm({form, update, toggleActive, onSubmit, onCancel, saving, ed
 					<Input id="mcName" required autoComplete="off" value={form.name} onChange={update('name')}
 					       placeholder="e.g. Mesin Cuci 1"/>
 				</Field>
-				<div className="row" style={{gap: 12}}>
-					<Field label="Type" htmlFor="mcType">
-						<Select id="mcType" required value={form.type} onChange={update('type')}>
-							{(Object.keys(MACHINE_TYPE_LABELS) as MachineType[]).map((t) => (
-									<option key={t} value={t}>{MACHINE_TYPE_LABELS[t]}</option>
-							))}
-						</Select>
-					</Field>
-					<Field label="Capacity (kg)" htmlFor="mcCapacity" hint="Optional">
-						<Input id="mcCapacity" type="number" min="0.1" step="0.1" autoComplete="off"
-						       value={form.capacityKg} onChange={update('capacityKg')} placeholder="8"/>
-					</Field>
-				</div>
+				<Field label="Type" htmlFor="mcType">
+					<Select id="mcType" required value={form.type} onChange={update('type')}>
+						{(Object.keys(MACHINE_TYPE_LABELS) as MachineType[]).map((t) => (
+								<option key={t} value={t}>{MACHINE_TYPE_LABELS[t]}</option>
+						))}
+					</Select>
+				</Field>
 				<Field label="Description" htmlFor="mcDesc">
 					<Textarea id="mcDesc" value={form.description} onChange={update('description')}
 					          placeholder="optional" rows={2}/>
@@ -166,7 +158,6 @@ export default function MachinesPage() {
 		setForm({
 			name: m.name,
 			type: m.type,
-			capacityKg: m.capacityKg === null ? '' : String(m.capacityKg),
 			description: m.description,
 			active: m.active,
 		});
@@ -186,7 +177,6 @@ export default function MachinesPage() {
 			const input = {
 				name: form.name,
 				type: form.type,
-				capacityKg: form.capacityKg === '' ? null : Number(form.capacityKg),
 				description: form.description || undefined,
 			};
 			if (editingMachine) {
@@ -279,7 +269,6 @@ export default function MachinesPage() {
 							<tr>
 								<th>Machine</th>
 								<th>Type</th>
-								<th>Capacity</th>
 								<th>Usage</th>
 								<th>Status</th>
 								<th/>
@@ -295,7 +284,6 @@ export default function MachinesPage() {
 										<td>
 											<Badge tone={typeTone(m.type)}>{MACHINE_TYPE_LABELS[m.type]}</Badge>
 										</td>
-										<td>{m.capacityKg === null ? <span className="muted">—</span> : `${m.capacityKg} kg`}</td>
 										<td>
 											{m.inUse ? (
 													<Badge tone="info">In use · {m.currentOrderNumber}</Badge>
