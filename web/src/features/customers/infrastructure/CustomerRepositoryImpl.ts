@@ -190,7 +190,7 @@ export class CustomerRepositoryImpl implements CustomerRepository {
 			const names = await httpClient.get<CustomerNamesApiResponse>(`${CUSTOMER_ENDPOINTS.names}?${params.toString()}`);
 			for (const n of names.customers) nameById.set(n.customerId, n.fullName);
 		}
-		return res.customers.flatMap((c) => {
+		return res.customers.flatMap<TopCustomer>((c) => {
 			if (c.customerId === null) {
 				return [{customerId: null, fullName: NON_MEMBER_NAME, totalOrders: c.totalOrders, totalSpend: c.totalSpend}];
 			}
