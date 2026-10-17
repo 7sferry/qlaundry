@@ -62,27 +62,27 @@ public class EmailTriggerJpa{
 
 	public static EmailTriggerJpa construct(String id, EmailTrigger trigger, CryptoTool cryptoTool){
 		EmailTriggerJpa entity = new EmailTriggerJpa();
-		entity.id = id;
-		entity.typeId = trigger.typeIdValue();
-		entity.recipientCipher = cryptoTool.encrypt(trigger.recipientValue(), recipientAad(id));
-		entity.payloadCipher = cryptoTool.encrypt(trigger.payload(), payloadAad(id));
-		entity.statusId = trigger.statusIdValue();
-		entity.createdBy = trigger.createdBy();
-		entity.createdAt = trigger.createdAt();
-		entity.updatedBy = trigger.updatedBy();
-		entity.updatedAt = trigger.updatedAt();
-		entity.deleted = trigger.deleted();
-		entity.version = trigger.version();
+		entity.setId(id);
+		entity.setTypeId(trigger.typeIdValue());
+		entity.setRecipientCipher(cryptoTool.encrypt(trigger.recipientValue(), recipientAad(id)));
+		entity.setPayloadCipher(cryptoTool.encrypt(trigger.payload(), payloadAad(id)));
+		entity.setStatusId(trigger.statusIdValue());
+		entity.setCreatedBy(trigger.createdBy());
+		entity.setCreatedAt(trigger.createdAt());
+		entity.setUpdatedBy(trigger.updatedBy());
+		entity.setUpdatedAt(trigger.updatedAt());
+		entity.setDeleted(trigger.deleted());
+		entity.setVersion(trigger.version());
 		return entity;
 	}
 
 	public static EmailTrigger construct(EmailTriggerJpa saved, CryptoTool cryptoTool){
-		String recipient = cryptoTool.decrypt(saved.recipientCipher, recipientAad(saved.id));
-		String payload = cryptoTool.decrypt(saved.payloadCipher, payloadAad(saved.id));
-		return new EmailTrigger(saved.id, EmailTriggerType.fromValue(saved.typeId).orElseThrow(),
+		String recipient = cryptoTool.decrypt(saved.getRecipientCipher(), recipientAad(saved.getId()));
+		String payload = cryptoTool.decrypt(saved.getPayloadCipher(), payloadAad(saved.getId()));
+		return new EmailTrigger(saved.getId(), EmailTriggerType.fromValue(saved.getTypeId()).orElseThrow(),
 				new Email(recipient), payload,
-				EmailTriggerStatus.fromValue(saved.statusId).orElseThrow(), saved.version, saved.deleted,
-				saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+				EmailTriggerStatus.fromValue(saved.getStatusId()).orElseThrow(), saved.getVersion(), saved.isDeleted(),
+				saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 	public void backfill(CryptoTool cryptoTool){

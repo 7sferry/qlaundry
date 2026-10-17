@@ -70,25 +70,24 @@ public class CustomerEmailJpa{
 	public static CustomerEmailJpa construct(String id, CustomerEmail register,
 	                                               CustomerJpa customer, CryptoTool cryptoTool){
 		CustomerEmailJpa entity = new CustomerEmailJpa();
-		entity.id = id;
-		entity.customer = customer;
-		entity.customerId = customer.getId();
+		entity.setId(id);
+		entity.setCustomer(customer);
 		String email = register.email().value();
-		entity.emailCipher = cryptoTool.encrypt(email, aad(customer.getId()));
-		entity.emailHash = cryptoTool.blindIndex(normalize(email));
-		entity.createdBy = register.createdBy();
-		entity.createdAt = register.createdAt();
-		entity.updatedBy = register.updatedBy();
-		entity.updatedAt = register.updatedAt();
-		entity.deleted = register.deleted();
-		entity.version = register.version();
+		entity.setEmailCipher(cryptoTool.encrypt(email, aad(customer.getId())));
+		entity.setEmailHash(cryptoTool.blindIndex(normalize(email)));
+		entity.setCreatedBy(register.createdBy());
+		entity.setCreatedAt(register.createdAt());
+		entity.setUpdatedBy(register.updatedBy());
+		entity.setUpdatedAt(register.updatedAt());
+		entity.setDeleted(register.deleted());
+		entity.setVersion(register.version());
 		return entity;
 	}
 
 	public static CustomerEmail construct(CustomerEmailJpa saved, CryptoTool cryptoTool){
-		String email = cryptoTool.decrypt(saved.emailCipher, aad(saved.customerId));
-		return new CustomerEmail(saved.id, saved.customerId, new Email(email), saved.version,
-				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+		String email = cryptoTool.decrypt(saved.getEmailCipher(), aad(saved.getCustomerId()));
+		return new CustomerEmail(saved.getId(), saved.getCustomerId(), new Email(email), saved.getVersion(),
+				saved.isDeleted(), saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 }

@@ -53,21 +53,20 @@ public class StaffPasswordJpa{
 
 	public static StaffPasswordJpa construct(String id, StaffPassword register, StaffJpa staff){
 		StaffPasswordJpa entity = new StaffPasswordJpa();
-		entity.id = id;
-		entity.staffId = staff.getId();
-		entity.staff = staff;
-		entity.password = register.passwordValue();
-		entity.createdBy = register.createdBy();
-		entity.updatedAt = register.updatedAt();
-		entity.createdAt = register.createdAt();
-		entity.updatedBy = register.updatedBy();
-		entity.deleted = register.deleted();
-		entity.version = register.version();
+		entity.setId(id);
+		entity.setStaff(staff);
+		entity.setPassword(register.passwordValue());
+		entity.setCreatedBy(register.createdBy());
+		entity.setUpdatedAt(register.updatedAt());
+		entity.setCreatedAt(register.createdAt());
+		entity.setUpdatedBy(register.updatedBy());
+		entity.setDeleted(register.deleted());
+		entity.setVersion(register.version());
 		return entity;
 	}
 
 	public static StaffPassword construct(StaffPasswordJpa saved){
-		return new StaffPassword(saved.id, saved.staffId, new HashedPassword(saved.password), saved.version,
-				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+		return new StaffPassword(saved.getId(), saved.getStaffId(), new HashedPassword(saved.getPassword()), saved.getVersion(),
+				saved.isDeleted(), saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 }

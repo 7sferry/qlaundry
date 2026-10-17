@@ -124,68 +124,69 @@ public class OrderJpa{
 
 	public static OrderJpa construct(String id, Order order, CryptoTool cryptoTool){
 		OrderJpa entity = new OrderJpa();
-		entity.id = id;
-		entity.orderNumber = order.orderNumberValue();
-		entity.tenantId = order.tenantId();
-		entity.customerId = order.customerId();
-		entity.customerName = order.customerNameValue();
+		entity.setId(id);
+		entity.setOrderNumber(order.orderNumberValue());
+		entity.setTenantId(order.tenantId());
+		entity.setCustomerId(order.customerId());
+		entity.setCustomerName(order.customerNameValue());
 		String phone = order.customerPhoneValue();
-		entity.customerPhoneCipher = cryptoTool.encrypt(phone, aad(id, COLUMN_CUSTOMER_PHONE));
-		entity.customerPhoneHash = cryptoTool.blindIndex(phone);
+		entity.setCustomerPhoneCipher(cryptoTool.encrypt(phone, aad(id, COLUMN_CUSTOMER_PHONE)));
+		entity.setCustomerPhoneHash(cryptoTool.blindIndex(phone));
 		String email = order.customerEmailValue();
 		if(email != null){
-			entity.customerEmailCipher = cryptoTool.encrypt(email, aad(id, COLUMN_CUSTOMER_EMAIL));
-			entity.customerEmailHash = cryptoTool.blindIndex(normalizeEmail(email));
+			entity.setCustomerEmailCipher(cryptoTool.encrypt(email, aad(id, COLUMN_CUSTOMER_EMAIL)));
+			entity.setCustomerEmailHash(cryptoTool.blindIndex(normalizeEmail(email)));
 		}
 		String address = order.customerAddressValue();
 		if(address != null){
-			entity.customerAddressCipher = cryptoTool.encrypt(address, aad(id, COLUMN_CUSTOMER_ADDRESS));
+			entity.setCustomerAddressCipher(cryptoTool.encrypt(address, aad(id, COLUMN_CUSTOMER_ADDRESS)));
 		}
-		entity.serviceId = order.serviceId();
-		entity.serviceName = order.serviceName();
-		entity.unitId = order.unit().getValue();
-		entity.unitPrice = order.unitPrice().value();
-		entity.quantity = order.quantity();
-		entity.weightKg = order.weightKg();
-		entity.subtotal = order.subtotal().value();
-		entity.discount = order.discount().value();
-		entity.totalPrice = order.totalPrice().value();
-		entity.priorityId = order.priority().getValue();
-		entity.paymentMethodId = order.paymentMethod().getValue();
-		entity.paymentStatusId = order.paymentStatus().getValue();
-		entity.statusId = order.status().getValue();
-		entity.notes = order.notesValue();
-		entity.staffNotes = order.staffNotesValue();
-		entity.pickupAt = order.pickupAt();
-		entity.estimatedDeliveryAt = order.estimatedDeliveryAt();
-		entity.completedAt = order.completedAt();
-		entity.createdBy = order.createdBy();
-		entity.createdAt = order.createdAt();
-		entity.updatedBy = order.updatedBy();
-		entity.updatedAt = order.updatedAt();
-		entity.deleted = order.deleted();
-		entity.version = order.version();
+		entity.setServiceId(order.serviceId());
+		entity.setServiceName(order.serviceName());
+		entity.setUnitId(order.unit().getValue());
+		entity.setUnitPrice(order.unitPrice().value());
+		entity.setQuantity(order.quantity());
+		entity.setWeightKg(order.weightKg());
+		entity.setSubtotal(order.subtotal().value());
+		entity.setDiscount(order.discount().value());
+		entity.setTotalPrice(order.totalPrice().value());
+		entity.setPriorityId(order.priority().getValue());
+		entity.setPaymentMethodId(order.paymentMethod().getValue());
+		entity.setPaymentStatusId(order.paymentStatus().getValue());
+		entity.setStatusId(order.status().getValue());
+		entity.setNotes(order.notesValue());
+		entity.setStaffNotes(order.staffNotesValue());
+		entity.setPickupAt(order.pickupAt());
+		entity.setEstimatedDeliveryAt(order.estimatedDeliveryAt());
+		entity.setCompletedAt(order.completedAt());
+		entity.setCreatedBy(order.createdBy());
+		entity.setCreatedAt(order.createdAt());
+		entity.setUpdatedBy(order.updatedBy());
+		entity.setUpdatedAt(order.updatedAt());
+		entity.setDeleted(order.deleted());
+		entity.setVersion(order.version());
 		return entity;
 	}
 
 	public static Order construct(OrderJpa saved, CryptoTool cryptoTool){
-		String phone = cryptoTool.decrypt(saved.customerPhoneCipher, aad(saved.id, COLUMN_CUSTOMER_PHONE));
-		String email = saved.customerEmailCipher == null
-				? null : cryptoTool.decrypt(saved.customerEmailCipher, aad(saved.id, COLUMN_CUSTOMER_EMAIL));
-		String address = saved.customerAddressCipher == null
-				? null : cryptoTool.decrypt(saved.customerAddressCipher, aad(saved.id, COLUMN_CUSTOMER_ADDRESS));
-		return new Order(saved.id, new OrderNumber(saved.orderNumber), saved.tenantId, saved.customerId,
-				new FullName(saved.customerName), new Phone(phone),
-				email == null ? null : new Email(email),
-				address == null ? null : new AddressLine(address), saved.serviceId, saved.serviceName,
-				ServiceUnit.fromValue(saved.unitId).orElseThrow(), new Money(saved.unitPrice), saved.quantity,
-				saved.weightKg, new Money(saved.subtotal), new Money(saved.discount),
-				new Money(saved.totalPrice), OrderPriority.fromValue(saved.priorityId).orElseThrow(),
-				PaymentMethod.fromValue(saved.paymentMethodId).orElseThrow(),
-				PaymentStatus.fromValue(saved.paymentStatusId).orElseThrow(),
-				OrderStatus.fromValue(saved.statusId).orElseThrow(), new Note(saved.notes),
-				new Note(saved.staffNotes), saved.pickupAt, saved.estimatedDeliveryAt, saved.completedAt,
-				saved.version, saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+		String phone = cryptoTool.decrypt(saved.getCustomerPhoneCipher(), aad(saved.getId(), COLUMN_CUSTOMER_PHONE));
+		String email = saved.getCustomerEmailCipher() == null
+				? null : cryptoTool.decrypt(saved.getCustomerEmailCipher(), aad(saved.getId(), COLUMN_CUSTOMER_EMAIL));
+		String address = saved.getCustomerAddressCipher() == null
+				? null : cryptoTool.decrypt(saved.getCustomerAddressCipher(), aad(saved.getId(), COLUMN_CUSTOMER_ADDRESS));
+		return new Order(saved.getId(), new OrderNumber(saved.getOrderNumber()), saved.getTenantId(),
+				saved.getCustomerId(), new FullName(saved.getCustomerName()), new Phone(phone),
+				email == null ? null : new Email(email), address == null ? null : new AddressLine(address),
+				saved.getServiceId(), saved.getServiceName(), ServiceUnit.fromValue(saved.getUnitId()).orElseThrow(),
+				new Money(saved.getUnitPrice()), saved.getQuantity(), saved.getWeightKg(),
+				new Money(saved.getSubtotal()), new Money(saved.getDiscount()), new Money(saved.getTotalPrice()),
+				OrderPriority.fromValue(saved.getPriorityId()).orElseThrow(),
+				PaymentMethod.fromValue(saved.getPaymentMethodId()).orElseThrow(),
+				PaymentStatus.fromValue(saved.getPaymentStatusId()).orElseThrow(),
+				OrderStatus.fromValue(saved.getStatusId()).orElseThrow(), new Note(saved.getNotes()),
+				new Note(saved.getStaffNotes()), saved.getPickupAt(), saved.getEstimatedDeliveryAt(),
+				saved.getCompletedAt(), saved.getVersion(), saved.isDeleted(), saved.getCreatedAt(),
+				saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 }

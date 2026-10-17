@@ -52,26 +52,27 @@ public class MachineJpa{
 
 	public static MachineJpa construct(String id, Machine machine){
 		MachineJpa entity = new MachineJpa();
-		entity.id = id;
-		entity.tenantId = machine.tenantId();
-		entity.name = machine.name();
-		entity.typeId = machine.type().getValue();
-		entity.capacityKg = machine.capacityKg();
-		entity.description = machine.descriptionValue();
-		entity.active = machine.active();
-		entity.createdBy = machine.createdBy();
-		entity.createdAt = machine.createdAt();
-		entity.updatedBy = machine.updatedBy();
-		entity.updatedAt = machine.updatedAt();
-		entity.deleted = machine.deleted();
-		entity.version = machine.version();
+		entity.setId(id);
+		entity.setTenantId(machine.tenantId());
+		entity.setName(machine.name());
+		entity.setTypeId(machine.type().getValue());
+		entity.setCapacityKg(machine.capacityKg());
+		entity.setDescription(machine.descriptionValue());
+		entity.setActive(machine.active());
+		entity.setCreatedBy(machine.createdBy());
+		entity.setCreatedAt(machine.createdAt());
+		entity.setUpdatedBy(machine.updatedBy());
+		entity.setUpdatedAt(machine.updatedAt());
+		entity.setDeleted(machine.deleted());
+		entity.setVersion(machine.version());
 		return entity;
 	}
 
 	public static Machine construct(MachineJpa saved){
-		return new Machine(saved.id, saved.tenantId, saved.name, MachineType.fromValue(saved.typeId).orElseThrow(),
-				saved.capacityKg, new Note(saved.description), saved.active, saved.version, saved.deleted,
-				saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+		return new Machine(saved.getId(), saved.getTenantId(), saved.getName(),
+				MachineType.fromValue(saved.getTypeId()).orElseThrow(), saved.getCapacityKg(),
+				new Note(saved.getDescription()), saved.isActive(), saved.getVersion(), saved.isDeleted(),
+				saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 }

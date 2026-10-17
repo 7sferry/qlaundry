@@ -62,25 +62,24 @@ public class OrderPromotionJpa{
 
 	public static OrderPromotionJpa construct(String id, OrderPromotion promotion, OrderJpa order){
 		OrderPromotionJpa entity = new OrderPromotionJpa();
-		entity.id = id;
-		entity.order = order;
-		entity.orderId = order.getId();
-		entity.promotionId = promotion.promotionId();
-		entity.code = promotion.code();
-		entity.discountAmount = promotion.discountAmount().value();
-		entity.createdBy = promotion.createdBy();
-		entity.createdAt = promotion.createdAt();
-		entity.updatedBy = promotion.updatedBy();
-		entity.updatedAt = promotion.updatedAt();
-		entity.deleted = promotion.deleted();
-		entity.version = promotion.version();
+		entity.setId(id);
+		entity.setOrder(order);
+		entity.setPromotionId(promotion.promotionId());
+		entity.setCode(promotion.code());
+		entity.setDiscountAmount(promotion.discountAmount().value());
+		entity.setCreatedBy(promotion.createdBy());
+		entity.setCreatedAt(promotion.createdAt());
+		entity.setUpdatedBy(promotion.updatedBy());
+		entity.setUpdatedAt(promotion.updatedAt());
+		entity.setDeleted(promotion.deleted());
+		entity.setVersion(promotion.version());
 		return entity;
 	}
 
 	public static OrderPromotion construct(OrderPromotionJpa saved){
-		return new OrderPromotion(saved.id, saved.orderId, saved.promotionId, saved.code,
-				new Money(saved.discountAmount), saved.version, saved.deleted, saved.createdAt, saved.createdBy,
-				saved.updatedAt, saved.updatedBy);
+		return new OrderPromotion(saved.getId(), saved.getOrderId(), saved.getPromotionId(), saved.getCode(),
+				new Money(saved.getDiscountAmount()), saved.getVersion(), saved.isDeleted(), saved.getCreatedAt(),
+				saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 }

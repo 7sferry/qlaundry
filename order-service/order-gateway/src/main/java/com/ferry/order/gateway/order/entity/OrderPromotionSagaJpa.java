@@ -51,25 +51,26 @@ public class OrderPromotionSagaJpa{
 
 	public static OrderPromotionSagaJpa construct(String id, OrderPromotionSaga saga){
 		OrderPromotionSagaJpa entity = new OrderPromotionSagaJpa();
-		entity.id = id;
-		entity.tenantId = saga.tenantId();
-		entity.referenceId = saga.referenceId();
-		entity.statusId = saga.status().getValue();
-		entity.attempts = saga.attempts();
-		entity.lastError = saga.lastError();
-		entity.createdBy = saga.createdBy();
-		entity.createdAt = saga.createdAt();
-		entity.updatedBy = saga.updatedBy();
-		entity.updatedAt = saga.updatedAt();
-		entity.deleted = saga.deleted();
-		entity.version = saga.version();
+		entity.setId(id);
+		entity.setTenantId(saga.tenantId());
+		entity.setReferenceId(saga.referenceId());
+		entity.setStatusId(saga.status().getValue());
+		entity.setAttempts(saga.attempts());
+		entity.setLastError(saga.lastError());
+		entity.setCreatedBy(saga.createdBy());
+		entity.setCreatedAt(saga.createdAt());
+		entity.setUpdatedBy(saga.updatedBy());
+		entity.setUpdatedAt(saga.updatedAt());
+		entity.setDeleted(saga.deleted());
+		entity.setVersion(saga.version());
 		return entity;
 	}
 
 	public static OrderPromotionSaga construct(OrderPromotionSagaJpa saved){
-		return new OrderPromotionSaga(saved.id, saved.tenantId, saved.referenceId,
-				OrderPromotionSagaStatus.fromValue(saved.statusId).orElseThrow(), saved.attempts, saved.lastError,
-				saved.version, saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+		return new OrderPromotionSaga(saved.getId(), saved.getTenantId(), saved.getReferenceId(),
+				OrderPromotionSagaStatus.fromValue(saved.getStatusId()).orElseThrow(), saved.getAttempts(),
+				saved.getLastError(), saved.getVersion(), saved.isDeleted(), saved.getCreatedAt(), saved.getCreatedBy(),
+				saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 }

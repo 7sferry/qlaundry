@@ -69,25 +69,24 @@ public class StaffEmailJpa{
 	public static StaffEmailJpa construct(String id, StaffEmail register, StaffJpa staff,
 	                                            CryptoTool cryptoTool){
 		StaffEmailJpa entity = new StaffEmailJpa();
-		entity.id = id;
-		entity.staffId = staff.getId();
-		entity.staff = staff;
+		entity.setId(id);
+		entity.setStaff(staff);
 		String email = register.email().value();
-		entity.emailCipher = cryptoTool.encrypt(email, aad(staff.getId()));
-		entity.emailHash = cryptoTool.blindIndex(normalize(email));
-		entity.createdBy = register.createdBy();
-		entity.updatedAt = register.updatedAt();
-		entity.createdAt = register.createdAt();
-		entity.updatedBy = register.updatedBy();
-		entity.deleted = register.deleted();
-		entity.version = register.version();
+		entity.setEmailCipher(cryptoTool.encrypt(email, aad(staff.getId())));
+		entity.setEmailHash(cryptoTool.blindIndex(normalize(email)));
+		entity.setCreatedBy(register.createdBy());
+		entity.setUpdatedAt(register.updatedAt());
+		entity.setCreatedAt(register.createdAt());
+		entity.setUpdatedBy(register.updatedBy());
+		entity.setDeleted(register.deleted());
+		entity.setVersion(register.version());
 		return entity;
 	}
 
 	public static StaffEmail construct(StaffEmailJpa saved, CryptoTool cryptoTool){
-		String email = cryptoTool.decrypt(saved.emailCipher, aad(saved.staffId));
-		return new StaffEmail(saved.id, saved.staffId, new Email(email), saved.version,
-				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+		String email = cryptoTool.decrypt(saved.getEmailCipher(), aad(saved.getStaffId()));
+		return new StaffEmail(saved.getId(), saved.getStaffId(), new Email(email), saved.getVersion(),
+				saved.isDeleted(), saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 	public static String decryptEmail(String emailCipher, String staffId, CryptoTool cryptoTool){

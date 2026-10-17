@@ -57,24 +57,23 @@ public class CustomerJpa{
 
 	public static CustomerJpa construct(String id, Customer customer, TenantJpa tenant){
 		CustomerJpa entity = new CustomerJpa();
-		entity.id = id;
-		entity.tenant = tenant;
-		entity.tenantId = tenant == null ? null : tenant.getId();
-		entity.fullName = customer.fullNameValue();
-		entity.notes = customer.notesValue();
-		entity.createdBy = customer.createdBy();
-		entity.createdAt = customer.createdAt();
-		entity.updatedBy = customer.updatedBy();
-		entity.updatedAt = customer.updatedAt();
-		entity.deleted = customer.deleted();
-		entity.version = customer.version();
+		entity.setId(id);
+		entity.setTenant(tenant);
+		entity.setFullName(customer.fullNameValue());
+		entity.setNotes(customer.notesValue());
+		entity.setCreatedBy(customer.createdBy());
+		entity.setCreatedAt(customer.createdAt());
+		entity.setUpdatedBy(customer.updatedBy());
+		entity.setUpdatedAt(customer.updatedAt());
+		entity.setDeleted(customer.deleted());
+		entity.setVersion(customer.version());
 		return entity;
 	}
 
 	public static Customer construct(CustomerJpa saved){
-		return new Customer(saved.id, saved.tenantId, new FullName(saved.fullName),
-				new Description(saved.notes), saved.version, saved.deleted, saved.createdAt, saved.createdBy,
-				saved.updatedAt, saved.updatedBy);
+		return new Customer(saved.getId(), saved.getTenantId(), new FullName(saved.getFullName()),
+				new Description(saved.getNotes()), saved.getVersion(), saved.isDeleted(), saved.getCreatedAt(),
+				saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 }

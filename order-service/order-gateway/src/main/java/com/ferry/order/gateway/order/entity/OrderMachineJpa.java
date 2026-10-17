@@ -70,26 +70,24 @@ public class OrderMachineJpa{
 
 	public static OrderMachineJpa construct(String id, OrderMachine machine, OrderJpa order, MachineJpa machineRef){
 		OrderMachineJpa entity = new OrderMachineJpa();
-		entity.id = id;
-		entity.order = order;
-		entity.orderId = order.getId();
-		entity.machine = machineRef;
-		entity.machineId = machine.machineId();
-		entity.machineName = machine.machineName();
-		entity.machineTypeId = machine.machineType().getValue();
-		entity.createdBy = machine.createdBy();
-		entity.createdAt = machine.createdAt();
-		entity.updatedBy = machine.updatedBy();
-		entity.updatedAt = machine.updatedAt();
-		entity.deleted = machine.deleted();
-		entity.version = machine.version();
+		entity.setId(id);
+		entity.setOrder(order);
+		entity.setMachine(machineRef);
+		entity.setMachineName(machine.machineName());
+		entity.setMachineTypeId(machine.machineType().getValue());
+		entity.setCreatedBy(machine.createdBy());
+		entity.setCreatedAt(machine.createdAt());
+		entity.setUpdatedBy(machine.updatedBy());
+		entity.setUpdatedAt(machine.updatedAt());
+		entity.setDeleted(machine.deleted());
+		entity.setVersion(machine.version());
 		return entity;
 	}
 
 	public static OrderMachine construct(OrderMachineJpa saved){
-		return new OrderMachine(saved.id, saved.orderId, saved.machineId, saved.machineName,
-				MachineType.fromValue(saved.machineTypeId).orElseThrow(), saved.version, saved.deleted,
-				saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+		return new OrderMachine(saved.getId(), saved.getOrderId(), saved.getMachineId(), saved.getMachineName(),
+				MachineType.fromValue(saved.getMachineTypeId()).orElseThrow(), saved.getVersion(), saved.isDeleted(),
+				saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 }

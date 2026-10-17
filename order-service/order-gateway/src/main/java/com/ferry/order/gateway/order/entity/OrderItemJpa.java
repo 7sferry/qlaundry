@@ -57,25 +57,24 @@ public class OrderItemJpa{
 
 	public static OrderItemJpa construct(String id, OrderItem item, OrderJpa order){
 		OrderItemJpa entity = new OrderItemJpa();
-		entity.id = id;
-		entity.order = order;
-		entity.orderId = order.getId();
-		entity.typeId = item.type().getValue();
-		entity.label = item.label();
-		entity.quantity = item.quantity();
-		entity.createdBy = item.createdBy();
-		entity.createdAt = item.createdAt();
-		entity.updatedBy = item.updatedBy();
-		entity.updatedAt = item.updatedAt();
-		entity.deleted = item.deleted();
-		entity.version = item.version();
+		entity.setId(id);
+		entity.setOrder(order);
+		entity.setTypeId(item.type().getValue());
+		entity.setLabel(item.label());
+		entity.setQuantity(item.quantity());
+		entity.setCreatedBy(item.createdBy());
+		entity.setCreatedAt(item.createdAt());
+		entity.setUpdatedBy(item.updatedBy());
+		entity.setUpdatedAt(item.updatedAt());
+		entity.setDeleted(item.deleted());
+		entity.setVersion(item.version());
 		return entity;
 	}
 
 	public static OrderItem construct(OrderItemJpa saved){
-		return new OrderItem(saved.id, saved.orderId, ClothingType.fromValue(saved.typeId).orElseThrow(),
-				saved.label, saved.quantity, saved.version, saved.deleted, saved.createdAt, saved.createdBy,
-				saved.updatedAt, saved.updatedBy);
+		return new OrderItem(saved.getId(), saved.getOrderId(), ClothingType.fromValue(saved.getTypeId()).orElseThrow(),
+				saved.getLabel(), saved.getQuantity(), saved.getVersion(), saved.isDeleted(), saved.getCreatedAt(),
+				saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 }

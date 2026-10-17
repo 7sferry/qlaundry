@@ -62,23 +62,23 @@ public class CustomerAddressJpa{
 	public static CustomerAddressJpa construct(String id, CustomerAddress register,
 	                                                 CustomerJpa customer, CryptoTool cryptoTool){
 		CustomerAddressJpa entity = new CustomerAddressJpa();
-		entity.id = id;
-		entity.customer = customer;
-		entity.customerId = customer.getId();
-		entity.addressLineCipher = cryptoTool.encrypt(register.addressLine().value(), aad(customer.getId()));
-		entity.createdBy = register.createdBy();
-		entity.createdAt = register.createdAt();
-		entity.updatedBy = register.updatedBy();
-		entity.updatedAt = register.updatedAt();
-		entity.deleted = register.deleted();
-		entity.version = register.version();
+		entity.setId(id);
+		entity.setCustomer(customer);
+		entity.setAddressLineCipher(cryptoTool.encrypt(register.addressLine().value(), aad(customer.getId())));
+		entity.setCreatedBy(register.createdBy());
+		entity.setCreatedAt(register.createdAt());
+		entity.setUpdatedBy(register.updatedBy());
+		entity.setUpdatedAt(register.updatedAt());
+		entity.setDeleted(register.deleted());
+		entity.setVersion(register.version());
 		return entity;
 	}
 
 	public static CustomerAddress construct(CustomerAddressJpa saved, CryptoTool cryptoTool){
-		String addressLine = cryptoTool.decrypt(saved.addressLineCipher, aad(saved.customerId));
-		return new CustomerAddress(saved.id, saved.customerId, new AddressLine(addressLine),
-				saved.version, saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+		String addressLine = cryptoTool.decrypt(saved.getAddressLineCipher(), aad(saved.getCustomerId()));
+		return new CustomerAddress(saved.getId(), saved.getCustomerId(), new AddressLine(addressLine),
+				saved.getVersion(), saved.isDeleted(), saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(),
+				saved.getUpdatedBy());
 	}
 
 }

@@ -61,32 +61,34 @@ public class UserAnalyticsEventJpa{
 
 	public static UserAnalyticsEventJpa construct(String id, UserAnalyticsEvent event){
 		UserAnalyticsEventJpa entity = new UserAnalyticsEventJpa();
-		entity.id = id;
-		entity.aggregateId = event.aggregate().getValue();
-		entity.type = event.type().name();
-		entity.tenantId = event.tenantId();
-		entity.aggregateRefId = event.aggregateId();
-		entity.aggregateVersion = event.aggregateVersion();
-		entity.payload = event.payload();
-		entity.statusId = event.status().getValue();
-		entity.occurredAt = event.occurredAt();
-		entity.attempts = event.attempts();
-		entity.lastError = event.lastError();
-		entity.createdBy = event.createdBy();
-		entity.createdAt = event.createdAt();
-		entity.updatedBy = event.updatedBy();
-		entity.updatedAt = event.updatedAt();
-		entity.deleted = event.deleted();
-		entity.version = event.version();
+		entity.setId(id);
+		entity.setAggregateId(event.aggregate().getValue());
+		entity.setType(event.type().name());
+		entity.setTenantId(event.tenantId());
+		entity.setAggregateRefId(event.aggregateId());
+		entity.setAggregateVersion(event.aggregateVersion());
+		entity.setPayload(event.payload());
+		entity.setStatusId(event.status().getValue());
+		entity.setOccurredAt(event.occurredAt());
+		entity.setAttempts(event.attempts());
+		entity.setLastError(event.lastError());
+		entity.setCreatedBy(event.createdBy());
+		entity.setCreatedAt(event.createdAt());
+		entity.setUpdatedBy(event.updatedBy());
+		entity.setUpdatedAt(event.updatedAt());
+		entity.setDeleted(event.deleted());
+		entity.setVersion(event.version());
 		return entity;
 	}
 
 	public static UserAnalyticsEvent construct(UserAnalyticsEventJpa saved){
-		return new UserAnalyticsEvent(saved.id, UserAnalyticsAggregate.fromValue(saved.aggregateId).orElseThrow(),
-				UserAnalyticsEventType.valueOf(saved.type), saved.tenantId, saved.aggregateRefId, saved.aggregateVersion,
-				saved.payload, UserAnalyticsEventStatus.fromValue(saved.statusId).orElseThrow(), saved.occurredAt,
-				saved.attempts, saved.lastError, saved.version, saved.deleted, saved.createdAt, saved.createdBy,
-				saved.updatedAt, saved.updatedBy);
+		return new UserAnalyticsEvent(saved.getId(),
+				UserAnalyticsAggregate.fromValue(saved.getAggregateId()).orElseThrow(),
+				UserAnalyticsEventType.valueOf(saved.getType()), saved.getTenantId(), saved.getAggregateRefId(),
+				saved.getAggregateVersion(), saved.getPayload(),
+				UserAnalyticsEventStatus.fromValue(saved.getStatusId()).orElseThrow(), saved.getOccurredAt(),
+				saved.getAttempts(), saved.getLastError(), saved.getVersion(), saved.isDeleted(), saved.getCreatedAt(),
+				saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 }

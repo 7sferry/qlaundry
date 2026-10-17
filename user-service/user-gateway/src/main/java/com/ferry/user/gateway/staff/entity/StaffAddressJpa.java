@@ -62,23 +62,22 @@ public class StaffAddressJpa{
 	public static StaffAddressJpa construct(String id, StaffAddress register, StaffJpa staff,
 	                                              CryptoTool cryptoTool){
 		StaffAddressJpa entity = new StaffAddressJpa();
-		entity.id = id;
-		entity.staffId = staff.getId();
-		entity.staff = staff;
-		entity.addressLineCipher = cryptoTool.encrypt(register.addressLine().value(), aad(staff.getId()));
-		entity.createdBy = register.createdBy();
-		entity.updatedAt = register.updatedAt();
-		entity.createdAt = register.createdAt();
-		entity.updatedBy = register.updatedBy();
-		entity.deleted = register.deleted();
-		entity.version = register.version();
+		entity.setId(id);
+		entity.setStaff(staff);
+		entity.setAddressLineCipher(cryptoTool.encrypt(register.addressLine().value(), aad(staff.getId())));
+		entity.setCreatedBy(register.createdBy());
+		entity.setUpdatedAt(register.updatedAt());
+		entity.setCreatedAt(register.createdAt());
+		entity.setUpdatedBy(register.updatedBy());
+		entity.setDeleted(register.deleted());
+		entity.setVersion(register.version());
 		return entity;
 	}
 
 	public static StaffAddress constructUserAddressDomain(StaffAddressJpa saved, CryptoTool cryptoTool){
-		String addressLine = cryptoTool.decrypt(saved.addressLineCipher, aad(saved.staffId));
-		return new StaffAddress(saved.id, saved.staffId, new AddressLine(addressLine), saved.version,
-				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+		String addressLine = cryptoTool.decrypt(saved.getAddressLineCipher(), aad(saved.getStaffId()));
+		return new StaffAddress(saved.getId(), saved.getStaffId(), new AddressLine(addressLine), saved.getVersion(),
+				saved.isDeleted(), saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 	public static String decryptAddressLine(String addressLineCipher, String staffId, CryptoTool cryptoTool){

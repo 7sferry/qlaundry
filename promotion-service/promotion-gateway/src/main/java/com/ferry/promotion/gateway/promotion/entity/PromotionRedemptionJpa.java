@@ -69,29 +69,28 @@ public class PromotionRedemptionJpa{
 	public static PromotionRedemptionJpa construct(String id, PromotionRedemption redemption,
 	                                                     PromotionJpa promotion){
 		PromotionRedemptionJpa entity = new PromotionRedemptionJpa();
-		entity.id = id;
-		entity.promotion = promotion;
-		entity.promotionId = promotion.getId();
-		entity.tenantId = redemption.tenantId();
-		entity.code = redemption.codeValue();
-		entity.referenceId = redemption.referenceId();
-		entity.customerId = redemption.customerId();
-		entity.subtotal = redemption.subtotal().value();
-		entity.discountAmount = redemption.discountAmount().value();
-		entity.createdBy = redemption.createdBy();
-		entity.createdAt = redemption.createdAt();
-		entity.updatedBy = redemption.updatedBy();
-		entity.updatedAt = redemption.updatedAt();
-		entity.deleted = redemption.deleted();
-		entity.version = redemption.version();
+		entity.setId(id);
+		entity.setPromotion(promotion);
+		entity.setTenantId(redemption.tenantId());
+		entity.setCode(redemption.codeValue());
+		entity.setReferenceId(redemption.referenceId());
+		entity.setCustomerId(redemption.customerId());
+		entity.setSubtotal(redemption.subtotal().value());
+		entity.setDiscountAmount(redemption.discountAmount().value());
+		entity.setCreatedBy(redemption.createdBy());
+		entity.setCreatedAt(redemption.createdAt());
+		entity.setUpdatedBy(redemption.updatedBy());
+		entity.setUpdatedAt(redemption.updatedAt());
+		entity.setDeleted(redemption.deleted());
+		entity.setVersion(redemption.version());
 		return entity;
 	}
 
 	public static PromotionRedemption construct(PromotionRedemptionJpa saved){
-		return new PromotionRedemption(saved.id, saved.promotionId, saved.tenantId,
-				new PromotionCode(saved.code), saved.referenceId, saved.customerId,
-				new Money(saved.subtotal), new Money(saved.discountAmount), saved.version, saved.deleted,
-				saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+		return new PromotionRedemption(saved.getId(), saved.getPromotionId(), saved.getTenantId(),
+				new PromotionCode(saved.getCode()), saved.getReferenceId(), saved.getCustomerId(),
+				new Money(saved.getSubtotal()), new Money(saved.getDiscountAmount()), saved.getVersion(), saved.isDeleted(),
+				saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 }

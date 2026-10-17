@@ -38,20 +38,20 @@ public class UserSessionJpa{
 
 	public static UserSessionJpa construct(UserSession userSession){
 		UserSessionJpa entity = new UserSessionJpa();
-		entity.id = userSession.id();
-		entity.createdAt = userSession.createdAt();
-		entity.expirationTime = userSession.expirationTime();
-		entity.userId = userSession.userId();
-		entity.sessionTypeId = userSession.sessionTypeValue();
-		entity.updatedAt = userSession.updatedAt();
-		entity.version = userSession.version();
+		entity.setId(userSession.id());
+		entity.setCreatedAt(userSession.createdAt());
+		entity.setExpirationTime(userSession.expirationTime());
+		entity.setUserId(userSession.userId());
+		entity.setSessionTypeId(userSession.sessionTypeValue());
+		entity.setUpdatedAt(userSession.updatedAt());
+		entity.setVersion(userSession.version());
 		return entity;
 	}
 
 	public static UserSession construct(UserSessionJpa saved){
-		return new UserSession(saved.id, saved.expirationTime, saved.userId,
-				SessionType.fromValue(saved.sessionTypeId).orElseThrow(), saved.version, saved.createdAt,
-				saved.updatedAt);
+		return new UserSession(saved.getId(), saved.getExpirationTime(), saved.getUserId(),
+				SessionType.fromValue(saved.getSessionTypeId()).orElseThrow(), saved.getVersion(), saved.getCreatedAt(),
+				saved.getUpdatedAt());
 	}
 
 }

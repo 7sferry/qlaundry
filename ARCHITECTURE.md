@@ -218,6 +218,18 @@ gateway, never DB-generated. Order numbers are separate and human-facing:
 `INV-<yyyyMMdd in the tenant's time zone>-<millis-of-day + random Crockford chars>`,
 unique-constrained.
 
+**Entity mapping goes through accessors.** Every static `construct…(...)` on
+a JPA entity, both directions, reads the entity with getters
+(`saved.getId()`, `saved.isDeleted()`) and fills a new one with setters
+(`entity.setId(id)`), never `saved.id` / `entity.id = …`. Once Hibernate has a
+lazy proxy for an id (a lazy `@ManyToOne`, `getReferenceById`), every later
+query, `findById` or lock for that id in the same persistence context returns
+that proxy. The proxy's own fields are always empty, and only method calls
+reach the loaded state, so direct field access silently reads nulls (and
+writes into a shell Hibernate never flushes). The relation setters
+(`setOrder`, `setStaff`, `setTenant`…) also set the matching raw id column, so
+`construct` calls only the relation setter.
+
 **Tenant time zone.** "Today", the dashboard's day/month buckets, the
 schedule's day and the order number's date follow the *tenant's* business
 day, not the viewer's device. The zone is stored on `tenants.time_zone`

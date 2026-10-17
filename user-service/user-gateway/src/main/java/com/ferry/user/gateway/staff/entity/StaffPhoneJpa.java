@@ -64,25 +64,24 @@ public class StaffPhoneJpa{
 	public static StaffPhoneJpa construct(String id, StaffPhone register, StaffJpa staff,
 	                                            CryptoTool cryptoTool){
 		StaffPhoneJpa entity = new StaffPhoneJpa();
-		entity.id = id;
-		entity.staffId = staff.getId();
-		entity.staff = staff;
+		entity.setId(id);
+		entity.setStaff(staff);
 		String phone = register.phone().value();
-		entity.phoneCipher = cryptoTool.encrypt(phone, aad(staff.getId()));
-		entity.phoneHash = cryptoTool.blindIndex(phone);
-		entity.createdBy = register.createdBy();
-		entity.updatedAt = register.updatedAt();
-		entity.createdAt = register.createdAt();
-		entity.updatedBy = register.updatedBy();
-		entity.deleted = register.deleted();
-		entity.version = register.version();
+		entity.setPhoneCipher(cryptoTool.encrypt(phone, aad(staff.getId())));
+		entity.setPhoneHash(cryptoTool.blindIndex(phone));
+		entity.setCreatedBy(register.createdBy());
+		entity.setUpdatedAt(register.updatedAt());
+		entity.setCreatedAt(register.createdAt());
+		entity.setUpdatedBy(register.updatedBy());
+		entity.setDeleted(register.deleted());
+		entity.setVersion(register.version());
 		return entity;
 	}
 
 	public static StaffPhone construct(StaffPhoneJpa saved, CryptoTool cryptoTool){
-		String phone = cryptoTool.decrypt(saved.phoneCipher, aad(saved.staffId));
-		return new StaffPhone(saved.id, saved.staffId, new Phone(phone), saved.version,
-				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+		String phone = cryptoTool.decrypt(saved.getPhoneCipher(), aad(saved.getStaffId()));
+		return new StaffPhone(saved.getId(), saved.getStaffId(), new Phone(phone), saved.getVersion(),
+				saved.isDeleted(), saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 	public static String decryptPhone(String phoneCipher, String staffId, CryptoTool cryptoTool){

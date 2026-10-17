@@ -52,25 +52,26 @@ public class TenantJpa{
 	private Instant updatedAt;
 
 	public static Tenant construct(TenantJpa saved){
-		return new Tenant(saved.id, new Username(saved.username), new FullName(saved.fullName),
-				new Description(saved.description), saved.timeZone, TenantStatus.findByValue(saved.statusId).orElseThrow(),
-				saved.version, saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+		return new Tenant(saved.getId(), new Username(saved.getUsername()), new FullName(saved.getFullName()),
+				new Description(saved.getDescription()), saved.getTimeZone(),
+				TenantStatus.findByValue(saved.getStatusId()).orElseThrow(), saved.getVersion(), saved.isDeleted(),
+				saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(), saved.getUpdatedBy());
 	}
 
 	public static TenantJpa construct(String id, Tenant tenant, TenantStatus status){
 		TenantJpa entity = new TenantJpa();
-		entity.id = id;
-		entity.createdAt = tenant.createdAt();
-		entity.updatedAt = tenant.updatedAt();
-		entity.createdBy = entity.id;
-		entity.updatedBy = entity.id;
-		entity.username = tenant.usernameValue();
-		entity.description = tenant.descriptionValue();
-		entity.fullName = tenant.fullNameValue();
-		entity.timeZone = tenant.timeZone();
-		entity.statusId = status.getValue();
-		entity.version = tenant.version();
-		entity.deleted = tenant.deleted();
+		entity.setId(id);
+		entity.setCreatedAt(tenant.createdAt());
+		entity.setUpdatedAt(tenant.updatedAt());
+		entity.setCreatedBy(entity.getId());
+		entity.setUpdatedBy(entity.getId());
+		entity.setUsername(tenant.usernameValue());
+		entity.setDescription(tenant.descriptionValue());
+		entity.setFullName(tenant.fullNameValue());
+		entity.setTimeZone(tenant.timeZone());
+		entity.setStatusId(status.getValue());
+		entity.setVersion(tenant.version());
+		entity.setDeleted(tenant.deleted());
 		return entity;
 	}
 

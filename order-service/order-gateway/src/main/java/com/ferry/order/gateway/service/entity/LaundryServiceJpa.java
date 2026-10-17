@@ -65,33 +65,34 @@ public class LaundryServiceJpa{
 
 	public static LaundryServiceJpa construct(String id, LaundryService service){
 		LaundryServiceJpa entity = new LaundryServiceJpa();
-		entity.id = id;
-		entity.tenantId = service.tenantId();
-		entity.name = service.name();
-		entity.description = service.descriptionValue();
-		entity.pricePerUnit = service.pricePerUnit().value();
-		entity.unitId = service.unit().getValue();
-		entity.categoryId = service.category().getValue();
-		entity.estimatedHours = service.estimatedHours();
-		entity.expressHours = service.expressHours();
-		entity.expressMultiplier = service.expressMultiplier();
-		entity.popular = service.popular();
-		entity.active = service.active();
-		entity.createdBy = service.createdBy();
-		entity.createdAt = service.createdAt();
-		entity.updatedBy = service.updatedBy();
-		entity.updatedAt = service.updatedAt();
-		entity.deleted = service.deleted();
-		entity.version = service.version();
+		entity.setId(id);
+		entity.setTenantId(service.tenantId());
+		entity.setName(service.name());
+		entity.setDescription(service.descriptionValue());
+		entity.setPricePerUnit(service.pricePerUnit().value());
+		entity.setUnitId(service.unit().getValue());
+		entity.setCategoryId(service.category().getValue());
+		entity.setEstimatedHours(service.estimatedHours());
+		entity.setExpressHours(service.expressHours());
+		entity.setExpressMultiplier(service.expressMultiplier());
+		entity.setPopular(service.popular());
+		entity.setActive(service.active());
+		entity.setCreatedBy(service.createdBy());
+		entity.setCreatedAt(service.createdAt());
+		entity.setUpdatedBy(service.updatedBy());
+		entity.setUpdatedAt(service.updatedAt());
+		entity.setDeleted(service.deleted());
+		entity.setVersion(service.version());
 		return entity;
 	}
 
 	public static LaundryService construct(LaundryServiceJpa saved){
-		return new LaundryService(saved.id, saved.tenantId, saved.name, new Note(saved.description),
-				new Money(saved.pricePerUnit), ServiceUnit.fromValue(saved.unitId).orElseThrow(),
-				ServiceCategory.fromValue(saved.categoryId).orElseThrow(), saved.estimatedHours,
-				saved.expressHours, saved.expressMultiplier, saved.popular, saved.active, saved.version, saved.deleted, saved.createdAt,
-				saved.createdBy, saved.updatedAt, saved.updatedBy);
+		return new LaundryService(saved.getId(), saved.getTenantId(), saved.getName(), new Note(saved.getDescription()),
+				new Money(saved.getPricePerUnit()), ServiceUnit.fromValue(saved.getUnitId()).orElseThrow(),
+				ServiceCategory.fromValue(saved.getCategoryId()).orElseThrow(), saved.getEstimatedHours(),
+				saved.getExpressHours(), saved.getExpressMultiplier(), saved.isPopular(), saved.isActive(),
+				saved.getVersion(), saved.isDeleted(), saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(),
+				saved.getUpdatedBy());
 	}
 
 }

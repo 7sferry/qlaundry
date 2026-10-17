@@ -75,39 +75,40 @@ public class PromotionJpa{
 
 	public static PromotionJpa construct(String id, Promotion promotion){
 		PromotionJpa entity = new PromotionJpa();
-		entity.id = id;
-		entity.tenantId = promotion.tenantId();
-		entity.code = promotion.codeValue();
-		entity.name = promotion.name();
-		entity.description = promotion.descriptionValue();
-		entity.typeId = promotion.type().getValue();
-		entity.percentage = promotion.percentage();
-		entity.amount = promotion.amountValue();
-		entity.maxDiscountAmount = promotion.maxDiscountAmountValue();
-		entity.minSubtotal = promotion.minSubtotalValue();
-		entity.combinable = promotion.combinable();
-		entity.usageLimit = promotion.usageLimit();
-		entity.usedCount = promotion.usedCount();
-		entity.startAt = promotion.startAt();
-		entity.endAt = promotion.endAt();
-		entity.active = promotion.active();
-		entity.createdBy = promotion.createdBy();
-		entity.createdAt = promotion.createdAt();
-		entity.updatedBy = promotion.updatedBy();
-		entity.updatedAt = promotion.updatedAt();
-		entity.deleted = promotion.deleted();
-		entity.version = promotion.version();
+		entity.setId(id);
+		entity.setTenantId(promotion.tenantId());
+		entity.setCode(promotion.codeValue());
+		entity.setName(promotion.name());
+		entity.setDescription(promotion.descriptionValue());
+		entity.setTypeId(promotion.type().getValue());
+		entity.setPercentage(promotion.percentage());
+		entity.setAmount(promotion.amountValue());
+		entity.setMaxDiscountAmount(promotion.maxDiscountAmountValue());
+		entity.setMinSubtotal(promotion.minSubtotalValue());
+		entity.setCombinable(promotion.combinable());
+		entity.setUsageLimit(promotion.usageLimit());
+		entity.setUsedCount(promotion.usedCount());
+		entity.setStartAt(promotion.startAt());
+		entity.setEndAt(promotion.endAt());
+		entity.setActive(promotion.active());
+		entity.setCreatedBy(promotion.createdBy());
+		entity.setCreatedAt(promotion.createdAt());
+		entity.setUpdatedBy(promotion.updatedBy());
+		entity.setUpdatedAt(promotion.updatedAt());
+		entity.setDeleted(promotion.deleted());
+		entity.setVersion(promotion.version());
 		return entity;
 	}
 
 	public static Promotion construct(PromotionJpa saved){
-		return new Promotion(saved.id, saved.tenantId, new PromotionCode(saved.code), saved.name,
-				new Note(saved.description), PromotionType.fromValue(saved.typeId),
-				saved.percentage, saved.amount == null ? null : new Money(saved.amount),
-				saved.maxDiscountAmount == null ? null : new Money(saved.maxDiscountAmount),
-				saved.minSubtotal == null ? null : new Money(saved.minSubtotal), saved.combinable,
-				saved.usageLimit, saved.usedCount, saved.startAt, saved.endAt, saved.active, saved.version,
-				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt, saved.updatedBy);
+		return new Promotion(saved.getId(), saved.getTenantId(), new PromotionCode(saved.getCode()), saved.getName(),
+				new Note(saved.getDescription()), PromotionType.fromValue(saved.getTypeId()), saved.getPercentage(),
+				saved.getAmount() == null ? null : new Money(saved.getAmount()),
+				saved.getMaxDiscountAmount() == null ? null : new Money(saved.getMaxDiscountAmount()),
+				saved.getMinSubtotal() == null ? null : new Money(saved.getMinSubtotal()), saved.isCombinable(),
+				saved.getUsageLimit(), saved.getUsedCount(), saved.getStartAt(), saved.getEndAt(), saved.isActive(),
+				saved.getVersion(), saved.isDeleted(), saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(),
+				saved.getUpdatedBy());
 	}
 
 }

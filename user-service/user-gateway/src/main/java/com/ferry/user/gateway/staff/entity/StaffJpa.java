@@ -62,29 +62,28 @@ public class StaffJpa{
 	}
 
 	public static Staff construct(StaffJpa saved){
-		return new Staff(saved.id, new Username(saved.username),
-				new FullName(saved.fullName),
-				new Description(saved.description), saved.tenantId,
-				StaffRole.findByValue(saved.roleId).orElseThrow(), saved.version,
-				saved.deleted, saved.createdAt, saved.createdBy, saved.updatedAt,
-				saved.updatedBy);
+		return new Staff(saved.getId(), new Username(saved.getUsername()),
+				new FullName(saved.getFullName()),
+				new Description(saved.getDescription()), saved.getTenantId(),
+				StaffRole.findByValue(saved.getRoleId()).orElseThrow(), saved.getVersion(),
+				saved.isDeleted(), saved.getCreatedAt(), saved.getCreatedBy(), saved.getUpdatedAt(),
+				saved.getUpdatedBy());
 	}
 
 	public static StaffJpa construct(String id, Staff register, TenantJpa tenant, StaffRole role){
 		StaffJpa entity = new StaffJpa();
-		entity.id = id;
-		entity.username = register.usernameValue();
-		entity.description = register.descriptionValue();
-		entity.fullName = register.fullNameValue();
-		entity.tenantId = tenant.getId();
-		entity.tenant = tenant;
-		entity.roleId = role.getValue();
-		entity.createdBy = register.createdBy();
-		entity.updatedAt = register.updatedAt();
-		entity.createdAt = register.createdAt();
-		entity.updatedBy = register.updatedBy();
-		entity.version = register.version();
-		entity.deleted = register.deleted();
+		entity.setId(id);
+		entity.setUsername(register.usernameValue());
+		entity.setDescription(register.descriptionValue());
+		entity.setFullName(register.fullNameValue());
+		entity.setTenant(tenant);
+		entity.setRoleId(role.getValue());
+		entity.setCreatedBy(register.createdBy());
+		entity.setUpdatedAt(register.updatedAt());
+		entity.setCreatedAt(register.createdAt());
+		entity.setUpdatedBy(register.updatedBy());
+		entity.setVersion(register.version());
+		entity.setDeleted(register.deleted());
 		return entity;
 	}
 

@@ -49,14 +49,14 @@ public class EmailNotificationJpa{
 	public static EmailNotificationJpa construct(String id, EmailNotification notification,
 	                                                    CryptoTool cryptoTool){
 		EmailNotificationJpa entity = new EmailNotificationJpa();
-		entity.id = id;
-		entity.referenceId = notification.referenceId();
-		entity.typeId = notification.typeIdValue();
-		entity.recipientCipher = cryptoTool.encrypt(notification.recipientValue(), recipientAad(id));
-		entity.subject = notification.subjectValue();
-		entity.createdAt = notification.createdAt();
-		entity.sentAt = notification.sentAt();
-		entity.version = notification.version();
+		entity.setId(id);
+		entity.setReferenceId(notification.referenceId());
+		entity.setTypeId(notification.typeIdValue());
+		entity.setRecipientCipher(cryptoTool.encrypt(notification.recipientValue(), recipientAad(id)));
+		entity.setSubject(notification.subjectValue());
+		entity.setCreatedAt(notification.createdAt());
+		entity.setSentAt(notification.sentAt());
+		entity.setVersion(notification.version());
 		return entity;
 	}
 
