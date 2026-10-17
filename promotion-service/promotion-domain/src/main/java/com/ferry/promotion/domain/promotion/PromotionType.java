@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -22,9 +23,8 @@ public enum PromotionType{
 	NON_CUMULATIVE_PERCENTAGE((short) 3),
 	;
 
-	private static final Map<Short,PromotionType> PROMOTION_TYPE_MAP = Stream.of(PromotionType.values())
-			.collect(Collectors.collectingAndThen(Collectors.toMap(o -> o.value, o -> o),
-					Collections::unmodifiableMap));
+	private static final Map<Short,PromotionType> PROMOTION_TYPE_MAP = Map.copyOf(Stream.of(PromotionType.values())
+			.collect(Collectors.toMap(o -> o.value, Function.identity())));
 
 	private final short value;
 

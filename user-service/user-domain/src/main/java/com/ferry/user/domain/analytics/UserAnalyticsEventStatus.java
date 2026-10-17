@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,9 +22,8 @@ public enum UserAnalyticsEventStatus{
 	PUBLISHED((short) 2),
 	;
 
-	private static final Map<Short, UserAnalyticsEventStatus> STATUS_MAP = Stream.of(UserAnalyticsEventStatus.values())
-			.collect(Collectors.collectingAndThen(Collectors.toMap(o -> o.value, o -> o),
-					Collections::unmodifiableMap));
+	private static final Map<Short, UserAnalyticsEventStatus> STATUS_MAP = Map.copyOf(Stream.of(UserAnalyticsEventStatus.values())
+			.collect(Collectors.toMap(o -> o.value, Function.identity())));
 
 	private final short value;
 

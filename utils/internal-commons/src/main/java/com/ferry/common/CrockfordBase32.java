@@ -27,7 +27,7 @@ public class CrockfordBase32{
 		map.put('i', 1);
 		map.put('L', 1);
 		map.put('l', 1);
-		DECODE_MAP = Collections.unmodifiableMap(map);
+		DECODE_MAP = Map.copyOf(map);
 	}
 
 	public static String encodeTimestamp(long timestamp) {

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -20,9 +21,8 @@ public enum PaymentMethod{
 	CASH((short) 1),
 	;
 
-	private static final Map<Short,PaymentMethod> PAYMENT_METHOD_MAP = Stream.of(PaymentMethod.values())
-			.collect(Collectors.collectingAndThen(Collectors.toMap(o -> o.value, o -> o),
-					Collections::unmodifiableMap));
+	private static final Map<Short,PaymentMethod> PAYMENT_METHOD_MAP = Map.copyOf(Stream.of(PaymentMethod.values())
+			.collect(Collectors.toMap(o -> o.value, Function.identity())));
 
 	private final short value;
 

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,9 +24,8 @@ public enum ServiceCategory{
 	SPECIALTY((short) 4),
 	;
 
-	private static final Map<Short,ServiceCategory> SERVICE_CATEGORY_MAP = Stream.of(ServiceCategory.values())
-			.collect(Collectors.collectingAndThen(Collectors.toMap(o -> o.value, o -> o),
-					Collections::unmodifiableMap));
+	private static final Map<Short,ServiceCategory> SERVICE_CATEGORY_MAP = Map.copyOf(Stream.of(ServiceCategory.values())
+			.collect(Collectors.toMap(o -> o.value, Function.identity())));
 
 	private final short value;
 

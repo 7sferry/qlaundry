@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,9 +22,8 @@ public enum EmailTriggerStatus{
 	PUBLISHED((short) 2),
 	;
 
-	private static final Map<Short,EmailTriggerStatus> EMAIL_TRIGGER_STATUS_MAP = Stream.of(EmailTriggerStatus.values())
-			.collect(Collectors.collectingAndThen(Collectors.toMap(o -> o.value, o -> o),
-					Collections::unmodifiableMap));
+	private static final Map<Short,EmailTriggerStatus> EMAIL_TRIGGER_STATUS_MAP = Map.copyOf(Stream.of(EmailTriggerStatus.values())
+			.collect(Collectors.toMap(o -> o.value, Function.identity())));
 
 	private final short value;
 

@@ -39,7 +39,7 @@ public class OrderMachineJpa{
 	@Getter(AccessLevel.PRIVATE)
 	private MachineJpa machine;
 	@Setter(AccessLevel.PRIVATE)
-	@Column(nullable = false, name = "machine_id", insertable = false, updatable = false)
+	@Column(nullable = false, name = "machine_id", length = 50, insertable = false, updatable = false)
 	private String machineId;
 	@Column(nullable = false, length = 100)
 	private String machineName;
