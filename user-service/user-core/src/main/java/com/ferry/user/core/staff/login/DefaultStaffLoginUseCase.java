@@ -60,9 +60,13 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 			}
 			requireChallengeProof(request, challenge);
 			Username username = new Username(request.username());
-			staff = challenge == LoginChallenge.OTP
-					? authenticateWithOtp(request, username, subject)
-					: authenticateWithPassword(request, username);
+			if(challenge == LoginChallenge.OTP){
+				verifyOtp(request, username, subject);
+				staff = findStaff(username);
+			} else{
+				staff = findStaff(username);
+				verifyPassword(request, staff);
+			}
 			TenantLoginProjection tenant = gateway.findTenantById(new TenantId(staff.tenantId()))
 					.orElseThrow(() -> new NotFoundException("tenant not found"));
 			if(TenantStatus.findByValue(tenant.statusId()).orElse(null) != TenantStatus.ACTIVE){
@@ -82,7 +86,7 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 		} catch (InvalidPasswordException | InvalidUsernameException e){
 			long updatedAttempts = registerFailedAttempt(subject);
 			auditLog.record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, userIdOf(staff), subject);
-			throw new FailedToLoginException(e, challengeFor(updatedAttempts));
+			throw new FailedToLoginException(e, challengeFor(Math.max(attempts, updatedAttempts)));
 		} catch (FailedToLoginException e){
 			auditLog.record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, userIdOf(staff), subject);
 			throw e;
@@ -139,16 +143,18 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 		return value == null || value.isBlank();
 	}
 
-	private StaffLoginProjection authenticateWithPassword(StaffLoginRequest request, Username username){
-		StaffLoginProjection staff = gateway.findByUsername(username)
+	private StaffLoginProjection findStaff(Username username){
+		return gateway.findByUsername(username)
 				.orElseThrow(() -> new InvalidPasswordException("userId not found"));
+	}
+
+	private void verifyPassword(StaffLoginRequest request, StaffLoginProjection staff){
 		if(!passwordTool.matches(request.password(), staff.password())){
 			throw new InvalidPasswordException("password not match");
 		}
-		return staff;
 	}
 
-	private StaffLoginProjection authenticateWithOtp(StaffLoginRequest request, Username username, String subject){
+	private void verifyOtp(StaffLoginRequest request, Username username, String subject){
 		String otpKey = PasswordConstant.OTP_KEY + username.value();
 		boolean valid = cacheManager.get(otpKey)
 				.map(expected -> MessageDigest.isEqual(expected.getBytes(StandardCharsets.UTF_8),
@@ -159,8 +165,6 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 			throw new InvalidPasswordException("otp not match");
 		}
 		cacheManager.delete(otpKey);
-		return gateway.findByUsername(username)
-				.orElseThrow(() -> new InvalidPasswordException("userId not found"));
 	}
 
 	private void registerFailedOtp(String subject, String otpKey){
