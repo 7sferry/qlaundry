@@ -8,5 +8,5 @@ package com.ferry.user.core.audit;
 public enum AuthResult{
 	SUCCESS,
 	FAILURE,
-	LOCKED
+	CHALLENGED
 }

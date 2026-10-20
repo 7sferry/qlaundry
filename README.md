@@ -5,7 +5,7 @@ A multi-tenant laundry management system: each laundry business (a *tenant*) man
 ## Features
 
 - **Tenant onboarding** — a laundry registers itself (with a Cloudflare Turnstile captcha), confirms by email, and its first account becomes the super-staff. Unconfirmed registrations expire after 30 days.
-- **Staff accounts** — `STAFF` and `SUPER_STAFF` roles, self-service profile, password reset by emailed OTP, no password reuse within 90 days, passwords that may not contain the account holder's own details, and a 10-minute login lock after 3 failed attempts in 5 minutes. Changing or resetting a password signs the account out everywhere.
+- **Staff accounts** — `STAFF` and `SUPER_STAFF` roles, self-service profile, password reset by emailed OTP, no password reuse within 90 days, passwords that may not contain the account holder's own details, and escalating login protection: a Turnstile captcha after 3 failed attempts, then sign-in by an emailed one-time code after 4 more. Changing or resetting a password signs the account out everywhere.
 - **Customers** — a per-tenant customer book with phone/email/address. Phone numbers are normalised (`0812…`, `62812…`, `+62 812…` are the same number).
 - **Price list** — laundry services priced per kg or per unit, with categories, estimated hours and an optional express option (its own hours and price multiplier).
 - **Machines** — the laundry's washers, dryers and irons. Staff pick the machines an order runs on when they start processing it and can swap them while it is in progress; a machine can't be on two in-progress orders at once.

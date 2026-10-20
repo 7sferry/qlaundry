@@ -15,7 +15,7 @@ import java.util.Locale;
  ************************/
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class LoginLockKey{
+public final class LoginAttemptKey{
 
 	public static String normalize(String username){
 		return username == null ? "" : username.trim().toLowerCase(Locale.ROOT);
@@ -25,8 +25,8 @@ public final class LoginLockKey{
 		return LoginConstant.ATTEMPT_KEY + hash(normalizedUsername);
 	}
 
-	public static String lock(String normalizedUsername){
-		return LoginConstant.LOCK_KEY + hash(normalizedUsername);
+	public static String otpAttempt(String normalizedUsername){
+		return LoginConstant.OTP_ATTEMPT_KEY + hash(normalizedUsername);
 	}
 
 	@SneakyThrows

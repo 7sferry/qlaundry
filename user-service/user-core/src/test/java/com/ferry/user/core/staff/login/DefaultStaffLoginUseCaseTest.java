@@ -4,7 +4,9 @@ import com.ferry.user.core.audit.AuthAction;
 import com.ferry.user.core.audit.AuthAuditLog;
 import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.staff.constant.LoginConstant;
+import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.staff.constant.TokenConstant;
+import com.ferry.user.core.tenant.registration.VerificationGateway;
 import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
@@ -15,7 +17,8 @@ import com.ferry.user.domain.common.exception.NotFoundException;
 import com.ferry.user.domain.session.UserSession;
 import com.ferry.user.domain.staff.StaffRole;
 import com.ferry.user.domain.staff.login.FailedToLoginException;
-import com.ferry.user.domain.staff.login.LoginLockedException;
+import com.ferry.user.domain.staff.login.LoginChallenge;
+import com.ferry.user.domain.staff.login.LoginChallengeRequiredException;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
 import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.tenant.TenantStatus;
@@ -31,7 +34,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Optional;
 
@@ -59,6 +61,8 @@ class DefaultStaffLoginUseCaseTest{
 	private static final String OVERSIZED_USERNAME_HASH = "bfc5fe0e360152ca98c50fab4ed7e3078c17debc2917740d5000913b686ca129";
 	private static final String GHOST_USERNAME_HASH ="c6907143339f30a3c7684fadf34be5f3126b429795e716a7cbc8a225dc2c4b5c";
 	private static final String PASSWORD = "Passw0rd!2026";
+	private static final String OTP = "482913";
+	private static final String CAPTCHA_TOKEN = "turnstile-token-7781";
 	private static final String USER_ID = "usr-445566";
 	private static final String TENANT_ID = "tnt-medan-04";
 	private static final String HASHED_PASSWORD = "citra-hashed-pw";
@@ -76,6 +80,8 @@ class DefaultStaffLoginUseCaseTest{
 	@Mock
 	UserCacheManager cacheManager;
 	@Mock
+	VerificationGateway verificationGateway;
+	@Mock
 	AuthAuditLog auditLog;
 	@InjectMocks
 	DefaultStaffLoginUseCase useCase;
@@ -87,7 +93,7 @@ class DefaultStaffLoginUseCaseTest{
 	@Test
 	void givenBlankUsername_thenThrowsFailedToLoginExceptionWithConstraintViolationCause(){
 		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
-				() -> useCase.execute(new StaffLoginRequest(" ", PASSWORD), presenter));
+				() -> useCase.execute(new StaffLoginRequest(" ", PASSWORD, null, null), presenter));
 
 		thenSoftly(softly -> softly.then(thrown.getCause()).isInstanceOf(ConstraintViolationException.class));
 		then(gateway).shouldHaveNoInteractions();
@@ -95,19 +101,20 @@ class DefaultStaffLoginUseCaseTest{
 	}
 
 	@Test
-	void givenBlankPassword_thenThrowsFailedToLoginExceptionWithConstraintViolationCause(){
+	void givenBlankPassword_thenThrowsFailedToLoginExceptionWithoutLookupOrCounting(){
 		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
-				() -> useCase.execute(new StaffLoginRequest(USERNAME, " "), presenter));
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, " ", null, null), presenter));
 
-		thenSoftly(softly -> softly.then(thrown.getCause()).isInstanceOf(ConstraintViolationException.class));
+		thenSoftly(softly -> softly.then(thrown).hasMessage("password required"));
 		then(gateway).shouldHaveNoInteractions();
+		then(cacheManager).should(never()).increment(anyString(), any(Duration.class));
 		then(presenter).shouldHaveNoInteractions();
 	}
 
 	@Test
 	void givenUsernameShorterThanMinimumLength_thenThrowsFailedToLoginExceptionWithInvalidUsernameCause(){
 		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
-				() -> useCase.execute(new StaffLoginRequest("citr", PASSWORD), presenter));
+				() -> useCase.execute(new StaffLoginRequest("citr", PASSWORD, null, null), presenter));
 
 		thenSoftly(softly -> softly.then(thrown.getCause()).isInstanceOf(InvalidUsernameException.class));
 		then(gateway).shouldHaveNoInteractions();
@@ -119,7 +126,7 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(Optional.empty()).given(gateway).findByUsername(new Username(USERNAME));
 
 		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
-				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter));
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter));
 
 		thenSoftly(softly -> softly.then(thrown.getCause())
 				.isInstanceOf(InvalidPasswordException.class)
@@ -135,7 +142,7 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(false).given(passwordTool).matches(eq(PASSWORD), any());
 
 		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
-				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter));
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter));
 
 		thenSoftly(softly -> softly.then(thrown.getCause())
 				.isInstanceOf(InvalidPasswordException.class)
@@ -153,7 +160,7 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(Optional.empty()).given(gateway).findTenantById(new TenantId(TENANT_ID));
 
 		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
-				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter));
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter));
 
 		thenSoftly(softly -> softly.then(thrown.getCause())
 				.isInstanceOf(NotFoundException.class)
@@ -172,7 +179,7 @@ class DefaultStaffLoginUseCaseTest{
 				.given(gateway).findTenantById(new TenantId(TENANT_ID));
 
 		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
-				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter));
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter));
 
 		thenSoftly(softly -> softly.then(thrown).hasMessage("tenant not confirmed"));
 		then(gateway).should(never()).save(any(UserSession.class));
@@ -193,7 +200,7 @@ class DefaultStaffLoginUseCaseTest{
 				.given(gateway).findTenantById(new TenantId(TENANT_ID));
 
 		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
-				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter));
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter));
 
 		thenSoftly(softly -> softly.then(thrown.getCause())
 				.isInstanceOf(NotFoundException.class)
@@ -216,7 +223,7 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();
 
-		useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter);
+		useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter);
 
 		then(cacheManager).should().set(eq(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN), any(UserSession.class),
 				eq(Duration.ofSeconds(TokenConstant.REFRESH_CACHE_MAX_SECONDS)));
@@ -240,7 +247,7 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any());
 		willReturn(30L).given(tokenProcessor).getAccessDurationInSeconds();
 
-		useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter);
+		useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter);
 
 		then(cacheManager).should(never()).set(eq(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN), any(), any());
 		then(presenter).should().present(new StaffLoginResponse(ACCESS_TOKEN, REFRESH_TOKEN));
@@ -261,7 +268,7 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(principalCaptor.capture());
 		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();
 
-		useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter);
+		useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter);
 
 		UserAuthPrincipal principal = principalCaptor.getValue();
 		thenSoftly(softly -> {
@@ -286,66 +293,14 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(principalCaptor.capture());
 		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();
 
-		useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter);
+		useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter);
 
 		thenSoftly(softly -> softly.then(principalCaptor.getValue().timeZone()).isEqualTo(ZoneId.of("UTC")));
 	}
 
-	@Test
-	void givenAccountIsLocked_thenThrowsLoginLockedExceptionWithRemainingTimeAndSkipsLookup(){
-		willReturn(Optional.of(Instant.now().plus(Duration.ofMinutes(4)).toString()))
-				.given(cacheManager).get(LoginConstant.LOCK_KEY + USERNAME_HASH);
-
-		LoginLockedException thrown = catchThrowableOfType(LoginLockedException.class,
-				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter));
-
-		thenSoftly(softly -> {
-			softly.then(thrown.retryAfter()).isGreaterThan(Duration.ofMinutes(3));
-			softly.then(thrown.retryAfter()).isLessThanOrEqualTo(Duration.ofMinutes(4));
-		});
-		then(gateway).shouldHaveNoInteractions();
-		then(passwordTool).shouldHaveNoInteractions();
-		then(presenter).shouldHaveNoInteractions();
-		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.LOCKED, null, USERNAME);
-	}
 
 	@Test
-	void givenUnknownAccountIsLocked_thenThrowsLoginLockedExceptionLikeAnExistingOne(){
-		willReturn(Optional.of(Instant.now().plus(Duration.ofMinutes(9)).toString()))
-				.given(cacheManager).get(LoginConstant.LOCK_KEY + GHOST_USERNAME_HASH);
-
-		LoginLockedException thrown = catchThrowableOfType(LoginLockedException.class,
-				() -> useCase.execute(new StaffLoginRequest(GHOST_USERNAME, PASSWORD), presenter));
-
-		thenSoftly(softly -> softly.then(thrown.retryAfter()).isGreaterThan(Duration.ofMinutes(8)));
-		then(gateway).shouldHaveNoInteractions();
-		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.LOCKED, null, GHOST_USERNAME);
-	}
-
-	@Test
-	void givenLockExpiryIsUnreadable_thenFallsBackToTheFullLockDuration(){
-		willReturn(Optional.of("not-an-instant")).given(cacheManager).get(LoginConstant.LOCK_KEY + USERNAME_HASH);
-
-		LoginLockedException thrown = catchThrowableOfType(LoginLockedException.class,
-				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter));
-
-		thenSoftly(softly -> softly.then(thrown.retryAfter()).isEqualTo(LoginConstant.LOCK_DURATION));
-	}
-
-	@Test
-	void givenUsernameWithDifferentCaseAndPadding_thenUsesTheSameLockAsTheNormalizedUsername(){
-		willReturn(Optional.of(Instant.now().plus(Duration.ofMinutes(2)).toString()))
-				.given(cacheManager).get(LoginConstant.LOCK_KEY + USERNAME_HASH);
-
-		LoginLockedException thrown = catchThrowableOfType(LoginLockedException.class,
-				() -> useCase.execute(new StaffLoginRequest("  CitraAdminStaff ", PASSWORD), presenter));
-
-		thenSoftly(softly -> softly.then(thrown).isNotNull());
-		then(gateway).shouldHaveNoInteractions();
-	}
-
-	@Test
-	void givenWrongPasswordBelowTheLimit_thenCountsTheAttemptWithoutLocking(){
+	void givenCounterBelowCaptchaThreshold_thenWrongPasswordFailsWithoutAChallenge(){
 		StaffLoginProjection staff = new StaffLoginProjection(USER_ID, USERNAME, HASHED_PASSWORD,
 				FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue());
 		willReturn(Optional.of(staff)).given(gateway).findByUsername(new Username(USERNAME));
@@ -353,15 +308,16 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(2L).given(cacheManager).increment(LoginConstant.ATTEMPT_KEY + USERNAME_HASH,
 				LoginConstant.ATTEMPT_WINDOW);
 
-		catchThrowableOfType(FailedToLoginException.class,
-				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter));
+		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter));
 
-		then(cacheManager).should(never()).set(eq(LoginConstant.LOCK_KEY + USERNAME_HASH), anyString(), any(Duration.class));
+		thenSoftly(softly -> softly.then(thrown.challenge()).isNull());
+		then(verificationGateway).shouldHaveNoInteractions();
 		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, USER_ID, USERNAME);
 	}
 
 	@Test
-	void givenThirdWrongPasswordInTheWindow_thenLocksTheAccountForTenMinutes(){
+	void givenThirdWrongPassword_thenFailureAsksForCaptchaOnTheNextAttempt(){
 		StaffLoginProjection staff = new StaffLoginProjection(USER_ID, USERNAME, HASHED_PASSWORD,
 				FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue());
 		willReturn(Optional.of(staff)).given(gateway).findByUsername(new Username(USERNAME));
@@ -370,26 +326,220 @@ class DefaultStaffLoginUseCaseTest{
 				LoginConstant.ATTEMPT_WINDOW);
 
 		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
-				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter));
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter));
 
-		thenSoftly(softly -> softly.then(thrown.getCause()).isInstanceOf(InvalidPasswordException.class));
-		then(cacheManager).should().set(eq(LoginConstant.LOCK_KEY + USERNAME_HASH), anyString(),
-				eq(Duration.ofMinutes(10)));
-		then(cacheManager).should().delete(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
+		thenSoftly(softly -> softly.then(thrown.challenge()).isEqualTo(LoginChallenge.CAPTCHA));
 	}
 
 	@Test
-	void givenThirdAttemptOnAnUnknownAccount_thenLocksItJustLikeAnExistingOne(){
-		willReturn(Optional.empty()).given(gateway).findByUsername(new Username(GHOST_USERNAME));
-		willReturn(3L).given(cacheManager).increment(LoginConstant.ATTEMPT_KEY + GHOST_USERNAME_HASH,
+	void givenSeventhFailure_thenFailureAsksForOtpOnTheNextAttempt(){
+		willReturn(Optional.of("6")).given(cacheManager).get(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
+		willReturn(Optional.of(new StaffLoginProjection(USER_ID, USERNAME, HASHED_PASSWORD,
+				FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue()))).given(gateway).findByUsername(new Username(USERNAME));
+		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
+		willReturn(false).given(passwordTool).matches(eq(PASSWORD), anyString());
+		willReturn(7L).given(cacheManager).increment(LoginConstant.ATTEMPT_KEY + USERNAME_HASH,
 				LoginConstant.ATTEMPT_WINDOW);
 
-		catchThrowableOfType(FailedToLoginException.class,
-				() -> useCase.execute(new StaffLoginRequest(GHOST_USERNAME, PASSWORD), presenter));
+		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, CAPTCHA_TOKEN), presenter));
 
-		then(cacheManager).should().set(eq(LoginConstant.LOCK_KEY + GHOST_USERNAME_HASH), anyString(),
-				eq(LoginConstant.LOCK_DURATION));
+		thenSoftly(softly -> softly.then(thrown.challenge()).isEqualTo(LoginChallenge.OTP));
+	}
+
+	@Test
+	void givenCaptchaLevelAndNoToken_thenRequiresCaptchaWithoutLookupOrCounting(){
+		willReturn(Optional.of("3")).given(cacheManager).get(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
+
+		LoginChallengeRequiredException thrown = catchThrowableOfType(LoginChallengeRequiredException.class,
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter));
+
+		thenSoftly(softly -> softly.then(thrown.challenge()).isEqualTo(LoginChallenge.CAPTCHA));
+		then(gateway).shouldHaveNoInteractions();
+		then(passwordTool).shouldHaveNoInteractions();
+		then(verificationGateway).shouldHaveNoInteractions();
+		then(cacheManager).should(never()).increment(anyString(), any(Duration.class));
+		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.CHALLENGED, null, USERNAME);
+	}
+
+	@Test
+	void givenCaptchaLevelAndRejectedToken_thenRequiresCaptchaWithoutLookupOrCounting(){
+		willReturn(Optional.of("5")).given(cacheManager).get(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
+		willReturn(false).given(verificationGateway).verify(CAPTCHA_TOKEN);
+
+		LoginChallengeRequiredException thrown = catchThrowableOfType(LoginChallengeRequiredException.class,
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, CAPTCHA_TOKEN), presenter));
+
+		thenSoftly(softly -> softly.then(thrown.challenge()).isEqualTo(LoginChallenge.CAPTCHA));
+		then(gateway).shouldHaveNoInteractions();
+		then(cacheManager).should(never()).increment(anyString(), any(Duration.class));
+	}
+
+	@Test
+	void givenCaptchaLevelAndValidTokenAndCorrectPassword_thenLogsInAndClearsTheCounters(){
+		StaffLoginProjection staff = new StaffLoginProjection(USER_ID, USERNAME, HASHED_PASSWORD,
+				FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue());
+		willReturn(Optional.of("6")).given(cacheManager).get(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
+		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
+		willReturn(Optional.of(staff)).given(gateway).findByUsername(new Username(USERNAME));
+		willReturn(true).given(passwordTool).matches(eq(PASSWORD), anyString());
+		willReturn(REFRESH_TOKEN).given(tokenProcessor).generateRefreshToken();
+		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
+		willReturn(86400L).given(tokenProcessor).getRefreshDurationInSeconds();
+		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(UserSession.class));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", ZoneId.of("Asia/Jakarta"), TenantStatus.ACTIVE.getValue())))
+				.given(gateway).findTenantById(new TenantId(TENANT_ID));
+		willReturn(ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any(UserAuthPrincipal.class));
+		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();
+
+		useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, CAPTCHA_TOKEN), presenter);
+
+		then(cacheManager).should().delete(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
+		then(cacheManager).should().delete(LoginConstant.OTP_ATTEMPT_KEY + USERNAME_HASH);
+		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.SUCCESS, USER_ID, USERNAME);
+		then(presenter).should().present(new StaffLoginResponse(ACCESS_TOKEN, REFRESH_TOKEN));
+	}
+
+	@Test
+	void givenCaptchaLevelOnAnUnknownAccount_thenBehavesLikeAnExistingOne(){
+		willReturn(Optional.of("5")).given(cacheManager).get(LoginConstant.ATTEMPT_KEY + GHOST_USERNAME_HASH);
+		willReturn(true).given(verificationGateway).verify(CAPTCHA_TOKEN);
+		willReturn(Optional.empty()).given(gateway).findByUsername(new Username(GHOST_USERNAME));
+		willReturn(6L).given(cacheManager).increment(LoginConstant.ATTEMPT_KEY + GHOST_USERNAME_HASH,
+				LoginConstant.ATTEMPT_WINDOW);
+
+		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
+				() -> useCase.execute(new StaffLoginRequest(GHOST_USERNAME, PASSWORD, null, CAPTCHA_TOKEN), presenter));
+
+		thenSoftly(softly -> softly.then(thrown.challenge()).isEqualTo(LoginChallenge.CAPTCHA));
 		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, null, GHOST_USERNAME);
+	}
+
+	@Test
+	void givenOtpLevelAndNoOtp_thenRequiresOtpEvenWithTheCorrectPassword(){
+		willReturn(Optional.of("7")).given(cacheManager).get(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
+
+		LoginChallengeRequiredException thrown = catchThrowableOfType(LoginChallengeRequiredException.class,
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, CAPTCHA_TOKEN), presenter));
+
+		thenSoftly(softly -> softly.then(thrown.challenge()).isEqualTo(LoginChallenge.OTP));
+		then(gateway).shouldHaveNoInteractions();
+		then(passwordTool).shouldHaveNoInteractions();
+		then(verificationGateway).shouldHaveNoInteractions();
+		then(cacheManager).should(never()).increment(anyString(), any(Duration.class));
+		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.CHALLENGED, null, USERNAME);
+	}
+
+	@Test
+	void givenOtpLevelAndWrongOtp_thenCountsBothFailuresAndKeepsAskingForOtp(){
+		willReturn(Optional.of("7")).given(cacheManager).get(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
+		willReturn(Optional.of(OTP)).given(cacheManager).get(PasswordConstant.OTP_KEY + USERNAME);
+		willReturn(1L).given(cacheManager).increment(LoginConstant.OTP_ATTEMPT_KEY + USERNAME_HASH,
+				PasswordConstant.OTP_DURATION);
+		willReturn(8L).given(cacheManager).increment(LoginConstant.ATTEMPT_KEY + USERNAME_HASH,
+				LoginConstant.ATTEMPT_WINDOW);
+
+		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, null, "000000", null), presenter));
+
+		thenSoftly(softly -> {
+			softly.then(thrown.getCause()).isInstanceOf(InvalidPasswordException.class).hasMessage("otp not match");
+			softly.then(thrown.challenge()).isEqualTo(LoginChallenge.OTP);
+		});
+		then(cacheManager).should(never()).delete(PasswordConstant.OTP_KEY + USERNAME);
+		then(gateway).shouldHaveNoInteractions();
+		then(presenter).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void givenFifthWrongOtp_thenDiscardsTheOtpSoItCannotBeGuessedFurther(){
+		willReturn(Optional.of("9")).given(cacheManager).get(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
+		willReturn(Optional.of(OTP)).given(cacheManager).get(PasswordConstant.OTP_KEY + USERNAME);
+		willReturn(5L).given(cacheManager).increment(LoginConstant.OTP_ATTEMPT_KEY + USERNAME_HASH,
+				PasswordConstant.OTP_DURATION);
+
+		catchThrowableOfType(FailedToLoginException.class,
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, null, "111111", null), presenter));
+
+		then(cacheManager).should().delete(PasswordConstant.OTP_KEY + USERNAME);
+		then(cacheManager).should().delete(LoginConstant.OTP_ATTEMPT_KEY + USERNAME_HASH);
+	}
+
+	@Test
+	void givenOtpLevelOnAnUnknownAccount_thenFailsLikeAWrongOtp(){
+		willReturn(Optional.of("7")).given(cacheManager).get(LoginConstant.ATTEMPT_KEY + GHOST_USERNAME_HASH);
+
+		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
+				() -> useCase.execute(new StaffLoginRequest(GHOST_USERNAME, null, OTP, null), presenter));
+
+		thenSoftly(softly -> {
+			softly.then(thrown.getCause()).isInstanceOf(InvalidPasswordException.class).hasMessage("otp not match");
+			softly.then(thrown.challenge()).isEqualTo(LoginChallenge.OTP);
+		});
+		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, null, GHOST_USERNAME);
+	}
+
+	@Test
+	void givenOtpLevelAndCorrectOtp_thenConsumesTheOtpLogsInWithoutAPasswordAndClearsTheCounters(){
+		StaffLoginProjection staff = new StaffLoginProjection(USER_ID, USERNAME, HASHED_PASSWORD,
+				FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue());
+		willReturn(Optional.of("7")).given(cacheManager).get(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
+		willReturn(Optional.of(OTP)).given(cacheManager).get(PasswordConstant.OTP_KEY + USERNAME);
+		willReturn(Optional.of(staff)).given(gateway).findByUsername(new Username(USERNAME));
+		willReturn(REFRESH_TOKEN).given(tokenProcessor).generateRefreshToken();
+		willReturn(HASHED_REFRESH_TOKEN).given(tokenProcessor).hashToken(REFRESH_TOKEN);
+		willReturn(86400L).given(tokenProcessor).getRefreshDurationInSeconds();
+		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(UserSession.class));
+		willReturn(Optional.of(new TenantLoginProjection("Tenant Medan", ZoneId.of("Asia/Jakarta"), TenantStatus.ACTIVE.getValue())))
+				.given(gateway).findTenantById(new TenantId(TENANT_ID));
+		willReturn(ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any(UserAuthPrincipal.class));
+		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();
+
+		useCase.execute(new StaffLoginRequest(USERNAME, null, OTP, null), presenter);
+
+		then(cacheManager).should().delete(PasswordConstant.OTP_KEY + USERNAME);
+		then(cacheManager).should().delete(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
+		then(cacheManager).should().delete(LoginConstant.OTP_ATTEMPT_KEY + USERNAME_HASH);
+		then(passwordTool).shouldHaveNoInteractions();
+		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.SUCCESS, USER_ID, USERNAME);
+		then(presenter).should().present(new StaffLoginResponse(ACCESS_TOKEN, REFRESH_TOKEN));
+	}
+
+	@Test
+	void givenOtpButCounterBelowOtpLevel_thenOtpIsIgnoredAndMissingPasswordIsNotCounted(){
+		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, null, OTP, null), presenter));
+
+		thenSoftly(softly -> softly.then(thrown).hasMessage("password required"));
+		then(gateway).shouldHaveNoInteractions();
+		then(cacheManager).should(never()).increment(anyString(), any(Duration.class));
+		then(cacheManager).should(never()).delete(PasswordConstant.OTP_KEY + USERNAME);
+	}
+
+	@Test
+	void givenUnreadableCounter_thenTreatsItAsZero(){
+		StaffLoginProjection staff = new StaffLoginProjection(USER_ID, USERNAME, HASHED_PASSWORD,
+				FULL_NAME, TENANT_ID, StaffRole.STAFF.getValue());
+		willReturn(Optional.of("not-a-number")).given(cacheManager).get(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
+		willReturn(Optional.of(staff)).given(gateway).findByUsername(new Username(USERNAME));
+		willReturn(false).given(passwordTool).matches(eq(PASSWORD), anyString());
+
+		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter));
+
+		thenSoftly(softly -> softly.then(thrown.challenge()).isNull());
+		then(verificationGateway).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void givenUsernameWithDifferentCaseAndPadding_thenUsesTheSameCounterAsTheNormalizedUsername(){
+		willReturn(Optional.of("5")).given(cacheManager).get(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
+
+		LoginChallengeRequiredException thrown = catchThrowableOfType(LoginChallengeRequiredException.class,
+				() -> useCase.execute(new StaffLoginRequest("  CitraAdminStaff ", PASSWORD, null, null), presenter));
+
+		thenSoftly(softly -> softly.then(thrown.challenge()).isEqualTo(LoginChallenge.CAPTCHA));
+		then(gateway).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -398,7 +548,7 @@ class DefaultStaffLoginUseCaseTest{
 				LoginConstant.ATTEMPT_WINDOW);
 
 		FailedToLoginException thrown = catchThrowableOfType(FailedToLoginException.class,
-				() -> useCase.execute(new StaffLoginRequest(OVERSIZED_USERNAME, PASSWORD), presenter));
+				() -> useCase.execute(new StaffLoginRequest(OVERSIZED_USERNAME, PASSWORD, null, null), presenter));
 
 		thenSoftly(softly -> softly.then(thrown.getCause()).isInstanceOf(InvalidUsernameException.class));
 		then(gateway).shouldHaveNoInteractions();
@@ -416,7 +566,7 @@ class DefaultStaffLoginUseCaseTest{
 				.given(gateway).findTenantById(new TenantId(TENANT_ID));
 
 		catchThrowableOfType(FailedToLoginException.class,
-				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter));
+				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter));
 
 		then(cacheManager).should(never()).increment(anyString(), any(Duration.class));
 		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, USER_ID, USERNAME);
@@ -437,7 +587,7 @@ class DefaultStaffLoginUseCaseTest{
 		willReturn(ACCESS_TOKEN).given(tokenProcessor).generateAccessToken(any(UserAuthPrincipal.class));
 		willReturn(900L).given(tokenProcessor).getAccessDurationInSeconds();
 
-		useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD), presenter);
+		useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter);
 
 		then(cacheManager).should().delete(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
 		then(cacheManager).should(never()).increment(anyString(), any(Duration.class));

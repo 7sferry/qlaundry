@@ -28,15 +28,19 @@ async function resolveAccessToken(path: string): Promise<string | null> {
 	return refreshAccessToken();
 }
 
-async function readErrorDetail(response: Response): Promise<string | undefined> {
+async function readErrorBody(response: Response): Promise<Record<string, unknown> | undefined> {
 	const text = await response.text().catch(() => '');
 	try {
-		const body = JSON.parse(text) as Record<string, unknown>;
-		const detail = body.detail ?? body.message;
-		return typeof detail === 'string' && detail.trim() !== '' ? detail : undefined;
+		const body = JSON.parse(text) as unknown;
+		return body !== null && typeof body === 'object' ? body as Record<string, unknown> : undefined;
 	} catch {
 		return undefined;
 	}
+}
+
+function errorDetail(body: Record<string, unknown> | undefined): string | undefined {
+	const detail = body?.detail ?? body?.message;
+	return typeof detail === 'string' && detail.trim() !== '' ? detail : undefined;
 }
 
 function errorMessage(status: number, detail: string | undefined): string {
@@ -73,7 +77,8 @@ async function request<T>(path: string, options: RequestOptions = {}, isRetry = 
 		}
 
 		if (!response.ok) {
-			throw new HttpError(response.status, errorMessage(response.status, await readErrorDetail(response)));
+			const body = await readErrorBody(response);
+			throw new HttpError(response.status, errorMessage(response.status, errorDetail(body)), body);
 		}
 
 		return (await response.json()) as T;

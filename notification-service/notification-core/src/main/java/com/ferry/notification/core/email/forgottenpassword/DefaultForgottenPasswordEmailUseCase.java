@@ -18,7 +18,7 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 public class DefaultForgottenPasswordEmailUseCase implements ForgottenPasswordEmailUseCase{
-	private static final String SUBJECT = "QLaundry Password Reset Verification Code - ";
+	private static final String SUBJECT = "QLaundry Verification Code - ";
 
 	private final ForgottenPasswordEmailComposer composer;
 	private final EmailSendGateway emailSendGateway;

@@ -55,6 +55,26 @@ describe('LoginUseCase', () => {
 		expect(loginFn).not.toHaveBeenCalled();
 	});
 
+	it('accepts a six digit code in place of the password', async () => {
+		const credentials = {username: 'admin', password: '', otp: '482913'};
+		await useCase.execute(credentials);
+
+		expect(loginFn).toHaveBeenCalledWith(credentials);
+	});
+
+	it('rejects a code that is not six digits', async () => {
+		await expect(useCase.execute({username: 'admin', password: '', otp: '4829'}))
+				.rejects.toThrow('Kode verifikasi harus 6 digit.');
+		expect(loginFn).not.toHaveBeenCalled();
+	});
+
+	it('forwards the captcha token with the credentials', async () => {
+		const credentials = {username: 'admin', password: 'admin123', captchaToken: 'turnstile-token'};
+		await useCase.execute(credentials);
+
+		expect(loginFn).toHaveBeenCalledWith(credentials);
+	});
+
 	it('delegates to the repository with valid credentials', async () => {
 		const credentials = {username: 'admin', password: 'admin123'};
 		const result = await useCase.execute(credentials);

@@ -17,9 +17,13 @@ export interface User {
 	avatarInitials?: string;
 }
 
+export type LoginChallenge = 'CAPTCHA' | 'OTP';
+
 export interface LoginCredentials {
 	username: string;
 	password: string;
+	otp?: string;
+	captchaToken?: string;
 }
 
 export interface RegisterData {

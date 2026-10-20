@@ -266,8 +266,8 @@ class DefaultStaffResetPasswordUseCaseTest{
 
 		then(gateway).should().save(passwordCaptor.capture());
 		then(sessionRevoker).should().revokeAll(STAFF_ID);
-		then(cacheManager).should().delete(LoginConstant.LOCK_KEY + USERNAME_HASH);
 		then(cacheManager).should().delete(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
+		then(cacheManager).should().delete(LoginConstant.OTP_ATTEMPT_KEY + USERNAME_HASH);
 		then(auditLog).should().record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.SUCCESS, STAFF_ID, USERNAME);
 		then(presenter).should().present(new StaffResetPasswordResponse("password has been reset"));
 		thenSoftly(softly -> {

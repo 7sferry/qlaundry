@@ -17,7 +17,7 @@ POST   /auth/tenant/registration          register a laundry + its first (super-
 GET    /auth/tenant/confirmRegistration   ?tenantId=&token=  → activates the tenant
 POST   /auth/tenant/resendConfirmation    {tenantId}         → new confirmation email
 POST   /auth/staff/registration           add a staff account to an active tenant
-POST   /auth/staff/login
+POST   /auth/staff/login                  {username, password}; after repeated failures also {captchaToken} or {username, otp}
 POST   /auth/staff/refresh
 POST   /auth/staff/forgottenPassword      {username}                       → {email} (masked); emails an OTP
 POST   /auth/staff/submitOtp              {username, otp}                  → {resetToken} (single use, 5 min)
@@ -30,8 +30,8 @@ DELETE /auth/staff/logout
 - Usernames are 5 to 50 characters: letters, digits and underscore.
 - Passwords are hashed with Argon2. A new password can't equal the current one or any password used in the last 90 days, and (registration, `/staff/profile`, reset) can't contain the account's username, full name or any name word, the tenant name or tenant username, any email (with or without its domain) or phone number (with or without country code) — rejected with **422** and the reason in `detail`.
 - Changing the password through `/staff/profile` or resetting it expires every refresh session of that staff and clears the `refresh_token` cookie; an already-issued access token stays valid until it expires on its own.
-- **Login lock**: 3 failed logins for the same username (existing or not), each within 5 minutes of the previous one, lock that username for 10 minutes, answered with **429** + `Retry-After`. A successful login or a completed password reset clears the lock and the counter. State is in Redis (`login:attempt:<sha256(username)>`, `login:lock:<sha256(username)>`); to unlock early `redis-cli -a 12345 DEL login:lock:$(printf '%s' <username> | sha256sum | cut -d' ' -f1)`.
-- Every auth endpoint writes one line per call to `logs/user-auth-audit.log` (logger `AUTH_AUDIT`): `action`, `result` (`SUCCESS`/`FAILURE`/`LOCKED`), `userId`, `subject` (the username or tenant id the caller named), `ip`.
+- **Login challenges**: logins are never blocked, they escalate per username (existing or not). After **3** failed logins (each within 15 minutes of the previous one) the login must carry a valid Cloudflare Turnstile token (`captchaToken`), otherwise it is answered with **428** and `challenge: "CAPTCHA"`. After **4 more** (7 in total), password login is refused with **428** and `challenge: "OTP"`; the user requests a code with `POST /auth/staff/forgottenPassword` and signs in with `{username, otp}` (no password). Failed logins (400) also carry the current `challenge`. A successful login, a completed password reset, or 15 quiet minutes reset the level. State is in Redis (`login:attempt:<sha256(username)>`, `login:otp-attempt:<sha256(username)>`); to reset a username early `redis-cli -a 12345 DEL login:attempt:$(printf '%s' <username> | sha256sum | cut -d' ' -f1)`.
+- Every auth endpoint writes one line per call to `logs/user-auth-audit.log` (logger `AUTH_AUDIT`): `action`, `result` (`SUCCESS`/`FAILURE`/`CHALLENGED`), `userId`, `subject` (the username or tenant id the caller named), `ip`.
 
 ### Staff
 

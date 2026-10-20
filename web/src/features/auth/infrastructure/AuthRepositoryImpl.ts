@@ -17,7 +17,7 @@ import {
 import {refreshAccessToken} from '@/core/auth/refreshAccessToken';
 import type {StaffRole} from '@/features/staff/domain/Staff';
 import type {AuthRepository} from '../domain/AuthRepository';
-import {ResetSessionExpiredError} from '../domain/errors';
+import {LoginChallengeError, ResetSessionExpiredError} from '../domain/errors';
 import type {AuthSession, LoginCredentials, RegisterData, User} from '../domain/User';
 import {AUTH_ENDPOINTS} from './authEndpoints';
 
@@ -58,6 +58,21 @@ function resolveTimeZone(): string | undefined {
 	}
 }
 
+function toLoginError(err: unknown, credentials: LoginCredentials): Error {
+	const challenge = err instanceof HttpError ? err.problem?.challenge : undefined;
+	if (challenge !== 'CAPTCHA' && challenge !== 'OTP') {
+		return new Error('Incorrect username or password.');
+	}
+	if (err instanceof HttpError && err.status === 428) {
+		return new LoginChallengeError(challenge, challenge === 'OTP'
+				? 'Too many failed attempts. Sign in with the code sent to your email.'
+				: 'Complete the captcha verification to continue.');
+	}
+	return new LoginChallengeError(challenge, credentials.otp
+			? 'The verification code is incorrect or has expired.'
+			: 'Incorrect username or password.');
+}
+
 function fetchStaffDetail(username: string): Promise<User> {
 	return httpClient
 			.get<StaffDetailApiResponse>(`${AUTH_ENDPOINTS.staffDetail}?username=${encodeURIComponent(username)}`)
@@ -71,10 +86,11 @@ export class AuthRepositoryImpl implements AuthRepository {
 			tokens = await httpClient.post<LoginApiResponse>(AUTH_ENDPOINTS.login, {
 				username: credentials.username,
 				password: credentials.password,
+				otp: credentials.otp,
+				captchaToken: credentials.captchaToken,
 			});
 		} catch (err) {
-			if (err instanceof HttpError && err.status === 429) throw err;
-			throw new Error('Incorrect username or password.');
+			throw toLoginError(err, credentials);
 		}
 		setAccessToken(tokens.accessToken);
 		setRefreshTokenCookie(tokens.refreshToken);

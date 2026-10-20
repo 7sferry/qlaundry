@@ -103,7 +103,7 @@ class DefaultForgottenPasswordEmailUseCaseTest{
 			softly.then(notification.typeValue()).isEqualTo(EmailType.FORGOTTEN_PASSWORD.name());
 			softly.then(notification.referenceId()).isEqualTo(TRIGGER_ID);
 			softly.then(notification.recipientValue()).isEqualTo(RECIPIENT);
-			softly.then(notification.subjectValue()).isEqualTo("QLaundry Password Reset Verification Code - " + USERNAME);
+			softly.then(notification.subjectValue()).isEqualTo("QLaundry Verification Code - " + USERNAME);
 			softly.then(contentCaptor.getValue().value()).isEqualTo("<html>content</html>");
 		});
 	}

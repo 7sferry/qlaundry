@@ -3,8 +3,6 @@ package com.ferry.user.core.staff.login;
 import com.ferry.user.core.tools.UserValidation;
 import jakarta.validation.constraints.NotBlank;
 
-import java.util.List;
-
 /************************
  * Made by [MR Ferry™]  *
  * on Juli 2026         *
@@ -12,5 +10,7 @@ import java.util.List;
 
 public record StaffLoginRequest(
 	@NotBlank String username,
-	@NotBlank String password) implements UserValidation{
+	String password,
+	String otp,
+	String captchaToken) implements UserValidation{
 }

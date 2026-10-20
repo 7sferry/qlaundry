@@ -3,7 +3,7 @@ package com.ferry.user.core.staff.resetpassword;
 import com.ferry.user.core.audit.AuthAction;
 import com.ferry.user.core.audit.AuthAuditLog;
 import com.ferry.user.core.audit.AuthResult;
-import com.ferry.user.core.staff.constant.LoginLockKey;
+import com.ferry.user.core.staff.constant.LoginAttemptKey;
 import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tools.PasswordContentPolicy;
 import com.ferry.user.core.tools.PasswordSubject;
@@ -59,7 +59,7 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 			HashedPassword hashedPassword = passwordTool.hash(password);
 			gateway.save(StaffPassword.register(staff.id(), hashedPassword, staff.id()));
 			sessionRevoker.revokeAll(staff.id());
-			clearLoginLock(username);
+			clearLoginAttempts(username);
 			auditLog.record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.SUCCESS, staff.id(), subject);
 			presenter.present(new StaffResetPasswordResponse("password has been reset"));
 		} catch (InvalidPasswordException | FailedToResetPasswordException e){
@@ -71,10 +71,10 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 		}
 	}
 
-	private void clearLoginLock(Username username){
-		String normalized = LoginLockKey.normalize(username.value());
-		cacheManager.delete(LoginLockKey.lock(normalized));
-		cacheManager.delete(LoginLockKey.attempt(normalized));
+	private void clearLoginAttempts(Username username){
+		String normalized = LoginAttemptKey.normalize(username.value());
+		cacheManager.delete(LoginAttemptKey.otpAttempt(normalized));
+		cacheManager.delete(LoginAttemptKey.attempt(normalized));
 	}
 
 	private String userIdOf(Staff staff){

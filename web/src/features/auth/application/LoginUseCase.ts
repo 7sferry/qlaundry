@@ -5,6 +5,7 @@
 
 import {USERNAME_MAX_LENGTH} from '@/core/utils/username';
 import type {AuthRepository} from '../domain/AuthRepository';
+import {LoginValidationError} from '../domain/errors';
 import type {AuthSession, LoginCredentials} from '../domain/User';
 
 export class LoginUseCase {
@@ -15,11 +16,16 @@ export class LoginUseCase {
 	}
 
 	execute(credentials: LoginCredentials): Promise<AuthSession> {
-		if (!credentials.username.trim() || !credentials.password.trim()) {
-			return Promise.reject(new Error('Masukkan username dan password.'));
+		const username = credentials.username.trim();
+		const otp = credentials.otp?.trim();
+		if (!username || (!otp && !credentials.password.trim())) {
+			return Promise.reject(new LoginValidationError('Masukkan username dan password.'));
 		}
-		if (credentials.username.trim().length > USERNAME_MAX_LENGTH) {
-			return Promise.reject(new Error(`Username maksimal ${USERNAME_MAX_LENGTH} karakter.`));
+		if (username.length > USERNAME_MAX_LENGTH) {
+			return Promise.reject(new LoginValidationError(`Username maksimal ${USERNAME_MAX_LENGTH} karakter.`));
+		}
+		if (otp && !/^\d{6}$/.test(otp)) {
+			return Promise.reject(new LoginValidationError('Kode verifikasi harus 6 digit.'));
 		}
 		return this.repository.login(credentials);
 	}

@@ -446,9 +446,9 @@ public class UserWebConfig{
 	@Bean
 	StaffLoginUseCase staffLoginUseCase(StaffLoginGateway staffLoginGateway, PasswordTool passwordTool,
 	                                    TokenProcessor tokenProcessor, UserCacheManager userCacheManager,
-	                                    AuthAuditLog authAuditLog){
+	                                    VerificationGateway verificationGateway, AuthAuditLog authAuditLog){
 		return new DefaultStaffLoginUseCase(staffLoginGateway, passwordTool, tokenProcessor, userCacheManager,
-				authAuditLog);
+				verificationGateway, authAuditLog);
 	}
 
 	@Bean

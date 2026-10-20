@@ -4,7 +4,8 @@ import com.ferry.user.core.tenant.resendconfirmation.TenantResendConfirmationRes
 import com.ferry.user.domain.common.exception.*;
 import com.ferry.user.domain.staff.forgottenpassword.FailedToResetPasswordException;
 import com.ferry.user.domain.staff.login.FailedToLoginException;
-import com.ferry.user.domain.staff.login.LoginLockedException;
+import com.ferry.user.domain.staff.login.LoginChallenge;
+import com.ferry.user.domain.staff.login.LoginChallengeRequiredException;
 import com.ferry.user.domain.staff.refresh.ExpiredSessionException;
 import com.ferry.user.domain.staff.registration.TurnstileVerificationException;
 import com.ferry.user.domain.staff.submitotp.FailedToSubmitOtpException;
@@ -12,10 +13,8 @@ import com.ferry.user.domain.tenant.confirmregistration.FailedToConfirmTenantExc
 import com.ferry.user.domain.tenant.resendconfirmation.FailedToResendConfirmationException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -62,22 +61,25 @@ public class UserWebExceptionHandler{
 		return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
 	}
 
-	@ExceptionHandler(LoginLockedException.class)
-	ResponseEntity<ProblemDetail> handleLoginLocked(LoginLockedException e){
+	@ExceptionHandler(LoginChallengeRequiredException.class)
+	ProblemDetail handleLoginChallengeRequired(LoginChallengeRequiredException e){
 		log.warn(e.getMessage());
-		long retryAfterSeconds = e.retryAfter().toSeconds();
-		long retryAfterMinutes = Math.max(1, (retryAfterSeconds + 59) / 60);
-		ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS,
-				"Too many failed login attempts. Try again in " + retryAfterMinutes + " minute(s).");
-		return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-				.header(HttpHeaders.RETRY_AFTER, String.valueOf(retryAfterSeconds))
-				.body(body);
+		String detail = e.challenge() == LoginChallenge.OTP
+				? "A one-time code sent to your email is required to sign in"
+				: "Captcha verification is required to sign in";
+		ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.PRECONDITION_REQUIRED, detail);
+		body.setProperty("challenge", e.challenge().name());
+		return body;
 	}
 
 	@ExceptionHandler(FailedToLoginException.class)
 	ProblemDetail handleLoginError(FailedToLoginException e){
 		log.warn(e.getMessage(), e);
-		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Incorrect username or password");
+		ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Incorrect username or password");
+		if(e.challenge() != null){
+			body.setProperty("challenge", e.challenge().name());
+		}
+		return body;
 	}
 
 	@ExceptionHandler(FailedToResetPasswordException.class)
