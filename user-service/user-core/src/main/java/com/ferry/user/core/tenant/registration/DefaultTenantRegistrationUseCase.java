@@ -8,6 +8,7 @@ import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.staff.registration.StaffRegistrationRequest;
 import com.ferry.user.core.staff.registration.StaffRegistrationResponse;
 import com.ferry.user.core.tenant.constant.TenantConfirmationConstant;
+import com.ferry.user.core.tools.ResponseTimeFloor;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.core.tools.UserEmailPublisher;
 import com.ferry.user.domain.common.Description;
@@ -24,6 +25,7 @@ import com.ferry.user.domain.tenant.Tenant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
 import java.util.HexFormat;
 
 /************************
@@ -35,30 +37,36 @@ import java.util.HexFormat;
 @RequiredArgsConstructor
 public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCase{
 	private static final int CONFIRMATION_TOKEN_BYTES = 32;
+	private static final Duration MIN_RESPONSE_TIME = Duration.ofSeconds(1);
 
 	private final TenantRegistrationGateway gateway;
 	private final UserEmailPublisher emailPublisher;
 	private final VerificationGateway verificationGateway;
 	private final UserCacheManager cacheManager;
 	private final AuthAuditLog auditLog;
+	private final ResponseTimeFloor responseTimeFloor;
 
 	@Override
 	public void execute(TenantRegistrationRequest request, TenantRegistrationPresenter presenter){
 		request.validate();
+		long startedAt = System.nanoTime();
 		try{
 			verifyCaptcha(request);
+			startedAt = System.nanoTime();
 			Tenant savedTenant = saveTenant(request);
 			StaffRegistrationResponse registeredAdmin = registerAdmin(request, savedTenant);
 			triggerRegistrationEmail(request, savedTenant, registeredAdmin);
 			auditLog.record(AuthAction.TENANT_REGISTRATION, AuthResult.SUCCESS, registeredAdmin.user().id(),
 					request.username());
 			presenter.present(new TenantRegistrationResponse(savedTenant, registeredAdmin));
+			responseTimeFloor.enforce(startedAt, MIN_RESPONSE_TIME);
 		} catch (InvalidUsernameException e){
 			log.warn("Failed to register tenant", e);
 			auditLog.record(AuthAction.TENANT_REGISTRATION, AuthResult.FAILURE, null, request.username());
 			Tenant fakeTenant = Tenant.fake(new FullName(request.tenantName()), new Username(request.username()));
 			Staff fakeStaff = Staff.fake(new FullName(request.fullName()), new Username(request.username()));
 			presenter.present(new TenantRegistrationResponse(fakeTenant, new StaffRegistrationResponse(fakeStaff)));
+			responseTimeFloor.enforce(startedAt, MIN_RESPONSE_TIME);
 		} catch (RuntimeException e){
 			auditLog.record(AuthAction.TENANT_REGISTRATION, AuthResult.FAILURE, null, request.username());
 			throw e;

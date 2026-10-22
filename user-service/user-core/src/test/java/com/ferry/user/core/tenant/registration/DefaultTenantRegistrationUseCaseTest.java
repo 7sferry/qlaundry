@@ -7,6 +7,7 @@ import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.registration.StaffRegistrationRequest;
 import com.ferry.user.core.staff.registration.StaffRegistrationResponse;
 import com.ferry.user.core.tenant.constant.TenantConfirmationConstant;
+import com.ferry.user.core.tools.ResponseTimeFloor;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.core.tools.UserEmailPublisher;
 import com.ferry.user.domain.common.Description;
@@ -28,6 +29,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -53,6 +55,7 @@ class DefaultTenantRegistrationUseCaseTest{
 	private static final String CAPTCHA_TOKEN = "cf-turnstile-tok-1122";
 	private static final String TENANT_ID = "tnt-gen-8899";
 	private static final ZoneId TIME_ZONE = ZoneId.of("Asia/Makassar");
+	private static final Duration MIN_RESPONSE_TIME = Duration.ofSeconds(1);
 
 	@Mock
 	TenantRegistrationGateway gateway;
@@ -64,6 +67,8 @@ class DefaultTenantRegistrationUseCaseTest{
 	UserCacheManager cacheManager;
 	@Mock
 	AuthAuditLog auditLog;
+	@Mock
+	ResponseTimeFloor responseTimeFloor;
 	@InjectMocks
 	DefaultTenantRegistrationUseCase useCase;
 	@Mock
@@ -117,6 +122,7 @@ class DefaultTenantRegistrationUseCaseTest{
 		then(gateway).shouldHaveNoInteractions();
 		then(emailPublisher).shouldHaveNoInteractions();
 		then(presenter).shouldHaveNoInteractions();
+		then(responseTimeFloor).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -135,6 +141,7 @@ class DefaultTenantRegistrationUseCaseTest{
 		then(gateway).should(never()).registerAdmin(any(StaffRegistrationRequest.class), any(Tenant.class));
 		then(emailPublisher).shouldHaveNoInteractions();
 		then(auditLog).should().record(AuthAction.TENANT_REGISTRATION, AuthResult.FAILURE, null, USERNAME);
+		then(responseTimeFloor).should().enforce(anyLong(), eq(MIN_RESPONSE_TIME));
 	}
 
 	@Test
@@ -247,6 +254,7 @@ class DefaultTenantRegistrationUseCaseTest{
 
 		then(presenter).should().present(responseCaptor.capture());
 		then(auditLog).should().record(AuthAction.TENANT_REGISTRATION, AuthResult.SUCCESS, null, USERNAME);
+		then(responseTimeFloor).should().enforce(anyLong(), eq(MIN_RESPONSE_TIME));
 		TenantRegistrationResponse response = responseCaptor.getValue();
 		thenSoftly(softly -> {
 			softly.then(response.tenant().id()).isEqualTo(TENANT_ID);

@@ -7,6 +7,7 @@ import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.constant.PasswordConstant;
 import com.ferry.user.core.tools.UserEmailPublisher;
 import com.ferry.user.core.tools.UserCacheManager;
+import com.ferry.user.core.tools.ResponseTimeFloor;
 import com.ferry.user.domain.common.Email;
 import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.staff.forgottenpassword.ForgottenPasswordOtp;
@@ -19,8 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /************************
  * Made by [MR Ferry™]  *
@@ -37,14 +38,13 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 	private static final int REPEATED_ASTERISK = 5;
 	private static final char AT_SYMBOL = '@';
 	private static final String TLD = ".com";
-	private static final long MIN_RESPONSE_MILLIS = 300;
-	private static final long MAX_TIMEOUT_RANGE = 100;
-	private static final long MILLIS_IN_NANO = 1_000_000L;
+	private static final Duration MIN_RESPONSE_TIME = Duration.ofMillis(300);
 
 	private final StaffForgottenPasswordGateway gateway;
 	private final UserEmailPublisher emailPublisher;
 	private final UserCacheManager userCacheManager;
 	private final AuthAuditLog auditLog;
+	private final ResponseTimeFloor responseTimeFloor;
 
 	@Override
 	public void execute(StaffForgottenPasswordRequest request, StaffForgottenPasswordPresenter presenter){
@@ -65,30 +65,19 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 				auditLog.record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.SUCCESS, email.staffId(), username.value());
 				String maskedEmail = maskEmail(email.email());
 				presenter.present(new StaffForgottenPasswordResponse(maskedEmail));
-				awaitMinimumResponseTime(startedAt);
+				responseTimeFloor.enforce(startedAt, MIN_RESPONSE_TIME);
 			}, () -> {
 				auditLog.record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.FAILURE, null, username.value());
 				String maskedFakeEmail = maskFakeEmail(username.value());
 				presenter.present(new StaffForgottenPasswordResponse(maskedFakeEmail));
-				awaitMinimumResponseTime(startedAt);
+				responseTimeFloor.enforce(startedAt, MIN_RESPONSE_TIME);
 			});
 		} catch (Exception e){
 			log.error("Failed to process forgotten password request", e);
 			auditLog.record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.FAILURE, null, request.username());
 			String maskedFakeEmail = maskFakeEmail(request.username());
 			presenter.present(new StaffForgottenPasswordResponse(maskedFakeEmail));
-			awaitMinimumResponseTime(startedAt);
-		}
-	}
-
-	@SneakyThrows
-	private void awaitMinimumResponseTime(long startedAtNanos){
-		long elapsedMillis = (System.nanoTime() - startedAtNanos) / MILLIS_IN_NANO;
-		long remainingMillis = MIN_RESPONSE_MILLIS - elapsedMillis;
-		if(remainingMillis > 0){
-			long maxTimeout = remainingMillis + MAX_TIMEOUT_RANGE;
-			long timeout = PasswordConstant.getRandom().nextLong(remainingMillis, maxTimeout);
-			TimeUnit.MILLISECONDS.sleep(timeout);
+			responseTimeFloor.enforce(startedAt, MIN_RESPONSE_TIME);
 		}
 	}
 

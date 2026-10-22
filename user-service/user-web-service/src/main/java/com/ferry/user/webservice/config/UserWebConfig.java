@@ -105,6 +105,7 @@ import com.ferry.user.webservice.analytics.sweep.UserAnalyticsOutboxScheduler;
 import com.ferry.user.webservice.audit.Slf4jAuthAuditLog;
 import com.ferry.user.webservice.tenant.expiration.TenantExpirationScheduler;
 import com.ferry.user.webservice.tools.Argon2PasswordTool;
+import com.ferry.user.webservice.tools.RequestResponseTimeFloor;
 import com.ferry.user.webservice.tools.DefaultUserCacheManager;
 import com.ferry.utils.cache.CacheHandler;
 import com.ferry.utils.cache.DefaultCacheHandler;
@@ -321,9 +322,10 @@ public class UserWebConfig{
 	                                                    UserEmailPublisher emailPublisher,
 	                                                    VerificationGateway verificationGateway,
 	                                                    UserCacheManager userCacheManager,
-	                                                    AuthAuditLog authAuditLog){
+	                                                    AuthAuditLog authAuditLog,
+	                                                    ResponseTimeFloor responseTimeFloor){
 		return new DefaultTenantRegistrationUseCase(tenantRegistrationGateway, emailPublisher,
-				verificationGateway, userCacheManager, authAuditLog);
+				verificationGateway, userCacheManager, authAuditLog, responseTimeFloor);
 	}
 
 	@Bean
@@ -350,9 +352,10 @@ public class UserWebConfig{
 	TenantResendConfirmationUseCase tenantResendConfirmationUseCase(TenantResendConfirmationGateway tenantResendConfirmationGateway,
 	                                                                UserEmailPublisher emailPublisher,
 	                                                                UserCacheManager userCacheManager,
-	                                                                AuthAuditLog authAuditLog){
+	                                                                AuthAuditLog authAuditLog,
+	                                                                ResponseTimeFloor responseTimeFloor){
 		return new DefaultTenantResendConfirmationUseCase(tenantResendConfirmationGateway, emailPublisher,
-				userCacheManager, authAuditLog);
+				userCacheManager, authAuditLog, responseTimeFloor);
 	}
 
 	@Bean
@@ -436,6 +439,11 @@ public class UserWebConfig{
 				Argon2Function.getInstance(15360, 2, 1, 32, Argon2.ID)
 		);
 		return new Argon2PasswordTool(passwordEncoder);
+	}
+
+	@Bean
+	ResponseTimeFloor responseTimeFloor(){
+		return new RequestResponseTimeFloor();
 	}
 
 	@Bean
@@ -539,9 +547,10 @@ public class UserWebConfig{
 	StaffForgottenPasswordUseCase staffForgottenPasswordUseCase(StaffForgottenPasswordGateway staffForgottenPasswordGateway,
 	                                                            UserEmailPublisher emailPublisher,
 	                                                            UserCacheManager userCacheManager,
-	                                                            AuthAuditLog authAuditLog){
+	                                                            AuthAuditLog authAuditLog,
+	                                                            ResponseTimeFloor responseTimeFloor){
 		return new DefaultStaffForgottenPasswordUseCase(staffForgottenPasswordGateway, emailPublisher,
-				userCacheManager, authAuditLog);
+				userCacheManager, authAuditLog, responseTimeFloor);
 	}
 
 	@Bean

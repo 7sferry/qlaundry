@@ -6,6 +6,7 @@ import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.tenant.constant.TenantConfirmationConstant;
 import com.ferry.user.core.tenant.registration.TenantRegistrationEmailMessage;
+import com.ferry.user.core.tools.ResponseTimeFloor;
 import com.ferry.user.core.tools.UserEmailPublisher;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.common.Description;
@@ -26,6 +27,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Optional;
@@ -50,6 +52,7 @@ class DefaultTenantResendConfirmationUseCaseTest{
 	private static final String ADMIN_FULL_NAME = "Putri Handayani";
 	private static final String ADMIN_USERNAME = "putrisuperstaff";
 	private static final String ADMIN_STAFF_ID = "stf-707";
+	private static final Duration MIN_RESPONSE_TIME = Duration.ofMillis(300);
 
 	@Mock
 	TenantResendConfirmationGateway gateway;
@@ -59,6 +62,8 @@ class DefaultTenantResendConfirmationUseCaseTest{
 	UserCacheManager cacheManager;
 	@Mock
 	AuthAuditLog auditLog;
+	@Mock
+	ResponseTimeFloor responseTimeFloor;
 	@InjectMocks
 	DefaultTenantResendConfirmationUseCase useCase;
 	@Mock
@@ -73,6 +78,7 @@ class DefaultTenantResendConfirmationUseCaseTest{
 		then(presenter).should().present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
 		then(gateway).shouldHaveNoInteractions();
 		then(emailPublisher).shouldHaveNoInteractions();
+		then(responseTimeFloor).should().enforce(anyLong(), eq(MIN_RESPONSE_TIME));
 	}
 
 	@Test
@@ -83,6 +89,7 @@ class DefaultTenantResendConfirmationUseCaseTest{
 
 		then(presenter).should().present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
 		then(emailPublisher).shouldHaveNoInteractions();
+		then(responseTimeFloor).should().enforce(anyLong(), eq(MIN_RESPONSE_TIME));
 	}
 
 	@Test
@@ -130,6 +137,7 @@ class DefaultTenantResendConfirmationUseCaseTest{
 		then(emailPublisher).should().publish(trigger);
 		then(auditLog).should().record(AuthAction.TENANT_RESEND_CONFIRMATION, AuthResult.SUCCESS, null, TENANT_ID);
 		then(presenter).should().present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
+		then(responseTimeFloor).should().enforce(anyLong(), eq(MIN_RESPONSE_TIME));
 		EmailTriggerConfig config = emailConfigCaptor.getValue();
 		TenantRegistrationEmailMessage message = (TenantRegistrationEmailMessage) config.payload();
 		then(cacheManager).should().set(eq(TenantConfirmationConstant.CONFIRM_TOKEN_KEY + TENANT_ID),

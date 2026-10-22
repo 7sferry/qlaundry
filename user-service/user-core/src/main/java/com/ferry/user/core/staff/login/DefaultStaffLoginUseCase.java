@@ -64,7 +64,7 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 				verifyOtp(request, username, subject);
 				staff = findStaff(username);
 			} else{
-				staff = findStaff(username);
+				staff = findStaffForPassword(username, request.password());
 				verifyPassword(request, staff);
 			}
 			TenantLoginProjection tenant = gateway.findTenantById(new TenantId(staff.tenantId()))
@@ -146,6 +146,14 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 	private StaffLoginProjection findStaff(Username username){
 		return gateway.findByUsername(username)
 				.orElseThrow(() -> new InvalidPasswordException("userId not found"));
+	}
+
+	private StaffLoginProjection findStaffForPassword(Username username, String password){
+		return gateway.findByUsername(username)
+				.orElseThrow(() -> {
+					passwordTool.simulateMatch(password);
+					return new InvalidPasswordException("userId not found");
+				});
 	}
 
 	private void verifyPassword(StaffLoginRequest request, StaffLoginProjection staff){

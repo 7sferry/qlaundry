@@ -131,6 +131,8 @@ class DefaultStaffLoginUseCaseTest{
 		thenSoftly(softly -> softly.then(thrown.getCause())
 				.isInstanceOf(InvalidPasswordException.class)
 				.hasMessage("userId not found"));
+		then(passwordTool).should().simulateMatch(PASSWORD);
+		then(passwordTool).should(never()).matches(anyString(), anyString());
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -147,6 +149,7 @@ class DefaultStaffLoginUseCaseTest{
 		thenSoftly(softly -> softly.then(thrown.getCause())
 				.isInstanceOf(InvalidPasswordException.class)
 				.hasMessage("password not match"));
+		then(passwordTool).should(never()).simulateMatch(anyString());
 		then(gateway).should(never()).save(any());
 		then(presenter).shouldHaveNoInteractions();
 	}
@@ -412,6 +415,7 @@ class DefaultStaffLoginUseCaseTest{
 				() -> useCase.execute(new StaffLoginRequest(GHOST_USERNAME, PASSWORD, null, CAPTCHA_TOKEN), presenter));
 
 		thenSoftly(softly -> softly.then(thrown.challenge()).isEqualTo(LoginChallenge.CAPTCHA));
+		then(passwordTool).should().simulateMatch(PASSWORD);
 		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, null, GHOST_USERNAME);
 	}
 

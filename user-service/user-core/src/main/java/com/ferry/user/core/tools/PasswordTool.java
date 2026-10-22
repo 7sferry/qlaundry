@@ -12,4 +12,6 @@ public interface PasswordTool{
 	HashedPassword hash(RawPassword rawPasswordDomain);
 
 	boolean matches(String rawPassword, String hashedPassword);
+
+	void simulateMatch(String rawPassword);
 }

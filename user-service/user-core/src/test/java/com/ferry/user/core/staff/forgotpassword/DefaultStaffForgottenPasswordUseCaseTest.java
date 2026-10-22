@@ -5,6 +5,7 @@ import com.ferry.user.core.audit.AuthAuditLog;
 import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.notification.EmailTriggerConfig;
 import com.ferry.user.core.staff.constant.PasswordConstant;
+import com.ferry.user.core.tools.ResponseTimeFloor;
 import com.ferry.user.core.tools.UserEmailPublisher;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.common.Email;
@@ -21,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import static org.assertj.core.api.BDDSoftAssertions.thenSoftly;
@@ -41,6 +43,7 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 	private static final String EMAIL = "yustina.putri@mailcorporate.com";
 	private static final String STAFF_ID = "stf-909";
 	private static final String FAKE_EMAIL_PATTERN = "^[a-z]\\*{3,7}[a-z]@[gym]\\*{3,7}\\.com$";
+	private static final Duration MIN_RESPONSE_TIME = Duration.ofMillis(300);
 
 	@Mock
 	StaffForgottenPasswordGateway gateway;
@@ -50,6 +53,8 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 	UserCacheManager userCacheManager;
 	@Mock
 	AuthAuditLog auditLog;
+	@Mock
+	ResponseTimeFloor responseTimeFloor;
 	@InjectMocks
 	DefaultStaffForgottenPasswordUseCase useCase;
 	@Mock
@@ -70,6 +75,7 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 		then(emailPublisher).shouldHaveNoInteractions();
 		then(presenter).should().present(responseCaptor.capture());
 		thenSoftly(softly -> softly.then(responseCaptor.getValue().email()).matches(FAKE_EMAIL_PATTERN));
+		then(responseTimeFloor).should().enforce(anyLong(), eq(MIN_RESPONSE_TIME));
 	}
 
 	@Test
@@ -82,6 +88,7 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 		then(emailPublisher).shouldHaveNoInteractions();
 		then(auditLog).should().record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.FAILURE, null, USERNAME);
 		then(presenter).should().present(responseCaptor.capture());
+		then(responseTimeFloor).should().enforce(anyLong(), eq(MIN_RESPONSE_TIME));
 		String notFoundMaskedEmail = responseCaptor.getValue().email();
 		thenSoftly(softly -> softly.then(notFoundMaskedEmail).matches(FAKE_EMAIL_PATTERN));
 
@@ -109,6 +116,7 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 		then(auditLog).should().record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.SUCCESS, STAFF_ID, USERNAME);
 		then(emailPublisher).should().publish(trigger);
 		then(presenter).should().present(responseCaptor.capture());
+		then(responseTimeFloor).should().enforce(anyLong(), eq(MIN_RESPONSE_TIME));
 
 		EmailTriggerConfig config = configCaptor.getValue();
 		ForgottenPasswordOtp payload = (ForgottenPasswordOtp) config.payload();
@@ -134,6 +142,7 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 		then(emailPublisher).shouldHaveNoInteractions();
 		then(presenter).should().present(responseCaptor.capture());
 		thenSoftly(softly -> softly.then(responseCaptor.getValue().email()).matches(FAKE_EMAIL_PATTERN));
+		then(responseTimeFloor).should().enforce(anyLong(), eq(MIN_RESPONSE_TIME));
 	}
 
 }
