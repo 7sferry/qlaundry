@@ -4,6 +4,9 @@ import com.ferry.notification.core.email.forgottenpassword.DefaultForgottenPassw
 import com.ferry.notification.core.email.forgottenpassword.ForgottenPasswordEmailComposer;
 import com.ferry.notification.core.email.forgottenpassword.ForgottenPasswordEmailUseCase;
 import com.ferry.notification.core.email.history.EmailHistoryGateway;
+import com.ferry.notification.core.email.passwordchanged.DefaultPasswordChangedEmailUseCase;
+import com.ferry.notification.core.email.passwordchanged.PasswordChangedEmailComposer;
+import com.ferry.notification.core.email.passwordchanged.PasswordChangedEmailUseCase;
 import com.ferry.notification.core.email.send.EmailSendGateway;
 import com.ferry.notification.core.email.tenantregistration.DefaultTenantRegistrationEmailUseCase;
 import com.ferry.notification.core.email.tenantregistration.TenantRegistrationEmailComposer;
@@ -11,6 +14,7 @@ import com.ferry.notification.core.email.tenantregistration.TenantRegistrationEm
 import com.ferry.notification.gateway.email.JpaEmailHistoryGateway;
 import com.ferry.notification.gateway.email.SmtpEmailSendGateway;
 import com.ferry.notification.gateway.email.ThymeleafForgottenPasswordEmailComposer;
+import com.ferry.notification.gateway.email.ThymeleafPasswordChangedEmailComposer;
 import com.ferry.notification.gateway.email.ThymeleafTenantRegistrationEmailComposer;
 import com.ferry.notification.gateway.email.entity.EmailNotificationJpa;
 import com.ferry.notification.gateway.email.repository.EmailNotificationJpaRepository;
@@ -126,6 +130,18 @@ public class NotificationWebConfig{
 	                                                            EmailSendGateway emailSendGateway,
 	                                                            EmailHistoryGateway emailHistoryGateway){
 		return new DefaultForgottenPasswordEmailUseCase(forgottenPasswordEmailComposer, emailSendGateway, emailHistoryGateway);
+	}
+
+	@Bean
+	PasswordChangedEmailComposer passwordChangedEmailComposer(ITemplateEngine emailTemplateEngine){
+		return new ThymeleafPasswordChangedEmailComposer(emailTemplateEngine);
+	}
+
+	@Bean
+	PasswordChangedEmailUseCase passwordChangedEmailUseCase(PasswordChangedEmailComposer passwordChangedEmailComposer,
+	                                                        EmailSendGateway emailSendGateway,
+	                                                        EmailHistoryGateway emailHistoryGateway){
+		return new DefaultPasswordChangedEmailUseCase(passwordChangedEmailComposer, emailSendGateway, emailHistoryGateway);
 	}
 
 }

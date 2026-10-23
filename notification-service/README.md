@@ -12,6 +12,7 @@ Modules: `notification-domain`, `notification-core`, `notification-gateway`, `no
 |---|---|---|
 | `notification:email:TENANT_REGISTRATION` | Registration confirmation, with the link that activates the tenant | `templates/mail/tenant-registration.html` |
 | `notification:email:FORGOTTEN_PASSWORD` | Password-reset OTP (valid 3 minutes) | `templates/mail/forgotten-password.html` |
+| `notification:email:PASSWORD_CHANGED` | Security notice that the account password was changed (profile change or reset) | `templates/mail/password-changed.html` |
 
 Templates are in `notification-gateway/src/main/resources/templates/mail/`. The confirmation link points at the **frontend** (`app.notification.confirmation.base-url`, `https://localhost:8100` in dev), whose `/confirm-registration` page activates the tenant.
 

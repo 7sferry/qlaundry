@@ -1,9 +1,11 @@
 package com.ferry.notification.webservice.config;
 
 import com.ferry.notification.core.email.forgottenpassword.ForgottenPasswordEmailUseCase;
+import com.ferry.notification.core.email.passwordchanged.PasswordChangedEmailUseCase;
 import com.ferry.notification.core.email.tenantregistration.TenantRegistrationEmailUseCase;
 import com.ferry.notification.domain.EmailType;
 import com.ferry.notification.webservice.email.forgottenpassword.ForgottenPasswordEmailStreamListener;
+import com.ferry.notification.webservice.email.passwordchanged.PasswordChangedEmailStreamListener;
 import com.ferry.notification.webservice.email.streamtrim.EmailStreamTrimScheduler;
 import com.ferry.notification.webservice.email.tenantregistration.TenantRegistrationEmailStreamListener;
 import com.ferry.utils.json.JsonManager;
@@ -58,16 +60,28 @@ public class NotificationStreamConfig{
 				stringRedisTemplate, streamKeyPrefix + EmailType.FORGOTTEN_PASSWORD.name(), group);
 	}
 
+	@Bean
+	PasswordChangedEmailStreamListener passwordChangedEmailStreamListener(PasswordChangedEmailUseCase passwordChangedEmailUseCase,
+	                                                                      JsonManager jsonManager,
+	                                                                      StringRedisTemplate stringRedisTemplate,
+	                                                                      @Value("${app.notification.stream.email.key}") String streamKeyPrefix,
+	                                                                      @Value("${app.notification.stream.email.group}") String group){
+		return new PasswordChangedEmailStreamListener(passwordChangedEmailUseCase, jsonManager,
+				stringRedisTemplate, streamKeyPrefix + EmailType.PASSWORD_CHANGED.name(), group);
+	}
+
 	@Bean(destroyMethod = "stop")
 	StreamMessageListenerContainer<String, MapRecord<String, String, String>> emailListenerContainer(
 			RedisConnectionFactory redisConnectionFactory, StringRedisTemplate stringRedisTemplate,
 			TenantRegistrationEmailStreamListener tenantRegistrationEmailStreamListener,
 			ForgottenPasswordEmailStreamListener forgottenPasswordEmailStreamListener,
+			PasswordChangedEmailStreamListener passwordChangedEmailStreamListener,
 			@Value("${app.notification.stream.email.key}") String streamKeyPrefix,
 			@Value("${app.notification.stream.email.group}") String group,
 			@Value("${app.notification.stream.email.consumer}") String consumer){
 		List<String> streamKeys = List.of(streamKeyPrefix + EmailType.TENANT_REGISTRATION.name(),
-				streamKeyPrefix + EmailType.FORGOTTEN_PASSWORD.name());
+				streamKeyPrefix + EmailType.FORGOTTEN_PASSWORD.name(),
+				streamKeyPrefix + EmailType.PASSWORD_CHANGED.name());
 		StreamMessageListenerContainerOptions<String, MapRecord<String, String, String>> options =
 				StreamMessageListenerContainerOptions.builder()
 						.pollTimeout(Duration.ofSeconds(1))
@@ -79,6 +93,8 @@ public class NotificationStreamConfig{
 				consumer, tenantRegistrationEmailStreamListener);
 		subscribe(container, stringRedisTemplate, streamKeyPrefix + EmailType.FORGOTTEN_PASSWORD.name(), group,
 				consumer, forgottenPasswordEmailStreamListener);
+		subscribe(container, stringRedisTemplate, streamKeyPrefix + EmailType.PASSWORD_CHANGED.name(), group,
+				consumer, passwordChangedEmailStreamListener);
 		container.start();
 		return container;
 	}
@@ -121,7 +137,8 @@ public class NotificationStreamConfig{
 	                                                   @Value("${app.notification.stream.email.key}") String streamKeyPrefix,
 	                                                   @Value("${app.notification.stream.email.retention-days}") long retentionDays){
 		List<String> streamKeys = List.of(streamKeyPrefix + EmailType.TENANT_REGISTRATION.name(),
-				streamKeyPrefix + EmailType.FORGOTTEN_PASSWORD.name());
+				streamKeyPrefix + EmailType.FORGOTTEN_PASSWORD.name(),
+				streamKeyPrefix + EmailType.PASSWORD_CHANGED.name());
 		EmailStreamTrimScheduler scheduler = new EmailStreamTrimScheduler(stringRedisTemplate, streamKeys, Duration.ofDays(retentionDays));
 		Thread.startVirtualThread(scheduler::trimOldEntries);
 		return scheduler;

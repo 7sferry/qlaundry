@@ -5,3 +5,4 @@
 
 INSERT INTO email_types (id, name) VALUES (1, 'TENANT_REGISTRATION');
 INSERT INTO email_types (id, name) VALUES (2, 'FORGOTTEN_PASSWORD');
+INSERT INTO email_types (id, name) VALUES (3, 'PASSWORD_CHANGED');
