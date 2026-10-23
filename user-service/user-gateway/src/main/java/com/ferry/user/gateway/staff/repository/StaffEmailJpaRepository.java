@@ -52,6 +52,15 @@ public interface StaffEmailJpaRepository extends JpaRepository<StaffEmailJpa, St
 			"LIMIT 1")
 	Optional<StaffEmailJpa> findForForgottenPassword(@Param("username") String username);
 
+	@Query("select se " +
+			"FROM StaffEmailJpa se " +
+			"WHERE se.staffId = :staffId " +
+			"AND se.deleted IS FALSE " +
+			"AND se.emailCipher IS NOT NULL " +
+			"ORDER BY se.id " +
+			"LIMIT 1")
+	Optional<StaffEmailJpa> findFirstByStaffId(@Param("staffId") String staffId);
+
 	@Query("select new com.ferry.user.domain.tenant.resendconfirmation.TenantAdminContactProjection(se.emailCipher, s.fullName, s.username, se.staffId) " +
 			"FROM StaffEmailJpa se " +
 			"JOIN StaffJpa s ON s.id = se.staffId " +

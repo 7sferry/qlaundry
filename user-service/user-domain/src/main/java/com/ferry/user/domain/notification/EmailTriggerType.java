@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 public enum EmailTriggerType{
 	TENANT_REGISTRATION((short) 1),
 	FORGOTTEN_PASSWORD((short) 2),
+	PASSWORD_CHANGED((short) 3),
 	;
 
 	private static final Map<Short,EmailTriggerType> EMAIL_TRIGGER_TYPE_MAP = Map.copyOf(Stream.of(EmailTriggerType.values())

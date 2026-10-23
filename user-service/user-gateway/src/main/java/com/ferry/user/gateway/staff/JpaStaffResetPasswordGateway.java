@@ -5,10 +5,13 @@ import com.ferry.user.domain.common.Username;
 import com.ferry.user.domain.staff.Staff;
 import com.ferry.user.domain.staff.StaffPassword;
 import com.ferry.user.domain.staff.StaffPasswordProjection;
+import com.ferry.user.gateway.staff.entity.StaffEmailJpa;
 import com.ferry.user.gateway.staff.entity.StaffJpa;
 import com.ferry.user.gateway.staff.entity.StaffPasswordJpa;
+import com.ferry.user.gateway.staff.repository.StaffEmailJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffJpaRepository;
 import com.ferry.user.gateway.staff.repository.StaffPasswordJpaRepository;
+import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +28,9 @@ import java.util.Optional;
 public class JpaStaffResetPasswordGateway implements StaffResetPasswordGateway{
 	private final StaffJpaRepository staffJpaRepository;
 	private final StaffPasswordJpaRepository staffPasswordJpaRepository;
+	private final StaffEmailJpaRepository staffEmailJpaRepository;
 	private final IdGenerator idGenerator;
+	private final CryptoTool cryptoTool;
 
 	@Override
 	public Optional<Staff> findByUsername(Username username){
@@ -41,6 +46,12 @@ public class JpaStaffResetPasswordGateway implements StaffResetPasswordGateway{
 	@Override
 	public List<StaffPasswordProjection> findRecentPasswords(String staffId, Instant since){
 		return staffPasswordJpaRepository.findRecent(staffId, since);
+	}
+
+	@Override
+	public Optional<String> findEmail(String staffId){
+		return staffEmailJpaRepository.findFirstByStaffId(staffId)
+				.map(entity -> StaffEmailJpa.construct(entity, cryptoTool).email().value());
 	}
 
 	@Override

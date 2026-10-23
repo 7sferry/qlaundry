@@ -3,6 +3,7 @@ package com.ferry.user.core.staff.update;
 import com.ferry.user.core.audit.AuthAction;
 import com.ferry.user.core.audit.AuthAuditLog;
 import com.ferry.user.core.audit.AuthResult;
+import com.ferry.user.core.tools.PasswordChangedNotifier;
 import com.ferry.user.core.tools.PasswordSubject;
 import com.ferry.user.core.tools.PasswordSubjectGateway;
 import com.ferry.user.core.tools.StaffSessionRevoker;
@@ -59,6 +60,8 @@ class DefaultStaffUpdateUseCaseTest{
 	PasswordSubjectGateway subjectGateway;
 	@Mock
 	StaffSessionRevoker sessionRevoker;
+	@Mock
+	PasswordChangedNotifier passwordChangedNotifier;
 	@Mock
 	AuthAuditLog auditLog;
 	@InjectMocks
@@ -250,13 +253,15 @@ class DefaultStaffUpdateUseCaseTest{
 		then(gateway).should(never()).findCurrentPassword(anyString());
 		then(gateway).should(never()).save(any(StaffPassword.class));
 		then(gateway).should().save(any(Staff.class));
+		then(passwordChangedNotifier).shouldHaveNoInteractions();
 	}
 
 	@Test
-	void givenValidNewPassword_thenHashesAndSavesPasswordHistory(){
+	void givenValidNewPassword_thenHashesSavesPasswordHistoryAndNotifiesStoredEmail(){
 		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
 		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
 				"NewSecret2026", List.of(EMAIL), null, null);
+		StaffEmail storedEmail = StaffEmail.register(USER_ID, new Email("rahmat.lama@mailku.id"), USER_ID);
 		Staff existing = Staff.register(new Username(USERNAME),
 				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
 				.toBuilder().id(USER_ID).build();
@@ -269,7 +274,7 @@ class DefaultStaffUpdateUseCaseTest{
 		willReturn(Optional.of(SUBJECT)).given(subjectGateway).findByStaffId(USER_ID);
 		willDoNothing().given(gateway).save(any(StaffPassword.class));
 		willAnswer(invocation -> invocation.getArgument(0)).given(gateway).save(any(Staff.class));
-		willReturn(List.of()).given(gateway).findEmailsByStaffId(USER_ID);
+		willReturn(List.of(storedEmail)).given(gateway).findEmailsByStaffId(USER_ID);
 		willReturn(List.of()).given(gateway).findPhonesByStaffId(USER_ID);
 		willReturn(List.of()).given(gateway).findAddressesByStaffId(USER_ID);
 
@@ -277,6 +282,7 @@ class DefaultStaffUpdateUseCaseTest{
 
 		then(gateway).should().save(passwordCaptor.capture());
 		then(sessionRevoker).should().revokeAll(USER_ID);
+		then(passwordChangedNotifier).should().notifyChanged(USER_ID, USERNAME, "rahmat.lama@mailku.id");
 		then(auditLog).should().record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.SUCCESS, USER_ID, USERNAME);
 		then(presenter).should().present(responseCaptor.capture());
 		thenSoftly(softly -> {

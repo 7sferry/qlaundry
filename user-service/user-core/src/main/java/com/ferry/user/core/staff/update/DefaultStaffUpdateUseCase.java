@@ -4,6 +4,7 @@ import com.ferry.user.core.audit.AuthAction;
 import com.ferry.user.core.audit.AuthAuditLog;
 import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.staff.constant.PasswordConstant;
+import com.ferry.user.core.tools.PasswordChangedNotifier;
 import com.ferry.user.core.tools.PasswordContentPolicy;
 import com.ferry.user.core.tools.PasswordSubject;
 import com.ferry.user.core.tools.PasswordSubjectGateway;
@@ -32,6 +33,7 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 	private final PasswordTool passwordTool;
 	private final PasswordSubjectGateway subjectGateway;
 	private final StaffSessionRevoker sessionRevoker;
+	private final PasswordChangedNotifier passwordChangedNotifier;
 	private final AuthAuditLog auditLog;
 
 	@Override
@@ -45,6 +47,7 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 			gateway.save(newPassword);
 			sessionRevoker.revokeAll(staff.id());
 			auditLog.record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.SUCCESS, staff.id(), staff.usernameValue());
+			notifyPasswordChanged(staff);
 		}
 		Staff saved = updateProfile(staff, request, principal);
 		replaceEmails(request, saved, principal);
@@ -54,6 +57,13 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 		List<StaffPhone> phones = gateway.findPhonesByStaffId(saved.id());
 		List<StaffAddress> addresses = gateway.findAddressesByStaffId(saved.id());
 		presenter.present(new StaffUpdateResponse(saved, emails, phones, addresses, passwordChanged));
+	}
+
+	private void notifyPasswordChanged(Staff staff){
+		gateway.findEmailsByStaffId(staff.id()).stream()
+				.findFirst()
+				.ifPresent(email -> passwordChangedNotifier.notifyChanged(staff.id(), staff.usernameValue(),
+						email.email().value()));
 	}
 
 	private Staff updateProfile(Staff staff, StaffUpdateRequest request, UserAuthPrincipal principal){

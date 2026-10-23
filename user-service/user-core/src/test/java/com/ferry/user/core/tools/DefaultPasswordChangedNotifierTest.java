@@ -25,6 +25,11 @@ import static org.mockito.ArgumentMatchers.any;
  * on Oktober 2026      *
  ************************/
 
+/************************
+ * Made by [MR Ferry™]  *
+ * on Oktober 2026      *
+ ************************/
+
 @ExtendWith(MockitoExtension.class)
 class DefaultPasswordChangedNotifierTest{
 

@@ -11,6 +11,7 @@ INSERT INTO staff_roles (id, name) VALUES (2, 'STAFF');
 
 INSERT INTO email_trigger_types (id, name) VALUES (1, 'TENANT_REGISTRATION');
 INSERT INTO email_trigger_types (id, name) VALUES (2, 'FORGOTTEN_PASSWORD');
+INSERT INTO email_trigger_types (id, name) VALUES (3, 'PASSWORD_CHANGED');
 
 INSERT INTO email_trigger_statuses (id, name) VALUES (1, 'CREATED');
 INSERT INTO email_trigger_statuses (id, name) VALUES (2, 'PUBLISHED');

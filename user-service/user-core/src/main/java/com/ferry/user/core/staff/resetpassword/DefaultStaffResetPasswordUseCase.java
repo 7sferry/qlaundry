@@ -5,6 +5,7 @@ import com.ferry.user.core.audit.AuthAuditLog;
 import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.staff.constant.LoginAttemptKey;
 import com.ferry.user.core.staff.constant.PasswordConstant;
+import com.ferry.user.core.tools.PasswordChangedNotifier;
 import com.ferry.user.core.tools.PasswordContentPolicy;
 import com.ferry.user.core.tools.PasswordSubject;
 import com.ferry.user.core.tools.PasswordSubjectGateway;
@@ -39,6 +40,7 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 	private final UserCacheManager cacheManager;
 	private final PasswordSubjectGateway subjectGateway;
 	private final StaffSessionRevoker sessionRevoker;
+	private final PasswordChangedNotifier passwordChangedNotifier;
 	private final AuthAuditLog auditLog;
 
 	@Override
@@ -59,6 +61,8 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 			HashedPassword hashedPassword = passwordTool.hash(password);
 			gateway.save(StaffPassword.register(staff.id(), hashedPassword, staff.id()));
 			sessionRevoker.revokeAll(staff.id());
+			gateway.findEmail(staff.id())
+					.ifPresent(email -> passwordChangedNotifier.notifyChanged(staff.id(), staff.usernameValue(), email));
 			clearLoginAttempts(username);
 			auditLog.record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.SUCCESS, staff.id(), subject);
 			presenter.present(new StaffResetPasswordResponse("password has been reset"));

@@ -561,8 +561,15 @@ public class UserWebConfig{
 	@Bean
 	StaffResetPasswordGateway staffResetPasswordGateway(StaffJpaRepository staffJpaRepository,
 	                                                    StaffPasswordJpaRepository staffPasswordJpaRepository,
-	                                                    IdGenerator idGenerator){
-		return new JpaStaffResetPasswordGateway(staffJpaRepository, staffPasswordJpaRepository, idGenerator);
+	                                                    StaffEmailJpaRepository staffEmailJpaRepository,
+	                                                    IdGenerator idGenerator, CryptoTool cryptoTool){
+		return new JpaStaffResetPasswordGateway(staffJpaRepository, staffPasswordJpaRepository,
+				staffEmailJpaRepository, idGenerator, cryptoTool);
+	}
+
+	@Bean
+	PasswordChangedNotifier passwordChangedNotifier(UserEmailPublisher emailPublisher){
+		return new DefaultPasswordChangedNotifier(emailPublisher);
 	}
 
 	@Bean
@@ -570,9 +577,10 @@ public class UserWebConfig{
 	                                                    PasswordTool passwordTool, UserCacheManager userCacheManager,
 	                                                    PasswordSubjectGateway passwordSubjectGateway,
 	                                                    StaffSessionRevoker staffSessionRevoker,
+	                                                    PasswordChangedNotifier passwordChangedNotifier,
 	                                                    AuthAuditLog authAuditLog){
 		return new DefaultStaffResetPasswordUseCase(staffResetPasswordGateway, passwordTool, userCacheManager,
-				passwordSubjectGateway, staffSessionRevoker, authAuditLog);
+				passwordSubjectGateway, staffSessionRevoker, passwordChangedNotifier, authAuditLog);
 	}
 
 	@Bean
@@ -604,9 +612,10 @@ public class UserWebConfig{
 	@Bean
 	StaffUpdateUseCase staffUpdateUseCase(StaffUpdateGateway staffUpdateGateway, PasswordTool passwordTool,
 	                                      PasswordSubjectGateway passwordSubjectGateway,
-	                                      StaffSessionRevoker staffSessionRevoker, AuthAuditLog authAuditLog){
+	                                      StaffSessionRevoker staffSessionRevoker,
+	                                      PasswordChangedNotifier passwordChangedNotifier, AuthAuditLog authAuditLog){
 		return new DefaultStaffUpdateUseCase(staffUpdateGateway, passwordTool, passwordSubjectGateway,
-				staffSessionRevoker, authAuditLog);
+				staffSessionRevoker, passwordChangedNotifier, authAuditLog);
 	}
 
 	@Bean

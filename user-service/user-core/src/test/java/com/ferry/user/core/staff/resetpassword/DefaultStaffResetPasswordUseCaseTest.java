@@ -5,6 +5,7 @@ import com.ferry.user.core.audit.AuthAuditLog;
 import com.ferry.user.core.audit.AuthResult;
 import com.ferry.user.core.staff.constant.LoginConstant;
 import com.ferry.user.core.staff.constant.PasswordConstant;
+import com.ferry.user.core.tools.PasswordChangedNotifier;
 import com.ferry.user.core.tools.PasswordSubject;
 import com.ferry.user.core.tools.PasswordSubjectGateway;
 import com.ferry.user.core.tools.PasswordTool;
@@ -68,6 +69,8 @@ class DefaultStaffResetPasswordUseCaseTest{
 	PasswordSubjectGateway subjectGateway;
 	@Mock
 	StaffSessionRevoker sessionRevoker;
+	@Mock
+	PasswordChangedNotifier passwordChangedNotifier;
 	@Mock
 	AuthAuditLog auditLog;
 	@InjectMocks
@@ -248,6 +251,27 @@ class DefaultStaffResetPasswordUseCaseTest{
 		thenSoftly(softly -> softly.then(thrown.getMessage()).isEqualTo("Invalid reset token"));
 		then(gateway).should(never()).save(any(StaffPassword.class));
 		then(sessionRevoker).shouldHaveNoInteractions();
+		then(passwordChangedNotifier).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void givenValidRequestButStaffHasNoEmail_thenResetsPasswordWithoutNotifying(){
+		Staff existing = Staff.register(new Username(USERNAME), new FullName("Hendra Wijaya"),
+						new Description("desc"), "tnt-02", StaffRole.STAFF, null)
+				.toBuilder().id(STAFF_ID).build();
+		willReturn(Optional.of(RESET_TOKEN)).given(cacheManager).get(RESET_TOKEN_KEY);
+		willReturn(Optional.of(RESET_TOKEN)).given(cacheManager).getAndDelete(RESET_TOKEN_KEY);
+		willReturn(Optional.of(existing)).given(gateway).findByUsername(new Username(USERNAME));
+		willReturn(Optional.of(SUBJECT)).given(subjectGateway).findByStaffId(STAFF_ID);
+		willReturn(List.of()).given(gateway).findRecentPasswords(eq(STAFF_ID), any(Instant.class));
+		willReturn(new HashedPassword("new-hashed-password")).given(passwordTool).hash(new RawPassword(PASSWORD));
+		willReturn(Optional.empty()).given(gateway).findEmail(STAFF_ID);
+
+		useCase.execute(new StaffResetPasswordRequest(USERNAME, PASSWORD, RESET_TOKEN), presenter);
+
+		then(gateway).should().save(any(StaffPassword.class));
+		then(passwordChangedNotifier).shouldHaveNoInteractions();
+		then(presenter).should().present(new StaffResetPasswordResponse("password has been reset"));
 	}
 
 	@Test
@@ -261,11 +285,13 @@ class DefaultStaffResetPasswordUseCaseTest{
 		willReturn(Optional.of(SUBJECT)).given(subjectGateway).findByStaffId(STAFF_ID);
 		willReturn(List.of()).given(gateway).findRecentPasswords(eq(STAFF_ID), any(Instant.class));
 		willReturn(new HashedPassword("new-hashed-password")).given(passwordTool).hash(new RawPassword(PASSWORD));
+		willReturn(Optional.of("hendra.w@mailku.id")).given(gateway).findEmail(STAFF_ID);
 
 		useCase.execute(new StaffResetPasswordRequest(USERNAME, PASSWORD, RESET_TOKEN), presenter);
 
 		then(gateway).should().save(passwordCaptor.capture());
 		then(sessionRevoker).should().revokeAll(STAFF_ID);
+		then(passwordChangedNotifier).should().notifyChanged(STAFF_ID, USERNAME, "hendra.w@mailku.id");
 		then(cacheManager).should().delete(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
 		then(cacheManager).should().delete(LoginConstant.OTP_ATTEMPT_KEY + USERNAME_HASH);
 		then(auditLog).should().record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.SUCCESS, STAFF_ID, USERNAME);
