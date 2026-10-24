@@ -22,6 +22,7 @@ public interface StaffUpdateGateway{
 
 	Optional<StaffPasswordProjection> findCurrentPassword(String staffId);
 	List<StaffPasswordProjection> findRecentPasswords(String staffId, Instant since);
+	List<StaffPasswordProjection> findLastPasswords(String staffId, int count);
 	void save(StaffPassword password);
 
 	List<StaffEmail> findEmailsByStaffId(String staffId);

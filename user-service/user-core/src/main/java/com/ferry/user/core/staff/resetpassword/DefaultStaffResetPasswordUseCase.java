@@ -56,6 +56,7 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 			validatePasswordContent(staff, password);
 			validateRecentPassword(staff, password);
 			validateLastUsedPasswords(staff, password);
+			validatePasswordHistory(staff, password);
 			consumeResetToken(username);
 			HashedPassword hashedPassword = passwordTool.hash(password);
 			gateway.save(StaffPassword.register(staff.id(), hashedPassword, staff.id()));
@@ -93,6 +94,17 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 				.anyMatch(recent -> passwordTool.matches(password.value(), recent.password()));
 		if(reused){
 			throw new PasswordPolicyException("Password was used within the last 3 months, please choose a different password");
+		}
+	}
+
+	private void validatePasswordHistory(Staff staff, RawPassword password){
+		List<StaffPasswordProjection> lastPasswords = gateway.findLastPasswords(staff.id(),
+				PasswordConstant.PASSWORD_HISTORY_COUNT);
+		boolean reused = lastPasswords.stream()
+				.anyMatch(previous -> passwordTool.matches(password.value(), previous.password()));
+		if(reused){
+			throw new PasswordPolicyException("Password matches one of your last "
+					+ PasswordConstant.PASSWORD_HISTORY_COUNT + " passwords, please choose a different password");
 		}
 	}
 

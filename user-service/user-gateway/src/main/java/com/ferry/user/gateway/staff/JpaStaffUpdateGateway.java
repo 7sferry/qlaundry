@@ -25,6 +25,7 @@ import com.ferry.user.gateway.tenant.repository.TenantJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.Instant;
 import java.util.List;
@@ -66,6 +67,11 @@ public class JpaStaffUpdateGateway implements StaffUpdateGateway{
 	@Override
 	public List<StaffPasswordProjection> findRecentPasswords(String staffId, Instant since){
 		return staffPasswordJpaRepository.findRecent(staffId, since);
+	}
+
+	@Override
+	public List<StaffPasswordProjection> findLastPasswords(String staffId, int count){
+		return staffPasswordJpaRepository.findLast(staffId, PageRequest.ofSize(count));
 	}
 
 	@Override

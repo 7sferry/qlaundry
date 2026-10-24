@@ -15,6 +15,7 @@ public class PasswordConstant{
 	public static final Duration OTP_DURATION = Duration.ofMinutes(5);
 	public static final Duration RESET_TOKEN_DURATION = Duration.ofMinutes(7);
 	public static final Duration PASSWORD_REUSE_WINDOW = Duration.ofDays(90);
+	public static final int PASSWORD_HISTORY_COUNT = 5;
 
 	public static Random getRandom() {
 		return RandomHolder.GENERATOR;

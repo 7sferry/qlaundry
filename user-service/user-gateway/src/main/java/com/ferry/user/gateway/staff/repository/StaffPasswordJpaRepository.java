@@ -2,6 +2,7 @@ package com.ferry.user.gateway.staff.repository;
 
 import com.ferry.user.domain.staff.StaffPasswordProjection;
 import com.ferry.user.gateway.staff.entity.StaffPasswordJpa;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -26,6 +27,10 @@ public interface StaffPasswordJpaRepository extends JpaRepository<StaffPasswordJ
 	@Query("select new com.ferry.user.domain.staff.StaffPasswordProjection(p.password) " +
 			"from StaffPasswordJpa p where p.staffId = :staffId and p.updatedAt >= :since")
 	List<StaffPasswordProjection> findRecent(@Param("staffId") String staffId, @Param("since") Instant since);
+
+	@Query("select new com.ferry.user.domain.staff.StaffPasswordProjection(p.password) " +
+			"from StaffPasswordJpa p where p.staffId = :staffId order by p.createdAt desc")
+	List<StaffPasswordProjection> findLast(@Param("staffId") String staffId, Pageable pageable);
 
 	@Modifying
 	@Query("update StaffPasswordJpa p set p.deleted = true, p.updatedBy = :updatedBy, p.updatedAt = CURRENT_TIMESTAMP " +

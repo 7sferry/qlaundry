@@ -14,6 +14,7 @@ import com.ferry.user.gateway.staff.repository.StaffPasswordJpaRepository;
 import com.ferry.utils.crypto.CryptoTool;
 import com.ferry.utils.generator.IdGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.Instant;
 import java.util.List;
@@ -46,6 +47,11 @@ public class JpaStaffResetPasswordGateway implements StaffResetPasswordGateway{
 	@Override
 	public List<StaffPasswordProjection> findRecentPasswords(String staffId, Instant since){
 		return staffPasswordJpaRepository.findRecent(staffId, since);
+	}
+
+	@Override
+	public List<StaffPasswordProjection> findLastPasswords(String staffId, int count){
+		return staffPasswordJpaRepository.findLast(staffId, PageRequest.ofSize(count));
 	}
 
 	@Override

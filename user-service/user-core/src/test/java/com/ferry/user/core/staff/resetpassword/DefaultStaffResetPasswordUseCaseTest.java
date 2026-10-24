@@ -215,6 +215,30 @@ class DefaultStaffResetPasswordUseCaseTest{
 	}
 
 	@Test
+	void givenPasswordMatchesOneOfLastFivePasswords_thenThrowsPasswordPolicyExceptionAndKeepsResetTokenUsable(){
+		Staff existing = Staff.register(new Username(USERNAME), new FullName("Hendra Wijaya"),
+						new Description("desc"), "tnt-02", StaffRole.STAFF, null)
+				.toBuilder().id(STAFF_ID).build();
+		willReturn(Optional.of(RESET_TOKEN)).given(cacheManager).get(RESET_TOKEN_KEY);
+		willReturn(Optional.of(existing)).given(gateway).findByUsername(new Username(USERNAME));
+		willReturn(Optional.of(SUBJECT)).given(subjectGateway).findByStaffId(STAFF_ID);
+		willReturn(List.of()).given(gateway).findRecentPasswords(eq(STAFF_ID), any(Instant.class));
+		willReturn(List.of(new StaffPasswordProjection("hash-three-back")))
+				.given(gateway).findLastPasswords(STAFF_ID, PasswordConstant.PASSWORD_HISTORY_COUNT);
+		willReturn(true).given(passwordTool).matches(PASSWORD, "hash-three-back");
+
+		PasswordPolicyException thrown = catchThrowableOfType(PasswordPolicyException.class,
+				() -> useCase.execute(new StaffResetPasswordRequest(USERNAME, PASSWORD, RESET_TOKEN), presenter));
+
+		thenSoftly(softly -> softly.then(thrown)
+				.hasMessage("Password matches one of your last 5 passwords, please choose a different password"));
+		then(cacheManager).should(never()).getAndDelete(anyString());
+		then(gateway).should(never()).save(any(StaffPassword.class));
+		then(sessionRevoker).shouldHaveNoInteractions();
+		then(presenter).shouldHaveNoInteractions();
+	}
+
+	@Test
 	void givenNewPasswordSameAsCurrentPassword_thenThrowsPasswordPolicyException(){
 		Staff existing = Staff.register(new Username(USERNAME), new FullName("Hendra Wijaya"),
 						new Description("desc"), "tnt-02", StaffRole.STAFF, null)

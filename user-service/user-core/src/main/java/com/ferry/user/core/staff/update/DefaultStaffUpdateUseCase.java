@@ -95,6 +95,7 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 		validatePasswordContent(staff, request, newRawPassword);
 		validateRecentPassword(newRawPassword, currentPassword);
 		validateLastUsedPasswords(staff, newRawPassword);
+		validatePasswordHistory(staff, newRawPassword);
 		return StaffPassword.register(staff.id(), passwordTool.hash(newRawPassword), staff.id());
 	}
 
@@ -113,6 +114,17 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 				.anyMatch(recent -> passwordTool.matches(newRawPassword.value(), recent.password()));
 		if(reused){
 			throw new PasswordPolicyException("Password was used within the last 3 months, please choose a different password");
+		}
+	}
+
+	private void validatePasswordHistory(Staff staff, RawPassword newRawPassword){
+		List<StaffPasswordProjection> lastPasswords = gateway.findLastPasswords(staff.id(),
+				PasswordConstant.PASSWORD_HISTORY_COUNT);
+		boolean reused = lastPasswords.stream()
+				.anyMatch(previous -> passwordTool.matches(newRawPassword.value(), previous.password()));
+		if(reused){
+			throw new PasswordPolicyException("Password matches one of your last "
+					+ PasswordConstant.PASSWORD_HISTORY_COUNT + " passwords, please choose a different password");
 		}
 	}
 

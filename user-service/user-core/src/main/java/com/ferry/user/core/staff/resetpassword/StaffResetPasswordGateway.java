@@ -21,6 +21,8 @@ public interface StaffResetPasswordGateway{
 
 	List<StaffPasswordProjection> findRecentPasswords(String staffId, Instant since);
 
+	List<StaffPasswordProjection> findLastPasswords(String staffId, int count);
+
 	Optional<String> findEmail(String staffId);
 
 	void save(StaffPassword password);

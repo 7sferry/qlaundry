@@ -24,6 +24,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.ferry.user.core.staff.constant.PasswordConstant;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -230,6 +232,36 @@ class DefaultStaffUpdateUseCaseTest{
 
 		then(gateway).should(never()).save(any(Staff.class));
 		then(gateway).should(never()).save(any(StaffPassword.class));
+		then(presenter).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void givenNewPasswordMatchesOneOfLastFivePasswords_thenThrowsPasswordPolicyException(){
+		UserAuthPrincipal principal = UserAuthPrincipal.builder().userId(USER_ID).build();
+		StaffUpdateRequest request = new StaffUpdateRequest(FULL_NAME, NEW_DESCRIPTION, "current-password",
+				"Zebra-Crossing-2024", List.of(EMAIL), null, null);
+		Staff existing = Staff.register(new Username(USERNAME),
+				new FullName("Old Name"), new Description("Old description"), TENANT_ID, StaffRole.STAFF, USER_ID)
+				.toBuilder().id(USER_ID).build();
+		willReturn(Optional.of(existing)).given(gateway).findById(USER_ID);
+		willReturn(Optional.of(new StaffPasswordProjection(OLD_HASHED_PASSWORD)))
+				.given(gateway).findCurrentPassword(USER_ID);
+		willReturn(true).given(passwordTool).matches("current-password", OLD_HASHED_PASSWORD);
+		willReturn(false).given(passwordTool).matches("Zebra-Crossing-2024", OLD_HASHED_PASSWORD);
+		willReturn(List.of()).given(gateway).findRecentPasswords(eq(USER_ID), any(Instant.class));
+		willReturn(List.of(new StaffPasswordProjection("hash-two-back"), new StaffPasswordProjection("hash-four-back")))
+				.given(gateway).findLastPasswords(USER_ID, PasswordConstant.PASSWORD_HISTORY_COUNT);
+		willReturn(false).given(passwordTool).matches("Zebra-Crossing-2024", "hash-two-back");
+		willReturn(true).given(passwordTool).matches("Zebra-Crossing-2024", "hash-four-back");
+		willReturn(Optional.of(SUBJECT)).given(subjectGateway).findByStaffId(USER_ID);
+
+		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
+				.isInstanceOf(PasswordPolicyException.class)
+				.hasMessage("Password matches one of your last 5 passwords, please choose a different password"));
+
+		then(gateway).should(never()).save(any(StaffPassword.class));
+		then(sessionRevoker).shouldHaveNoInteractions();
+		then(auditLog).should().record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.FAILURE, USERNAME);
 		then(presenter).shouldHaveNoInteractions();
 	}
 
