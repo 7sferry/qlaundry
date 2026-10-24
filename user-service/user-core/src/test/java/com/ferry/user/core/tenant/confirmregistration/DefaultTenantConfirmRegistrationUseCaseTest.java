@@ -143,7 +143,7 @@ class DefaultTenantConfirmRegistrationUseCaseTest{
 		useCase.execute(new TenantConfirmRegistrationRequest(TENANT_ID, TOKEN), presenter);
 
 		then(gateway).should().save(tenantCaptor.capture());
-		then(auditLog).should().record(AuthAction.TENANT_CONFIRMATION, AuthResult.SUCCESS, null, TENANT_ID);
+		then(auditLog).should().record(AuthAction.TENANT_CONFIRMATION, AuthResult.SUCCESS, TENANT_ID);
 		then(presenter).should().present(new TenantConfirmRegistrationResponse("Registration confirmed. You can now sign in."));
 		thenSoftly(softly -> softly.then(tenantCaptor.getValue().status()).isEqualTo(TenantStatus.ACTIVE));
 	}

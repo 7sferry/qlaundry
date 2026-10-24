@@ -86,7 +86,7 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 
 		then(userCacheManager).shouldHaveNoInteractions();
 		then(emailPublisher).shouldHaveNoInteractions();
-		then(auditLog).should().record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.FAILURE, null, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.FAILURE, USERNAME);
 		then(presenter).should().present(responseCaptor.capture());
 		then(responseTimeFloor).should().enforce(anyLong(), eq(MIN_RESPONSE_TIME));
 		String notFoundMaskedEmail = responseCaptor.getValue().email();
@@ -113,7 +113,7 @@ class DefaultStaffForgottenPasswordUseCaseTest{
 		useCase.execute(new StaffForgottenPasswordRequest(USERNAME), presenter);
 
 		then(userCacheManager).should().set(eq(PasswordConstant.OTP_KEY + USERNAME), otpCaptor.capture(), eq(PasswordConstant.OTP_DURATION));
-		then(auditLog).should().record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.SUCCESS, STAFF_ID, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.SUCCESS, USERNAME);
 		then(emailPublisher).should().publish(trigger);
 		then(presenter).should().present(responseCaptor.capture());
 		then(responseTimeFloor).should().enforce(anyLong(), eq(MIN_RESPONSE_TIME));

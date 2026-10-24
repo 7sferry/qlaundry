@@ -316,7 +316,7 @@ class DefaultStaffLoginUseCaseTest{
 
 		thenSoftly(softly -> softly.then(thrown.challenge()).isNull());
 		then(verificationGateway).shouldHaveNoInteractions();
-		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, USER_ID, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, USERNAME);
 	}
 
 	@Test
@@ -362,7 +362,7 @@ class DefaultStaffLoginUseCaseTest{
 		then(passwordTool).shouldHaveNoInteractions();
 		then(verificationGateway).shouldHaveNoInteractions();
 		then(cacheManager).should(never()).increment(anyString(), any(Duration.class));
-		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.CHALLENGED, null, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.CHALLENGED, USERNAME);
 	}
 
 	@Test
@@ -399,7 +399,7 @@ class DefaultStaffLoginUseCaseTest{
 
 		then(cacheManager).should().delete(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
 		then(cacheManager).should().delete(LoginConstant.OTP_ATTEMPT_KEY + USERNAME_HASH);
-		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.SUCCESS, USER_ID, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.SUCCESS, USERNAME);
 		then(presenter).should().present(new StaffLoginResponse(ACCESS_TOKEN, REFRESH_TOKEN));
 	}
 
@@ -416,7 +416,7 @@ class DefaultStaffLoginUseCaseTest{
 
 		thenSoftly(softly -> softly.then(thrown.challenge()).isEqualTo(LoginChallenge.CAPTCHA));
 		then(passwordTool).should().simulateMatch(PASSWORD);
-		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, null, GHOST_USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, GHOST_USERNAME);
 	}
 
 	@Test
@@ -431,7 +431,7 @@ class DefaultStaffLoginUseCaseTest{
 		then(passwordTool).shouldHaveNoInteractions();
 		then(verificationGateway).shouldHaveNoInteractions();
 		then(cacheManager).should(never()).increment(anyString(), any(Duration.class));
-		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.CHALLENGED, null, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.CHALLENGED, USERNAME);
 	}
 
 	@Test
@@ -480,7 +480,7 @@ class DefaultStaffLoginUseCaseTest{
 			softly.then(thrown.getCause()).isInstanceOf(InvalidPasswordException.class).hasMessage("otp not match");
 			softly.then(thrown.challenge()).isEqualTo(LoginChallenge.OTP);
 		});
-		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, null, GHOST_USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, GHOST_USERNAME);
 	}
 
 	@Test
@@ -505,7 +505,7 @@ class DefaultStaffLoginUseCaseTest{
 		then(cacheManager).should().delete(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
 		then(cacheManager).should().delete(LoginConstant.OTP_ATTEMPT_KEY + USERNAME_HASH);
 		then(passwordTool).shouldHaveNoInteractions();
-		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.SUCCESS, USER_ID, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.SUCCESS, USERNAME);
 		then(presenter).should().present(new StaffLoginResponse(ACCESS_TOKEN, REFRESH_TOKEN));
 	}
 
@@ -573,7 +573,7 @@ class DefaultStaffLoginUseCaseTest{
 				() -> useCase.execute(new StaffLoginRequest(USERNAME, PASSWORD, null, null), presenter));
 
 		then(cacheManager).should(never()).increment(anyString(), any(Duration.class));
-		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, USER_ID, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, USERNAME);
 	}
 
 	@Test
@@ -595,7 +595,7 @@ class DefaultStaffLoginUseCaseTest{
 
 		then(cacheManager).should().delete(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
 		then(cacheManager).should(never()).increment(anyString(), any(Duration.class));
-		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.SUCCESS, USER_ID, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_LOGIN, AuthResult.SUCCESS, USERNAME);
 	}
 
 }

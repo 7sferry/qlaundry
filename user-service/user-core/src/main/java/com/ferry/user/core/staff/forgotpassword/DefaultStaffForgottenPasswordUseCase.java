@@ -62,19 +62,19 @@ public class DefaultStaffForgottenPasswordUseCase implements StaffForgottenPassw
 						EmailTriggerType.FORGOTTEN_PASSWORD, recipient);
 				EmailTrigger saved = emailPublisher.save(config);
 				emailPublisher.publish(saved);
-				auditLog.record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.SUCCESS, email.staffId(), username.value());
+				auditLog.record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.SUCCESS, username.value());
 				String maskedEmail = maskEmail(email.email());
 				presenter.present(new StaffForgottenPasswordResponse(maskedEmail));
 				responseTimeFloor.enforce(startedAt, MIN_RESPONSE_TIME);
 			}, () -> {
-				auditLog.record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.FAILURE, null, username.value());
+				auditLog.record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.FAILURE, username.value());
 				String maskedFakeEmail = maskFakeEmail(username.value());
 				presenter.present(new StaffForgottenPasswordResponse(maskedFakeEmail));
 				responseTimeFloor.enforce(startedAt, MIN_RESPONSE_TIME);
 			});
 		} catch (Exception e){
 			log.error("Failed to process forgotten password request", e);
-			auditLog.record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.FAILURE, null, request.username());
+			auditLog.record(AuthAction.STAFF_FORGOTTEN_PASSWORD, AuthResult.FAILURE, request.username());
 			String maskedFakeEmail = maskFakeEmail(request.username());
 			presenter.present(new StaffForgottenPasswordResponse(maskedFakeEmail));
 			responseTimeFloor.enforce(startedAt, MIN_RESPONSE_TIME);

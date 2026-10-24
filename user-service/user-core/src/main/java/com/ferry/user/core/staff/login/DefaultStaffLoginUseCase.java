@@ -12,16 +12,16 @@ import com.ferry.user.core.tools.PasswordTool;
 import com.ferry.user.core.tools.TokenProcessor;
 import com.ferry.user.core.tools.UserCacheManager;
 import com.ferry.user.domain.common.Username;
+import com.ferry.user.domain.common.exception.InvalidPasswordException;
 import com.ferry.user.domain.common.exception.InvalidUsernameException;
 import com.ferry.user.domain.common.exception.NotFoundException;
-import com.ferry.user.domain.staff.login.FailedToLoginException;
-import com.ferry.user.domain.staff.login.LoginChallenge;
-import com.ferry.user.domain.staff.login.LoginChallengeRequiredException;
 import com.ferry.user.domain.session.SessionType;
 import com.ferry.user.domain.session.UserSession;
 import com.ferry.user.domain.staff.StaffRole;
+import com.ferry.user.domain.staff.login.FailedToLoginException;
+import com.ferry.user.domain.staff.login.LoginChallenge;
+import com.ferry.user.domain.staff.login.LoginChallengeRequiredException;
 import com.ferry.user.domain.staff.login.StaffLoginProjection;
-import com.ferry.user.domain.common.exception.InvalidPasswordException;
 import com.ferry.user.domain.tenant.TenantId;
 import com.ferry.user.domain.tenant.TenantStatus;
 import com.ferry.user.domain.tenant.login.TenantLoginProjection;
@@ -39,7 +39,7 @@ import java.time.Instant;
  ************************/
 
 @RequiredArgsConstructor
-public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
+public class DefaultStaffLoginUseCase implements StaffLoginUseCase{
 	private final StaffLoginGateway gateway;
 	private final PasswordTool passwordTool;
 	private final TokenProcessor tokenProcessor;
@@ -51,7 +51,6 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 	public void execute(StaffLoginRequest request, StaffLoginPresenter presenter){
 		String subject = subjectOf(request);
 		long attempts = failedAttempts(subject);
-		StaffLoginProjection staff = null;
 		try{
 			request.validate();
 			LoginChallenge challenge = challengeFor(attempts);
@@ -60,13 +59,7 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 			}
 			requireChallengeProof(request, challenge);
 			Username username = new Username(request.username());
-			if(challenge == LoginChallenge.OTP){
-				verifyOtp(request, username, subject);
-				staff = findStaff(username);
-			} else{
-				staff = findStaffForPassword(username, request.password());
-				verifyPassword(request, staff);
-			}
+			StaffLoginProjection staff = getStaff(request, challenge, username);
 			TenantLoginProjection tenant = gateway.findTenantById(new TenantId(staff.tenantId()))
 					.orElseThrow(() -> new NotFoundException("tenant not found"));
 			if(TenantStatus.findByValue(tenant.statusId()).orElse(null) != TenantStatus.ACTIVE){
@@ -78,30 +71,36 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 			String accessToken = generateAccessToken(staff, tenant, hashedRefreshToken);
 			cacheManager.delete(LoginAttemptKey.attempt(subject));
 			cacheManager.delete(LoginAttemptKey.otpAttempt(subject));
-			auditLog.record(AuthAction.STAFF_LOGIN, AuthResult.SUCCESS, staff.id(), subject);
+			auditLog.record(AuthAction.STAFF_LOGIN, AuthResult.SUCCESS, subject);
 			presenter.present(new StaffLoginResponse(accessToken, refreshToken));
-		} catch (LoginChallengeRequiredException e){
-			auditLog.record(AuthAction.STAFF_LOGIN, AuthResult.CHALLENGED, null, subject);
+		} catch(LoginChallengeRequiredException e){
+			auditLog.record(AuthAction.STAFF_LOGIN, AuthResult.CHALLENGED, subject);
 			throw e;
-		} catch (InvalidPasswordException | InvalidUsernameException e){
+		} catch(InvalidPasswordException | InvalidUsernameException e){
 			long updatedAttempts = registerFailedAttempt(subject);
-			auditLog.record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, userIdOf(staff), subject);
+			auditLog.record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, subject);
 			throw new FailedToLoginException(e, challengeFor(Math.max(attempts, updatedAttempts)));
-		} catch (FailedToLoginException e){
-			auditLog.record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, userIdOf(staff), subject);
+		} catch(FailedToLoginException e){
+			auditLog.record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, subject);
 			throw e;
-		} catch (Exception e){
-			auditLog.record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, userIdOf(staff), subject);
+		} catch(Exception e){
+			auditLog.record(AuthAction.STAFF_LOGIN, AuthResult.FAILURE, subject);
 			throw new FailedToLoginException(e, challengeFor(attempts));
 		}
 	}
 
-	private String subjectOf(StaffLoginRequest request){
-		return LoginAttemptKey.normalize(request == null ? null : request.username());
+	private StaffLoginProjection getStaff(StaffLoginRequest request, LoginChallenge challenge, Username username){
+		if(challenge == LoginChallenge.OTP){
+			verifyOtp(request, username, subjectOf(request));
+			return findStaff(username);
+		}
+		StaffLoginProjection staff = findStaffForPassword(username, request.password());
+		verifyPassword(request, staff);
+		return staff;
 	}
 
-	private String userIdOf(StaffLoginProjection staff){
-		return staff == null ? null : staff.id();
+	private String subjectOf(StaffLoginRequest request){
+		return LoginAttemptKey.normalize(request == null ? null : request.username());
 	}
 
 	private LoginChallenge challengeFor(long attempts){
@@ -124,7 +123,7 @@ public class DefaultStaffLoginUseCase implements StaffLoginUseCase {
 	private long parseCount(String value){
 		try{
 			return Long.parseLong(value);
-		} catch (NumberFormatException e){
+		} catch(NumberFormatException e){
 			return 0;
 		}
 	}

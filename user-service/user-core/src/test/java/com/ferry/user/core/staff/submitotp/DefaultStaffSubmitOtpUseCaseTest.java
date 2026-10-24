@@ -84,7 +84,7 @@ class DefaultStaffSubmitOtpUseCaseTest{
 		FailedToSubmitOtpException thrown = catchThrowableOfType(FailedToSubmitOtpException.class,
 				() -> useCase.execute(new StaffSubmitOtpRequest(USERNAME, OTP), presenter));
 
-		then(auditLog).should().record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.FAILURE, null, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.FAILURE, USERNAME);
 		thenSoftly(softly -> softly.then(thrown.getMessage()).isEqualTo("Invalid otp"));
 		then(cacheManager).should(never()).delete(any());
 		then(presenter).shouldHaveNoInteractions();
@@ -97,7 +97,7 @@ class DefaultStaffSubmitOtpUseCaseTest{
 		useCase.execute(new StaffSubmitOtpRequest(USERNAME, OTP), presenter);
 
 		then(cacheManager).should().delete(PasswordConstant.OTP_KEY + USERNAME);
-		then(auditLog).should().record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.SUCCESS, null, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.SUCCESS, USERNAME);
 		then(cacheManager).should().set(eq(PasswordConstant.RESET_TOKEN_KEY + USERNAME), resetTokenCaptor.capture(),
 				eq(PasswordConstant.RESET_TOKEN_DURATION));
 		then(presenter).should().present(new StaffSubmitOtpResponse(resetTokenCaptor.getValue()));

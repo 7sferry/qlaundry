@@ -140,7 +140,7 @@ class DefaultTenantRegistrationUseCaseTest{
 		then(gateway).should(never()).save(any(Tenant.class));
 		then(gateway).should(never()).registerAdmin(any(StaffRegistrationRequest.class), any(Tenant.class));
 		then(emailPublisher).shouldHaveNoInteractions();
-		then(auditLog).should().record(AuthAction.TENANT_REGISTRATION, AuthResult.FAILURE, null, USERNAME);
+		then(auditLog).should().record(AuthAction.TENANT_REGISTRATION, AuthResult.FAILURE, USERNAME);
 		then(responseTimeFloor).should().enforce(anyLong(), eq(MIN_RESPONSE_TIME));
 	}
 
@@ -253,7 +253,7 @@ class DefaultTenantRegistrationUseCaseTest{
 		useCase.execute(request, presenter);
 
 		then(presenter).should().present(responseCaptor.capture());
-		then(auditLog).should().record(AuthAction.TENANT_REGISTRATION, AuthResult.SUCCESS, null, USERNAME);
+		then(auditLog).should().record(AuthAction.TENANT_REGISTRATION, AuthResult.SUCCESS, USERNAME);
 		then(responseTimeFloor).should().enforce(anyLong(), eq(MIN_RESPONSE_TIME));
 		TenantRegistrationResponse response = responseCaptor.getValue();
 		thenSoftly(softly -> {

@@ -78,7 +78,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		then(tokenProcessor).shouldHaveNoInteractions();
 		then(cacheManager).shouldHaveNoInteractions();
 		then(presenter).should().presentUnauthorized();
-		then(auditLog).should().record(AuthAction.STAFF_REFRESH, AuthResult.FAILURE, null, null);
+		then(auditLog).should().record(AuthAction.STAFF_REFRESH, AuthResult.FAILURE, null);
 	}
 
 	@Test
@@ -104,7 +104,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 				.isInstanceOf(ExpiredSessionException.class)
 				.hasMessage("session expired"));
 
-		then(auditLog).should().record(AuthAction.STAFF_REFRESH, AuthResult.FAILURE, null, null);
+		then(auditLog).should().record(AuthAction.STAFF_REFRESH, AuthResult.FAILURE, null);
 		then(presenter).shouldHaveNoInteractions();
 	}
 
@@ -131,7 +131,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
 		then(presenter).should().presentUnauthorized();
-		then(auditLog).should().record(AuthAction.STAFF_REFRESH, AuthResult.FAILURE, USER_ID, null);
+		then(auditLog).should().record(AuthAction.STAFF_REFRESH, AuthResult.FAILURE, USER_ID);
 	}
 
 	@Test
@@ -163,7 +163,7 @@ class DefaultStaffRefreshTokenUseCaseTest{
 		useCase.execute(new StaffRefreshTokenRequest(REFRESH_TOKEN), presenter);
 
 		then(presenter).should().presentCachedToken(new StaffRefreshTokenResponse("cached-access-token", null));
-		then(auditLog).should().record(AuthAction.STAFF_REFRESH, AuthResult.SUCCESS, USER_ID, null);
+		then(auditLog).should().record(AuthAction.STAFF_REFRESH, AuthResult.SUCCESS, USER_ID);
 		then(gateway).shouldHaveNoInteractions();
 		then(cacheManager).should(never()).set(eq(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN), any(), any());
 	}

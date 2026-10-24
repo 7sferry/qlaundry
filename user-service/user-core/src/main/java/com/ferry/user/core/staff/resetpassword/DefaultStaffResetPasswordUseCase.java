@@ -46,13 +46,12 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 	@Override
 	public void execute(StaffResetPasswordRequest request, StaffResetPasswordPresenter presenter){
 		String subject = request.username();
-		Staff staff = null;
 		try{
 			request.validate();
 			Username username = new Username(request.username());
 			RawPassword password = new RawPassword(request.password());
 			validateResetToken(username, request.resetToken());
-			staff = gateway.findByUsername(username)
+			Staff staff = gateway.findByUsername(username)
 					.orElseThrow(() -> new FailedToResetPasswordException("Invalid username"));
 			validatePasswordContent(staff, password);
 			validateRecentPassword(staff, password);
@@ -64,13 +63,13 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 			gateway.findEmail(staff.id())
 					.ifPresent(email -> passwordChangedNotifier.notifyChanged(staff.id(), staff.usernameValue(), email));
 			clearLoginAttempts(username);
-			auditLog.record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.SUCCESS, staff.id(), subject);
+			auditLog.record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.SUCCESS, subject);
 			presenter.present(new StaffResetPasswordResponse("password has been reset"));
 		} catch (InvalidPasswordException | FailedToResetPasswordException e){
-			auditLog.record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.FAILURE, userIdOf(staff), subject);
+			auditLog.record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.FAILURE, subject);
 			throw e;
 		} catch (Exception e){
-			auditLog.record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.FAILURE, userIdOf(staff), subject);
+			auditLog.record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.FAILURE, subject);
 			throw new FailedToResetPasswordException(e);
 		}
 	}
@@ -79,10 +78,6 @@ public class DefaultStaffResetPasswordUseCase implements StaffResetPasswordUseCa
 		String normalized = LoginAttemptKey.normalize(username.value());
 		cacheManager.delete(LoginAttemptKey.otpAttempt(normalized));
 		cacheManager.delete(LoginAttemptKey.attempt(normalized));
-	}
-
-	private String userIdOf(Staff staff){
-		return staff == null ? null : staff.id();
 	}
 
 	private void validatePasswordContent(Staff staff, RawPassword password){

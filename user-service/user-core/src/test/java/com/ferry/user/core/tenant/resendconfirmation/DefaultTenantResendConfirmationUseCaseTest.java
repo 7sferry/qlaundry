@@ -135,7 +135,7 @@ class DefaultTenantResendConfirmationUseCaseTest{
 		useCase.execute(new TenantResendConfirmationRequest(TENANT_ID), presenter);
 
 		then(emailPublisher).should().publish(trigger);
-		then(auditLog).should().record(AuthAction.TENANT_RESEND_CONFIRMATION, AuthResult.SUCCESS, null, TENANT_ID);
+		then(auditLog).should().record(AuthAction.TENANT_RESEND_CONFIRMATION, AuthResult.SUCCESS, TENANT_ID);
 		then(presenter).should().present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
 		then(responseTimeFloor).should().enforce(anyLong(), eq(MIN_RESPONSE_TIME));
 		EmailTriggerConfig config = emailConfigCaptor.getValue();

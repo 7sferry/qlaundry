@@ -6,5 +6,5 @@ package com.ferry.user.core.audit;
  ************************/
 
 public interface AuthAuditLog{
-	void record(AuthAction action, AuthResult result, String userId, String subject);
+	void record(AuthAction action, AuthResult result, String subject);
 }

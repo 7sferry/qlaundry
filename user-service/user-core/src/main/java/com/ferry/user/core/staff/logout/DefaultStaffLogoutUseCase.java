@@ -29,12 +29,12 @@ public class DefaultStaffLogoutUseCase implements StaffLogoutUseCase{
 		try{
 			request.validate();
 		} catch (RuntimeException e){
-			auditLog.record(AuthAction.STAFF_LOGOUT, AuthResult.FAILURE, null, null);
+			auditLog.record(AuthAction.STAFF_LOGOUT, AuthResult.FAILURE, null);
 			throw e;
 		}
 		String refreshToken = request.refreshToken();
 		String userId = refreshToken == null ? null : revokeSession(tokenProcessor.hashToken(refreshToken));
-		auditLog.record(AuthAction.STAFF_LOGOUT, userId == null ? AuthResult.FAILURE : AuthResult.SUCCESS, userId, null);
+		auditLog.record(AuthAction.STAFF_LOGOUT, userId == null ? AuthResult.FAILURE : AuthResult.SUCCESS, userId);
 		presenter.present(new StaffLogoutResponse("bye!"));
 	}
 

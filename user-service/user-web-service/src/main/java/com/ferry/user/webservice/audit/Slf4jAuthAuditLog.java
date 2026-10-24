@@ -21,9 +21,8 @@ public class Slf4jAuthAuditLog implements AuthAuditLog{
 	private static final Logger LOG = LoggerFactory.getLogger(LOGGER_NAME);
 
 	@Override
-	public void record(AuthAction action, AuthResult result, String userId, String subject){
-		LOG.info("action={} result={} userId={} subject={} ip={}", action, result, clean(userId), clean(subject),
-				clean(clientIp()));
+	public void record(AuthAction action, AuthResult result, String subject){
+		LOG.info("action={} result={} subject={} ip={}", action, result, clean(subject), clean(clientIp()));
 	}
 
 	private String clientIp(){

@@ -38,13 +38,13 @@ public class DefaultTenantConfirmRegistrationUseCase implements TenantConfirmReg
 				throw new FailedToConfirmTenantException("Tenant already confirmed");
 			}
 			gateway.save(tenant.activate());
-			auditLog.record(AuthAction.TENANT_CONFIRMATION, AuthResult.SUCCESS, null, subject);
+			auditLog.record(AuthAction.TENANT_CONFIRMATION, AuthResult.SUCCESS, subject);
 			presenter.present(new TenantConfirmRegistrationResponse("Registration confirmed. You can now sign in."));
 		} catch (FailedToConfirmTenantException e){
-			auditLog.record(AuthAction.TENANT_CONFIRMATION, AuthResult.FAILURE, null, subject);
+			auditLog.record(AuthAction.TENANT_CONFIRMATION, AuthResult.FAILURE, subject);
 			throw e;
 		} catch (Exception e){
-			auditLog.record(AuthAction.TENANT_CONFIRMATION, AuthResult.FAILURE, null, subject);
+			auditLog.record(AuthAction.TENANT_CONFIRMATION, AuthResult.FAILURE, subject);
 			throw new FailedToConfirmTenantException(e);
 		}
 	}

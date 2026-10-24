@@ -87,7 +87,7 @@ public class DefaultStaffRefreshTokenUseCase implements StaffRefreshTokenUseCase
 	}
 
 	private void audit(AuthResult result, String userId){
-		auditLog.record(AuthAction.STAFF_REFRESH, result, userId, null);
+		auditLog.record(AuthAction.STAFF_REFRESH, result, userId);
 	}
 
 	private UserSession getCurrentSession(String hashedRefreshToken){

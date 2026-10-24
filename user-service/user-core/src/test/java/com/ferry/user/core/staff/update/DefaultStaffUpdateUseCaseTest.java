@@ -198,7 +198,7 @@ class DefaultStaffUpdateUseCaseTest{
 		thenSoftly(softly -> softly.thenThrownBy(() -> useCase.execute(request, principal, presenter))
 				.isInstanceOf(PasswordPolicyException.class)
 				.hasMessage("New password must be different from your current password"));
-		then(auditLog).should().record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.FAILURE, USER_ID, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.FAILURE, USERNAME);
 		then(sessionRevoker).shouldHaveNoInteractions();
 
 		then(gateway).should(never()).save(any(Staff.class));
@@ -283,7 +283,7 @@ class DefaultStaffUpdateUseCaseTest{
 		then(gateway).should().save(passwordCaptor.capture());
 		then(sessionRevoker).should().revokeAll(USER_ID);
 		then(passwordChangedNotifier).should().notifyChanged(USER_ID, USERNAME, "rahmat.lama@mailku.id");
-		then(auditLog).should().record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.SUCCESS, USER_ID, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.SUCCESS, USERNAME);
 		then(presenter).should().present(responseCaptor.capture());
 		thenSoftly(softly -> {
 			softly.then(passwordCaptor.getValue().passwordValue()).isEqualTo("new-hash-xyz789");
@@ -313,7 +313,7 @@ class DefaultStaffUpdateUseCaseTest{
 		then(gateway).should(never()).save(any(StaffPassword.class));
 		then(gateway).should(never()).save(any(Staff.class));
 		then(sessionRevoker).shouldHaveNoInteractions();
-		then(auditLog).should().record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.FAILURE, USER_ID, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.FAILURE, USERNAME);
 		then(presenter).shouldHaveNoInteractions();
 	}
 

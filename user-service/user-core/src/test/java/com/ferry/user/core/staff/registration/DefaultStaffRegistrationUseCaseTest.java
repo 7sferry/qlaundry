@@ -205,7 +205,7 @@ class DefaultStaffRegistrationUseCaseTest{
 		then(gateway).should(never()).save(any(Staff.class));
 		then(passwordTool).shouldHaveNoInteractions();
 		then(presenter).shouldHaveNoInteractions();
-		then(auditLog).should().record(AuthAction.STAFF_REGISTRATION, AuthResult.FAILURE, PRINCIPAL_ID, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_REGISTRATION, AuthResult.FAILURE, USERNAME);
 	}
 
 	@Test

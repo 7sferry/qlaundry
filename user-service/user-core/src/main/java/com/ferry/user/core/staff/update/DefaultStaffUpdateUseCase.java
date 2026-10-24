@@ -46,7 +46,7 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 		if(passwordChanged){
 			gateway.save(newPassword);
 			sessionRevoker.revokeAll(staff.id());
-			auditLog.record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.SUCCESS, staff.id(), staff.usernameValue());
+			auditLog.record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.SUCCESS, staff.usernameValue());
 			notifyPasswordChanged(staff);
 		}
 		Staff saved = updateProfile(staff, request, principal);
@@ -79,7 +79,7 @@ public class DefaultStaffUpdateUseCase implements StaffUpdateUseCase{
 		try{
 			return buildNewPassword(staff, request);
 		} catch (RuntimeException e){
-			auditLog.record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.FAILURE, staff.id(), staff.usernameValue());
+			auditLog.record(AuthAction.STAFF_CHANGE_PASSWORD, AuthResult.FAILURE, staff.usernameValue());
 			throw e;
 		}
 	}

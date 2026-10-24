@@ -56,12 +56,12 @@ public class DefaultTenantResendConfirmationUseCase implements TenantResendConfi
 			TenantAdminContactProjection admin = gateway.findAdminContact(tenantId)
 					.orElseThrow(() -> new FailedToResendConfirmationException("Tenant not found"));
 			resendConfirmationEmail(tenant, admin);
-			auditLog.record(AuthAction.TENANT_RESEND_CONFIRMATION, AuthResult.SUCCESS, null, subject);
+			auditLog.record(AuthAction.TENANT_RESEND_CONFIRMATION, AuthResult.SUCCESS, subject);
 			presenter.present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
 			responseTimeFloor.enforce(startedAt, MIN_RESPONSE_TIME);
 		} catch (Exception e){
 			log.error("Failed to process resend confirmation request", e);
-			auditLog.record(AuthAction.TENANT_RESEND_CONFIRMATION, AuthResult.FAILURE, null, subject);
+			auditLog.record(AuthAction.TENANT_RESEND_CONFIRMATION, AuthResult.FAILURE, subject);
 			presenter.present(new TenantResendConfirmationResponse("A new confirmation email has been sent."));
 			responseTimeFloor.enforce(startedAt, MIN_RESPONSE_TIME);
 		}

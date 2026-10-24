@@ -41,13 +41,13 @@ public class DefaultStaffSubmitOtpUseCase implements StaffSubmitOtpUseCase {
 			String resetToken = generateResetToken();
 			cacheManager.set(PasswordConstant.RESET_TOKEN_KEY + username.value(), resetToken,
 					PasswordConstant.RESET_TOKEN_DURATION);
-			auditLog.record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.SUCCESS, null, subject);
+			auditLog.record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.SUCCESS, subject);
 			presenter.present(new StaffSubmitOtpResponse(resetToken));
 		} catch (FailedToSubmitOtpException e){
-			auditLog.record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.FAILURE, null, subject);
+			auditLog.record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.FAILURE, subject);
 			throw e;
 		} catch (Exception e){
-			auditLog.record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.FAILURE, null, subject);
+			auditLog.record(AuthAction.STAFF_SUBMIT_OTP, AuthResult.FAILURE, subject);
 			throw new FailedToSubmitOtpException(e);
 		}
 	}

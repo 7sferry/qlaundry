@@ -72,7 +72,7 @@ class DefaultStaffLogoutUseCaseTest{
 
 		then(gateway).should(never()).save(any());
 		then(cacheManager).shouldHaveNoInteractions();
-		then(auditLog).should().record(AuthAction.STAFF_LOGOUT, AuthResult.FAILURE, null, null);
+		then(auditLog).should().record(AuthAction.STAFF_LOGOUT, AuthResult.FAILURE, null);
 		then(presenter).should().present(new StaffLogoutResponse("bye!"));
 	}
 
@@ -101,7 +101,7 @@ class DefaultStaffLogoutUseCaseTest{
 		then(cacheManager).should().delete(TokenConstant.ROTATED_KEY + HASHED_REFRESH_TOKEN);
 		then(cacheManager).should().delete(TokenConstant.ACCESS_KEY + HASHED_REFRESH_TOKEN);
 		then(cacheManager).should().delete(TokenConstant.REFRESH_KEY + HASHED_REFRESH_TOKEN);
-		then(auditLog).should().record(AuthAction.STAFF_LOGOUT, AuthResult.SUCCESS, USER_ID, null);
+		then(auditLog).should().record(AuthAction.STAFF_LOGOUT, AuthResult.SUCCESS, USER_ID);
 		then(presenter).should().present(new StaffLogoutResponse("bye!"));
 
 		thenSoftly(softly -> softly.then(sessionCaptor.getValue().expirationTime()).isBeforeOrEqualTo(Instant.now()));

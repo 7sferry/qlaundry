@@ -48,27 +48,26 @@ public class DefaultTenantRegistrationUseCase implements TenantRegistrationUseCa
 
 	@Override
 	public void execute(TenantRegistrationRequest request, TenantRegistrationPresenter presenter){
-		request.validate();
-		long startedAt = System.nanoTime();
+		long exceptionStartedAt = System.nanoTime();
 		try{
+			request.validate();
 			verifyCaptcha(request);
-			startedAt = System.nanoTime();
+			long startedAt = System.nanoTime();
 			Tenant savedTenant = saveTenant(request);
 			StaffRegistrationResponse registeredAdmin = registerAdmin(request, savedTenant);
 			triggerRegistrationEmail(request, savedTenant, registeredAdmin);
-			auditLog.record(AuthAction.TENANT_REGISTRATION, AuthResult.SUCCESS, registeredAdmin.user().id(),
-					request.username());
+			auditLog.record(AuthAction.TENANT_REGISTRATION, AuthResult.SUCCESS, request.username());
 			presenter.present(new TenantRegistrationResponse(savedTenant, registeredAdmin));
 			responseTimeFloor.enforce(startedAt, MIN_RESPONSE_TIME);
 		} catch (InvalidUsernameException e){
 			log.warn("Failed to register tenant", e);
-			auditLog.record(AuthAction.TENANT_REGISTRATION, AuthResult.FAILURE, null, request.username());
+			auditLog.record(AuthAction.TENANT_REGISTRATION, AuthResult.FAILURE, request.username());
 			Tenant fakeTenant = Tenant.fake(new FullName(request.tenantName()), new Username(request.username()));
 			Staff fakeStaff = Staff.fake(new FullName(request.fullName()), new Username(request.username()));
 			presenter.present(new TenantRegistrationResponse(fakeTenant, new StaffRegistrationResponse(fakeStaff)));
-			responseTimeFloor.enforce(startedAt, MIN_RESPONSE_TIME);
+			responseTimeFloor.enforce(exceptionStartedAt, MIN_RESPONSE_TIME);
 		} catch (RuntimeException e){
-			auditLog.record(AuthAction.TENANT_REGISTRATION, AuthResult.FAILURE, null, request.username());
+			auditLog.record(AuthAction.TENANT_REGISTRATION, AuthResult.FAILURE, request.username());
 			throw e;
 		}
 	}

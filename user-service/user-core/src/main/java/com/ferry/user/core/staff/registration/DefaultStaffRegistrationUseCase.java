@@ -48,11 +48,10 @@ public class DefaultStaffRegistrationUseCase implements StaffRegistrationUseCase
 			savePhone(request, registeredUser, principal);
 			analyticsPublisher.publish(analyticsPublisher.save(UserAnalyticsEvent.staff(
 					UserAnalyticsEventType.STAFF_REGISTERED, StaffAnalyticsMessage.from(registeredUser), principal.userId())));
-			auditLog.record(AuthAction.STAFF_REGISTRATION, AuthResult.SUCCESS, principal.userId(),
-					registeredUser.usernameValue());
+			auditLog.record(AuthAction.STAFF_REGISTRATION, AuthResult.SUCCESS, registeredUser.usernameValue());
 			presenter.present(new StaffRegistrationResponse(registeredUser));
 		} catch (RuntimeException e){
-			auditLog.record(AuthAction.STAFF_REGISTRATION, AuthResult.FAILURE, principal.userId(), request.username());
+			auditLog.record(AuthAction.STAFF_REGISTRATION, AuthResult.FAILURE, request.username());
 			throw e;
 		}
 	}

@@ -89,7 +89,7 @@ class DefaultStaffResetPasswordUseCaseTest{
 		then(gateway).shouldHaveNoInteractions();
 		then(cacheManager).shouldHaveNoInteractions();
 		then(presenter).shouldHaveNoInteractions();
-		then(auditLog).should().record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.FAILURE, null, " ");
+		then(auditLog).should().record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.FAILURE, " ");
 	}
 
 	@Test
@@ -174,7 +174,7 @@ class DefaultStaffResetPasswordUseCaseTest{
 		then(gateway).should(never()).save(any(StaffPassword.class));
 		then(sessionRevoker).shouldHaveNoInteractions();
 		then(presenter).shouldHaveNoInteractions();
-		then(auditLog).should().record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.FAILURE, STAFF_ID, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.FAILURE, USERNAME);
 	}
 
 	@Test
@@ -294,7 +294,7 @@ class DefaultStaffResetPasswordUseCaseTest{
 		then(passwordChangedNotifier).should().notifyChanged(STAFF_ID, USERNAME, "hendra.w@mailku.id");
 		then(cacheManager).should().delete(LoginConstant.ATTEMPT_KEY + USERNAME_HASH);
 		then(cacheManager).should().delete(LoginConstant.OTP_ATTEMPT_KEY + USERNAME_HASH);
-		then(auditLog).should().record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.SUCCESS, STAFF_ID, USERNAME);
+		then(auditLog).should().record(AuthAction.STAFF_RESET_PASSWORD, AuthResult.SUCCESS, USERNAME);
 		then(presenter).should().present(new StaffResetPasswordResponse("password has been reset"));
 		thenSoftly(softly -> {
 			softly.then(passwordCaptor.getValue().passwordValue()).isEqualTo("new-hashed-password");
